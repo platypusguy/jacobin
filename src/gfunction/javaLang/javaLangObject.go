@@ -31,7 +31,7 @@ func Load_Lang_Object() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.ClinitGeneric}
 
 	ghelpers.MethodSignatures["java/lang/Object.<init>()V"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.JustReturn}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: objectInit}
 
 	ghelpers.MethodSignatures["java/lang/Object.equals(Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: objectEquals}
@@ -101,6 +101,17 @@ type javaLangClass struct {
 	// instanceSlotCount uint
 	// staticSlotCount   uint
 	// staticVars        Slots
+}
+
+func objectInit(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	if obj == nil {
+		errMsg := fmt.Sprintf("objectInit: Invalid or missing object: %T", params[0])
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	obj = object.MakeEmptyObject()
+
+	return nil
 }
 
 // "java/lang/Object.getClass()Ljava/lang/Class;"

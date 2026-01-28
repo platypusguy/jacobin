@@ -188,8 +188,8 @@ func TestFetchCPentry(t *testing.T) {
 	LoadBaseClasses()
 	CP.ClassRefs = []uint32{types.StringPoolStringIndex}
 	cp = FetchCPentry(&CP, 8)
-	if cp.RetType != IS_STRING_ADDR || *cp.StringVal != "java/lang/String" {
-		t.Errorf("Expected IS_STRING_ADDR pointing to 'java/lang/String', got %d pointing to %s",
+	if cp.RetType != IS_CLASS_REF || *cp.StringVal != "java/lang/String" {
+		t.Errorf("Expected IS_CLASS_REF pointing to 'java/lang/String', got %d pointing to %s",
 			cp.RetType, *cp.StringVal)
 	}
 
