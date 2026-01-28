@@ -158,7 +158,7 @@ func RunJavaThread(args []any) {
 	javaLang.RegisterThread(t)
 
 	if globals.TraceInst {
-		traceInfo := fmt.Sprintf("threadRun: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
+		traceInfo := fmt.Sprintf("RunJavaThread: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
 			f.ClName, f.MethName, f.MethType, meth.MaxStack, meth.MaxLocals, len(meth.Code))
 		trace.Trace(traceInfo)
 	}
@@ -408,7 +408,7 @@ func CkSyncStaticMeth(fram *frames.Frame) error {
 			// First time for this class name.
 			// Convert JLCmap data to the lockable object.
 			jlc = jlc.(*classloader.Jlc)
-			obj = object.MakeOneFieldObject(fram.ClName, "data", types.Ref, jlc)
+			obj = object.MakeOneFieldObject(fram.ClName, "jlc", types.Ref, jlc)
 			globals.JlcMapLock.Lock()
 			globals.JLCmap[fram.ClName] = obj
 			globals.JlcMapLock.Unlock()
