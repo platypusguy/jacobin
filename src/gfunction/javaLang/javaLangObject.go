@@ -18,6 +18,7 @@ import (
 	"jacobin/src/types"
 	"jacobin/src/util"
 	"strings"
+	"sync/atomic"
 	"unsafe"
 )
 
@@ -260,6 +261,7 @@ func objectWait(params []interface{}) interface{} {
 	}
 
 	// Set millis = sleep time in milliseconds.
+	// TODO: Sub-millisecond precision is not done well.
 	millis := int64(0) // 0 means wait indefinitely
 	if len(params) > 2 {
 		millis = params[2].(int64)
@@ -274,13 +276,20 @@ func objectWait(params []interface{}) interface{} {
 
 	err := obj.ObjectWait(thID, millis)
 	if err != nil {
-		if strings.Contains(err.Error(), "thread does not own lock") {
-			return ghelpers.GetGErrBlk(excNames.IllegalMonitorStateException, err.Error())
+		monitor := obj.GetMonitor()
+		errMsg := fmt.Sprintf("objectWait: thID=%d, wait-obj-class=%s, obj-monitor.Owner=%d\n%s",
+			thID, object.GoStringFromStringPoolIndex(obj.KlassName), atomic.LoadInt32(&monitor.Owner), err.Error())
+
+		// Check for wrong owner.
+		if strings.Contains(err.Error(), "does not own lock") {
+			return ghelpers.GetGErrBlk(excNames.IllegalMonitorStateException, errMsg)
 		}
-		// In Java, wait() can throw InterruptedException.
-		// For now, let's map other errors to IllegalMonitorStateException
-		// unless we want to support InterruptedException specifically.
-		return ghelpers.GetGErrBlk(excNames.IllegalMonitorStateException, err.Error())
+		// Interrupted?
+		if strings.Contains(err.Error(), "interrupted") {
+			return ghelpers.GetGErrBlk(excNames.InterruptedException, errMsg)
+		}
+		// Other errors.
+		return ghelpers.GetGErrBlk(excNames.IllegalMonitorStateException, errMsg)
 	}
 
 	return nil

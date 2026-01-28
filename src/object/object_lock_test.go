@@ -241,7 +241,7 @@ func TestObjLock_TwoThreads_ThinLockContention(t *testing.T) {
 // Thread 2 must block until thread 1 fully releases the fat lock, then acquire.
 func TestObjLock_TwoThreads_FatLockContentionAndHandoff(t *testing.T) {
 	obj := MakeEmptyObject()
-	// Properly acquire lock to ensure internal state (mutex) is consistent
+	// Properly acquire lock to ensure internal state (Mutex) is consistent
 	if err := obj.ObjLock(1); err != nil {
 		t.Fatalf("setup: ObjLock(1) failed: %v", err)
 	}
