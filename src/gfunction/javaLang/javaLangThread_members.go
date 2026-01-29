@@ -262,7 +262,7 @@ func threadInterrupt(params []interface{}) any {
 	fld.Fvalue = types.JavaBoolTrue
 	thObj.FieldTable["interrupted"] = fld
 
-	thID, ok := thObj.FieldTable["ID"].Fvalue.(int)
+	thID, ok := thObj.FieldTable["ID"].Fvalue.(int64)
 	if !ok {
 		errMsg := "threadInterrupt: Missing the \"ID\" field in the thread object"
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
@@ -393,7 +393,7 @@ func threadRun(params []interface{}) interface{} {
 	name := t.FieldTable["name"].Fvalue.(*object.Object)
 	id := t.FieldTable["ID"].Fvalue.(int64)
 	t.ThMutex.RUnlock()
-	
+
 	warnMsg := fmt.Sprintf("threadRun Converting this call to threadStart for thread name: %s, ID: %d",
 		object.GoStringFromStringObject(name), id)
 	trace.Warning(warnMsg)
