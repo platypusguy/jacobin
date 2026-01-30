@@ -162,7 +162,10 @@ func classGetAssertionsEnabledStatus([]interface{}) interface{} {
 // classGetName()
 // java/lang/Class.getCanonicalName()Ljava/lang/String
 func classGetCanonicalName(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetCanonicalName: invalid or null object")
+	}
 	rawName := object.GoStringFromStringPoolIndex(obj.KlassName)
 	if strings.HasPrefix(rawName, types.Array) {
 		switch rawName[1] {
@@ -198,7 +201,10 @@ func classGetCanonicalName(params []interface{}) interface{} {
 // multidimensional arrays return an array one dimension less, e.g. int[][] returns int[].class.
 // Note: at present, this function returns a pointer to the loaded (but not instantiated) class.
 func getComponentType(params []interface{}) interface{} {
-	objPtr := params[0].(*object.Object)
+	objPtr, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(objPtr) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "getComponentType: invalid or null object")
+	}
 
 	field := (*objPtr).FieldTable["value"]
 	// If the object is not an array, return null.
@@ -250,14 +256,18 @@ func getComponentType(params []interface{}) interface{} {
 	return cl
 }
 
+// TODO: Is this function needed? Its currently trapped.
 func classGetField(params []interface{}) interface{} {
-	cl := params[0].(*object.Object)
+	cl, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(cl) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetField: invalid or null object")
+	}
 	if object.IsNull(params[1]) {
 		errMsg := "classGetField: null field name"
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
 	}
 	fieldName := params[1].(string)
-	_, ok := cl.FieldTable[fieldName]
+	_, ok = cl.FieldTable[fieldName]
 	if !ok {
 		errMsg := fmt.Sprintf("classGetField: field %s not found in %s",
 			fieldName, *stringPool.GetStringPointer(cl.KlassName))
@@ -267,7 +277,7 @@ func classGetField(params []interface{}) interface{} {
 	return NewField(cl, fieldName)
 }
 
-// classgetModule returns the unnamed module for any Class object
+// classGetModule returns the unnamed module for any Class object
 func classGetModule([]interface{}) interface{} {
 	if unnamedModule == nil {
 		errMsg := "classGetModule: unnamed module not initialized"
@@ -288,7 +298,10 @@ func classGetModule([]interface{}) interface{} {
 //
 // "java/lang/Class.classGetName()Ljava/lang/String;"
 func classGetName(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetName: invalid or null object")
+	}
 	name := object.StringObjectFromPoolIndex(obj.KlassName)
 	return name
 }
@@ -298,7 +311,10 @@ func classGetName(params []interface{}) interface{} {
 // This duplicates the behavior of OpenJDK JVMs.
 // "java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"
 func getPrimitiveClass(params []interface{}) interface{} {
-	primitive := params[0].(*object.Object)
+	primitive, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(primitive) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "getPrimitiveClass: invalid or null object")
+	}
 	str := object.GoStringFromStringObject(primitive)
 
 	var k *classloader.Klass
@@ -337,7 +353,10 @@ func getPrimitiveClass(params []interface{}) interface{} {
 
 // "java/lang/Class.isArray()Ljava/lang/String;"
 func classIsArray(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsArray: invalid or null object")
+	}
 	fldType := obj.FieldTable["value"].Ftype
 	if strings.HasPrefix(fldType, types.Array) {
 		return types.JavaBoolTrue
@@ -346,7 +365,10 @@ func classIsArray(params []interface{}) interface{} {
 }
 
 func classIsPrimitive(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsPrimitive: invalid or null object")
+	}
 	fldType := obj.FieldTable["value"].Ftype
 	if types.IsPrimitive(fldType) {
 		return types.JavaBoolTrue

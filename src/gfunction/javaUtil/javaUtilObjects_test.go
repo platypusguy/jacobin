@@ -4,6 +4,7 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
+	"jacobin/src/types"
 	"testing"
 )
 
@@ -75,18 +76,18 @@ func TestObjects_IsNull_And_NonNull_CurrentBehavior(t *testing.T) {
 	globals.InitStringPool()
 
 	// Non-object (e.g., int64) -> isNull true, nonNull false
-	if v := objectsIsNull([]interface{}{int64(5)}); v.(int64) != 1 {
+	if v := objectsIsNull([]interface{}{int64(5)}); v.(types.JavaBool) != types.JavaBoolTrue {
 		t.Fatalf("isNull for non-object expected true (1), got %v", v)
 	}
-	if v := objectsNonNull([]interface{}{int64(5)}); v.(bool) != false {
+	if v := objectsNonNull([]interface{}{int64(5)}); v.(types.JavaBool) != types.JavaBoolFalse {
 		t.Fatalf("nonNull for non-object expected false, got %v", v)
 	}
 
 	// Null object (typed-nil) -> current impl treats it as non-null (type assertion ok)
-	if v := objectsIsNull([]interface{}{nil}); v.(int64) != 1 { // nil is not *object.Object, so true
+	if v := objectsIsNull([]interface{}{nil}); v.(types.JavaBool) != types.JavaBoolTrue { // nil is not *object.Object, so true
 		t.Fatalf("isNull(nil) expected true (1), got %v", v)
 	}
-	if v := objectsNonNull([]interface{}{nil}); v.(bool) != false {
+	if v := objectsNonNull([]interface{}{nil}); v.(types.JavaBool) != types.JavaBoolFalse {
 		t.Fatalf("nonNull(nil) expected false, got %v", v)
 	}
 }
