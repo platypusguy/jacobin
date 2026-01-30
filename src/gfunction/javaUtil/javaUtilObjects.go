@@ -103,7 +103,7 @@ func Load_Util_Objects() {
 	ghelpers.MethodSignatures["java/util/Objects.requireNonNull(Ljava/lang/Object;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  objectsRequireNonNull,
 		}
 
 	ghelpers.MethodSignatures["java/util/Objects.requireNonNull(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;"] =
@@ -216,6 +216,23 @@ func objectsIsNull(params []interface{}) interface{} {
 }
 
 func objectsNonNull(params []interface{}) interface{} {
-	_, ok := params[0].(*object.Object)
-	return ok
+	obj, ok := params[0].(*object.Object)
+	if !ok {
+		return types.JavaBoolFalse
+	}
+	if object.IsNull(obj) {
+		return types.JavaBoolFalse
+	}
+	return types.JavaBoolTrue
+}
+
+func objectsRequireNonNull(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "objectsRequireNonNull: invalid argument")
+	}
+	if object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "objectsRequireNonNull: null object argument")
+	}
+	return obj
 }
