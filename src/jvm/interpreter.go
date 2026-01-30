@@ -2482,6 +2482,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			fieldValue = objField.Fvalue
 		}
 	} else { // not an index to the string pool, nor a String pointer with a byte array
+		// The field is another kind of Object.
 		fieldValue = objField.Fvalue
 	}
 
