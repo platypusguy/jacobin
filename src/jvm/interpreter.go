@@ -2478,6 +2478,8 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			klassName := "[Ljava/lang/Object;"
 			o.KlassName = stringPool.GetStringIndex(&klassName) // "[Ljava/lang/Object;"
 			fieldValue = o
+		} else {
+			fieldValue = objField.Fvalue
 		}
 	} else { // not an index to the string pool, nor a String pointer with a byte array
 		fieldValue = objField.Fvalue
