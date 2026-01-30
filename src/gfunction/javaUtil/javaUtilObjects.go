@@ -58,7 +58,11 @@ func Load_Util_Objects() {
 			GFunction:  objectsCheckIndex,
 		}
 
-	// TODO: Not even ghelpers.Trapped: static <T> int compare(T a, T b, Comparator<? super T> c)
+	ghelpers.MethodSignatures["java/util/Objects.compare(Ljava/lang/Object;Ljava/lang/Object;Ljava/util/Comparator;)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
 
 	ghelpers.MethodSignatures["java/util/Objects.deepEquals(Ljava/lang/Object;Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
@@ -96,10 +100,29 @@ func Load_Util_Objects() {
 			GFunction:  objectsNonNull,
 		}
 
-	// TODO: Not even ghelpers.Trapped: requireNonNull
-	// TODO: Not even ghelpers.Trapped: requireNonNullElse
-	// TODO: Not even ghelpers.Trapped: requireNonNullElseGet
-	// TODO: Not even ghelpers.Trapped: static String toIdentityString(Object o)
+	ghelpers.MethodSignatures["java/util/Objects.requireNonNull(Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Objects.requireNonNull(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Objects.requireNonNullElse(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Objects.requireNonNullElseGet(Ljava/lang/Object;Ljava/util/function/Supplier;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
 
 	ghelpers.MethodSignatures["java/util/Objects.toIdentityString(Ljava/lang/Object;)Ljava/lang/String;"] =
 		ghelpers.GMeth{
@@ -118,7 +141,6 @@ func Load_Util_Objects() {
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
-
 }
 
 func objectsCheckFromIndexSize(params []interface{}) interface{} {
