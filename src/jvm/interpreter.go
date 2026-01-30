@@ -2926,9 +2926,9 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 	// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
 	// that function simply returns. So test for it here and if it is, skip the rest
 	// fullConstructorName := className + "." + methodName + methodType
-	if fqn == "java/lang/Object.<init>()V" { // the java/lang/Object plain constructor just returns
-		return 3 // 2 for the CPslot + 1 for next bytecode
-	}
+	//if fqn == "java/lang/Object.<init>()V" { // the java/lang/Object plain constructor just returns
+	//	return 3 // 2 for the CPslot + 1 for next bytecode
+	//}
 
 	mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 	if err != nil || mtEntry.Meth == nil {
