@@ -109,7 +109,7 @@ func Load_Util_Objects() {
 	ghelpers.MethodSignatures["java/util/Objects.requireNonNull(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  objectsRequireNonNull,
 		}
 
 	ghelpers.MethodSignatures["java/util/Objects.requireNonNullElse(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"] =
@@ -231,8 +231,20 @@ func objectsRequireNonNull(params []interface{}) interface{} {
 	if !ok {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "objectsRequireNonNull: invalid argument")
 	}
-	if object.IsNull(obj) {
-		return ghelpers.GetGErrBlk(excNames.NullPointerException, "objectsRequireNonNull: null object argument")
+	if !object.IsNull(obj) {
+		return obj
 	}
-	return obj
+
+	// The object is null.
+	// Default text.
+	msgText := "objectsRequireNonNull: null object argument"
+	if len(params) > 1 {
+		msgObj, ok := params[0].(*object.Object)
+		if !ok {
+			return ghelpers.GetGErrBlk(excNames.NullPointerException, "objectsRequireNonNull: invalid custom text argument")
+		}
+		// Custom text.
+		msgText = object.GoStringFromStringObject(msgObj)
+	}
+	return ghelpers.GetGErrBlk(excNames.NullPointerException, msgText)
 }
