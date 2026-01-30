@@ -288,7 +288,10 @@ func classGetModule([]interface{}) interface{} {
 //
 // "java/lang/Class.classGetName()Ljava/lang/String;"
 func classGetName(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetName: invalid or null Class object")
+	}
 	name := object.StringObjectFromPoolIndex(obj.KlassName)
 	return name
 }
