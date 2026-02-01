@@ -81,7 +81,7 @@ func Load_Sun_Security_Jca_ProviderList() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["sun/security/jca/ProviderList$ServiceList.tryGet(I)Ljava/security/Provider$Service;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: providerListTryGet}
 
 }
 
@@ -197,4 +197,16 @@ func providerListProviders(params []interface{}) interface{} {
 
 func providerListSize([]interface{}) interface{} {
 	return int64(1)
+}
+
+func providerListTryGet(params []interface{}) interface{} {
+	// params[0] = this object (ProviderList)
+	// params[1] = integer key / index
+	if len(params) < 2 {
+		return object.Null
+	}
+
+	// The integer is ignored because we have no services
+	// Always return null safely
+	return object.Null
 }
