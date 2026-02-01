@@ -25,30 +25,6 @@ import (
 // This file contains basic functions of object creation. (Array objects
 // are created in object\arrays.go.)
 
-/*
-ObjectMonitor is a simple structure that holds the owner thread ID and recursion depth.
-* Thin locks (2-bit Misc) are fast for uncontended objects.
-* Recursive acquisition inflates the lock to a fat lock.
-* Fat lock tracks the owning thread and recursion count.
-* Unlocking decrements recursion and only releases when recursion hits zero.
-*/
-
-const MONITOR_OWNER_NONE = -1
-
-// Definition for Object monitor
-type ObjectMonitor struct {
-	Owner     int32      // thread ID of owning thread
-	Recursion int32      // recursion depth
-	Mutex     sync.Mutex // used for blocking when fat locked
-	Cond      *sync.Cond // used for wait/notify
-}
-
-// Global map tracking which object each thread is waiting on (for interrupt support)
-var WaitingThreads = struct {
-	sync.RWMutex
-	MapThToObj map[uint32]*Object // Thread ID -> Object it's waiting on
-}{MapThToObj: make(map[uint32]*Object)}
-
 // With regard to the layout of a created object in Jacobin, note that
 // on some architectures, but not Jacobin, there is an additional field
 // that insures that the fields that follow the oops (the mark word and
@@ -79,6 +55,28 @@ type Field struct {
 	Ftype  string // what type of value is stored in the field
 	Fvalue any    // the actual value or a pointer to the value (ftype="[something)
 }
+
+// ObjectMonitor is a simple structure that holds the owner thread ID and recursion depth.
+// Thin locks (2-bit Misc) are fast for uncontended objects.
+// Recursive acquisition inflates the lock to a fat lock.
+// Fat lock tracks the owning thread and recursion count.
+// Unlocking decrements recursion and only releases when recursion hits zero.
+
+const MONITOR_OWNER_NONE = -1
+
+// Definition for Object monitor
+type ObjectMonitor struct {
+	Owner     int32      // thread ID of owning thread
+	Recursion int32      // recursion depth
+	Mutex     sync.Mutex // used for blocking when fat locked
+	Cond      *sync.Cond // used for wait/notify
+}
+
+// Global map tracking which object each thread is waiting on (for interrupt support)
+var WaitingThreads = struct {
+	sync.RWMutex
+	MapThToObj map[uint32]*Object // Thread ID -> Object it's waiting on
+}{MapThToObj: make(map[uint32]*Object)}
 
 // MakeEmptyObject() creates an empty basis Object. It is expected that other
 // code will fill in the Klass header field and the data fields.

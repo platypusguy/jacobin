@@ -60,7 +60,7 @@ func RunJavaThread(args []any) {
 		exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, nil)
 	}
 
-	//trace.Trace(fmt.Sprintf("DEBUG RunJavaThread: Found run method: %s.%s%s", clName, methName, methType))
+	// trace.Trace(fmt.Sprintf("DEBUG RunJavaThread: Found run method: %s.%s%s", clName, methName, methType))
 
 	// Get Mtable entry for the method.
 	meth := mte.Meth.(classloader.JmEntry)
@@ -344,7 +344,6 @@ func createAndInitNewFrame(
 
 		// Save class-name object pointer in the frame for return and catch-frame processing.
 		fram.ObjSync = obj
-
 	} else {
 		// Since includeObjectRef is false, this is a static case: invokestatic.
 		// Check for synchronized method and lock the class object if so.
