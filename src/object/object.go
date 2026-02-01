@@ -33,23 +33,6 @@ ObjectMonitor is a simple structure that holds the owner thread ID and recursion
 * Unlocking decrements recursion and only releases when recursion hits zero.
 */
 
-// When no thread owns an object, the monitor object owner is set to this value.
-const MONITOR_OWNER_NONE = -1
-
-// Definition for Object monitor
-type ObjectMonitor struct {
-	Owner     int32      // ID of the owning thread or MONITOR_OWNER_NONE when not owned
-	Recursion int32      // recursion depth of same thread ID or 0 when not owned
-	Mutex     sync.Mutex // Cond locker. Used for blocking when fat locked
-	Cond      *sync.Cond // used for wait/notify
-}
-
-// Global map tracking which object each thread is waiting on (for interrupt support)
-var WaitingThreads = struct {
-	sync.RWMutex                    // embedded field so that we can lock at the WaitingThreads level
-	MapThToObj   map[uint32]*Object // Thread ID -> Object the thread is waiting on
-}{MapThToObj: make(map[uint32]*Object)}
-
 // With regard to the layout of a created object in Jacobin, note that
 // on some architectures, but not Jacobin, there is an additional field
 // that insures that the fields that follow the oops (the mark word and
