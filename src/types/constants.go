@@ -45,6 +45,7 @@ var FieldNameProperties = "map"
 var ClassNameOptional string = "java/util/Optional"
 var ClassNameBigDecimal = "java/math/BigDecimal"
 var ClassNameBigInteger = "java/math/BigInteger"
+var ClassNameSecurityProvider = "java/security/Provider"
 
 // Security-related
 const SecurityProviderName = "GoSecurityProvider"
