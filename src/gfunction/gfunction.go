@@ -20,6 +20,7 @@ import (
 	"jacobin/src/gfunction/javaText"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/gfunction/misc"
+	"jacobin/src/gfunction/sunSecurity"
 	"jacobin/src/trace"
 	"strings"
 )
@@ -135,7 +136,8 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	misc.Load_Jdk_Internal_Misc_ScopedMemoryAccess()
 
 	// Sun
-	javaSecurity.Load_Sun_Security_Action_GetPropertyAction()
+	sunSecurity.Load_Sun_Security_Action_GetPropertyAction()
+	sunSecurity.Load_Sun_Security_Jca_ProviderList()
 
 	// Load functions that invoke ghelpers.ClinitGeneric() and do nothing else.
 	Load_Other_Methods()

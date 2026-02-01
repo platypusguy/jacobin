@@ -162,8 +162,7 @@ func securityProviderPutService(params []any) any {
 // ----------------------- Used at Jacobin startup -----------------------------------
 func NewGoRuntimeProvider() *object.Object {
 	// Create the Provider object
-	className := "java/security/Provider"
-	provider := object.MakeEmptyObjectWithClassName(&className)
+	provider := object.MakeEmptyObjectWithClassName(&types.ClassNameSecurityProvider)
 
 	// Initialize the provider with name, version, info
 	nameObj := object.StringObjectFromGoString(types.SecurityProviderName)
@@ -172,7 +171,7 @@ func NewGoRuntimeProvider() *object.Object {
 	securityProviderInit(params)
 
 	// Create the default Provider$Service
-	className = "java/security/Provider$Service"
+	className := "java/security/Provider$Service"
 	service := object.MakeEmptyObjectWithClassName(&className)
 
 	// Service fields: provider, type, algorithm, className, aliases
