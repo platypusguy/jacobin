@@ -34,18 +34,21 @@ var ModuleClassRef = "Ljava/lang/Module;"
 var EmptyString = ""
 var NullString = "null"
 
-// Other class names
+// Other useful class names in alpha order
+var ClassNameBigDecimal = "java/math/BigDecimal"
+var ClassNameBigInteger = "java/math/BigInteger"
+var ClassNameLinkedList = "java/util/LinkedList"
+var ClassNameJavaLangClass = "java/lang/Class"
+var ClassNameOptional string = "java/util/Optional"
+var ClassNameProperties = "java/util/Properties"
+var ClassNameSecurityProvider = "java/security/Provider"
 var ClassNameThread = "java/lang/Thread"
 var ClassNameThreadGroup = "java/lang/ThreadGroup"
 var ClassNameThreadState = "java/lang/Thread$State"
-var StringPoolThreadIndex = uint32(3) // points to the string pool slice for "java/lang/Thread"
-var ClassNameLinkedList = "java/util/LinkedList"
-var ClassNameProperties = "java/util/Properties"
+
+var StringPoolThreadIndex = uint32(3)        // points to the string pool entry for "java/lang/Thread"
+var StringPoolJavaLangClassIndex = uint32(4) // points to the string entry for "java/lang/Class"
 var FieldNameProperties = "map"
-var ClassNameOptional string = "java/util/Optional"
-var ClassNameBigDecimal = "java/math/BigDecimal"
-var ClassNameBigInteger = "java/math/BigInteger"
-var ClassNameSecurityProvider = "java/security/Provider"
 
 // Security-related
 const SecurityProviderName = "GoSecurityProvider"

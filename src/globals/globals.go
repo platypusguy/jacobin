@@ -407,18 +407,21 @@ func InitStringPool() {
 	StringPoolLock.Lock()
 	defer StringPoolLock.Unlock()
 	StringPoolTable = make(StringPoolTable_t)
-	// Prestored values: 0 = nil, 1 = String, 2 = Object
+	// Prestored values: 0 = nil, 1 = java/lang/String, 2 = java/lang/Object,
+	// 3 = java/lang/Thread, 4 = java/lang/Class
 	StringPoolTable[""] = 0
 	StringPoolTable["java/lang/String"] = types.StringPoolStringIndex
 	StringPoolTable["java/lang/Object"] = types.StringPoolObjectIndex
 	StringPoolTable["java/lang/Thread"] = types.StringPoolThreadIndex
+	StringPoolTable["java/lang/Class"] = types.StringPoolJavaLangClassIndex
 
-	// Pre-stored string list.
+	// Pre-stored string list. This list must exactly match the preceding list.
 	StringPoolList = nil
 	StringPoolList = append(StringPoolList, types.EmptyString)
 	StringPoolList = append(StringPoolList, types.StringClassName)
 	StringPoolList = append(StringPoolList, types.ObjectClassName)
 	StringPoolList = append(StringPoolList, types.ClassNameThread)
+	StringPoolList = append(StringPoolList, types.ClassNameJavaLangClass)
 
 	// Set up the next available index.
 	StringPoolNext = uint32(len(StringPoolList))

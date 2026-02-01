@@ -123,6 +123,12 @@ func MakeEmptyObjectWithClassName(className *string) *Object {
 	return &o
 }
 
+func MakeJlcObject(className *string) *Object {
+	o := MakeEmptyObject()
+	o.KlassName = types.StringPoolJavaLangClassIndex
+	return o
+}
+
 // Make an object for a Java primitive field (byte, int, etc.), given the class and field type.
 func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
 	objPtr := MakeEmptyObject()
