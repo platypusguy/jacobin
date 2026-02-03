@@ -71,7 +71,7 @@ func Load_Lang_Class() {
 	ghelpers.MethodSignatures["java/lang/Class.getModule()Ljava/lang/Module;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetModule}
 	ghelpers.MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetName}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ClassGetName}
 	ghelpers.MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: getPrimitiveClass}
 	ghelpers.MethodSignatures["java/lang/Class.isArray()Z"] =
@@ -297,13 +297,14 @@ func classGetModule([]interface{}) interface{} {
 // Local Class:       com.example.Outer$1Local null
 //
 // "java/lang/Class.classGetName()Ljava/lang/String;"
-func classGetName(params []interface{}) interface{} {
+func ClassGetName(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetName: invalid or null object")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "java/lang/class.GetName(): invalid or null object")
 	}
-	name := object.StringObjectFromPoolIndex(obj.KlassName)
-	return name
+	name := obj.FieldTable["name"].Fvalue.(string)
+	nameObj := object.StringObjectFromGoString(name)
+	return nameObj
 }
 
 // getPrimitiveClass() takes a one-word descriptor of a primitive and

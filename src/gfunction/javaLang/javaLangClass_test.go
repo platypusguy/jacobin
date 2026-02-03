@@ -200,20 +200,3 @@ func TestAssertionsEnabledStatus_Enabled(t *testing.T) {
 		t.Errorf("Expected true, got %v", result)
 	}
 }
-
-func TestGetNameWithAStringObject(t *testing.T) {
-	setup()
-	obj := object.StringObjectFromGoString("java/lang/String")
-	newParams := []interface{}{obj}
-	result, ok := classGetName(newParams).(*object.Object)
-	if !ok {
-		t.Fatalf("Expected *object.Object, got %T", result)
-	}
-	observed := object.GoStringFromStringObject(result)
-	if observed == "" {
-		t.Error("Expected java/lang/String, got \"\"")
-	}
-	if observed != "java/lang/String" {
-		t.Errorf("Expected java/lang/String, got %s", observed)
-	}
-}

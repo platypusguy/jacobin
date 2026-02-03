@@ -616,9 +616,9 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	fld.Fvalue = &kd
 	jlc.FieldTable["$klass"] = fld
 
-	// insert the java/lang/Class mirror object into the JLCMap (for static fields access and introspection)
+	// insert the pointer to the java/lang/Class mirror object into the JLCMap (for static fields access and introspection)
 	globals.JlcMapLock.Lock()
-	globals.JLCmap[fullyParsedClass.className] = &jlc
+	globals.JLCmap[fullyParsedClass.className] = jlc
 	globals.JlcMapLock.Unlock()
 
 	kd.MethodList = make(map[string]string)
