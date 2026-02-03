@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"jacobin/src/excNames"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
@@ -581,11 +582,8 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		kd.Interfaces = append(kd.Interfaces, uint16(fullyParsedClass.interfaces[i]))
 	}
 
-	jlc := Jlc{
-		Lock:     sync.RWMutex{},
-		Statics:  []string{},
-		KlassPtr: nil,
-	}
+	// create a java/lang/Class mirror object for this class. It'll be used below.
+	jlc := object.MakeJlcObject(&kd.Name)
 
 	if len(fullyParsedClass.fields) > 0 {
 		for i := 0; i < len(fullyParsedClass.fields); i++ {
@@ -608,11 +606,15 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			kd.Fields = append(kd.Fields, kdf)
 
 			if kdf.IsStatic {
-				jlc.Statics = append(jlc.Statics, kdf.NameStr+kdf.DescStr)
+				statics := jlc.FieldTable["$statics"].Fvalue.([]string)
+				statics = append(statics, kdf.NameStr+kdf.DescStr)
 			}
 		}
 	}
-	jlc.KlassPtr = &kd
+
+	fld := jlc.FieldTable["$klass"]
+	fld.Fvalue = &kd
+	jlc.FieldTable["$klass"] = fld
 
 	// insert the java/lang/Class mirror object into the JLCMap (for static fields access and introspection)
 	globals.JlcMapLock.Lock()
