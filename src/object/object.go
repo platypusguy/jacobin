@@ -123,9 +123,13 @@ func MakeEmptyObjectWithClassName(className *string) *Object {
 	return &o
 }
 
+// makes an instance of a JLC (java/lang/Class) object, which has special considerations.
 func MakeJlcObject(className *string) *Object {
 	o := MakeEmptyObject()
 	o.KlassName = types.StringPoolJavaLangClassIndex
+	o.FieldTable["name"] = Field{Ftype: types.GolangString, Fvalue: *className}
+	o.FieldTable["$klass"] = Field{Ftype: types.RawGoPointer, Fvalue: nil}          // points to the Klass object in metadata
+	o.FieldTable["$statics"] = Field{Ftype: types.Array, Fvalue: make([]string, 0)} // array of static field names for this class
 	return o
 }
 
