@@ -57,7 +57,7 @@ func TestGetNameWithAStringObject(t *testing.T) {
 	if observed == "" {
 		t.Error("Expected java/lang/String, got \"\"")
 	}
-	if observed != "java/lang/String" {
-		t.Errorf("Expected java/lang/String, got %s", observed)
+	if observed != "java.lang.String" {
+		t.Errorf("Expected java.lang.String, got %s", observed)
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
+	"jacobin/src/util"
 	"strings"
 )
 
@@ -303,6 +304,7 @@ func ClassGetName(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "java/lang/class.GetName(): invalid or null object")
 	}
 	name := obj.FieldTable["name"].Fvalue.(string)
+	name = util.ConvertInternalClassNameToUserFormat(name)
 	nameObj := object.StringObjectFromGoString(name)
 	return nameObj
 }
