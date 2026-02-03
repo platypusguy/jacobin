@@ -63,6 +63,7 @@ func TestLoadSecurityMessageDigest_Registers(t *testing.T) {
 
 func TestMsgDig_GetInstance_ValidAlgorithms(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	algos := []string{"MD5", "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512", "SHA-512/224", "SHA-512/256"}
 	for _, a := range algos {
 		t.Run(a, func(t *testing.T) {
@@ -91,6 +92,7 @@ func TestMsgDig_GetInstance_ValidAlgorithms(t *testing.T) {
 
 func TestMsgDig_GetInstance_Unsupported(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	obj := object.StringObjectFromGoString("FOO")
 	ret := msgdigGetInstance([]any{obj})
 	ge := ret.(*ghelpers.GErrBlk)
@@ -101,6 +103,7 @@ func TestMsgDig_GetInstance_Unsupported(t *testing.T) {
 
 func TestMsgDig_GetInstance_WithProvider(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	alg := object.StringObjectFromGoString("SHA-256")
 	// wrong provider
 	badProv := object.StringObjectFromGoString("OtherProv")
@@ -119,6 +122,7 @@ func TestMsgDig_GetInstance_WithProvider(t *testing.T) {
 
 func TestMsgDig_UpdateAndDigest_CorrectnessAndReset(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	alg := "SHA-256"
 	mdObj := msgdigGetInstance([]any{object.StringObjectFromGoString(alg)}).(*object.Object)
 
@@ -146,6 +150,7 @@ func TestMsgDig_UpdateAndDigest_CorrectnessAndReset(t *testing.T) {
 
 func TestMsgDig_UpdateVariantsAndBounds(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	mdObj := msgdigGetInstance([]any{object.StringObjectFromGoString("MD5")}).(*object.Object)
 
 	// update single bytes 'a','b'
@@ -177,6 +182,7 @@ func TestMsgDig_UpdateVariantsAndBounds(t *testing.T) {
 
 func TestMsgDig_DigestWithInput(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	mdObj := msgdigGetInstance([]any{object.StringObjectFromGoString("SHA-1")}).(*object.Object)
 	data := []byte("hello world")
 	out := msgdigDigestBytes([]any{mdObj, mdMakeByteArrayObject(data)})
@@ -192,6 +198,7 @@ func TestMsgDig_DigestWithInput(t *testing.T) {
 
 func TestMsgDig_DigestIntoBuffer_TooSmall(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	mdObj := msgdigGetInstance([]any{object.StringObjectFromGoString("SHA-512/256")}).(*object.Object)
 	// small buffer
 	buf := mdMakeByteArrayObject(make([]byte, 16))
@@ -204,6 +211,7 @@ func TestMsgDig_DigestIntoBuffer_TooSmall(t *testing.T) {
 
 func TestMsgDig_DigestIntoBuffer_WritesAndReturnsLen(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	mdObj := msgdigGetInstance([]any{object.StringObjectFromGoString("SHA-384")}).(*object.Object)
 	// supply some data so digest isn't of empty string
 	_ = msgdigUpdateBytes([]any{mdObj, mdMakeByteArrayObject([]byte("xyz"))})
@@ -227,6 +235,7 @@ func TestMsgDig_DigestIntoBuffer_WritesAndReturnsLen(t *testing.T) {
 
 func TestMsgDig_Reset(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	mdObj := msgdigGetInstance([]any{object.StringObjectFromGoString("SHA-512")}).(*object.Object)
 	_ = msgdigUpdateBytes([]any{mdObj, mdMakeByteArrayObject([]byte("data"))})
 	// reset then digest empty
@@ -254,6 +263,7 @@ func TestMsgDig_IsEqual(t *testing.T) {
 
 func TestMsgDig_ToString_And_Clone(t *testing.T) {
 	globals.InitGlobals("test")
+	Load_Security()
 	mdObj := msgdigGetInstance([]any{object.StringObjectFromGoString("SHA-256")}).(*object.Object)
 	// toString contains algorithm
 	sObj := msgdigToString([]any{mdObj}).(*object.Object)

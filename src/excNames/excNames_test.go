@@ -23,6 +23,7 @@ func TestExceptionTableAlignment(t *testing.T) {
 	details(t, XMLParseException, "javax.management.modelmbean.XMLParseException")
 	details(t, VirtualMachineError, "java.lang.VirtualMachineError")
 	details(t, UTFDataFormatException, "java.io.UTFDataFormatException")
+	details(t, NoSuchAlgorithmException, "java.security.NoSuchAlgorithmException")
 }
 
 // Make sure that the enum for the exception correctly matches the string. Exceptions tested here

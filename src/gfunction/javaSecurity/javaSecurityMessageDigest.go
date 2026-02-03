@@ -14,6 +14,7 @@ import (
 	"strings"
 )
 
+// Load_Security_MessageDigest initializes java/security/MessageDigest methods
 func Load_Security_MessageDigest() {
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.<clinit>()V"] =
@@ -28,148 +29,79 @@ func Load_Security_MessageDigest() {
 			GFunction:  ghelpers.TrapProtected,
 		}
 
+	// ---------- Member Functions ----------
 	ghelpers.MethodSignatures["java/security/MessageDigest.clone()Ljava/lang/Object;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  msgdigClone,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: msgdigClone}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.digest()[B"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  msgdigDigest,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: msgdigDigest}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.digest([B)[B"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  msgdigDigestBytes,
-		}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: msgdigDigestBytes}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.digest([BII)I"] =
-		ghelpers.GMeth{
-			ParamSlots: 3,
-			GFunction:  msgdigDigestBytesII,
-		}
+		ghelpers.GMeth{ParamSlots: 3, GFunction: msgdigDigestBytesII}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.engineDigest()[B"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapProtected,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapProtected}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.engineDigest([BII)I"] =
-		ghelpers.GMeth{
-			ParamSlots: 3,
-			GFunction:  ghelpers.TrapProtected,
-		}
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapProtected}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.engineGetDigestLength()I"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapProtected,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapProtected}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.engineReset()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapProtected,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapProtected}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.engineUpdate(B)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  ghelpers.TrapProtected,
-		}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapProtected}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.engineUpdate([BII)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 3,
-			GFunction:  ghelpers.TrapProtected,
-		}
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapProtected}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.getAlgorithm()Ljava/lang/String;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  msgdigGetAlgorithm,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: msgdigGetAlgorithm}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.getDigestLength()I"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  msgdigGetDigestLength,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: msgdigGetDigestLength}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.getInstance(Ljava/lang/String;)Ljava/security/MessageDigest;"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  msgdigGetInstance,
-		}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: msgdigGetInstance}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.getInstance(Ljava/lang/String;Ljava/lang/String;)Ljava/security/MessageDigest;"] =
-		ghelpers.GMeth{
-			ParamSlots: 2,
-			GFunction:  msgdigGetInstanceProvider,
-		}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: msgdigGetInstanceProvider}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.getInstance(Ljava/lang/String;Ljava/security/Provider;)Ljava/security/MessageDigest;"] =
-		ghelpers.GMeth{
-			ParamSlots: 2,
-			GFunction:  msgdigGetInstanceProviderObj,
-		}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: msgdigGetInstanceProviderObj}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.getProvider()Ljava/security/Provider;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  msgdigGetProvider,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: msgdigGetProvider}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.isEqual([B[B)Z"] =
-		ghelpers.GMeth{
-			ParamSlots: 2,
-			GFunction:  msgdigIsEqual,
-		}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: msgdigIsEqual}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.reset()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  msgdigReset,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: msgdigReset}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.toString()Ljava/lang/String;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  msgdigToString,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: msgdigToString}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.update(B)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  msgdigUpdateByte,
-		}
-
-	ghelpers.MethodSignatures["java/security/MessageDigest.update(Ljava/nio/ByteBuffer;)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
-		}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: msgdigUpdateByte}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.update([B)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  msgdigUpdateBytes,
-		}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: msgdigUpdateBytes}
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.update([BII)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 3,
-			GFunction:  msgdigUpdateBytesII,
-		}
+		ghelpers.GMeth{ParamSlots: 3, GFunction: msgdigUpdateBytesII}
+
+	ghelpers.MethodSignatures["java/security/MessageDigest.update(Ljava/nio/ByteBuffer;)V"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 }
 
 // ===================== Helper Functions =====================
 
-// getHashForAlgorithm returns a hash.Hash for the given algorithm name
 func getHashForAlgorithm(algorithm string) (hash.Hash, error) {
 	alg := strings.ToUpper(algorithm)
 	switch alg {
@@ -194,7 +126,6 @@ func getHashForAlgorithm(algorithm string) (hash.Hash, error) {
 	}
 }
 
-// getDigestLengthForAlgorithm returns the digest length in bytes for the given algorithm
 func getDigestLengthForAlgorithm(algorithm string) int {
 	alg := strings.ToUpper(algorithm)
 	switch alg {
@@ -215,17 +146,44 @@ func getDigestLengthForAlgorithm(algorithm string) int {
 	}
 }
 
-// ===================== MessageDigest Functions =====================
+func appendToBuffer(this *object.Object, bytes []types.JavaByte) {
+	current := this.FieldTable["buffer"].Fvalue.([]types.JavaByte)
+	current = append(current, bytes...)
+	this.FieldTable["buffer"] = object.Field{
+		Ftype:  types.ByteArray,
+		Fvalue: current,
+	}
+}
 
-// getInstance(Ljava/lang/String;)Ljava/security/MessageDigest;
+func extractJavaBytes(bytesObj *object.Object) ([]types.JavaByte, error) {
+	field, ok := bytesObj.FieldTable["value"]
+	if !ok {
+		return nil, fmt.Errorf("missing 'value' field")
+	}
+
+	switch v := field.Fvalue.(type) {
+	case []types.JavaByte:
+		return v, nil
+	case []byte:
+		return object.JavaByteArrayFromGoByteArray(v), nil
+	default:
+		return nil, fmt.Errorf("invalid byte array type")
+	}
+}
+
+// ===================== MessageDigest Methods =====================
+
 func msgdigGetInstance(params []any) any {
 	algorithmObj := params[0].(*object.Object)
 	algorithm := object.GoStringFromStringObject(algorithmObj)
 
-	// Validate algorithm
-	_, err := getHashForAlgorithm(algorithm)
-	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, err.Error())
+	// Validate algorithm exists in our SecurityProviderServices
+	providerObj := ghelpers.GetDefaultSecurityProvider() // single Go runtime provider
+
+	// Try to get a service from the provider
+	svcObj := securityProviderGetService([]interface{}{providerObj, object.StringObjectFromGoString("MessageDigest"), algorithmObj})
+	if errBlk, ok := svcObj.(*ghelpers.GErrBlk); ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "msgdigGetInstance: "+errBlk.ErrMsg)
 	}
 
 	// Create MessageDigest object
@@ -241,7 +199,13 @@ func msgdigGetInstance(params []any) any {
 	// Store provider
 	md.FieldTable["provider"] = object.Field{
 		Ftype:  "Ljava/security/Provider;",
-		Fvalue: ghelpers.GetDefaultSecurityProvider(),
+		Fvalue: providerObj,
+	}
+
+	// Optionally store reference to the service (can be useful for future extensions)
+	md.FieldTable["service"] = object.Field{
+		Ftype:  "Ljava/security/Provider$Service;",
+		Fvalue: svcObj.(*object.Object),
 	}
 
 	// Initialize empty buffer for accumulating data
@@ -253,65 +217,55 @@ func msgdigGetInstance(params []any) any {
 	return md
 }
 
-// getInstance(Ljava/lang/String;Ljava/lang/String;)Ljava/security/MessageDigest;
 func msgdigGetInstanceProvider(params []any) any {
+	const fname = "msgdigGetInstanceProvider"
 	algorithmObj := params[0].(*object.Object)
 	providerObj := params[1].(*object.Object)
-
 	providerName := object.GoStringFromStringObject(providerObj)
 
-	// Only accept our security provider
 	if providerName != types.SecurityProviderName {
 		return ghelpers.GetGErrBlk(excNames.ProviderNotFoundException,
-			fmt.Sprintf("Provider %s not supported. Only %s is supported.", providerName, types.SecurityProviderName))
+			fmt.Sprintf("%s: Provider %s not supported. Only %s is supported.", fname, providerName, types.SecurityProviderName))
 	}
 
-	// Delegate to single-parameter getInstance
 	return msgdigGetInstance([]any{algorithmObj})
 }
 
-// getInstance(Ljava/lang/String;Ljava/security/Provider;)Ljava/security/MessageDigest;
 func msgdigGetInstanceProviderObj(params []any) any {
+	const fname = "msgdigGetInstanceProviderObj"
 	algorithmObj := params[0].(*object.Object)
 	providerObj := params[1].(*object.Object)
 
-	// Check if provider is our default provider
 	if providerObj == nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Provider cannot be null")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("%s: Provider cannot be null", fname))
 	}
 
-	// Get provider name from the provider object
 	providerNameField, ok := providerObj.FieldTable["name"]
 	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Invalid provider object")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("%s: Invalid provider object", fname))
 	}
 
 	providerNameObj := providerNameField.Fvalue.(*object.Object)
 	providerName := object.GoStringFromStringObject(providerNameObj)
 
-	// Only accept our security provider
 	if providerName != types.SecurityProviderName {
 		return ghelpers.GetGErrBlk(excNames.ProviderNotFoundException,
-			fmt.Sprintf("Provider %s not supported. Only %s is supported.", providerName, types.SecurityProviderName))
+			fmt.Sprintf("%s: Provider %s not supported. Only %s is supported.", fname, providerName, types.SecurityProviderName))
 	}
 
-	// Delegate to single-parameter getInstance
 	return msgdigGetInstance([]any{algorithmObj})
 }
 
-// getAlgorithm()Ljava/lang/String;
 func msgdigGetAlgorithm(params []any) any {
 	this := params[0].(*object.Object)
 	return this.FieldTable["algorithm"].Fvalue.(*object.Object)
 }
 
-// getProvider()Ljava/security/Provider;
 func msgdigGetProvider(params []any) any {
 	this := params[0].(*object.Object)
 	return this.FieldTable["provider"].Fvalue.(*object.Object)
 }
 
-// getDigestLength()I
 func msgdigGetDigestLength(params []any) any {
 	this := params[0].(*object.Object)
 	algorithmObj := this.FieldTable["algorithm"].Fvalue.(*object.Object)
@@ -319,259 +273,162 @@ func msgdigGetDigestLength(params []any) any {
 	return int64(getDigestLengthForAlgorithm(algorithm))
 }
 
-// update(B)V
 func msgdigUpdateByte(params []any) any {
+	const fname = "msgdigUpdateByte"
 	this := params[0].(*object.Object)
 	b := params[1].(int64)
-
-	// Get current buffer
-	buffer := this.FieldTable["buffer"].Fvalue.([]types.JavaByte)
-
-	// Append byte
-	buffer = append(buffer, types.JavaByte(b))
-
-	// Update buffer
-	this.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
-		Fvalue: buffer,
-	}
-
+	appendToBuffer(this, []types.JavaByte{types.JavaByte(b)})
 	return nil
 }
 
-// update([B)V
 func msgdigUpdateBytes(params []any) any {
+	const fname = "msgdigUpdateBytes"
 	this := params[0].(*object.Object)
 	bytesObj := params[1].(*object.Object)
 
-	// Get bytes from object
-	bytesField := bytesObj.FieldTable["value"]
-	var bytes []types.JavaByte
-	switch v := bytesField.Fvalue.(type) {
-	case []types.JavaByte:
-		bytes = v
-	case []byte:
-		bytes = object.JavaByteArrayFromGoByteArray(v)
-	default:
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Invalid byte array")
+	bytes, err := extractJavaBytes(bytesObj)
+	if err != nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("%s: %s", fname, err.Error()))
 	}
 
-	// Get current buffer
-	buffer := this.FieldTable["buffer"].Fvalue.([]types.JavaByte)
-
-	// Append bytes
-	buffer = append(buffer, bytes...)
-
-	// Update buffer
-	this.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
-		Fvalue: buffer,
-	}
-
+	appendToBuffer(this, bytes)
 	return nil
 }
 
-// update([BII)V
 func msgdigUpdateBytesII(params []any) any {
+	const fname = "msgdigUpdateBytesII"
 	this := params[0].(*object.Object)
 	bytesObj := params[1].(*object.Object)
 	offset := params[2].(int64)
 	length := params[3].(int64)
 
-	// Get bytes from object
-	bytesField := bytesObj.FieldTable["value"]
-	var bytes []types.JavaByte
-	switch v := bytesField.Fvalue.(type) {
-	case []types.JavaByte:
-		bytes = v
-	case []byte:
-		bytes = object.JavaByteArrayFromGoByteArray(v)
-	default:
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Invalid byte array")
+	bytes, err := extractJavaBytes(bytesObj)
+	if err != nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("%s: %s", fname, err.Error()))
 	}
 
-	// Validate offset and length
 	if offset < 0 || length < 0 || offset+length > int64(len(bytes)) {
-		return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, "Invalid offset or length")
+		return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, fmt.Sprintf("%s: Invalid offset or length", fname))
 	}
 
-	// Get current buffer
-	buffer := this.FieldTable["buffer"].Fvalue.([]types.JavaByte)
-
-	// Append bytes from offset to offset+length
-	buffer = append(buffer, bytes[offset:offset+length]...)
-
-	// Update buffer
-	this.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
-		Fvalue: buffer,
-	}
-
+	appendToBuffer(this, bytes[offset:offset+length])
 	return nil
 }
 
-// digest()[B
 func msgdigDigest(params []any) any {
+	const fname = "msgdigDigest"
 	this := params[0].(*object.Object)
-
-	// Get algorithm
 	algorithmObj := this.FieldTable["algorithm"].Fvalue.(*object.Object)
 	algorithm := object.GoStringFromStringObject(algorithmObj)
 
-	// Get hash function
 	h, err := getHashForAlgorithm(algorithm)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, err.Error())
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("%s: %s", fname, err.Error()))
 	}
 
-	// Get buffer
 	buffer := this.FieldTable["buffer"].Fvalue.([]types.JavaByte)
-
-	// Convert to Go bytes and compute hash
-	goBytes := object.GoByteArrayFromJavaByteArray(buffer)
-	h.Write(goBytes)
+	h.Write(object.GoByteArrayFromJavaByteArray(buffer))
 	digest := h.Sum(nil)
-
-	// Reset buffer
-	this.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
-		Fvalue: []types.JavaByte{},
-	}
-
-	// Convert digest to Java bytes and return as byte array object
 	javaDigest := object.JavaByteArrayFromGoByteArray(digest)
-	return object.StringObjectFromJavaByteArray(javaDigest)
+
+	this.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{}}
+
+	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, javaDigest)
 }
 
-// digest([B)[B
 func msgdigDigestBytes(params []any) any {
+	const fname = "msgdigDigestBytes"
 	this := params[0].(*object.Object)
 	bytesObj := params[1].(*object.Object)
 
-	// Update with the provided bytes
-	result := msgdigUpdateBytes([]any{this, bytesObj})
-	if result != nil {
-		return result // Error occurred
+	if res := msgdigUpdateBytes([]any{this, bytesObj}); res != nil {
+		if _, ok := res.(*ghelpers.GErrBlk); ok {
+			return res
+		}
 	}
 
-	// Compute and return digest
 	return msgdigDigest([]any{this})
 }
 
-// digest([BII)I
 func msgdigDigestBytesII(params []any) any {
+	const fname = "msgdigDigestBytesII"
 	this := params[0].(*object.Object)
 	bufObj := params[1].(*object.Object)
 	offset := params[2].(int64)
 	length := params[3].(int64)
 
-	// Get algorithm
-	algorithmObj := this.FieldTable["algorithm"].Fvalue.(*object.Object)
-	algorithm := object.GoStringFromStringObject(algorithmObj)
-
-	// Get expected digest length
-	digestLen := getDigestLengthForAlgorithm(algorithm)
-
-	// Validate that buffer has enough space
-	bufField := bufObj.FieldTable["value"]
+	bufferField := bufObj.FieldTable["value"]
 	var buf []types.JavaByte
-	switch v := bufField.Fvalue.(type) {
+	switch v := bufferField.Fvalue.(type) {
 	case []types.JavaByte:
 		buf = v
 	case []byte:
 		buf = object.JavaByteArrayFromGoByteArray(v)
 	default:
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Invalid byte array")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("%s: Invalid byte array", fname))
 	}
+
+	algorithmObj := this.FieldTable["algorithm"].Fvalue.(*object.Object)
+	algorithm := object.GoStringFromStringObject(algorithmObj)
+	digestLen := getDigestLengthForAlgorithm(algorithm)
 
 	if offset < 0 || length < int64(digestLen) || offset+int64(digestLen) > int64(len(buf)) {
-		return ghelpers.GetGErrBlk(excNames.IllegalStateException, "Buffer too small or invalid offset")
+		return ghelpers.GetGErrBlk(excNames.IllegalStateException, fmt.Sprintf("%s: Buffer too small or invalid offset", fname))
 	}
 
-	// Compute digest
 	digestObj := msgdigDigest([]any{this})
 	if errBlk, ok := digestObj.(*ghelpers.GErrBlk); ok {
 		return errBlk
 	}
 
-	// Get digest bytes
 	digestBytes := digestObj.(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
-
-	// Copy digest into buffer at offset
 	copy(buf[offset:], digestBytes)
+	bufObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: buf}
 
-	// Update the buffer object
-	bufObj.FieldTable["value"] = object.Field{
-		Ftype:  types.ByteArray,
-		Fvalue: buf,
-	}
-
-	// Return number of bytes written
 	return int64(len(digestBytes))
 }
 
-// reset()V
 func msgdigReset(params []any) any {
+	const fname = "msgdigReset"
 	this := params[0].(*object.Object)
-
-	// Reset buffer
-	this.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
-		Fvalue: []types.JavaByte{},
-	}
-
+	this.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{}}
 	return nil
 }
 
-// isEqual([B[B)Z - static method
 func msgdigIsEqual(params []any) any {
-	digesta := params[0].(*object.Object)
-	digestb := params[1].(*object.Object)
+	const fname = "msgdigIsEqual"
+	a := params[0].(*object.Object)
+	b := params[1].(*object.Object)
 
-	// Get bytes from both objects
-	bytesA := digesta.FieldTable["value"].Fvalue.([]types.JavaByte)
-	bytesB := digestb.FieldTable["value"].Fvalue.([]types.JavaByte)
+	bytesA := a.FieldTable["value"].Fvalue.([]types.JavaByte)
+	bytesB := b.FieldTable["value"].Fvalue.([]types.JavaByte)
 
-	// Compare using constant-time comparison
 	if object.JavaByteArrayEquals(bytesA, bytesB) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
 }
 
-// toString()Ljava/lang/String;
 func msgdigToString(params []any) any {
 	this := params[0].(*object.Object)
-
 	algorithmObj := this.FieldTable["algorithm"].Fvalue.(*object.Object)
 	algorithm := object.GoStringFromStringObject(algorithmObj)
 
-	str := fmt.Sprintf("MessageDigest[%s]", algorithm)
-	return object.StringObjectFromGoString(str)
+	return object.StringObjectFromGoString(fmt.Sprintf("MessageDigest[%s]", algorithm))
 }
 
-// clone()Ljava/lang/Object;
 func msgdigClone(params []any) any {
 	this := params[0].(*object.Object)
-
-	// Create new MessageDigest object
 	className := "java/security/MessageDigest"
 	clone := object.MakeEmptyObjectWithClassName(&className)
 
-	// Copy algorithm
 	clone.FieldTable["algorithm"] = this.FieldTable["algorithm"]
-
-	// Copy provider
 	clone.FieldTable["provider"] = this.FieldTable["provider"]
 
-	// Copy buffer (make a new slice)
 	buffer := this.FieldTable["buffer"].Fvalue.([]types.JavaByte)
 	bufferCopy := make([]types.JavaByte, len(buffer))
 	copy(bufferCopy, buffer)
-	clone.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
-		Fvalue: bufferCopy,
-	}
+	clone.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: bufferCopy}
 
 	return clone
 }

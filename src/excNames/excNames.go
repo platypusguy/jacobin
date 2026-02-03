@@ -231,6 +231,9 @@ const (
 	CharConversionException
 	UnsupportedEncodingException
 	UTFDataFormatException
+
+	// Java and JCA Security exceptions
+	NoSuchAlgorithmException
 )
 
 // -----------------------------------------------------------------------//
@@ -678,4 +681,7 @@ var JVMexceptionNames = []string{
 	"java.io.CharConversionException",           // VERIFIED
 	"java.io.UnsupportedEncodingException",      // VERIFIED
 	"java.io.UTFDataFormatException",            // VERIFIED
+
+	// Java and JCA Security exceptions
+	"java.security.NoSuchAlgorithmException",
 }

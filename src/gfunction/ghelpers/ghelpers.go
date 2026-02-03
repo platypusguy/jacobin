@@ -194,13 +194,10 @@ func ReturnRandomLong([]interface{}) interface{} {
 // DefaultSecurityProvider is the single security provider for Jacobin.
 // No other security providers are entertained.
 var DefaultSecurityProvider *object.Object
-var defaultSecurityProviderOnce sync.Once
+var DefaultSecurityProviderOnce sync.Once
 
 // GetDefaultSecurityProvider returns the default security provider, initializing it if needed.
 func GetDefaultSecurityProvider() *object.Object {
-	defaultSecurityProviderOnce.Do(func() {
-		DefaultSecurityProvider = object.StringObjectFromGoString(types.SecurityProviderName)
-	})
 	return DefaultSecurityProvider
 }
 

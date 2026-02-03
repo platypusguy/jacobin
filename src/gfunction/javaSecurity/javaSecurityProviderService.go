@@ -55,6 +55,7 @@ func Load_Security_Provider_Service() {
 
 // ----------------------- Constructor -----------------------
 func securityProvSvcInit(params []any) any {
+	// params: provider, type, algorithm, className, aliases
 	this := params[0].(*object.Object)
 
 	if params[1] == nil || params[2] == nil || params[3] == nil || params[4] == nil {
@@ -65,22 +66,25 @@ func securityProvSvcInit(params []any) any {
 	typeStr := strings.TrimSpace(object.GoStringFromStringObject(params[2].(*object.Object)))
 	algorithmStr := strings.TrimSpace(object.GoStringFromStringObject(params[3].(*object.Object)))
 	classNameStr := strings.TrimSpace(object.GoStringFromStringObject(params[4].(*object.Object)))
-	aliasGoArray := []string{}
+	aliasesArray := []string{}
 	if len(params) > 5 {
 		for _, a := range params[5].([]*object.Object) {
 			if a != nil {
-				aliasGoArray = append(aliasGoArray, strings.TrimSpace(object.GoStringFromStringObject(a)))
+				aliasesArray = append(aliasesArray, strings.TrimSpace(object.GoStringFromStringObject(a)))
 			}
 		}
 	}
-	aliasArray := object.StringObjectArrayFromGoStringArray(aliasGoArray)
+	aliasObjArray := object.StringObjectArrayFromGoStringArray(aliasesArray)
 
 	this.FieldTable["provider"] = object.Field{Ftype: types.Ref, Fvalue: provider}
 	this.FieldTable["type"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(typeStr)}
 	this.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algorithmStr)}
 	this.FieldTable["className"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(classNameStr)}
-	this.FieldTable["aliases"] = object.Field{Ftype: types.StringArrayClassName, Fvalue: aliasArray}
-	this.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: map[string]string{}}
+	this.FieldTable["aliases"] = object.Field{Ftype: types.StringArrayClassName, Fvalue: aliasObjArray}
+	var attributes = map[string]*object.Object{}
+	attributes["ImplementedIn"] = object.StringObjectFromGoString("Software")
+	attributes["blockSize"] = object.StringObjectFromGoString("null")
+	this.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
 
 	return nil
 }
@@ -88,7 +92,7 @@ func securityProvSvcInit(params []any) any {
 // ----------------------- Member Functions -----------------------
 func securityProvSvcGetProvider(params []any) any {
 	this := params[0].(*object.Object)
-	return this.FieldTable["provider"].Fvalue
+	return this.FieldTable["provider"].Fvalue.(*object.Object)
 }
 
 func securityProvSvcGetType(params []any) any {
@@ -112,25 +116,26 @@ func securityProvSvcGetAliases(params []any) any {
 }
 
 func securityProvSvcGetAttribute(params []any) any {
-	this := params[0].(*object.Object)
-	if params[1] == nil {
-		return nil
-	}
-	keyObj, ok := params[1].(*object.Object)
+	this, ok := params[0].(*object.Object)
 	if !ok {
-		return nil
+		return object.Null
 	}
-	key := object.GoStringFromStringObject(keyObj)
-	attributes := this.FieldTable["attributes"].Fvalue.(map[string]string)
-	if val, ok := attributes[key]; ok {
-		return object.StringObjectFromGoString(val)
+	nameObj, ok := params[1].(*object.Object)
+	if !ok {
+		return object.Null
 	}
-	return nil
+	name := object.GoStringFromStringObject(nameObj)
+
+	attrs := this.FieldTable["attributes"].Fvalue.(map[string]*object.Object)
+	if val, ok := attrs[name]; ok {
+		return val
+	}
+	return object.Null // match Hotspot: missing attribute returns null
 }
 
 func securityProvSvcToString(params []any) any {
 	this := params[0].(*object.Object)
 	typeStr := object.GoStringFromStringObject(this.FieldTable["type"].Fvalue.(*object.Object))
 	algStr := object.GoStringFromStringObject(this.FieldTable["algorithm"].Fvalue.(*object.Object))
-	return object.StringObjectFromGoString(typeStr + "/" + algStr)
+	return object.StringObjectFromGoString(typeStr + "." + algStr)
 }

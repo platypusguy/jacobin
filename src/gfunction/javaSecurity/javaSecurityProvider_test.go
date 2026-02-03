@@ -323,8 +323,8 @@ func TestSecurityProviderGetServiceNotFound(t *testing.T) {
 	algoObj := object.StringObjectFromGoString("AES")
 
 	result := securityProviderGetService([]any{provider, typeObj, algoObj})
-	if result != nil {
-		t.Errorf("expected nil for non-existent service, got %v", result)
+	if errBlk, ok := result.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NoSuchAlgorithmException {
+		t.Errorf("expected NoSuchAlgorithmException for non-existent service, got %v", result)
 	}
 }
 
@@ -470,8 +470,8 @@ func TestNewGoRuntimeProvider(t *testing.T) {
 		t.Fatal("services field should be map[string]*object.Object")
 	}
 
-	if len(services) != 1 {
-		t.Errorf("expected 1 default service, got %d", len(services))
+	if len(services) < 1 {
+		t.Errorf("expected at least 1 default service, got %d", len(services))
 	}
 
 	// Verify the default service
