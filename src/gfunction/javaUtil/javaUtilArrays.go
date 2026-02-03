@@ -86,20 +86,20 @@ func Load_Util_Arrays() {
 	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([SII[SII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
 
 	// copyOf
-	ghelpers.MethodSignatures["java/util/Arrays.copyOf([B I)[B"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.copyOf([C I)[C"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.copyOf([D I)[D"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.copyOf([F I)[F"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.copyOf([I I)[I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.copyOf([J I)[J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.copyOf([S I)[S"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.copyOf([Z I)[Z"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([BI)[B"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCopyOfPrimitive}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([CI)[C"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCopyOfPrimitive}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([DI)[D"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCopyOfPrimitive}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([FI)[F"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCopyOfPrimitive}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([II)[I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCopyOfPrimitive}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([JI)[J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCopyOfPrimitive}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([SI)[S"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCopyOfPrimitive}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([ZI)[Z"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCopyOfPrimitive}
 	ghelpers.MethodSignatures["java/util/Arrays.copyOf([Ljava/lang/Object;I)[Ljava/lang/Object;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  utilArraysCopyOf,
 		}
-	ghelpers.MethodSignatures["java/util/Arrays.copyOf([Ljava/lang/Object;ILjava/lang/Class;)[Ljava/lang/Object;"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([Ljava/lang/Object;ILjava/lang/Class;)[Ljava/lang/Object;"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysCopyOfObjectWithClass}
 
 	// equals
 	ghelpers.MethodSignatures["java/util/Arrays.equals([B[B)Z"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysEquals}
@@ -368,28 +368,60 @@ func utilArraysCopyOf(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.NegativeArraySizeException, "utilArraysCopyOf: negative array length")
 	}
 
-	// Get the array length.
-	parmObject := *parmObj
-	arr := parmObject.FieldTable["value"]
-	rawArrayOld := arr.Fvalue.([]*object.Object)
-	oldLen := len(rawArrayOld)
+	// Get the array length and type info.
+	arrField := parmObj.FieldTable["value"]
 
-	// Create a new array of the desired length.
-	newArrayObj := object.Make1DimRefArray("java/lang/Object;", int64(newLen))
-	rawArrayNew := newArrayObj.FieldTable["value"].Fvalue.([]*object.Object)
-
-	// Copy the elements from the old array to the new array.
-	for i := 0; i < oldLen && i < newLen; i++ {
-		rawArrayNew[i] = rawArrayOld[i]
-	}
-
-	if newLen > oldLen {
-		for i := oldLen; i < newLen; i++ {
-			rawArrayNew[i] = nil
+	switch old := arrField.Fvalue.(type) {
+	case []*object.Object:
+		oldLen := len(old)
+		// Preserve component type if available: arrField.Ftype is like "[L<class>;"
+		objType := object.GetArrayType(arrField.Ftype) // e.g., Ljava/lang/String;
+		newArrayObj := object.Make1DimRefArray(objType, int64(newLen))
+		rawArrayNew := newArrayObj.FieldTable["value"].Fvalue.([]*object.Object)
+		for i := 0; i < oldLen && i < newLen; i++ {
+			rawArrayNew[i] = old[i]
 		}
+		// remaining entries already nil
+		return newArrayObj
+	case []types.JavaByte:
+		oldLen := len(old)
+		newArr := make([]types.JavaByte, newLen)
+		for i := 0; i < oldLen && i < newLen; i++ {
+			newArr[i] = old[i]
+		}
+		return object.MakePrimitiveObject(arrField.Ftype, arrField.Ftype, newArr)
+	case []int64:
+		oldLen := len(old)
+		newArr := make([]int64, newLen)
+		for i := 0; i < oldLen && i < newLen; i++ {
+			newArr[i] = old[i]
+		}
+		return object.MakePrimitiveObject(arrField.Ftype, arrField.Ftype, newArr)
+	case []float64:
+		oldLen := len(old)
+		newArr := make([]float64, newLen)
+		for i := 0; i < oldLen && i < newLen; i++ {
+			newArr[i] = old[i]
+		}
+		return object.MakePrimitiveObject(arrField.Ftype, arrField.Ftype, newArr)
+	default:
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "utilArraysCopyOf: unsupported array type")
 	}
+}
 
-	return newArrayObj
+// utilArraysCopyOfPrimitive handles primitive array copyOf variants uniformly
+func utilArraysCopyOfPrimitive(params []interface{}) interface{} {
+	return utilArraysCopyOf(params)
+}
+
+// utilArraysCopyOfObjectWithClass: copyOf(Object[] a, int newLen, Class newType)
+// Minimal implementation: ignore newType and behave like copyOf(Object[], int)
+func utilArraysCopyOfObjectWithClass(params []interface{}) interface{} {
+	if len(params) < 3 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "utilArraysCopyOfObjectWithClass: too few arguments")
+	}
+	// Reuse utilArraysCopyOf for copying behavior
+	return utilArraysCopyOf([]interface{}{params[0], params[1]})
 }
 
 // Arrays.asList([Ljava/lang/Object;)Ljava/util/List;

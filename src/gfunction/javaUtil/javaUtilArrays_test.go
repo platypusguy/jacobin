@@ -65,6 +65,163 @@ func TestCopyOfObjectPointers_CopyArray(t *testing.T) {
 	}
 }
 
+func TestCopyOfPrimitive_Int(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	// Create a mock int array object [I
+	oldArray := object.Make1DimArray(object.T_INT, 3)
+	rawOldArray := oldArray.FieldTable["value"].Fvalue.([]int64)
+	rawOldArray[0] = 10
+	rawOldArray[1] = 20
+	rawOldArray[2] = 30
+
+	// Test copying to a larger array
+	result := utilArraysCopyOfPrimitive([]interface{}{oldArray, int64(5)})
+	resObj := result.(*object.Object)
+	newArray := resObj.FieldTable["value"].Fvalue.([]int64)
+
+	if len(newArray) != 5 {
+		t.Errorf("Expected new array length of 5, got %d", len(newArray))
+	}
+	if newArray[0] != 10 || newArray[1] != 20 || newArray[2] != 30 || newArray[3] != 0 || newArray[4] != 0 {
+		t.Errorf("Array elements not copied correctly: %v", newArray)
+	}
+
+	// Verify type preservation
+	if resObj.FieldTable["value"].Ftype != types.IntArray {
+		t.Errorf("Expected type %s, got %s", types.IntArray, resObj.FieldTable["value"].Ftype)
+	}
+}
+
+func TestCopyOfPrimitive_Byte(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	// Create a mock byte array object [B
+	oldArray := object.Make1DimArray(object.T_BYTE, 2)
+	rawOldArray := oldArray.FieldTable["value"].Fvalue.([]types.JavaByte)
+	rawOldArray[0] = 1
+	rawOldArray[1] = 2
+
+	// Test copying to a smaller array
+	result := utilArraysCopyOfPrimitive([]interface{}{oldArray, int64(1)})
+	resObj := result.(*object.Object)
+	newArray := resObj.FieldTable["value"].Fvalue.([]types.JavaByte)
+
+	if len(newArray) != 1 {
+		t.Errorf("Expected new array length of 1, got %d", len(newArray))
+	}
+	if newArray[0] != 1 {
+		t.Errorf("Array elements not copied correctly: %v", newArray)
+	}
+
+	// Verify type preservation
+	if resObj.FieldTable["value"].Ftype != types.ByteArray {
+		t.Errorf("Expected type %s, got %s", types.ByteArray, resObj.FieldTable["value"].Ftype)
+	}
+}
+
+func TestCopyOfPrimitive_Boolean(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	// Create a mock boolean array object [Z
+	oldArray := object.Make1DimArray(object.T_BOOLEAN, 2)
+	rawOldArray := oldArray.FieldTable["value"].Fvalue.([]types.JavaByte)
+	rawOldArray[0] = 1 // true
+	rawOldArray[1] = 0 // false
+
+	// Test copying to a larger array
+	result := utilArraysCopyOfPrimitive([]interface{}{oldArray, int64(3)})
+	resObj := result.(*object.Object)
+	newArray := resObj.FieldTable["value"].Fvalue.([]types.JavaByte)
+
+	if len(newArray) != 3 {
+		t.Errorf("Expected new array length of 3, got %d", len(newArray))
+	}
+	if newArray[0] != 1 || newArray[1] != 0 || newArray[2] != 0 {
+		t.Errorf("Array elements not copied correctly: %v", newArray)
+	}
+
+	// Verify type preservation
+	if resObj.FieldTable["value"].Ftype != types.BoolArray {
+		t.Errorf("Expected type %s, got %s", types.BoolArray, resObj.FieldTable["value"].Ftype)
+	}
+}
+
+func TestCopyOfPrimitive_Float(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	// Create a mock float array object [F
+	oldArray := object.Make1DimArray(object.T_FLOAT, 2)
+	rawOldArray := oldArray.FieldTable["value"].Fvalue.([]float64)
+	rawOldArray[0] = 1.5
+	rawOldArray[1] = 2.5
+
+	// Test copying
+	result := utilArraysCopyOfPrimitive([]interface{}{oldArray, int64(2)})
+	resObj := result.(*object.Object)
+	newArray := resObj.FieldTable["value"].Fvalue.([]float64)
+
+	if len(newArray) != 2 {
+		t.Errorf("Expected new array length of 2, got %d", len(newArray))
+	}
+	if newArray[0] != 1.5 || newArray[1] != 2.5 {
+		t.Errorf("Array elements not copied correctly: %v", newArray)
+	}
+
+	// Verify type preservation
+	if resObj.FieldTable["value"].Ftype != types.FloatArray {
+		t.Errorf("Expected type %s, got %s", types.FloatArray, resObj.FieldTable["value"].Ftype)
+	}
+}
+
+func TestCopyOfObjectWithClass(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	// Create a mock array object [Ljava/lang/Object;
+	oldArray := object.Make1DimRefArray("Ljava/lang/Object;", 2)
+	rawOldArray := oldArray.FieldTable["value"].Fvalue.([]*object.Object)
+	rawOldArray[0] = object.StringObjectFromGoString("one")
+	rawOldArray[1] = object.StringObjectFromGoString("two")
+
+	// Dummy class object
+	classClassName := "java/lang/Class"
+	classObj := object.MakeEmptyObjectWithClassName(&classClassName)
+
+	// Test copying with 3 arguments
+	result := utilArraysCopyOfObjectWithClass([]interface{}{oldArray, int64(3), classObj})
+	resObj, ok := result.(*object.Object)
+	if !ok {
+		t.Fatalf("Expected *object.Object, got %T", result)
+	}
+
+	newArray := resObj.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(newArray) != 3 {
+		t.Errorf("Expected length 3, got %d", len(newArray))
+	}
+	if object.GoStringFromStringObject(newArray[0]) != "one" || object.GoStringFromStringObject(newArray[1]) != "two" || newArray[2] != nil {
+		t.Errorf("Elements not copied correctly")
+	}
+}
+
+func TestCopyOf_UnsupportedType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create an object that is NOT an array (missing "value" field or wrong type in value field)
+	obj := object.MakeEmptyObject()
+	obj.FieldTable["value"] = object.Field{Ftype: "invalid", Fvalue: "not a slice"}
+
+	result := utilArraysCopyOf([]interface{}{obj, int64(5)})
+	err, ok := result.(*ghelpers.GErrBlk)
+	if !ok || err.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("Expected IllegalArgumentException for unsupported array type, got %v", result)
+	}
+}
+
 func TestArraysAsList(t *testing.T) {
 	globals.InitGlobals("test")
 	stringPool.PreloadArrayClassesToStringPool()

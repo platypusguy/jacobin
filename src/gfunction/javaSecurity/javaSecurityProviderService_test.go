@@ -436,10 +436,10 @@ func TestSecurityProvSvcGetAttributeFound(t *testing.T) {
 	serviceClassName := "java/security/Provider$Service"
 	service := object.MakeEmptyObjectWithClassName(&serviceClassName)
 
-	attributes := map[string]string{
-		"KeySize":     "2048",
-		"BlockSize":   "16",
-		"Implementor": "SunProvider",
+	attributes := map[string]*object.Object{
+		"KeySize":     object.StringObjectFromGoString("2048"),
+		"BlockSize":   object.StringObjectFromGoString("16"),
+		"Implementor": object.StringObjectFromGoString("SunProvider"),
 	}
 	service.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
 
@@ -463,16 +463,16 @@ func TestSecurityProvSvcGetAttributeNotFound(t *testing.T) {
 	serviceClassName := "java/security/Provider$Service"
 	service := object.MakeEmptyObjectWithClassName(&serviceClassName)
 
-	attributes := map[string]string{
-		"KeySize": "2048",
+	attributes := map[string]*object.Object{
+		"KeySize": object.StringObjectFromGoString("2048"),
 	}
 	service.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
 
 	keyObj := object.StringObjectFromGoString("NonExistent")
 	result := securityProvSvcGetAttribute([]any{service, keyObj})
 
-	if result != nil {
-		t.Errorf("Expected nil for non-existent attribute, got %v", result)
+	if !object.IsNull(result) {
+		t.Errorf("Expected object.IsNull(result) for non-existent attribute, got %v", result)
 	}
 }
 
@@ -483,14 +483,14 @@ func TestSecurityProvSvcGetAttributeNilKey(t *testing.T) {
 	serviceClassName := "java/security/Provider$Service"
 	service := object.MakeEmptyObjectWithClassName(&serviceClassName)
 
-	attributes := map[string]string{
-		"KeySize": "2048",
+	attributes := map[string]*object.Object{
+		"KeySize": object.StringObjectFromGoString("2048"),
 	}
 	service.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
 
-	result := securityProvSvcGetAttribute([]any{service, nil})
+	result := securityProvSvcGetAttribute([]any{service, object.StringObjectFromGoString("")})
 
-	if result != nil {
+	if !object.IsNull(result) {
 		t.Errorf("Expected nil for nil key, got %v", result)
 	}
 }
@@ -502,14 +502,12 @@ func TestSecurityProvSvcGetAttributeInvalidKeyType(t *testing.T) {
 	serviceClassName := "java/security/Provider$Service"
 	service := object.MakeEmptyObjectWithClassName(&serviceClassName)
 
-	attributes := map[string]string{
-		"KeySize": "2048",
+	attributes := map[string]*object.Object{
+		"KeySize": object.StringObjectFromGoString("2048"),
 	}
 	service.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
-
 	result := securityProvSvcGetAttribute([]any{service, 123})
-
-	if result != nil {
+	if !object.IsNull(result) {
 		t.Errorf("Expected nil for invalid key type, got %v", result)
 	}
 }
@@ -534,7 +532,7 @@ func TestSecurityProvSvcToString(t *testing.T) {
 		t.Fatalf("Expected *object.Object, got %T", result)
 	}
 	resultStr := object.GoStringFromStringObject(resultObj)
-	expected := "MessageDigest/SHA-256"
+	expected := "MessageDigest.SHA-256"
 	if resultStr != expected {
 		t.Errorf("Expected toString '%s', got '%s'", expected, resultStr)
 	}
@@ -560,7 +558,7 @@ func TestSecurityProvSvcToStringDifferentValues(t *testing.T) {
 		t.Fatalf("Expected *object.Object, got %T", result)
 	}
 	resultStr := object.GoStringFromStringObject(resultObj)
-	expected := "Cipher/AES"
+	expected := "Cipher.AES"
 	if resultStr != expected {
 		t.Errorf("Expected toString '%s', got '%s'", expected, resultStr)
 	}

@@ -15,7 +15,7 @@ func Load_Security_Provider() {
 	ghelpers.MethodSignatures["java/security/Provider.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
+			GFunction:  securityProviderInit,
 		}
 
 	// ---------- Constructors ----------
@@ -107,6 +107,12 @@ func securityProviderInit(params []any) any {
 	// initialize services map
 	this.FieldTable["services"] = object.Field{Ftype: types.Map, Fvalue: map[string]*object.Object{}}
 
+	// Save this object in ghelpers.DefaultSecurityProvider
+	onceBody := func() {
+		ghelpers.DefaultSecurityProvider = this
+	}
+	ghelpers.DefaultSecurityProviderOnce.Do(onceBody)
+
 	return nil
 }
 
@@ -130,7 +136,9 @@ func securityProviderToString(params []any) any {
 // ----------------------- Services -----------------------
 func securityProviderGetService(params []any) any {
 	this := params[0].(*object.Object)
-
+	if len(params) < 3 {
+		return nil
+	}
 	if params[1] == nil || params[2] == nil {
 		return nil
 	}
@@ -142,7 +150,15 @@ func securityProviderGetService(params []any) any {
 	if svc, ok := services[key]; ok {
 		return svc
 	}
-	return nil
+
+	if typMap, ok := SecurityProviderServices[typeStr]; ok {
+		if factory, ok2 := typMap[algStr]; ok2 {
+			return factory()
+		}
+	}
+
+	return ghelpers.GetGErrBlk(excNames.NoSuchAlgorithmException,
+		fmt.Sprintf("securityProviderGetService: unsupported type/algorithm %s/%s", typeStr, algStr))
 }
 
 func securityProviderPutService(params []any) any {
@@ -184,6 +200,14 @@ func NewGoRuntimeProvider() *object.Object {
 
 	// Register the service with the provider
 	securityProviderPutService([]any{provider, service})
+
+	// Register MessageDigest services
+	mdAlgos := []string{"MD5", "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512", "SHA-512/224", "SHA-512/256"}
+	for _, algo := range mdAlgos {
+		mdSvc := object.MakeEmptyObjectWithClassName(&className)
+		securityProvSvcInit([]any{mdSvc, provider, object.StringObjectFromGoString("MessageDigest"), object.StringObjectFromGoString(algo), object.StringObjectFromGoString("java.security.MessageDigest"), []*object.Object{}})
+		securityProviderPutService([]any{provider, mdSvc})
+	}
 
 	return provider
 }
