@@ -79,10 +79,18 @@ func securityProviderInit(params []any) any {
 	var version float64
 	var err error
 
-	this := params[0].(*object.Object)
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderInit: invalid `this` object, saw: %T", params[0]))
+	}
 
 	// name
-	nameObj := params[1].(*object.Object)
+	nameObj, ok := params[1].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderInit: invalid name object, saw: %T", params[1]))
+	}
 	nameStr := strings.TrimSpace(object.GoStringFromStringObject(nameObj))
 	this.FieldTable["name"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(nameStr)}
 
@@ -90,30 +98,41 @@ func securityProviderInit(params []any) any {
 	versionAny := params[2]
 	switch v := versionAny.(type) {
 	case *object.Object:
+		if object.IsNull(versionAny) {
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+				fmt.Sprintf("securityProviderInit: invalid version object, saw: %T", params[2]))
+		}
 		versionStr := strings.TrimSpace(object.GoStringFromStringObject(v))
 		version, err = strconv.ParseFloat(versionStr, 64)
 		if err != nil {
-			return ghelpers.GetGErrBlk(excNames.VirtualMachineError, fmt.Sprintf("securityProviderInit: failed parsing version '%s'", versionStr))
+			return ghelpers.GetGErrBlk(excNames.VirtualMachineError,
+				fmt.Sprintf("securityProviderInit: failed parsing version: '%s'", versionStr))
 		}
 	case float64:
 		version = v
 	default:
-		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, fmt.Sprintf("securityProviderInit: invalid version type %T", versionAny))
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError,
+			fmt.Sprintf("securityProviderInit: invalid version type, saw: %T", params[2]))
 	}
 	this.FieldTable["version"] = object.Field{Ftype: types.Double, Fvalue: version}
 
 	// info
-	infoObj := params[3].(*object.Object)
+	infoObj, ok := params[3].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderInit: invalid info object, saw: %T", infoObj))
+	}
 	infoStr := strings.TrimSpace(object.GoStringFromStringObject(infoObj))
 	this.FieldTable["info"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(infoStr)}
 
-	// initialize services map
+	// Initialize services map in an empty state.
 	this.FieldTable["services"] = object.Field{Ftype: types.Map, Fvalue: map[string]*object.Object{}}
 
 	return nil
 }
 
 // ----------------------- Getters -----------------------
+
 func securityProviderGetName([]any) any {
 	return object.StringObjectFromGoString(types.SecurityProviderName)
 }
@@ -123,24 +142,65 @@ func securityProviderGetInfo([]any) any {
 }
 
 func securityProviderToString(params []any) any {
-	this := params[0].(*object.Object)
-	name := object.GoStringFromStringObject(this.FieldTable["name"].Fvalue.(*object.Object))
-	version := this.FieldTable["version"].Fvalue.(float64)
-	info := object.GoStringFromStringObject(this.FieldTable["info"].Fvalue.(*object.Object))
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderToString: invalid `this` object, saw: %T", params[0]))
+	}
+	nameObj, ok := this.FieldTable["name"].Fvalue.(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderToString: invalid name object, saw: %T", nameObj))
+	}
+	name := object.GoStringFromStringObject(nameObj)
+	version, ok := this.FieldTable["version"].Fvalue.(float64)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderToString: invalid version, should be float64, saw: %T", version))
+	}
+	infoObj, ok := this.FieldTable["info"].Fvalue.(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderToString: invalid info object, saw: %T", infoObj))
+	}
+	info := object.GoStringFromStringObject(infoObj)
+
 	return object.StringObjectFromGoString(fmt.Sprintf("%s %.1f\n%s", name, version, info))
 }
 
-// ----------------------- Services -----------------------
+// ----------------------- Get/Put Services -----------------------
+
 func securityProviderGetService(params []any) any {
-	this := params[0].(*object.Object)
-	if len(params) < 3 {
+	if len(params) != 3 {
+		return ghelpers.GetGErrBlk(excNames.NoSuchAlgorithmException,
+			fmt.Sprintf("securityProviderGetService: wrong number of args, expected 3, saw: %d", len(params)))
+	}
+
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderGetService: invalid `this` object, saw: %T", params[0]))
+	}
+
+	if object.IsNull(params[1]) {
 		return nil
 	}
-	if params[1] == nil || params[2] == nil {
+	typeObj, ok := params[1].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderGetService: invalid type object, saw: %T", params[1]))
+	}
+	typeStr := object.GoStringFromStringObject(typeObj)
+
+	if object.IsNull(params[2]) {
 		return nil
 	}
-	typeStr := object.GoStringFromStringObject(params[1].(*object.Object))
-	algStr := object.GoStringFromStringObject(params[2].(*object.Object))
+	algObj, ok := params[2].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("securityProviderGetService: invalid alg object, saw: %T", params[2]))
+	}
+	algStr := object.GoStringFromStringObject(algObj)
 
 	services := this.FieldTable["services"].Fvalue.(map[string]*object.Object)
 	key := typeStr + "/" + algStr
@@ -148,11 +208,11 @@ func securityProviderGetService(params []any) any {
 		return svc
 	}
 
-	if typMap, ok := SecurityProviderServices[typeStr]; ok {
-		if factory, ok2 := typMap[algStr]; ok2 {
-			return factory()
-		}
-	}
+	//if secSvcTypeMap, ok := SecurityProviderServices[typeStr]; ok {
+	//	if svcInit, ok2 := secSvcTypeMap[algStr]; ok2 {
+	//		return svcInit()
+	//	}
+	//}
 
 	return ghelpers.GetGErrBlk(excNames.NoSuchAlgorithmException,
 		fmt.Sprintf("securityProviderGetService: unsupported type/algorithm %s/%s", typeStr, algStr))

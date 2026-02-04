@@ -180,7 +180,7 @@ func msgdigGetInstance(params []any) any {
 	}
 	algorithm := object.GoStringFromStringObject(algorithmObj)
 
-	// Validate algorithm exists in our SecurityProviderServices
+	// Get the default (only) security provider.
 	providerObj := ghelpers.GetDefaultSecurityProvider() // single Go runtime provider
 
 	// Try to get a service from the provider

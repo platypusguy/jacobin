@@ -52,8 +52,11 @@ The inner map is keyed by the algorithm name.
 */
 var SecurityProviderServices = map[string]map[string]func() *object.Object{
 	"KeyPairGenerator": {
+		"DH": func() *object.Object {
+			return NewGoRuntimeService("KeyPairGenerator", "DH", types.ClassNameKeyPairGenerator)
+		},
 		"DiffieHellman": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "DiffieHellman", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService("KeyPairGenerator", "DH", types.ClassNameKeyPairGenerator)
 		},
 		"DSA": func() *object.Object {
 			return NewGoRuntimeService("KeyPairGenerator", "DSA", types.ClassNameKeyPairGenerator)
@@ -66,6 +69,24 @@ var SecurityProviderServices = map[string]map[string]func() *object.Object{
 		},
 		"EC": func() *object.Object {
 			return NewGoRuntimeService("KeyPairGenerator", "EC", types.ClassNameKeyPairGenerator)
+		},
+		"EdDSA": func() *object.Object {
+			return NewGoRuntimeService("KeyPairGenerator", "EdDSA", types.ClassNameKeyPairGenerator)
+		},
+		"Ed25519": func() *object.Object {
+			return NewGoRuntimeService("KeyPairGenerator", "Ed25519", types.ClassNameKeyPairGenerator)
+		},
+		"Ed448": func() *object.Object {
+			return NewGoRuntimeService("KeyPairGenerator", "Ed448", types.ClassNameKeyPairGenerator)
+		},
+		"XDH": func() *object.Object {
+			return NewGoRuntimeService("KeyPairGenerator", "XDH", types.ClassNameKeyPairGenerator)
+		},
+		"X25519": func() *object.Object {
+			return NewGoRuntimeService("KeyPairGenerator", "X25519", types.ClassNameKeyPairGenerator)
+		},
+		"X448": func() *object.Object {
+			return NewGoRuntimeService("KeyPairGenerator", "X448", types.ClassNameKeyPairGenerator)
 		},
 	},
 	"MessageDigest": {

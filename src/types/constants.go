@@ -59,6 +59,7 @@ const SecurityProviderVersion = 1.0
 var ClassNameSecurityProvider = "java/security/Provider"
 var ClassNameSecurityProviderService = "java/security/Provider$Service"
 var ClassNameKeyPairGenerator = "java/security/KeyPairGenerator"
+var ClassNameKeyPair = "java/security/KeyPair"
 
 // File system
 var FileSystemProviderValue = &struct{}{}
