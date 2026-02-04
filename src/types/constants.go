@@ -37,12 +37,12 @@ var NullString = "null"
 // Other useful class names in alpha order
 var ClassNameBigDecimal = "java/math/BigDecimal"
 var ClassNameBigInteger = "java/math/BigInteger"
-var ClassNameLinkedList = "java/util/LinkedList"
 var ClassNameJavaLangClass = "java/lang/Class"
 var ClassNameJcaProviderList = "sun/security/jca/ProviderList"
+var ClassNameLinkedList = "java/util/LinkedList"
+var ClassNameMessageDigest = "java/security/MessageDigest"
 var ClassNameOptional string = "java/util/Optional"
 var ClassNameProperties = "java/util/Properties"
-var ClassNameSecurityProvider = "java/security/Provider"
 var ClassNameThread = "java/lang/Thread"
 var ClassNameThreadGroup = "java/lang/ThreadGroup"
 var ClassNameThreadState = "java/lang/Thread$State"
@@ -54,6 +54,11 @@ var FieldNameProperties = "map"
 // Security-related
 const SecurityProviderName = "GoSecurityProvider"
 const SecurityProviderInfo = "Security + Cryptography"
+const SecurityProviderVersion = 1.0
+
+var ClassNameSecurityProvider = "java/security/Provider"
+var ClassNameSecurityProviderService = "java/security/Provider$Service"
+var ClassNameKeyPairGenerator = "java/security/KeyPairGenerator"
 
 // File system
 var FileSystemProviderValue = &struct{}{}

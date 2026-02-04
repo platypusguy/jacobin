@@ -202,6 +202,9 @@ func IsStringObject(unknown any) bool {
 	if !ok {
 		return false
 	}
+	if IsNull(o) {
+		return false
+	}
 
 	return o.KlassName == types.StringPoolStringIndex
 }

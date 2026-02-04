@@ -69,6 +69,9 @@ func Load_Security_Provider() {
 	ghelpers.MethodSignatures["java/security/Provider.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: securityProviderToString}
 
+	// Set up a vector so that other functions can find the one and only Security Provider.
+	ghelpers.DefaultSecurityProvider = InitDefaultSecurityProvider()
+
 }
 
 // ----------------------- Constructor -----------------------
@@ -106,12 +109,6 @@ func securityProviderInit(params []any) any {
 
 	// initialize services map
 	this.FieldTable["services"] = object.Field{Ftype: types.Map, Fvalue: map[string]*object.Object{}}
-
-	// Save this object in ghelpers.DefaultSecurityProvider
-	onceBody := func() {
-		ghelpers.DefaultSecurityProvider = this
-	}
-	ghelpers.DefaultSecurityProviderOnce.Do(onceBody)
 
 	return nil
 }
@@ -172,42 +169,4 @@ func securityProviderPutService(params []any) any {
 	services := this.FieldTable["services"].Fvalue.(map[string]*object.Object)
 	services[key] = svc
 	return nil
-}
-
-// ----------------------- Helper: Default Go Runtime Provider -----------------------
-// ----------------------- Used at Jacobin startup -----------------------------------
-func NewGoRuntimeProvider() *object.Object {
-	// Create the Provider object
-	provider := object.MakeEmptyObjectWithClassName(&types.ClassNameSecurityProvider)
-
-	// Initialize the provider with name, version, info
-	nameObj := object.StringObjectFromGoString(types.SecurityProviderName)
-	infoObj := object.StringObjectFromGoString(types.SecurityProviderInfo)
-	params := []any{provider, nameObj, 1.0, infoObj} // version=1.0
-	securityProviderInit(params)
-
-	// Create the default Provider$Service
-	className := "java/security/Provider$Service"
-	service := object.MakeEmptyObjectWithClassName(&className)
-
-	// Service fields: provider, type, algorithm, className, aliases
-	serviceType := object.StringObjectFromGoString("Runtime")
-	serviceAlgorithm := object.StringObjectFromGoString("Security")
-	serviceClassName := object.StringObjectFromGoString(types.SecurityProviderName)
-	aliases := []*object.Object{} // empty aliases
-	serviceParams := []any{service, provider, serviceType, serviceAlgorithm, serviceClassName, aliases}
-	securityProvSvcInit(serviceParams)
-
-	// Register the service with the provider
-	securityProviderPutService([]any{provider, service})
-
-	// Register MessageDigest services
-	mdAlgos := []string{"MD5", "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512", "SHA-512/224", "SHA-512/256"}
-	for _, algo := range mdAlgos {
-		mdSvc := object.MakeEmptyObjectWithClassName(&className)
-		securityProvSvcInit([]any{mdSvc, provider, object.StringObjectFromGoString("MessageDigest"), object.StringObjectFromGoString(algo), object.StringObjectFromGoString("java.security.MessageDigest"), []*object.Object{}})
-		securityProviderPutService([]any{provider, mdSvc})
-	}
-
-	return provider
 }

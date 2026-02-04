@@ -174,7 +174,10 @@ func extractJavaBytes(bytesObj *object.Object) ([]types.JavaByte, error) {
 // ===================== MessageDigest Methods =====================
 
 func msgdigGetInstance(params []any) any {
-	algorithmObj := params[0].(*object.Object)
+	algorithmObj, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "msgdigGetInstance: Algorithm cannot be null")
+	}
 	algorithm := object.GoStringFromStringObject(algorithmObj)
 
 	// Validate algorithm exists in our SecurityProviderServices
@@ -187,8 +190,7 @@ func msgdigGetInstance(params []any) any {
 	}
 
 	// Create MessageDigest object
-	className := "java/security/MessageDigest"
-	md := object.MakeEmptyObjectWithClassName(&className)
+	md := object.MakeEmptyObjectWithClassName(&types.ClassNameMessageDigest)
 
 	// Store algorithm name
 	md.FieldTable["algorithm"] = object.Field{
@@ -198,13 +200,13 @@ func msgdigGetInstance(params []any) any {
 
 	// Store provider
 	md.FieldTable["provider"] = object.Field{
-		Ftype:  "Ljava/security/Provider;",
+		Ftype:  types.ClassNameSecurityProvider,
 		Fvalue: providerObj,
 	}
 
 	// Optionally store reference to the service (can be useful for future extensions)
 	md.FieldTable["service"] = object.Field{
-		Ftype:  "Ljava/security/Provider$Service;",
+		Ftype:  "java/security/Provider$Service",
 		Fvalue: svcObj.(*object.Object),
 	}
 
@@ -419,8 +421,7 @@ func msgdigToString(params []any) any {
 
 func msgdigClone(params []any) any {
 	this := params[0].(*object.Object)
-	className := "java/security/MessageDigest"
-	clone := object.MakeEmptyObjectWithClassName(&className)
+	clone := object.MakeEmptyObjectWithClassName(&types.ClassNameMessageDigest)
 
 	clone.FieldTable["algorithm"] = this.FieldTable["algorithm"]
 	clone.FieldTable["provider"] = this.FieldTable["provider"]
