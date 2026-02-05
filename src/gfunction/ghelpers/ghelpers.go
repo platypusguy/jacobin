@@ -18,7 +18,6 @@ import (
 	"jacobin/src/types"
 	"math/big"
 	"os"
-	"sync"
 )
 
 // Map repository of method signatures for all G functions:
@@ -194,7 +193,6 @@ func ReturnRandomLong([]interface{}) interface{} {
 // DefaultSecurityProvider is the single security provider for Jacobin.
 // No other security providers are entertained.
 var DefaultSecurityProvider *object.Object
-var DefaultSecurityProviderOnce sync.Once
 
 // GetDefaultSecurityProvider returns the default security provider, initializing it if needed.
 func GetDefaultSecurityProvider() *object.Object {

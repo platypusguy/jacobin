@@ -52,7 +52,6 @@ func Load_Security() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-	ghelpers.DefaultSecurityProvider = NewGoRuntimeProvider()
 }
 
 // ----------------------- Member Functions -----------------------

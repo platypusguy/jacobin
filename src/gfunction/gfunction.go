@@ -98,6 +98,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java/security/*
 	javaSecurity.Load_Security()
+	javaSecurity.Load_KeyPairGenerator()
 	javaSecurity.Load_Security_MessageDigest()
 	javaSecurity.Load_Security_Provider()
 	javaSecurity.Load_Security_Provider_Service()

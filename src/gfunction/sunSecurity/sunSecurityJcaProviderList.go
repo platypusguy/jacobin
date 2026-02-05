@@ -105,7 +105,7 @@ func clinitProviderList(params []interface{}) interface{} {
 		statics.Static{Type: types.Ref, Value: pcArray})
 
 	// P0 → Provider[] with the runtime provider
-	provider := javaSecurity.NewGoRuntimeProvider()
+	provider := javaSecurity.InitDefaultSecurityProvider()
 	providerArray := object.MakePrimitiveObject(
 		"[Ljava/security/Provider;", // proper array class
 		types.RefArray,
@@ -173,7 +173,7 @@ func providerListGetDefault(params []interface{}) interface{} {
 }
 
 func providerListGetProvider([]interface{}) interface{} {
-	return javaSecurity.NewGoRuntimeProvider()
+	return javaSecurity.InitDefaultSecurityProvider()
 }
 
 func providerListProviders(params []interface{}) interface{} {

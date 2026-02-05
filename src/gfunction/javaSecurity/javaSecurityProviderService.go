@@ -15,41 +15,41 @@ This file represents the sole Security Provider Service permitted by Jacobin: Th
 // Load_Security_Provider_Service initializes java/security/Provider$Service methods
 func Load_Security_Provider_Service() {
 
-	ghelpers.MethodSignatures["java/security/Provider$Service.<clinit>()V"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	ghelpers.MethodSignatures["java/security/Provider$Service.<init>(Ljava/security/Provider;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)V"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".<init>(Ljava/security/Provider;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 5, // provider, type, algorithm, className, aliases
 			GFunction:  securityProvSvcInit,
 		}
 
 	// ---------- Member Functions ----------
-	ghelpers.MethodSignatures["java/security/Provider$Service.getAlgorithm()Ljava/lang/String;"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".getAlgorithm()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: securityProvSvcGetAlgorithm}
 
-	ghelpers.MethodSignatures["java/security/Provider$Service.getAliases()Ljava/util/List;"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".getAliases()Ljava/util/List;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: securityProvSvcGetAliases}
 
-	ghelpers.MethodSignatures["java/security/Provider$Service.getAttribute(Ljava/lang/String;)Ljava/lang/String;"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".getAttribute(Ljava/lang/String;)Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: securityProvSvcGetAttribute}
 
-	ghelpers.MethodSignatures["java/security/Provider$Service.getClassName()Ljava/lang/String;"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".getClassName()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: securityProvSvcGetClassName}
 
-	ghelpers.MethodSignatures["java/security/Provider$Service.getProvider()Ljava/security/Provider;"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".getProvider()Ljava/security/Provider;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: securityProvSvcGetProvider}
 
-	ghelpers.MethodSignatures["java/security/Provider$Service.getType()Ljava/lang/String;"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".getType()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: securityProvSvcGetType}
 
-	ghelpers.MethodSignatures["java/security/Provider$Service.newInstance(Ljava/lang/Object[])Ljava/lang/Object;"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".newInstance(Ljava/lang/Object[])Ljava/lang/Object;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
-	ghelpers.MethodSignatures["java/security/Provider$Service.toString()Ljava/lang/String;"] =
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: securityProvSvcToString}
 }
 

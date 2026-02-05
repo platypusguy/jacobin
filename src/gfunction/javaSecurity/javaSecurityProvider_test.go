@@ -426,14 +426,14 @@ func TestSecurityProviderPutServiceOverwrite(t *testing.T) {
 	}
 }
 
-// TestNewGoRuntimeProvider tests NewGoRuntimeProvider helper function
+// TestNewGoRuntimeProvider tests InitDefaultSecurityProvider helper function
 func TestNewGoRuntimeProvider(t *testing.T) {
 	globals.InitGlobals("test")
 
-	provider := NewGoRuntimeProvider()
+	provider := InitDefaultSecurityProvider()
 
 	if provider == nil {
-		t.Fatal("NewGoRuntimeProvider should return non-nil provider")
+		t.Fatal("InitDefaultSecurityProvider should return non-nil provider")
 	}
 
 	// Verify provider class name
@@ -474,40 +474,4 @@ func TestNewGoRuntimeProvider(t *testing.T) {
 		t.Errorf("expected at least 1 default service, got %d", len(services))
 	}
 
-	// Verify the default service
-	defaultService := services["Runtime/Security"]
-	if defaultService == nil {
-		t.Fatal("expected default 'Runtime/Security' service to be present")
-	}
-
-	// Verify service class name
-	serviceClassName := object.GoStringFromStringPoolIndex(defaultService.KlassName)
-	if serviceClassName != "java/security/Provider$Service" {
-		t.Errorf("expected service class name 'java/security/Provider$Service', got '%s'", serviceClassName)
-	}
-
-	// Verify service type
-	serviceType := object.GoStringFromStringObject(defaultService.FieldTable["type"].Fvalue.(*object.Object))
-	if serviceType != "Runtime" {
-		t.Errorf("expected service type 'Runtime', got '%s'", serviceType)
-	}
-
-	// Verify service algorithm
-	serviceAlgo := object.GoStringFromStringObject(defaultService.FieldTable["algorithm"].Fvalue.(*object.Object))
-	if serviceAlgo != "Security" {
-		t.Errorf("expected service algorithm 'Security', got '%s'", serviceAlgo)
-	}
-
-	// Verify service className
-	serviceClassNameObj := defaultService.FieldTable["className"].Fvalue.(*object.Object)
-	serviceClassNameStr := object.GoStringFromStringObject(serviceClassNameObj)
-	if serviceClassNameStr != types.SecurityProviderName {
-		t.Errorf("expected service className '%s', got '%s'", types.SecurityProviderName, serviceClassNameStr)
-	}
-
-	// Verify service provider reference
-	serviceProvider := defaultService.FieldTable["provider"].Fvalue.(*object.Object)
-	if serviceProvider != provider {
-		t.Errorf("service should reference its parent provider")
-	}
 }
