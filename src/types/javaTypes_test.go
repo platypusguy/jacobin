@@ -131,11 +131,11 @@ func TestIsPrimitive(t *testing.T) {
 	if !IsPrimitive(Double) {
 		t.Errorf("IsPrimitive() returned false for Double, should be true")
 	}
-
-	// Test positive cases - Rune type
-	if !IsPrimitive(Rune) {
-		t.Errorf("IsPrimitive() returned false for Rune, should be true")
-	}
+	// Removed as part of JACOBIN-720. We don't use runes internally. Reinstate if necessary and document the need.
+	// // Test positive cases - Rune type
+	// if !IsPrimitive(Rune) {
+	// 	t.Errorf("IsPrimitive() returned false for Rune, should be true")
+	// }
 
 	// Test negative cases
 	if IsPrimitive(Ref) {

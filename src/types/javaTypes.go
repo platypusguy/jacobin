@@ -85,7 +85,7 @@ func IsFloatingPoint(t string) bool {
 }
 
 func IsPrimitive(t string) bool {
-	if IsIntegral(t) || IsFloatingPoint(t) || t == Rune || t == Bool {
+	if IsIntegral(t) || IsFloatingPoint(t) { // bool is tested for in IsIntegral() (in the JVM a boolean is an integer)
 		return true
 	}
 	return false

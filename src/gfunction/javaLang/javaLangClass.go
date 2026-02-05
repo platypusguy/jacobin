@@ -159,14 +159,15 @@ func classGetAssertionsEnabledStatus([]interface{}) interface{} {
 	}
 }
 
-// to distinguish name from canonical name, see comments before
-// classGetName()
+// to distinguish name from canonical name, see comments before classGetName() below for diiferences between the
+// different names that java/lang/CLass can return
 // java/lang/Class.getCanonicalName()Ljava/lang/String
 func classGetCanonicalName(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetCanonicalName: invalid or null object")
 	}
+
 	rawName := object.GoStringFromStringPoolIndex(obj.KlassName)
 	if strings.HasPrefix(rawName, types.Array) {
 		switch rawName[1] {
@@ -187,8 +188,8 @@ func classGetCanonicalName(params []interface{}) interface{} {
 		case 'Z':
 			return object.StringObjectFromGoString("boolean[]")
 		case 'L':
-			arrayObject := rawName[2 : len(rawName)-1] // remove the leading '[L' and trailing ';'
-			return object.StringObjectFromGoString(arrayObject + "[]")
+			arrayObject := rawName[2 : len(rawName)-1]                 // remove the leading '[L' and trailing ';'
+			return object.StringObjectFromGoString(arrayObject + "[]") // so java.lang.String[], for example
 		}
 	}
 
@@ -354,7 +355,7 @@ func getPrimitiveClass(params []interface{}) interface{} {
 	}
 }
 
-// "java/lang/Class.isArray()Ljava/lang/String;"
+// java/lang/Class.isArray()Z
 func classIsArray(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
@@ -367,6 +368,7 @@ func classIsArray(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
+// java/lang/Class.isPrimitive()Z
 func classIsPrimitive(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
