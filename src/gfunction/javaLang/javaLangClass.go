@@ -12,6 +12,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/statics"
@@ -75,6 +76,8 @@ func Load_Lang_Class() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ClassGetName}
 	ghelpers.MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: getPrimitiveClass}
+	ghelpers.MethodSignatures["java/lang/Class.getSuperclass()Ljava/lang/Class;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetSuperclass}
 	ghelpers.MethodSignatures["java/lang/Class.isArray()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsArray}
 	ghelpers.MethodSignatures["java/lang/Class.isPrimitive()Z"] =
@@ -353,6 +356,33 @@ func getPrimitiveClass(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("getPrimitiveClass: %s: %s", err.Error(), str)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+}
+
+// java/lang/Class.getSuperclass()Ljava/lang/Class; return a java/lang/Class object representing the superclass.
+// java/lang/Object, primitives, and interfaces return null.
+func classGetSuperclass(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetSuperclass: invalid or null object")
+	}
+
+	parms := []any{}
+	parms = append(params, obj)
+
+	// if the object is an array, return Object.class
+	if classIsArray(parms).(bool) {
+		return globals.JLCmap["java/lang/Object"]
+	}
+
+	// TODO: see remaining special cases in
+	//  https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html#getSuperclass()
+
+	klassPtr := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	scNameIndex := klassPtr.SuperclassIndex
+	scName := *stringPool.GetStringPointer(scNameIndex)
+
+	scClass := globals.JLCmap[scName]
+	return scClass
 }
 
 // java/lang/Class.isArray()Z
