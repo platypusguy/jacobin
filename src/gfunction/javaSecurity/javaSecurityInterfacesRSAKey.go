@@ -7,6 +7,7 @@
 package javaSecurity
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
@@ -66,20 +67,15 @@ func rsaKeyGetModulus(params []any) any {
 		)
 	}
 
-	modField, ok := thisObj.FieldTable["modulus"]
+	rsapubkey, ok := thisObj.FieldTable["value"].Fvalue.(*rsa.PublicKey)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalStateException,
-			"rsaKeyGetModulus: modulus field not set",
+			"rsaKeyGetModulus: RSA public key extraction failed",
 		)
 	}
 
-	if modField.Ftype != types.BigInteger {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalStateException,
-			"rsaKeyGetModulus: modulus is not BigInteger",
-		)
-	}
+	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, rsapubkey.N)
 
-	return modField.Fvalue
+	return bigint
 }
