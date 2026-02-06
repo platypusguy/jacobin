@@ -367,12 +367,16 @@ func classGetSuperclass(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetSuperclass: invalid or null object")
 	}
 
-	parms := []any{}
-	parms = append(params, obj)
+	param := ghelpers.ConvertArgsToParams(obj)
 
 	// if the object is an array, return Object.class
-	if classIsArray(parms).(bool) {
+	if classIsArray(param).(bool) {
 		return globals.JLCmap["java/lang/Object"]
+	}
+
+	// if the object is an interface, the superclass is null
+	if classIsInterface(param).(bool) {
+		return nil
 	}
 
 	// TODO: see remaining special cases in
