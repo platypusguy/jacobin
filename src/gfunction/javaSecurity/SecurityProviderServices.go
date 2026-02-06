@@ -2,6 +2,7 @@ package javaSecurity
 
 import (
 	"fmt"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"strings"
@@ -155,6 +156,10 @@ func NewGoRuntimeService(typ, algo, className string) *object.Object {
 		Ftype:  types.Map,
 		Fvalue: attributes,
 	}
+
+	// Get the default (only) security provider.
+	providerObj := ghelpers.GetDefaultSecurityProvider() // single Go runtime provider
+	svc.FieldTable["provider"] = object.Field{Ftype: types.ClassNameSecurityProvider, Fvalue: providerObj}
 
 	return svc
 }
