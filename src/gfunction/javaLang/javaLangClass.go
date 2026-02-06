@@ -80,6 +80,8 @@ func Load_Lang_Class() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetSuperclass}
 	ghelpers.MethodSignatures["java/lang/Class.isArray()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsArray}
+	ghelpers.MethodSignatures["java/lang/Class.isInterface()Z"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsInterface}
 	ghelpers.MethodSignatures["java/lang/Class.isPrimitive()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsPrimitive}
 	ghelpers.MethodSignatures["java/lang/Class.registerNatives()V"] =
@@ -138,7 +140,6 @@ func Load_Lang_Class() {
 	addTrap("java/lang/Class.getTypeName()Ljava/lang/String;", 0)
 	addTrap("java/lang/Class.isEnum()Z", 0)
 	addTrap("java/lang/Class.isInstance(Ljava/lang/Object;)Z", 1)
-	addTrap("java/lang/Class.isInterface()Z", 0)
 	addTrap("java/lang/Class.isNestmateOf(Ljava/lang/Class;)Z", 1)
 	addTrap("java/lang/Class.isSealed()Z", 0)
 	addTrap("java/lang/Class.isSynthetic()Z", 0)
@@ -396,6 +397,17 @@ func classIsArray(params []interface{}) interface{} {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
+}
+
+// java/lang/Class.isInterface()Z
+func classIsInterface(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsPrimitive: invalid or null object")
+	}
+
+	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	return klass.Access.ClassIsInterface
 }
 
 // java/lang/Class.isPrimitive()Z
