@@ -197,4 +197,15 @@ func loadlib(tbl *classloader.MT, libMeths map[string]ghelpers.GMeth) {
 	}
 }
 
-// Class is handled special because the natural <clinit> function is never called.
+// Converts a variable number of arguments into a []any that can be used in gfunctions
+func ConvertArgsToParams(args ...any) []any {
+	if len(args) == 0 {
+		return make([]any, 0)
+	} else {
+		params := make([]any, len(args))
+		for i, arg := range args {
+			params[i] = arg
+		}
+		return params
+	}
+}
