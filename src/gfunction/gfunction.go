@@ -196,5 +196,3 @@ func loadlib(tbl *classloader.MT, libMeths map[string]ghelpers.GMeth) {
 		exceptions.ThrowExNil(excNames.InternalException, "loadlib: at least one key was invalid")
 	}
 }
-
-// Class is handled special because the natural <clinit> function is never called.
