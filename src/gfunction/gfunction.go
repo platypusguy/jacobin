@@ -196,16 +196,3 @@ func loadlib(tbl *classloader.MT, libMeths map[string]ghelpers.GMeth) {
 		exceptions.ThrowExNil(excNames.InternalException, "loadlib: at least one key was invalid")
 	}
 }
-
-// Converts a variable number of arguments into a []any that can be used in gfunctions
-func ConvertArgsToParams(args ...any) []any {
-	if len(args) == 0 {
-		return make([]any, 0)
-	} else {
-		params := make([]any, len(args))
-		for i, arg := range args {
-			params[i] = arg
-		}
-		return params
-	}
-}
