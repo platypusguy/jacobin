@@ -97,8 +97,14 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaText.Load_Math_SimpleDateFormat()
 
 	// java/security/*
-	javaSecurity.Load_Security()
+	javaSecurity.Load_ECFieldAndPoint()
+	javaSecurity.Load_EC_Keys()
+	javaSecurity.Load_ECParameterSpec()
+	javaSecurity.Load_EllipticCurve()
+	javaSecurity.Load_Security_KeyPair()
 	javaSecurity.Load_KeyPairGenerator()
+	javaSecurity.Load_PublicAndPrivateKeys()
+	javaSecurity.Load_Security()
 	javaSecurity.Load_Security_MessageDigest()
 	javaSecurity.Load_Security_Provider()
 	javaSecurity.Load_Security_Provider_Service()
