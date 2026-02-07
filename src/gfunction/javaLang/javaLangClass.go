@@ -361,26 +361,38 @@ func getPrimitiveClass(params []interface{}) interface{} {
 
 // java/lang/Class.getSuperclass()Ljava/lang/Class; return a java/lang/Class object representing the superclass.
 // java/lang/Object, primitives, and interfaces return null.
+// Consult https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html#getSuperclass()
 func classGetSuperclass(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetSuperclass: invalid or null object")
 	}
 
-	param := ghelpers.ConvertArgsToParams(obj)
-
 	// if the object is an array, return Object.class
-	if classIsArray(param).(bool) {
+	if classIsArray(params).(bool) {
 		return globals.JLCmap["java/lang/Object"]
 	}
 
 	// if the object is an interface, the superclass is null
-	if classIsInterface(param).(bool) {
+	if classIsInterface(params).(bool) {
 		return nil
 	}
 
-	// TODO: see remaining special cases in
-	//  https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html#getSuperclass()
+	// java/lang/Object, primitives, and void all return null for the superclass
+	className := object.GoStringFromStringPoolIndex(obj.KlassName)
+	switch className {
+	case "java/lang/Object",
+		"java/lang/Byte",
+		"java/lang/Character",
+		"java/lang/Double",
+		"java/lang/Float",
+		"java/lang/Integer",
+		"java/lang/Long",
+		"java/lang/Short",
+		"java/lang/Boolean",
+		"java/lang/Void":
+		return nil
+	}
 
 	klassPtr := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
 	scNameIndex := klassPtr.SuperclassIndex
