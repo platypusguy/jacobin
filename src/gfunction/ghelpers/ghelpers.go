@@ -25,43 +25,6 @@ var MethodSignatures = make(map[string]GMeth)
 var TestMethodSignatures = make(map[string]GMeth) // used only for the test gfunctions
 var TestGfunctionsLoaded = false
 
-// TrapClass is a generic Trap for classes
-func TrapClass([]interface{}) interface{} {
-	errMsg := "TRAP: The requested class is not yet supported"
-	return GetGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-// TrapDeprecated is a generic Trap for deprecated classes and functions
-func TrapDeprecated([]interface{}) interface{} {
-	errMsg := "TRAP: The requested class or function is deprecated and, therefore, not supported"
-	return GetGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-// TrapUndocumented is a generic Trap for deprecated classes and functions
-func TrapUndocumented([]interface{}) interface{} {
-	errMsg := "TRAP: The requested class or function is undocumented and, therefore, not supported"
-	return GetGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-// TrapFunction is a generic Trap for functions
-func TrapFunction([]interface{}) interface{} {
-	errMsg := "TRAP: The requested function is not yet supported"
-	return GetGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-// TrapProtected is a generic Trap for functions
-func TrapProtected([]interface{}) interface{} {
-	errMsg := "TRAP: The requested function is protected"
-	return GetGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-func TrapUnicode([]interface{}) interface{} {
-	return GetGErrBlk(
-		excNames.UnsupportedOperationException,
-		"Character Unicode method not yet implemented",
-	)
-}
-
 // GMeth is the entry in the MTable for Go functions. See MTable comments for details.
 //   - ParamSlots - the number of user parameters in a G function. E.g. For atan2, this would be 2.
 //   - GFunction - a go function. All go functions accept a possibly empty slice of interface{} and

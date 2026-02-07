@@ -101,16 +101,14 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java/security/*
 	javaSecurity.Load_ECFieldAndPoint()
-	javaSecurity.Load_EC_Keys()
+	javaSecurity.Load_Security_Interfaces_Keys()
 	javaSecurity.Load_ECParameterSpec()
 	javaSecurity.Load_EllipticCurve()
 	javaSecurity.Load_Security_KeyPair()
 	javaSecurity.Load_KeyPairGenerator()
 	javaSecurity.Load_PublicAndPrivateKeys()
 	javaSecurity.Load_Security()
-	javaSecurity.Load_Security_Interfaces_RSAKey()
-	javaSecurity.Load_Security_Interfaces_RSAPublicKey()
-	javaSecurity.Load_Security_Interfaces_RSAPrivateKey()
+	javaSecurity.Load_Security_Interfaces_RSA_Keys()
 	javaSecurity.Load_Security_MessageDigest()
 	javaSecurity.Load_Security_Provider()
 	javaSecurity.Load_Security_Provider_Service()
