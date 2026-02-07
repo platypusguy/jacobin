@@ -5,9 +5,9 @@ module jacobin
 // go 1.20   // as of 2023-03-25
 // go 1.21   // as of 2023-08-11 (v. 0.4.0) per JACOBIN-330
 // go 1.21.4 // as of 2023-11-08
-// go 1.24   // as of 2025-02-27 (v. 0.7.0) per JACOBIN-636
-// go 1.24.0
-go 1.25 // as of 2026-02-05
+// go 1.24.0 // as of 2025-02-27 (v. 0.7.0) per JACOBIN-636
+
+go 1.25 // as of 2026-02-05 (v. 0.8.113) per JACOBIN-867
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0
