@@ -56,10 +56,15 @@ const SecurityProviderName = "GoSecurityProvider"
 const SecurityProviderInfo = "Security + Cryptography"
 const SecurityProviderVersion = 1.0
 
-var ClassNameSecurityProvider = "java/security/Provider"
-var ClassNameSecurityProviderService = "java/security/Provider$Service"
+var ClassNameECParameterSpec = "java/security/ECParameterSpec"
+var ClassNameECPoint = "java/security/ECPoint"
+var ClassNameEllipticCurve = "java/security/EllipticCurve"
 var ClassNameKeyPairGenerator = "java/security/KeyPairGenerator"
 var ClassNameKeyPair = "java/security/KeyPair"
+var ClassNamePublicKey = "java/security/PublicKey"
+var ClassNamePrivateKey = "java/security/PrivateKey"
+var ClassNameSecurityProvider = "java/security/Provider"
+var ClassNameSecurityProviderService = "java/security/Provider$Service"
 
 // File system
 var FileSystemProviderValue = &struct{}{}

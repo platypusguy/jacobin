@@ -30,6 +30,13 @@ import (
 // they make available.
 func MTableLoadGFunctions(MTable *classloader.MT) {
 
+	// Load traps first, then override with our implementations for Files
+	// so any methods we implement replace trapped entries.
+	ghelpers.Load_Traps()
+	ghelpers.Load_Traps_Java_Io()
+	ghelpers.Load_Traps_Java_Nio()
+	ghelpers.Load_Traps_Java_Security()
+
 	// java/awt/*
 	misc.Load_Awt_Graphics_Environment()
 
@@ -47,15 +54,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaIo.Load_Io_OutputStreamWriter()
 	javaIo.Load_Io_PrintStream()
 	javaIo.Load_Io_RandomAccessFile()
-
-	// java/nio/*
-	javaNio.Load_Nio_File_Files()
-	javaNio.Load_Nio_File_Path()
-	javaNio.Load_Nio_File_Paths()
-	// Load traps first, then override with our implementations for Files
-	// so any methods we implement replace trapped entries.
-	ghelpers.Load_Traps_Java_Nio()
-	javaNio.Load_Nio_File_Files()
 
 	// java/lang/*
 	javaLang.Load_Lang_Boolean()
@@ -93,12 +91,26 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaMath.Load_Math_Math_Context()
 	javaMath.Load_Math_Rounding_Mode()
 
+	// java/nio/*
+	javaNio.Load_Nio_File_Files()
+	javaNio.Load_Nio_File_Path()
+	javaNio.Load_Nio_File_Paths()
+
 	// java/text/*
 	javaText.Load_Math_SimpleDateFormat()
 
 	// java/security/*
-	javaSecurity.Load_Security()
+	javaSecurity.Load_ECFieldAndPoint()
+	javaSecurity.Load_EC_Keys()
+	javaSecurity.Load_ECParameterSpec()
+	javaSecurity.Load_EllipticCurve()
+	javaSecurity.Load_Security_KeyPair()
 	javaSecurity.Load_KeyPairGenerator()
+	javaSecurity.Load_PublicAndPrivateKeys()
+	javaSecurity.Load_Security()
+	javaSecurity.Load_Security_Interfaces_RSAKey()
+	javaSecurity.Load_Security_Interfaces_RSAPublicKey()
+	javaSecurity.Load_Security_Interfaces_RSAPrivateKey()
 	javaSecurity.Load_Security_MessageDigest()
 	javaSecurity.Load_Security_Provider()
 	javaSecurity.Load_Security_Provider_Service()
@@ -142,10 +154,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// Load functions that invoke ghelpers.ClinitGeneric() and do nothing else.
 	Load_Other_Methods()
-
-	// Load traps that lead to unconditional error returns.
-	ghelpers.Load_Traps()
-	ghelpers.Load_Traps_Java_Io()
 
 	// Load diagnostic helper functions.
 	misc.Load_jj()

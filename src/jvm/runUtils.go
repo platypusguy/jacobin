@@ -493,7 +493,7 @@ func checkcastArray(obj *object.Object, targetClassName string) bool {
 }
 
 func checkcastInterface(obj *object.Object, targetClassName string) bool {
-	return false // TODO: fill this in
+	return true // TODO: fill this in     2026-02-05 This was returning false
 }
 
 // the function that finds the interface method to execute (and returns it).

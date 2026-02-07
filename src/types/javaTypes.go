@@ -65,6 +65,7 @@ const Properties = "*PT" // The related Fvalue is a Golang map[interface{}]inter
 const Map = "MAP"        // Golang map (E.g. security services in java/Security/Provider.Service)
 const PrivateKey = "PRV" // Java security private key
 const PublicKey = "PUB"  // Java security public key
+const ECPoint = "ECpt"
 
 type DefHashMap map[any]any
 type DefProperties map[string]string

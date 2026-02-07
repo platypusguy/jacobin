@@ -3706,6 +3706,11 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		checkcastStatus = checkcastArray(obj, targetClassName)
 	case types.Interface:
 		checkcastStatus = checkcastInterface(obj, targetClassName)
+		if checkcastStatus {
+			stObj := pop(fr).(*object.Object)
+			stObj.KlassName = object.StringPoolIndexFromGoString(targetClassName)
+			push(fr, stObj)
+		}
 	default:
 		errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got: %s", objClassType)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
