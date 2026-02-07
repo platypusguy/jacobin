@@ -108,10 +108,11 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 		}
 
 	case "DH":
-		// Placeholder: generate simple DH big.Int values
-		p, g := big.NewInt(0), big.NewInt(0)
-		priv := big.NewInt(0)
-		pub := big.NewInt(0)
+		// Mickey Mouse (constant) simple DH big.Int values
+		p := big.NewInt(23)   // prime modulus
+		g := big.NewInt(5)    // generator
+		priv := big.NewInt(6) // private key
+		pub := big.NewInt(8)  // g**priv mod p (public key)
 		keyPairObj = NewGoRuntimeService("KeyPair", "DH", types.ClassNameKeyPair)
 		keyPairObj.FieldTable["private"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
 		keyPairObj.FieldTable["public"] = object.Field{Ftype: types.PublicKey, Fvalue: pub}
