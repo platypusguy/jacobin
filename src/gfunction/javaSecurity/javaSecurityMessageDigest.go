@@ -10,6 +10,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/sha3"
 	"crypto/sha512"
 	"fmt"
 	"hash"
@@ -127,6 +128,14 @@ func getHashForAlgorithm(algorithm string) (hash.Hash, error) {
 		return sha512.New512_224(), nil
 	case "SHA-512/256", "SHA512/256":
 		return sha512.New512_256(), nil
+	case "SHA3-224", "SHA3_224":
+		return sha3.New224(), nil
+	case "SHA3-256", "SHA3_256":
+		return sha3.New256(), nil
+	case "SHA3-384", "SHA3_384":
+		return sha3.New384(), nil
+	case "SHA3-512", "SHA3_512":
+		return sha3.New512(), nil
 	default:
 		return nil, fmt.Errorf("unsupported algorithm: %s", algorithm)
 	}
