@@ -109,7 +109,7 @@ func Load_Security_MessageDigest() {
 
 // ===================== Helper Functions =====================
 
-func getHashForAlgorithm(algorithm string) (hash.Hash, error) {
+func getMdHashForAlgorithm(algorithm string) (hash.Hash, error) {
 	alg := strings.ToUpper(algorithm)
 	switch alg {
 	case "MD5":
@@ -338,7 +338,7 @@ func msgdigDigest(params []any) any {
 	algorithmObj := this.FieldTable["algorithm"].Fvalue.(*object.Object)
 	algorithm := object.GoStringFromStringObject(algorithmObj)
 
-	h, err := getHashForAlgorithm(algorithm)
+	h, err := getMdHashForAlgorithm(algorithm)
 	if err != nil {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("%s: %s", fname, err.Error()))
 	}
