@@ -77,7 +77,7 @@ func Load_Lang_Class() {
 	ghelpers.MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: getPrimitiveClass}
 	ghelpers.MethodSignatures["java/lang/Class.getSimpleName()Ljava/lang/String;"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ClassSimpleName}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ClassGetSimpleName}
 	ghelpers.MethodSignatures["java/lang/Class.getSuperclass()Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetSuperclass}
 	ghelpers.MethodSignatures["java/lang/Class.isArray()Z"] =
@@ -377,7 +377,7 @@ func getPrimitiveClass(params []interface{}) interface{} {
 // readable array notation (e.g., `[]`)
 //
 // java/lang/Class.getSimpleName()Ljava/lang/String;
-func classGetSimpleName(params []interface{}) interface{} {
+func ClassGetSimpleName(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetSimpleName: invalid or null object")
