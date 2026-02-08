@@ -126,7 +126,7 @@ var SecurityProviderServices = map[string]map[string]func() *object.Object{
 
 // NewGoRuntimeService creates a basic Provider$Service object for a security runtime algorithm.
 func NewGoRuntimeService(typ, algo, className string) *object.Object {
-	svc := object.MakeEmptyObjectWithClassName(&types.ClassNameSecurityProviderService)
+	svc := object.MakeEmptyObjectWithClassName(&className)
 
 	svc.FieldTable["type"] = object.Field{
 		Ftype:  types.StringClassName,
