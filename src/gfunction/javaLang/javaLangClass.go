@@ -76,6 +76,8 @@ func Load_Lang_Class() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ClassGetName}
 	ghelpers.MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: getPrimitiveClass}
+	ghelpers.MethodSignatures["java/lang/Class.getSimpleName()Ljava/lang/String;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ClassGetSimpleName}
 	ghelpers.MethodSignatures["java/lang/Class.getSuperclass()Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetSuperclass}
 	ghelpers.MethodSignatures["java/lang/Class.isArray()Z"] =
@@ -136,7 +138,7 @@ func Load_Lang_Class() {
 	addTrap("java/lang/Class.getPermittedSubclasses()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getProtectionDomain()Ljava/security/ProtectionDomain;", 0)
 	addTrap("java/lang/Class.getRecordComponents()[Ljava/lang/reflect/RecordComponent;", 0)
-	addTrap("java/lang/Class.getSimpleName()Ljava/lang/String;", 0)
+	// addTrap("java/lang/Class.getSimpleName()Ljava/lang/String;", 0)
 	addTrap("java/lang/Class.getTypeName()Ljava/lang/String;", 0)
 	addTrap("java/lang/Class.isEnum()Z", 0)
 	addTrap("java/lang/Class.isInstance(Ljava/lang/Object;)Z", 1)
@@ -357,6 +359,32 @@ func getPrimitiveClass(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("getPrimitiveClass: %s: %s", err.Error(), str)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+}
+
+// | Class Type      | getName()               | getSimpleName()
+// |-----------------|-------------------------|----------------
+// | Regular class   | java.lang.String        | String
+// | Inner class     | com.example.Outer$Inner | Inner
+// | Anonymous class | com.example.MyClass$1   | (empty string)
+// | Array           | [Ljava.lang.String;     | String[]
+// | Primitive array | [I                      | int[]
+//
+// > getName() returns the fully qualified name with package,
+// and it uses internal JVM notation for arrays (e.g., `[L...;`)
+//
+// > getSimpleName() returns just the class name as written in source code,
+// and it returns empty string for anonymous classes and it uses
+// readable array notation (e.g., `[]`)
+//
+// java/lang/Class.getSimpleName()Ljava/lang/String;
+func ClassGetSimpleName(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetSimpleName: invalid or null object")
+	}
+
+	// TODO: implement
+	return ClassGetName(params)
 }
 
 // java/lang/Class.getSuperclass()Ljava/lang/Class; return a java/lang/Class object representing the superclass.
