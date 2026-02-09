@@ -85,7 +85,7 @@ func TestLoadSecurityParamSlots(t *testing.T) {
 func TestSecurityGetProvider(t *testing.T) {
 	globals.InitGlobals("test")
 
-	result := securityGetProvider([]any{})
+	result := SecurityGetProvider([]any{})
 	expected := ghelpers.GetDefaultSecurityProvider()
 
 	if result != expected {

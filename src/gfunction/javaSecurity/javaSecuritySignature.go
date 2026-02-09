@@ -69,7 +69,7 @@ func Load_Security_Signature() {
 	ghelpers.MethodSignatures["java/security/Signature.getProvider()Ljava/security/Provider;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  signatureGetProvider,
+			GFunction:  SecurityGetProvider,
 		}
 
 	ghelpers.MethodSignatures["java/security/Signature.initSign(Ljava/security/PrivateKey;)V"] =
@@ -202,26 +202,6 @@ func signatureGetAlgorithm(params []any) any {
 	}
 
 	return sigObj.FieldTable["algorithm"].Fvalue
-}
-
-// signatureGetProvider returns the provider (placeholder)
-func signatureGetProvider(params []any) any {
-	if len(params) != 1 {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"Signature.getProvider: expected 0 parameters",
-		)
-	}
-
-	// Return a simple provider object
-	providerObj := object.MakeEmptyObjectWithClassName(&types.ClassNameSecurityProvider)
-	providerObj.FieldTable = make(map[string]object.Field)
-	providerObj.FieldTable["name"] = object.Field{
-		Ftype:  types.StringClassName,
-		Fvalue: object.StringObjectFromGoString(types.SecurityProviderName),
-	}
-
-	return providerObj
 }
 
 // signatureInitSign initializes the signature for signing
@@ -865,26 +845,17 @@ func verifyRSA(publicKey *rsa.PublicKey, data []byte, signature []byte, algo str
 func signECDSA(privateKey *ecdsa.PrivateKey, data []byte, algo string) ([]byte, error) {
 	hashType := getSigHashForAlgorithm(algo)
 	hashed := hashData(data, hashType)
-	r, s, err := ecdsa.Sign(rand.Reader, privateKey, hashed)
+	signature, err := ecdsa.SignASN1(rand.Reader, privateKey, hashed)
 	if err != nil {
 		return nil, err
 	}
-
-	// Concatenate r and s
-	signature := append(r.Bytes(), s.Bytes()...)
 	return signature, nil
 }
 
 func verifyECDSA(publicKey *ecdsa.PublicKey, data []byte, signature []byte, algo string) bool {
 	hashType := getSigHashForAlgorithm(algo)
 	hashed := hashData(data, hashType)
-
-	// Split signature into r and s
-	sigLen := len(signature) / 2
-	r := new(big.Int).SetBytes(signature[:sigLen])
-	s := new(big.Int).SetBytes(signature[sigLen:])
-
-	return ecdsa.Verify(publicKey, hashed, r, s)
+	return ecdsa.VerifyASN1(publicKey, hashed, signature)
 }
 
 // DSA signing/verification

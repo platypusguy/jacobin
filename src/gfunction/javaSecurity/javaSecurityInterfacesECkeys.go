@@ -88,7 +88,7 @@ func ecPrivateKeyGetParams(params []any) any {
 		)
 	}
 
-	specObj, exists := thisObj.FieldTable["params"]
+	specObj, exists := thisObj.FieldTable["params"].Fvalue.(*object.Object)
 	if !exists {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalArgumentException,
@@ -96,7 +96,8 @@ func ecPrivateKeyGetParams(params []any) any {
 		)
 	}
 
-	return specObj.Fvalue
+	return specObj
+
 }
 
 func ecPrivateKeyGetS(params []any) any {
@@ -123,9 +124,9 @@ func ecPrivateKeyGetS(params []any) any {
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecprivkey.D)
+	bigintObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecprivkey.D)
 
-	return bigint
+	return bigintObj
 }
 
 // === ECPublicKey ===
