@@ -120,7 +120,7 @@ func ecPrivateKeyGetS(params []any) any {
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalStateException,
-			"ecPrivateKeyGetS: EC public key extraction failed",
+			"ecPrivateKeyGetS: EC private key extraction failed",
 		)
 	}
 
@@ -172,12 +172,31 @@ func ecPublicKeyGetW(params []any) any {
 			"ecPublicKeyGetW: this is not an Object",
 		)
 	}
-	pointObj, exists := thisObj.FieldTable["w"].Fvalue.(*object.Object)
-	if !exists {
+
+	// Try "w" field first (manually populated)
+	if pointObj, exists := thisObj.FieldTable["w"].Fvalue.(*object.Object); exists {
+		return pointObj
+	}
+
+	// Otherwise extract from "value" (*ecdsa.PublicKey)
+	ecpubkey, ok := thisObj.FieldTable["value"].Fvalue.(*ecdsa.PublicKey)
+	if !ok {
 		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"ecPublicKeyGetW: w field missing",
+			excNames.IllegalStateException,
+			"ecPublicKeyGetW: EC public key extraction failed",
 		)
 	}
+
+	// Create ECPoint object
+	pointObj := NewGoRuntimeService("ECPoint", "", types.ClassNameECPoint)
+	pointObj.FieldTable["x"] = object.Field{
+		Ftype:  types.BigInteger,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecpubkey.X),
+	}
+	pointObj.FieldTable["y"] = object.Field{
+		Ftype:  types.BigInteger,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecpubkey.Y),
+	}
+
 	return pointObj
 }

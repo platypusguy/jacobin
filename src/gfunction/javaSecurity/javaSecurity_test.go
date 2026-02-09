@@ -10,6 +10,8 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"testing"
 )
 
@@ -155,5 +157,143 @@ func TestSecurityGetProvidersEmptyParams(t *testing.T) {
 	result = securityGetProviders([]any{})
 	if _, ok := result.(*object.Object); !ok {
 		t.Errorf("securityGetProviders with empty params should return *object.Object, got %T", result)
+	}
+}
+
+// TestLoadSecuritySignatures verifies that Load_Security_Signature() properly initializes method signatures
+func TestLoadSecuritySignatures(t *testing.T) {
+	globals.InitGlobals("test")
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+	Load_Security_Signature()
+
+	methods := []string{
+		"java/security/Signature.getInstance(Ljava/lang/String;)Ljava/security/Signature;",
+		"java/security/Signature.initSign(Ljava/security/PrivateKey;)V",
+		"java/security/Signature.initVerify(Ljava/security/PublicKey;)V",
+		"java/security/Signature.sign()[B",
+		"java/security/Signature.update([B)V",
+		"java/security/Signature.verify([B)Z",
+	}
+
+	for _, m := range methods {
+		if _, ok := ghelpers.MethodSignatures[m]; !ok {
+			t.Errorf("Signature method signature not registered: %s", m)
+		}
+	}
+}
+
+// TestSignatureGetInstance tests algorithm resolution for Signature
+func TestSignatureGetInstance(t *testing.T) {
+	globals.InitGlobals("test")
+	InitDefaultSecurityProvider()
+
+	// Supported algorithm
+	algoObj := object.StringObjectFromGoString("SHA256withRSA")
+	result := signatureGetInstance([]any{algoObj})
+
+	sigObj, ok := result.(*object.Object)
+	if !ok {
+		t.Fatalf("Expected *object.Object, got %T", result)
+	}
+
+	if sigObj.KlassName != stringPool.GetStringIndex(&types.ClassNameSignature) {
+		t.Errorf("Expected ClassNameSignature, got index %d", sigObj.KlassName)
+	}
+
+	// Unsupported algorithm
+	badAlgoObj := object.StringObjectFromGoString("BadAlgo")
+	result = signatureGetInstance([]any{badAlgoObj})
+	if _, ok := result.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk for unsupported algorithm, got %T", result)
+	}
+}
+
+// TestLoadECParameterSpec verifies that Load_ECParameterSpec() properly initializes method signatures
+func TestLoadECParameterSpec(t *testing.T) {
+	globals.InitGlobals("test")
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+	Load_ECParameterSpec()
+
+	methods := []string{
+		"java/security/spec/ECGenParameterSpec.<init>(Ljava/lang/String;)V",
+		"java/security/spec/ECParameterSpec.getCurve()Ljava/security/spec/EllipticCurve;",
+	}
+
+	for _, m := range methods {
+		if _, ok := ghelpers.MethodSignatures[m]; !ok {
+			t.Errorf("ECParameterSpec method signature not registered: %s", m)
+		}
+	}
+}
+
+// TestECParameterGenSpecInitString tests curve parameter initialization
+func TestECParameterGenSpecInitString(t *testing.T) {
+	globals.InitGlobals("test")
+	InitDefaultSecurityProvider()
+
+	thisObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECGenParameterSpec)
+	curveNameObj := object.StringObjectFromGoString("secp256r1")
+
+	result := ecparameterGenSpecInitString([]any{thisObj, curveNameObj})
+	if result != nil {
+		if err, ok := result.(*ghelpers.GErrBlk); ok {
+			t.Fatalf("ecparameterGenSpecInitString failed: %s", err.ErrMsg)
+		}
+		t.Fatalf("Expected nil on success, got %T", result)
+	}
+
+	// Unsupported curve
+	badCurveObj := object.StringObjectFromGoString("BadCurve")
+	result = ecparameterGenSpecInitString([]any{thisObj, badCurveObj})
+	if _, ok := result.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk for unsupported curve, got %T", result)
+	}
+}
+
+// TestLoadKeyPairGenerator verifies that Load_KeyPairGenerator() properly initializes method signatures
+func TestLoadKeyPairGenerator(t *testing.T) {
+	globals.InitGlobals("test")
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+	Load_KeyPairGenerator()
+
+	methods := []string{
+		"java/security/KeyPairGenerator.getInstance(Ljava/lang/String;)Ljava/security/KeyPairGenerator;",
+		"java/security/KeyPairGenerator.initialize(I)V",
+		"java/security/KeyPairGenerator.generateKeyPair()Ljava/security/KeyPair;",
+	}
+
+	for _, m := range methods {
+		if _, ok := ghelpers.MethodSignatures[m]; !ok {
+			t.Errorf("KeyPairGenerator method signature not registered: %s", m)
+		}
+	}
+}
+
+// TestKeyPairGeneratorGetInstance tests algorithm resolution for KeyPairGenerator
+func TestKeyPairGeneratorGetInstance(t *testing.T) {
+	globals.InitGlobals("test")
+	InitDefaultSecurityProvider()
+
+	// Supported algorithm
+	algoObj := object.StringObjectFromGoString("RSA")
+	result := keypairgeneratorGetInstance([]any{algoObj})
+
+	kpgObj, ok := result.(*object.Object)
+	if !ok {
+		if err, ok := result.(*ghelpers.GErrBlk); ok {
+			t.Fatalf("keypairgeneratorGetInstance failed: %s", err.ErrMsg)
+		}
+		t.Fatalf("Expected *object.Object, got %T", result)
+	}
+
+	if kpgObj.KlassName != stringPool.GetStringIndex(&types.ClassNameKeyPairGenerator) {
+		t.Errorf("Expected ClassNameKeyPairGenerator, got index %d", kpgObj.KlassName)
+	}
+
+	// Unsupported algorithm
+	badAlgoObj := object.StringObjectFromGoString("BadAlgo")
+	result = keypairgeneratorGetInstance([]any{badAlgoObj})
+	if _, ok := result.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk for unsupported algorithm, got %T", result)
 	}
 }
