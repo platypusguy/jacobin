@@ -70,7 +70,7 @@ func keypairGetPublic(params []any) any {
 	if !ok {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keypairGetPublic: param[0] is not an Object")
 	}
-	return thisObj.FieldTable["public"].Fvalue.(*object.Object)
+	return thisObj.FieldTable["public"].Fvalue
 }
 
 func keypairGetPrivate(params []any) any {
@@ -78,5 +78,5 @@ func keypairGetPrivate(params []any) any {
 	if !ok {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keypairGetPrivate: param[0] is not an Object")
 	}
-	return thisObj.FieldTable["private"].Fvalue.(*object.Object)
+	return thisObj.FieldTable["private"].Fvalue
 }

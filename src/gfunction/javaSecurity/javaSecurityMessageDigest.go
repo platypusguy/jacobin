@@ -10,6 +10,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/sha3"
 	"crypto/sha512"
 	"fmt"
 	"hash"
@@ -108,7 +109,7 @@ func Load_Security_MessageDigest() {
 
 // ===================== Helper Functions =====================
 
-func getHashForAlgorithm(algorithm string) (hash.Hash, error) {
+func getMdHashForAlgorithm(algorithm string) (hash.Hash, error) {
 	alg := strings.ToUpper(algorithm)
 	switch alg {
 	case "MD5":
@@ -127,6 +128,14 @@ func getHashForAlgorithm(algorithm string) (hash.Hash, error) {
 		return sha512.New512_224(), nil
 	case "SHA-512/256", "SHA512/256":
 		return sha512.New512_256(), nil
+	case "SHA3-224", "SHA3_224":
+		return sha3.New224(), nil
+	case "SHA3-256", "SHA3_256":
+		return sha3.New256(), nil
+	case "SHA3-384", "SHA3_384":
+		return sha3.New384(), nil
+	case "SHA3-512", "SHA3_512":
+		return sha3.New512(), nil
 	default:
 		return nil, fmt.Errorf("unsupported algorithm: %s", algorithm)
 	}
@@ -329,7 +338,7 @@ func msgdigDigest(params []any) any {
 	algorithmObj := this.FieldTable["algorithm"].Fvalue.(*object.Object)
 	algorithm := object.GoStringFromStringObject(algorithmObj)
 
-	h, err := getHashForAlgorithm(algorithm)
+	h, err := getMdHashForAlgorithm(algorithm)
 	if err != nil {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("%s: %s", fname, err.Error()))
 	}

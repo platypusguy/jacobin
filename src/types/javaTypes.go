@@ -63,9 +63,11 @@ const Vector = "*VC"     // The related Fvalue is a Golang []interface{}
 const LinkedList = "*LL" // The related Fvalue is a Golang *list.List
 const Properties = "*PT" // The related Fvalue is a Golang map[interface{}]interface{}
 const Map = "MAP"        // Golang map (E.g. security services in java/Security/Provider.Service)
+
+// Security field types
+const ECPoint = "ECpt"
 const PrivateKey = "PRV" // Java security private key
 const PublicKey = "PUB"  // Java security public key
-const ECPoint = "ECpt"
 
 type DefHashMap map[any]any
 type DefProperties map[string]string

@@ -234,6 +234,8 @@ const (
 
 	// Java and JCA Security exceptions
 	NoSuchAlgorithmException
+	InvalidKeyException
+	SignatureException
 )
 
 // -----------------------------------------------------------------------//
@@ -684,4 +686,6 @@ var JVMexceptionNames = []string{
 
 	// Java and JCA Security exceptions
 	"java.security.NoSuchAlgorithmException",
+	"java.security.InvalidKeyException",
+	"java.security.SignatureException",
 }
