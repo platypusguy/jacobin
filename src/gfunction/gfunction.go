@@ -113,11 +113,14 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaSecurity.Load_Security_Interfaces_DSA_Keys()
 	javaSecurity.Load_Security_Interfaces_EC_Keys()
 	javaSecurity.Load_Security_Interfaces_RSA_Keys()
+	javaSecurity.Load_Security_Key()
 	javaSecurity.Load_Security_MessageDigest()
 	javaSecurity.Load_Security_Provider()
 	javaSecurity.Load_Security_Provider_Service()
 	javaSecurity.Load_Security_SecureRandom()
 	javaSecurity.Load_Security_Signature()
+	javaSecurity.Load_Security_Spec_NamedParameterSpec()
+	javaSecurity.Load_Security_Spec_AlgorithmParameterSpec()
 
 	// javax/crypto/*
 	javaxCrypto.Load_Crypto_KeyAgreement()
@@ -138,6 +141,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_LinkedList()
 	javaUtil.Load_Util_Locale()
 	javaUtil.Load_Util_Logging_Logger()
+	javaUtil.Load_Util_Map()
 	javaUtil.Load_Util_Properties()
 	javaUtil.Load_Util_Objects()
 	javaUtil.Load_Util_Optional()

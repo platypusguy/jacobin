@@ -39,7 +39,7 @@ func TestInitDefaultSecurityProvider(t *testing.T) {
 			if _, exists := services[key]; !exists {
 				// Special case: "DH" and "DiffieHellman" might map to the same key if the provider
 				// implementation normalizes algorithm names, or if it only stores one of them.
-				// In SecurityProviderServices.go, DH and DiffieHellman both return "DH" as algo.
+				// In javaSecurity_Helpers_ProviderServices.go, DH and DiffieHellman both return "DH" as algo.
 				// securityProviderPutService uses svc.FieldTable["algorithm"] to build the key.
 
 				// Let's check what the algorithm in the service is.

@@ -62,9 +62,6 @@ var SecurityProviderServices = map[string]map[string]func() *object.Object{
 		"DH": func() *object.Object {
 			return NewGoRuntimeService("KeyPairGenerator", "DH", types.ClassNameKeyPairGenerator)
 		},
-		"DiffieHellman": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "DH", types.ClassNameKeyPairGenerator)
-		},
 		"DSA": func() *object.Object {
 			return NewGoRuntimeService("KeyPairGenerator", "DSA", types.ClassNameKeyPairGenerator)
 		},
@@ -145,7 +142,7 @@ func NewGoRuntimeService(typ, algo, className string) *object.Object {
 		Fvalue: []*object.Object{},
 	}
 
-	// Initialize the service attribute ttributes map.
+	// Initialize the service attributes map.
 	attributes := map[string]*object.Object{}
 
 	// Block size.
