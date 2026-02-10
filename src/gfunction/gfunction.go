@@ -19,6 +19,7 @@ import (
 	"jacobin/src/gfunction/javaSecurity"
 	"jacobin/src/gfunction/javaText"
 	"jacobin/src/gfunction/javaUtil"
+	"jacobin/src/gfunction/javaxCrypto"
 	"jacobin/src/gfunction/misc"
 	"jacobin/src/gfunction/sunSecurity"
 	"jacobin/src/trace"
@@ -117,6 +118,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaSecurity.Load_Security_Provider_Service()
 	javaSecurity.Load_Security_SecureRandom()
 	javaSecurity.Load_Security_Signature()
+
+	// javax/crypto/*
+	javaxCrypto.Load_Crypto_KeyAgreement()
 
 	// java/util/*
 	javaUtil.Load_Util_ArrayList()

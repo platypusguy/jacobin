@@ -192,4 +192,10 @@ func Load_Other_Methods() {
 			GFunction:  ghelpers.ReturnNull,
 		}
 
+	ghelpers.MethodSignatures["sun/security/util/Debug.isOn(Ljava/lang/String;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.ReturnFalse,
+		}
+
 }

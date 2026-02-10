@@ -236,6 +236,7 @@ const (
 	NoSuchAlgorithmException
 	InvalidKeyException
 	SignatureException
+	InvalidAlgorithmParameterException
 )
 
 // -----------------------------------------------------------------------//
@@ -688,4 +689,5 @@ var JVMexceptionNames = []string{
 	"java.security.NoSuchAlgorithmException",
 	"java.security.InvalidKeyException",
 	"java.security.SignatureException",
+	"java.security.InvalidAlgorithmParameterException",
 }
