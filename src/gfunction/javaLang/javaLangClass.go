@@ -380,11 +380,83 @@ func getPrimitiveClass(params []interface{}) interface{} {
 func ClassGetSimpleName(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetSimpleName: invalid or null object")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "ClassGetSimpleName: invalid or null object")
 	}
 
-	// TODO: implement
-	return ClassGetName(params)
+	name := obj.FieldTable["name"].Fvalue.(string)
+
+	// Handle arrays - use canonical name logic but return simple name for component
+	if strings.HasPrefix(name, types.Array) {
+		switch name[1] {
+		case 'B':
+			return object.StringObjectFromGoString("byte[]")
+		case 'C':
+			return object.StringObjectFromGoString("char[]")
+		case 'D':
+			return object.StringObjectFromGoString("double[]")
+		case 'F':
+			return object.StringObjectFromGoString("float[]")
+		case 'I':
+			return object.StringObjectFromGoString("int[]")
+		case 'J':
+			return object.StringObjectFromGoString("long[]")
+		case 'S':
+			return object.StringObjectFromGoString("short[]")
+		case 'Z':
+			return object.StringObjectFromGoString("boolean[]")
+		case 'L':
+			// For object arrays, extract the simple name of the component type
+			arrayObject := name[2 : len(name)-1] // remove '[L' and ';'
+			lastSlash := strings.LastIndex(arrayObject, "/")
+			if lastSlash >= 0 {
+				arrayObject = arrayObject[lastSlash+1:] // get simple name after last /
+			}
+			// Handle inner/anonymous classes in array component type
+			lastDollar := strings.LastIndex(arrayObject, "$")
+			if lastDollar >= 0 {
+				// Check if it's anonymous (ends with digits after $)
+				afterDollar := arrayObject[lastDollar+1:]
+				if isNumeric(afterDollar) {
+					return object.StringObjectFromGoString("[]") // anonymous class array
+				}
+				arrayObject = arrayObject[lastDollar+1:] // inner class name
+			}
+			return object.StringObjectFromGoString(arrayObject + "[]")
+		}
+	}
+
+	// Handle anonymous classes - they contain $ followed by digits
+	if strings.Contains(name, "$") {
+		lastDollar := strings.LastIndex(name, "$")
+		afterDollar := name[lastDollar+1:]
+		if isNumeric(afterDollar) {
+			return object.StringObjectFromGoString("") // anonymous class returns empty string
+		}
+		// Inner class - return the name after the last $
+		simpleName := afterDollar
+		return object.StringObjectFromGoString(simpleName)
+	}
+
+	// Regular class - return the name after the last /
+	lastSlash := strings.LastIndex(name, "/")
+	if lastSlash >= 0 {
+		name = name[lastSlash+1:]
+	}
+
+	return object.StringObjectFromGoString(name)
+}
+
+// Helper function to check if a string contains only digits
+func isNumeric(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // java/lang/Class.getSuperclass()Ljava/lang/Class; return a java/lang/Class object representing the superclass.
