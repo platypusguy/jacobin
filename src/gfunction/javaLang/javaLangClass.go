@@ -82,10 +82,14 @@ func Load_Lang_Class() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetSuperclass}
 	ghelpers.MethodSignatures["java/lang/Class.isArray()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsArray}
+	ghelpers.MethodSignatures["java/lang/Class.isEnum()Z"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsEnum}
 	ghelpers.MethodSignatures["java/lang/Class.isInterface()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsInterface}
 	ghelpers.MethodSignatures["java/lang/Class.isPrimitive()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsPrimitive}
+	ghelpers.MethodSignatures["java/lang/Class.isSynthetic()Z"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsSynthetic}
 	ghelpers.MethodSignatures["java/lang/Class.registerNatives()V"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.ClinitGeneric}
 	ghelpers.MethodSignatures["java/lang/Class.toString()Ljava/lang/String;"] =
@@ -138,13 +142,10 @@ func Load_Lang_Class() {
 	addTrap("java/lang/Class.getPermittedSubclasses()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getProtectionDomain()Ljava/security/ProtectionDomain;", 0)
 	addTrap("java/lang/Class.getRecordComponents()[Ljava/lang/reflect/RecordComponent;", 0)
-	// addTrap("java/lang/Class.getSimpleName()Ljava/lang/String;", 0)
 	addTrap("java/lang/Class.getTypeName()Ljava/lang/String;", 0)
-	addTrap("java/lang/Class.isEnum()Z", 0)
 	addTrap("java/lang/Class.isInstance(Ljava/lang/Object;)Z", 1)
 	addTrap("java/lang/Class.isNestmateOf(Ljava/lang/Class;)Z", 1)
 	addTrap("java/lang/Class.isSealed()Z", 0)
-	addTrap("java/lang/Class.isSynthetic()Z", 0)
 }
 
 // returns boolean indicating whether assertions are enabled or not.
@@ -468,19 +469,6 @@ func ClassGetSimpleName(params []interface{}) interface{} {
 	return object.StringObjectFromGoString(name)
 }
 
-// Helper function to check if a string contains only digits
-func isNumeric(s string) bool {
-	if len(s) == 0 {
-		return false
-	}
-	for _, c := range s {
-		if c < '0' || c > '9' {
-			return false
-		}
-	}
-	return true
-}
-
 // java/lang/Class.getSuperclass()Ljava/lang/Class; return a java/lang/Class object representing the superclass.
 // java/lang/Object, primitives, and interfaces return null.
 // Consult https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html#getSuperclass()
@@ -537,11 +525,22 @@ func classIsArray(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
+// java/lang/Class.isEnum()Z
+func classIsEnum(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsEnum: invalid or null object")
+	}
+
+	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	return klass.Access.ClassIsEnum
+}
+
 // java/lang/Class.isInterface()Z
 func classIsInterface(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsPrimitive: invalid or null object")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsInterface: invalid or null object")
 	}
 
 	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
@@ -559,6 +558,17 @@ func classIsPrimitive(params []interface{}) interface{} {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
+}
+
+// java/lang/Class.isSynthetic()Z
+func classIsSynthetic(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsSynthetic: invalid or null object")
+	}
+
+	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	return klass.Access.ClassIsSynthetic
 }
 
 /* JDK Javadoc:
@@ -585,6 +595,19 @@ func classToString(params []any) any {
 }
 
 // === helper functions (not part of the javaLangClass class API) ===
+
+// Helper function to check if a string contains only digits
+func isNumeric(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
 
 // simpleClassLoadByName() just checks the MethodArea cache for the loaded
 // class, and if it's not there, it loads it and returns a pointer to it.
