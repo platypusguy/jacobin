@@ -194,12 +194,34 @@ func classGetCanonicalName(params []interface{}) interface{} {
 		case 'Z':
 			return object.StringObjectFromGoString("boolean[]")
 		case 'L':
-			arrayObject := rawName[2 : len(rawName)-1]                 // remove the leading '[L' and trailing ';'
+			arrayObject := rawName[2 : len(rawName)-1] // remove the leading '[L' and trailing ';'
+			// Check if the component type is anonymous or local class
+			if strings.Contains(arrayObject, "$") {
+				lastDollar := strings.LastIndex(arrayObject, "$")
+				afterDollar := arrayObject[lastDollar+1:]
+				// Anonymous class (e.g., Outer$1) or local class (e.g., Outer$1Local) - return nil
+				if len(afterDollar) > 0 && afterDollar[0] >= '0' && afterDollar[0] <= '9' {
+					return nil
+				}
+				// Inner class - replace $ with .
+				arrayObject = strings.ReplaceAll(arrayObject, "$", ".")
+			}
 			return object.StringObjectFromGoString(arrayObject + "[]") // so java.lang.String[], for example
 		}
 	}
 
-	// TODO: handle anonymous and inner classes
+	// Handle anonymous and local classes - return nil
+	if strings.Contains(rawName, "$") {
+		lastDollar := strings.LastIndex(rawName, "$")
+		afterDollar := rawName[lastDollar+1:]
+		// Check if it's anonymous or local class (starts with digit after $)
+		if len(afterDollar) > 0 && afterDollar[0] >= '0' && afterDollar[0] <= '9' {
+			return nil
+		}
+		// Inner class - replace $ with . for canonical name
+		canonicalName := strings.ReplaceAll(rawName, "$", ".")
+		return object.StringObjectFromGoString(canonicalName)
+	}
 
 	return object.StringObjectFromGoString(rawName)
 }
