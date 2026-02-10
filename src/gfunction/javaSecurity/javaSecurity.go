@@ -27,7 +27,7 @@ func Load_Security() {
 	ghelpers.MethodSignatures["java/security/Security.getProvider(Ljava/lang/String;)Ljava/security/Provider;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1, // provider name
-			GFunction:  securityGetProvider,
+			GFunction:  SecurityGetProvider,
 		}
 
 	// Security.getProviders()
@@ -62,7 +62,7 @@ func Load_Security() {
 
 // ----------------------- Member Functions -----------------------
 
-func securityGetProvider([]any) any {
+func SecurityGetProvider([]any) any {
 	return ghelpers.GetDefaultSecurityProvider()
 }
 

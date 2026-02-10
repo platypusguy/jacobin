@@ -111,17 +111,21 @@ func rsaKeyGetModulus(params []any) any {
 		)
 	}
 
-	rsapubkey, ok := thisObj.FieldTable["value"].Fvalue.(*rsa.PublicKey)
-	if !ok {
-		return ghelpers.GetGErrBlk(
-			excNames.VirtualMachineError,
-			"rsaKeyGetModulus: RSA public key field is the wrong type",
-		)
+	// The RSAKey super-interface is shared by both RSAPublicKey and RSAPrivateKey.
+	// Support extracting modulus from either kind of underlying Go key.
+	if rsapubkey, ok := thisObj.FieldTable["value"].Fvalue.(*rsa.PublicKey); ok {
+		bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, rsapubkey.N)
+		return bigint
+	}
+	if rsaprivkey, ok := thisObj.FieldTable["value"].Fvalue.(*rsa.PrivateKey); ok {
+		bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, rsaprivkey.N)
+		return bigint
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, rsapubkey.N)
-
-	return bigint
+	return ghelpers.GetGErrBlk(
+		excNames.VirtualMachineError,
+		"rsaKeyGetModulus: RSA key field is the wrong type",
+	)
 }
 
 func rsaprivateGetExponent(params []any) any {

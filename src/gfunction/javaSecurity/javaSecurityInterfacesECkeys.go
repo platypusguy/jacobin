@@ -88,7 +88,7 @@ func ecPrivateKeyGetParams(params []any) any {
 		)
 	}
 
-	specObj, exists := thisObj.FieldTable["params"]
+	specObj, exists := thisObj.FieldTable["params"].Fvalue.(*object.Object)
 	if !exists {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalArgumentException,
@@ -96,7 +96,8 @@ func ecPrivateKeyGetParams(params []any) any {
 		)
 	}
 
-	return specObj.Fvalue
+	return specObj
+
 }
 
 func ecPrivateKeyGetS(params []any) any {
@@ -119,13 +120,13 @@ func ecPrivateKeyGetS(params []any) any {
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalStateException,
-			"ecPrivateKeyGetS: EC public key extraction failed",
+			"ecPrivateKeyGetS: EC private key extraction failed",
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecprivkey.D)
+	bigintObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecprivkey.D)
 
-	return bigint
+	return bigintObj
 }
 
 // === ECPublicKey ===
@@ -171,12 +172,31 @@ func ecPublicKeyGetW(params []any) any {
 			"ecPublicKeyGetW: this is not an Object",
 		)
 	}
-	pointObj, exists := thisObj.FieldTable["w"].Fvalue.(*object.Object)
-	if !exists {
+
+	// Try "w" field first (manually populated)
+	if pointObj, exists := thisObj.FieldTable["w"].Fvalue.(*object.Object); exists {
+		return pointObj
+	}
+
+	// Otherwise extract from "value" (*ecdsa.PublicKey)
+	ecpubkey, ok := thisObj.FieldTable["value"].Fvalue.(*ecdsa.PublicKey)
+	if !ok {
 		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"ecPublicKeyGetW: w field missing",
+			excNames.IllegalStateException,
+			"ecPublicKeyGetW: EC public key extraction failed",
 		)
 	}
+
+	// Create ECPoint object
+	pointObj := NewGoRuntimeService("ECPoint", "", types.ClassNameECPoint)
+	pointObj.FieldTable["x"] = object.Field{
+		Ftype:  types.BigInteger,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecpubkey.X),
+	}
+	pointObj.FieldTable["y"] = object.Field{
+		Ftype:  types.BigInteger,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecpubkey.Y),
+	}
+
 	return pointObj
 }

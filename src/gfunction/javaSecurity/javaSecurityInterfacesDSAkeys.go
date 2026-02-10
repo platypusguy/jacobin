@@ -8,12 +8,10 @@ package javaSecurity
 
 import (
 	"fmt"
-	"math/big"
 
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
-	"jacobin/src/types"
 )
 
 // Placeholder: use simple DSA big.Int values
@@ -54,19 +52,19 @@ func Load_Security_Interfaces_DSA_Keys() {
 			GFunction:  ghelpers.TrapKeyPairGeneration,
 		}
 
-	ghelpers.MethodSignatures["java/security/interfaces/DSAParams.getG()V"] =
+	ghelpers.MethodSignatures["java/security/interfaces/DSAParams.getG()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dsaParamsGetG,
 		}
 
-	ghelpers.MethodSignatures["java/security/interfaces/DSAParams.getP()V"] =
+	ghelpers.MethodSignatures["java/security/interfaces/DSAParams.getP()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dsaParamsGetP,
 		}
 
-	ghelpers.MethodSignatures["java/security/interfaces/DSAParams.getG()V"] =
+	ghelpers.MethodSignatures["java/security/interfaces/DSAParams.getQ()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dsaParamsGetQ,
@@ -86,19 +84,19 @@ func Load_Security_Interfaces_DSA_Keys() {
 			GFunction:  ghelpers.TrapKeyPairGeneration,
 		}
 
-	ghelpers.MethodSignatures["java/security/spec/DSAParameterSpec.getG()V"] =
+	ghelpers.MethodSignatures["java/security/spec/DSAParameterSpec.getG()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dsaParamsGetG,
 		}
 
-	ghelpers.MethodSignatures["java/security/spec/DSAParameterSpec.getP()V"] =
+	ghelpers.MethodSignatures["java/security/spec/DSAParameterSpec.getP()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dsaParamsGetP,
 		}
 
-	ghelpers.MethodSignatures["java/security/spec/DSAParameterSpec.getG()V"] =
+	ghelpers.MethodSignatures["java/security/spec/DSAParameterSpec.getQ()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dsaParamsGetQ,
@@ -118,7 +116,7 @@ func Load_Security_Interfaces_DSA_Keys() {
 			GFunction:  ghelpers.TrapKeyPairGeneration,
 		}
 
-	ghelpers.MethodSignatures["java/security/interfaces/DSAPrivateKey.getX()()Ljava/math/BigInteger;"] =
+	ghelpers.MethodSignatures["java/security/interfaces/DSAPrivateKey.getX()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dsaPrivateGetX,
@@ -166,7 +164,7 @@ func dsaPrivateGetX(params []any) any {
 	if len(params) != 1 {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalArgumentException,
-			fmt.Sprintf("dsaPrivateGetExponent: expected `this` object only, got %d params", len(params)),
+			fmt.Sprintf("dsaPrivateGetX: expected `this` object only, got %d params", len(params)),
 		)
 	}
 
@@ -174,21 +172,19 @@ func dsaPrivateGetX(params []any) any {
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalArgumentException,
-			"dsaPrivateGetExponent: `this` is not an Object",
+			"dsaPrivateGetX: `this` is not an Object",
 		)
 	}
 
-	dsaprvkey, ok := thisObj.FieldTable["value"].Fvalue.(*big.Int)
+	dsaprvkeyObj, ok := thisObj.FieldTable["value"].Fvalue.(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.VirtualMachineError,
-			"dsaPrivateGetX: DSA private key extraction failed",
+			"dsaPrivateGetX: DSA private key extraction failed (not an Object)",
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, dsaprvkey)
-
-	return bigint
+	return dsaprvkeyObj
 }
 
 func dsaParamsGetG(params []any) any {
@@ -207,17 +203,15 @@ func dsaParamsGetG(params []any) any {
 		)
 	}
 
-	dsaParamsG, ok := thisObj.FieldTable["g"].Fvalue.(*big.Int)
+	dsaParamsGObj, ok := thisObj.FieldTable["g"].Fvalue.(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.VirtualMachineError,
-			"dsaParamsGetG: DSA field G extraction failed",
+			"dsaParamsGetG: DSA field G extraction failed (not an Object)",
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, dsaParamsG)
-
-	return bigint
+	return dsaParamsGObj
 }
 
 func dsaParamsGetP(params []any) any {
@@ -236,18 +230,17 @@ func dsaParamsGetP(params []any) any {
 		)
 	}
 
-	dsaParamsP, ok := thisObj.FieldTable["p"].Fvalue.(*big.Int)
+	dsaParamsPObj, ok := thisObj.FieldTable["p"].Fvalue.(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.VirtualMachineError,
-			"dsaParamsGetP: DSA field P extraction failed",
+			"dsaParamsGetP: DSA field P extraction failed (not an Object)",
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, dsaParamsP)
-
-	return bigint
+	return dsaParamsPObj
 }
+
 func dsaParamsGetQ(params []any) any {
 	if len(params) != 1 {
 		return ghelpers.GetGErrBlk(
@@ -264,17 +257,15 @@ func dsaParamsGetQ(params []any) any {
 		)
 	}
 
-	dsaParamsQ, ok := thisObj.FieldTable["q"].Fvalue.(*big.Int)
+	dsaParamsQObj, ok := thisObj.FieldTable["q"].Fvalue.(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.VirtualMachineError,
-			"dsaParamsGetQ: DSA field Q extraction failed",
+			"dsaParamsGetQ: DSA field Q extraction failed (not an Object)",
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, dsaParamsQ)
-
-	return bigint
+	return dsaParamsQObj
 }
 
 func dsaPublicKeyGetY(params []any) any {
@@ -293,17 +284,15 @@ func dsaPublicKeyGetY(params []any) any {
 		)
 	}
 
-	dsapubkey, ok := thisObj.FieldTable["value"].Fvalue.(*big.Int)
+	dsapubkeyObj, ok := thisObj.FieldTable["value"].Fvalue.(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalStateException,
-			"dsaPublicKeyGetY: DSA public key extraction failed",
+			"dsaPublicKeyGetY: DSA public key extraction failed (not an Object)",
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, dsapubkey)
-
-	return bigint
+	return dsapubkeyObj
 }
 
 func dsaKeysGetParams(params []any) any {
@@ -326,7 +315,7 @@ func dsaKeysGetParams(params []any) any {
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalStateException,
-			"dsaKeysGetParams: DSA public key extraction failed",
+			"dsaKeysGetParams: DSA parameters extraction failed",
 		)
 	}
 
