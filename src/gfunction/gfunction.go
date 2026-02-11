@@ -110,7 +110,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaSecurity.Load_KeyPairGenerator()
 	javaSecurity.Load_PublicAndPrivateKeys()
 	javaSecurity.Load_Security()
-	javaSecurity.Load_Security_Interfaces_DH_Keys()
+	javaxCrypto.Load_Security_Interfaces_DH_Keys()
 	javaSecurity.Load_Security_Interfaces_DSA_Keys()
 	javaSecurity.Load_Security_Interfaces_EC_Keys()
 	javaSecurity.Load_Security_Interfaces_RSA_Keys()

@@ -56,9 +56,9 @@ const SecurityProviderName = "GoSecurityProvider"
 const SecurityProviderInfo = "Security + Cryptography"
 const SecurityProviderVersion = 1.0
 
-var ClassNameDHParameterSpec = "java/security/spec/DHParameterSpec"
-var ClassNameDHPublicKey = "java/security/interfaces/DHPublicKey"
-var ClassNameDHPrivateKey = "java/security/interfaces/DHPrivateKey"
+var ClassNameDHParameterSpec = "javax/crypto/spec/DHParameterSpec"
+var ClassNameDHPublicKey = "javax/crypto/interfaces/DHPublicKey"
+var ClassNameDHPrivateKey = "javax/crypto/interfaces/DHPrivateKey"
 var ClassNameDSAParameterSpec = "java/security/spec/DSAParameterSpec"
 var ClassNameDSAPublicKey = "java/security/interfaces/DSAPublicKey"
 var ClassNameDSAPrivateKey = "java/security/interfaces/DSAPrivateKey"
