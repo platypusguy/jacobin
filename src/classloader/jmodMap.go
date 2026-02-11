@@ -283,7 +283,9 @@ func processJmodFile(jmodFileName string, jmodFullPath string) bool {
 
 		// Add to map
 		JMODMAP[classFileName] = jmodFileName
-		// fmt.Printf("DEBUG processJmodFile: classFileName=%s, jmodFileName=%s\n", classFileName, jmodFileName)
+		if classFileName == "java/security/interfaces/DHPublicKey.class" {
+			fmt.Printf("DEBUG processJmodFile: stored classFileName=%s, jmodFileName=%s\n", classFileName, jmodFileName)
+		}
 
 		// Add to count of classes
 		countClasses++

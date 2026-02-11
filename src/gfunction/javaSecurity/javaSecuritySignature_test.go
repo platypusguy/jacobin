@@ -206,7 +206,7 @@ func TestSignatureGFunctions_Ed25519(t *testing.T) {
 
 	pubKey, privKey, _ := ed25519.GenerateKey(rand.Reader)
 
-	privKeyObj := NewGoRuntimeService("Ed25519PrivateKey", "Ed25519", types.ClassNameEd25519PrivateKey)
+	privKeyObj := NewGoRuntimeService("Ed25519", "Ed25519", types.ClassNameEdECPrivateKey)
 	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privKey}
 
 	signatureInitSign([]any{sigObj, privKeyObj})
@@ -218,7 +218,7 @@ func TestSignatureGFunctions_Ed25519(t *testing.T) {
 	res = signatureSign([]any{sigObj})
 	sigResultObj := res.(*object.Object)
 
-	pubKeyObj := NewGoRuntimeService("Ed25519PublicKey", "Ed25519", types.ClassNameEd25519PublicKey)
+	pubKeyObj := NewGoRuntimeService("Ed25519", "Ed25519", types.ClassNameEdECPublicKey)
 	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubKey}
 
 	signatureInitVerify([]any{sigObj, pubKeyObj})

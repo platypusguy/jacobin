@@ -2,6 +2,7 @@ package javaxCrypto
 
 import (
 	"crypto/ecdsa"
+	"math/big"
 
 	"fmt"
 
@@ -209,7 +210,7 @@ func keyagreementInit(params []any) any {
 			)
 		}
 	} else if algorithm == "XDH" || algorithm == "X25519" {
-		if keyClassName != types.ClassNameX25519PrivateKey {
+		if keyClassName != types.ClassNameEdECPrivateKey {
 			return ghelpers.GetGErrBlk(
 				excNames.InvalidKeyException,
 				fmt.Sprintf("X25519 requires X25519 private key, got %s", keyClassName),
@@ -289,7 +290,7 @@ func keyagreementDoPhase(params []any) any {
 			)
 		}
 	} else if algorithm == "X25519" || algorithm == "XDH" {
-		if keyClassName != types.ClassNameX25519PublicKey {
+		if keyClassName != types.ClassNameEdECPublicKey {
 			return ghelpers.GetGErrBlk(
 				excNames.InvalidKeyException,
 				fmt.Sprintf("X25519 requires X25519 public key, got %s", keyClassName),
@@ -357,9 +358,11 @@ func keyagreementGenerateSecret(params []any) any {
 
 	switch algorithm {
 	case "ECDH", "EC":
-		secretBytes, err = performECDH(privateKeyObj, publicKeyObj)
+		secretBytes, err = genSecretECDH(privateKeyObj, publicKeyObj)
 	case "X25519", "XDH":
-		secretBytes, err = performX25519(privateKeyObj, publicKeyObj)
+		secretBytes, err = genSecretX25519(privateKeyObj, publicKeyObj)
+	case "DH", "DiffieHellman":
+		secretBytes, err = genSecretDH(privateKeyObj, publicKeyObj, kaObj.FieldTable["params"].Fvalue.(*object.Object))
 	default:
 		return ghelpers.GetGErrBlk(
 			excNames.NoSuchAlgorithmException,
@@ -387,8 +390,33 @@ func isSupportedKeyAgreementAlgorithm(algo string) bool {
 	return false
 }
 
-// performECDH performs Elliptic Curve Diffie-Hellman
-func performECDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
+// genSecretDH performs classic Diffie-Hellman key exchange
+func genSecretDH(privateKeyObj, publicKeyObj, paramsObj *object.Object) ([]byte, error) {
+	// Extract private key (a big integer)
+	privKeyValue := privateKeyObj.FieldTable["value"].Fvalue.(*big.Int)
+
+	// Extract public key (a big integer)
+	pubKeyValue := publicKeyObj.FieldTable["value"].Fvalue.(*big.Int)
+
+	// Extract DH parameters (p: prime modulus)
+	p := paramsObj.FieldTable["p"].Fvalue.(*big.Int)
+	// Note: generator (g) is not needed for shared secret computation
+
+	// Validate public key is in valid range [2, p-2]
+	two := big.NewInt(2)
+	pMinusTwo := new(big.Int).Sub(p, two)
+	if pubKeyValue.Cmp(two) < 0 || pubKeyValue.Cmp(pMinusTwo) > 0 {
+		return nil, fmt.Errorf("genSecretDH: public key out of valid range")
+	}
+
+	// Perform modular exponentiation: shared_secret = (public_key ^ private_key) mod p
+	sharedSecret := new(big.Int).Exp(pubKeyValue, privKeyValue, p)
+
+	return sharedSecret.Bytes(), nil
+}
+
+// genSecretECDH performs Elliptic Curve Diffie-Hellman
+func genSecretECDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
 	// Extract private key
 	privKeyValue := privateKeyObj.FieldTable["value"].Fvalue.(*ecdsa.PrivateKey)
 
@@ -401,14 +429,14 @@ func performECDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
 	}
 
 	// Perform scalar multiplication: shared_secret = private_key * public_key_point
-	x, _ := pubKeyValue.Curve.ScalarMult(pubKeyValue.X, pubKeyValue.Y, privKeyValue.D.Bytes())
+	bigInt, _ := pubKeyValue.Curve.ScalarMult(pubKeyValue.X, pubKeyValue.Y, privKeyValue.D.Bytes())
 
 	// The shared secret is the x-coordinate
-	return x.Bytes(), nil
+	return bigInt.Bytes(), nil
 }
 
-// performX25519 performs X25519 key agreement
-func performX25519(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
+// genSecretX25519 performs X25519 key agreement
+func genSecretX25519(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
 	// Extract private key (32 bytes)
 	privKey := privateKeyObj.FieldTable["value"].Fvalue.([]byte)
 

@@ -418,7 +418,7 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 		// if the file was not found, try the next entry in the classpath
 		// if we are at the last entry in the classpath, throw an exception
 		if ii >= len(globals.GetGlobalRef().Classpath)-1 {
-			errMsg := fmt.Sprintf("LoadClassFromFile for %s failed", filename)
+			errMsg := fmt.Sprintf("LoadClassFromFile for %s failed for all classpath elements", classFilename)
 			globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
 			return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg) // return for tests only
 		}

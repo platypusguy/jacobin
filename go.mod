@@ -11,6 +11,8 @@ go 1.25 // as of 2026-02-05 (v. 0.8.113) per JACOBIN-867
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0
+	github.com/cloudflare/circl v1.6.3
+	github.com/unix-world/smartgo v0.0.0-20260117025406-ff3ea76b574d
 	golang.org/x/crypto v0.47.0
 	golang.org/x/term v0.39.0
 )

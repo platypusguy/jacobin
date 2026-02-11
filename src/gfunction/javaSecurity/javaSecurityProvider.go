@@ -207,6 +207,9 @@ func securityProviderGetService(params []any) any {
 			fmt.Sprintf("securityProviderGetService: invalid alg object, saw: %T", params[2]))
 	}
 	algStr := object.GoStringFromStringObject(algObj)
+	if algStr == "DiffieHellman" {
+		algStr = "DH"
+	}
 
 	services := this.FieldTable["services"].Fvalue.(map[string]*object.Object)
 	key := typeStr + "/" + algStr

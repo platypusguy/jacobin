@@ -111,14 +111,14 @@ func TestKeyAgreement_X25519(t *testing.T) {
 
 	// 2. Mock Keys (32 bytes for X25519)
 	privA := make([]byte, 32)
-	rand.Read(privA)
+	_, _ = rand.Read(privA)
 	pubB := make([]byte, 32)
-	rand.Read(pubB)
+	_, _ = rand.Read(pubB)
 
-	privateKeyObjA := javaSecurity.NewGoRuntimeService("X25519PrivateKey", "XDH", types.ClassNameX25519PrivateKey)
+	privateKeyObjA := javaSecurity.NewGoRuntimeService("XDH", "XDH", types.ClassNameEdECPrivateKey)
 	privateKeyObjA.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privA}
 
-	publicKeyObjB := javaSecurity.NewGoRuntimeService("X25519PublicKey", "XDH", types.ClassNameX25519PublicKey)
+	publicKeyObjB := javaSecurity.NewGoRuntimeService("XDH", "XDH", types.ClassNameEdECPublicKey)
 	publicKeyObjB.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubB}
 
 	// 3. Init

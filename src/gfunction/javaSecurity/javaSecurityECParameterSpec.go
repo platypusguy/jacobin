@@ -157,7 +157,8 @@ func ecparameterGenSpecInitString(params []any) any {
 		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, curveParams.N),
 	}
 
-	thisObj.FieldTable["h"] = object.Field{Ftype: types.Int, Fvalue: int64(1)} // cofactor
+	// Co-factor.
+	thisObj.FieldTable["h"] = object.Field{Ftype: types.Int, Fvalue: int64(1)}
 
 	return nil
 }

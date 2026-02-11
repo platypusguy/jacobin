@@ -89,6 +89,12 @@ func Load_KeyPairGenerator() {
 			GFunction:  keypairgeneratorInitializeParmSpec,
 		}
 
+	ghelpers.MethodSignatures["java/security/KeyPairGenerator.initialize(Ljava/security/spec/AlgorithmParameterSpec;Ljava/security/SecureRandom;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	// ---------------------------------------------------------
 	// Public API: generateKeyPair & genKeyPair
 	// ---------------------------------------------------------
@@ -123,6 +129,9 @@ func keypairgeneratorGetInstance(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keypairgeneratorGetInstance: Algorithm cannot be null")
 	}
 	algorithm := object.GoStringFromStringObject(algorithmObj)
+	if algorithm == "DiffieHellman" {
+		algorithm = "DH"
+	}
 
 	// Get the default (only) security provider.
 	providerObj := ghelpers.GetDefaultSecurityProvider() // single Go runtime provider
@@ -361,6 +370,37 @@ func keypairgeneratorInitializeParmSpec(params []any) any {
 		pObj := pField.Fvalue.(*object.Object)
 		p := pObj.FieldTable["value"].Fvalue.(*big.Int)
 		keySize = int64(p.BitLen())
+
+	case "EdDSA":
+		// Accept only NamedParameterSpec
+		if paramSpecClassName != "java/security/spec/NamedParameterSpec" {
+			return ghelpers.GetGErrBlk(
+				excNames.InvalidAlgorithmParameterException,
+				fmt.Sprintf("EdDSA requires NamedParameterSpec, got %s", paramSpecClassName),
+			)
+		}
+
+		// Optionally: check name field is one of ED25519, ED448, etc
+		nameField, exists := paramSpecObj.FieldTable["name"]
+		if !exists {
+			return ghelpers.GetGErrBlk(
+				excNames.InvalidAlgorithmParameterException,
+				"NamedParameterSpec missing name field",
+			)
+		}
+		name := object.GoStringFromStringObject(nameField.Fvalue.(*object.Object))
+		switch name {
+		case "Ed25519", "Ed448", "X25519", "X448":
+			// valid, proceed
+		default:
+			return ghelpers.GetGErrBlk(
+				excNames.InvalidAlgorithmParameterException,
+				fmt.Sprintf("unsupported NamedParameterSpec name: %s", name),
+			)
+		}
+
+		// Set a keySize if you want (EdDSA curves are fixed size)
+		keySize = 256 // Ed25519 / X25519
 
 	case "Ed25519", "Ed448", "X25519", "X448", "XDH":
 		// These algorithms don't use parameter specs
