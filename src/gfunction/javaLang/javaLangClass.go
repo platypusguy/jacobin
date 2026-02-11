@@ -664,12 +664,12 @@ func classGetSuperclass(params []interface{}) interface{} {
 	}
 
 	// if the object is an array, return Object.class
-	if classIsArray(params).(bool) {
+	if classIsArray(params).(int64) == types.JavaBoolTrue {
 		return globals.JLCmap["java/lang/Object"]
 	}
 
 	// if the object is an interface, the superclass is null
-	if classIsInterface(params).(bool) {
+	if classIsInterface(params).(int64) == types.JavaBoolTrue {
 		return nil
 	}
 
@@ -822,7 +822,7 @@ func classIsInstance(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
-// java/lang/Class.isInterface()Z
+// java/lang/Class.isInterface()Z -- returns types.JavaBoolTrue or types.JavaBoolFalse (both of which are int64)
 func classIsInterface(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
@@ -830,10 +830,13 @@ func classIsInterface(params []interface{}) interface{} {
 	}
 
 	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
-	return klass.Access.ClassIsInterface
+	if klass.Access.ClassIsInterface {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
 
-// java/lang/Class.isPrimitive()Z
+// java/lang/Class.isPrimitive()Z -- returns types.JavaBoolTrue or types.JavaBoolFalse (both of which are int64)
 func classIsPrimitive(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
