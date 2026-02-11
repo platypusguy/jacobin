@@ -683,6 +683,8 @@ func locateInterfaceMeth(
 				if (jmEntry.AccessFlags & classloader.ACC_ABSTRACT) == 0 {
 					return mtEntry, nil
 				}
+			} else {
+				return mtEntry, nil
 			}
 		}
 	}
