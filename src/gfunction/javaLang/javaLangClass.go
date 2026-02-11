@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023-5 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-6 by  the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -62,6 +62,12 @@ func ClassClinitIsh() {
 func Load_Lang_Class() {
 
 	// Implemented methods
+	ghelpers.MethodSignatures["java/lang/Class.cast(Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: classCast}
+	ghelpers.MethodSignatures["java/lang/Class.componentType()Ljava/lang/Class;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classComponentType}
+	ghelpers.MethodSignatures["java/lang/Class.descriptorString()Ljava/lang/String;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classDescriptorString}
 	ghelpers.MethodSignatures["java/lang/Class.desiredAssertionStatus()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetAssertionsEnabledStatus}
 	ghelpers.MethodSignatures["java/lang/Class.desiredAssertionStatus0()Z"] =
@@ -70,24 +76,36 @@ func Load_Lang_Class() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetCanonicalName}
 	ghelpers.MethodSignatures["java/lang/Class.getComponentType()Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: getComponentType}
+	ghelpers.MethodSignatures["java/lang/Class.getDeclaringClass()Ljava/lang/Class;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetDeclaringClass}
+	ghelpers.MethodSignatures["java/lang/Class.getModifiers()I"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetModifiers}
 	ghelpers.MethodSignatures["java/lang/Class.getModule()Ljava/lang/Module;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetModule}
 	ghelpers.MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ClassGetName}
+	ghelpers.MethodSignatures["java/lang/Class.getPackageName()Ljava/lang/String;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetPackageName}
 	ghelpers.MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: getPrimitiveClass}
 	ghelpers.MethodSignatures["java/lang/Class.getSimpleName()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ClassGetSimpleName}
 	ghelpers.MethodSignatures["java/lang/Class.getSuperclass()Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetSuperclass}
+	ghelpers.MethodSignatures["java/lang/Class.getTypeName()Ljava/lang/String;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetTypeName}
 	ghelpers.MethodSignatures["java/lang/Class.isArray()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsArray}
 	ghelpers.MethodSignatures["java/lang/Class.isEnum()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsEnum}
+	ghelpers.MethodSignatures["java/lang/Class.isInstance(Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: classIsInstance}
 	ghelpers.MethodSignatures["java/lang/Class.isInterface()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsInterface}
 	ghelpers.MethodSignatures["java/lang/Class.isPrimitive()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsPrimitive}
+	ghelpers.MethodSignatures["java/lang/Class.isSealed()Z"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsSealed}
 	ghelpers.MethodSignatures["java/lang/Class.isSynthetic()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsSynthetic}
 	ghelpers.MethodSignatures["java/lang/Class.registerNatives()V"] =
@@ -103,10 +121,7 @@ func Load_Lang_Class() {
 
 	addTrap("java/lang/Class.accessFlags()Ljava/util/Set;", 0)
 	addTrap("java/lang/Class.asSubclass(Ljava/lang/Class;)Ljava/lang/Class;", 1)
-	addTrap("java/lang/Class.cast(Ljava/lang/Object;)Ljava/lang/Object;", 1)
-	addTrap("java/lang/Class.componentType()Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.describeConstable()Ljava/util/Optional;", 0)
-	addTrap("java/lang/Class.descriptorString()Ljava/lang/String;", 0)
 	addTrap("java/lang/Class.forName(Ljava/lang/Module;Ljava/lang/String;)Ljava/lang/Class;", 2)
 	addTrap("java/lang/Class.forName(Ljava/lang/String;)Ljava/lang/Class;", 1)
 	addTrap("java/lang/Class.forName(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", 3)
@@ -124,7 +139,6 @@ func Load_Lang_Class() {
 	addTrap("java/lang/Class.getDeclaredFields()[Ljava/lang/reflect/Field;", 0)
 	addTrap("java/lang/Class.getDeclaredMethod(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;", 2)
 	addTrap("java/lang/Class.getDeclaredMethods()[Ljava/lang/reflect/Method;", 0)
-	addTrap("java/lang/Class.getDeclaringClass()Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getEnclosingClass()Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getEnclosingConstructor()Ljava/lang/reflect/Constructor;", 0)
 	addTrap("java/lang/Class.getEnclosingMethod()Ljava/lang/reflect/Method;", 0)
@@ -134,18 +148,84 @@ func Load_Lang_Class() {
 	addTrap("java/lang/Class.getGenericInterfaces()[Ljava/lang/reflect/Type;", 0)
 	addTrap("java/lang/Class.getGenericSuperclass()Ljava/lang/reflect/Type;", 0)
 	addTrap("java/lang/Class.getInterfaces()[Ljava/lang/Class;", 0)
-	addTrap("java/lang/Class.getModifiers()I", 0)
 	addTrap("java/lang/Class.getNestHost()Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getNestMembers()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getPackage()Ljava/lang/Package;", 0)
-	addTrap("java/lang/Class.getPackageName()Ljava/lang/String;", 0)
 	addTrap("java/lang/Class.getPermittedSubclasses()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getProtectionDomain()Ljava/security/ProtectionDomain;", 0)
 	addTrap("java/lang/Class.getRecordComponents()[Ljava/lang/reflect/RecordComponent;", 0)
-	addTrap("java/lang/Class.getTypeName()Ljava/lang/String;", 0)
-	addTrap("java/lang/Class.isInstance(Ljava/lang/Object;)Z", 1)
 	addTrap("java/lang/Class.isNestmateOf(Ljava/lang/Class;)Z", 1)
-	addTrap("java/lang/Class.isSealed()Z", 0)
+}
+
+// === Implemented methods (alphabetically ordered) ===
+
+// java/lang/Class.cast(Ljava/lang/Object;)Ljava/lang/Object;
+// Casts an object to the class or interface represented by this Class object
+func classCast(params []interface{}) interface{} {
+	classObj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(classObj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classCast: invalid or null class object")
+	}
+
+	objToCast := params[1]
+	if object.IsNull(objToCast) {
+		return nil // null can be cast to any type
+	}
+
+	// Use classIsInstance to check if the cast is valid
+	isInstanceParams := []interface{}{classObj, objToCast}
+	isValid := classIsInstance(isInstanceParams)
+
+	if isValid == types.JavaBoolTrue {
+		return objToCast
+	}
+
+	className := object.GoStringFromStringPoolIndex(classObj.KlassName)
+	errMsg := fmt.Sprintf("classCast: cannot cast object to %s", className)
+	return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
+}
+
+// java/lang/Class.componentType()Ljava/lang/Class;
+// Returns the component type of an array, or null if not an array (same as getComponentType)
+func classComponentType(params []interface{}) interface{} {
+	return getComponentType(params)
+}
+
+// java/lang/Class.descriptorString()Ljava/lang/String;
+// Returns the descriptor string of this class (field descriptor format)
+func classDescriptorString(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classDescriptorString: invalid or null object")
+	}
+
+	name := obj.FieldTable["name"].Fvalue.(string)
+
+	// If it's already in descriptor format (starts with [ or L), return as-is
+	if strings.HasPrefix(name, "[") {
+		return object.StringObjectFromGoString(name)
+	}
+
+	// Check if it's a primitive type
+	primitiveDescriptors := map[string]string{
+		"boolean": "Z",
+		"byte":    "B",
+		"char":    "C",
+		"double":  "D",
+		"float":   "F",
+		"int":     "I",
+		"long":    "J",
+		"short":   "S",
+		"void":    "V",
+	}
+
+	if desc, isPrimitive := primitiveDescriptors[name]; isPrimitive {
+		return object.StringObjectFromGoString(desc)
+	}
+
+	// For reference types, wrap with L and ;
+	descriptor := "L" + name + ";"
+	return object.StringObjectFromGoString(descriptor)
 }
 
 // returns boolean indicating whether assertions are enabled or not.
@@ -175,7 +255,8 @@ func classGetCanonicalName(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetCanonicalName: invalid or null object")
 	}
 
-	rawName := object.GoStringFromStringPoolIndex(obj.KlassName)
+	// we don't use obj.KlassName because that's always java/lang/Class for Class objects
+	rawName := obj.FieldTable["name"].Fvalue.(string)
 	if strings.HasPrefix(rawName, types.Array) {
 		switch rawName[1] {
 		case 'B':
@@ -224,7 +305,8 @@ func classGetCanonicalName(params []interface{}) interface{} {
 		return object.StringObjectFromGoString(canonicalName)
 	}
 
-	return object.StringObjectFromGoString(rawName)
+	name := util.ConvertInternalClassNameToUserFormat(rawName)
+	return object.StringObjectFromGoString(name)
 }
 
 // getComponentType() returns a pointer to class of the type of an array.
@@ -287,6 +369,34 @@ func getComponentType(params []interface{}) interface{} {
 	return cl
 }
 
+// java/lang/Class.getDeclaringClass()Ljava/lang/Class;
+// Returns the declaring class if this is a member class, otherwise null
+func classGetDeclaringClass(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetDeclaringClass: invalid or null object")
+	}
+
+	name := obj.FieldTable["name"].Fvalue.(string)
+
+	// Check if this is an inner class (contains $)
+	if !strings.Contains(name, "$") {
+		return nil // Not an inner class
+	}
+
+	// Get the outer class name (everything before the last $)
+	lastDollar := strings.LastIndex(name, "$")
+	outerClassName := name[:lastDollar]
+
+	// Try to load the outer class
+	outerClass, err := simpleClassLoadByName(outerClassName)
+	if err != nil {
+		return nil // If we can't load it, return nil
+	}
+
+	return outerClass
+}
+
 // TODO: Is this function needed? Its currently trapped.
 func classGetField(params []interface{}) interface{} {
 	cl, ok := params[0].(*object.Object)
@@ -306,6 +416,48 @@ func classGetField(params []interface{}) interface{} {
 	}
 
 	return NewField(cl, fieldName)
+}
+
+// java/lang/Class.getModifiers()I
+// Returns the Java language modifiers for this class
+func classGetModifiers(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetModifiers: invalid or null object")
+	}
+
+	klassPtr := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	access := klassPtr.Access
+
+	// Convert AccessFlags to Java modifier bits
+	// Java modifier constants: PUBLIC=1, FINAL=16, SUPER=32, INTERFACE=512, ABSTRACT=1024, SYNTHETIC=4096, ANNOTATION=8192, ENUM=16384
+	modifiers := int64(0)
+	if access.ClassIsPublic {
+		modifiers |= 0x0001 // PUBLIC
+	}
+	if access.ClassIsFinal {
+		modifiers |= 0x0010 // FINAL
+	}
+	if access.ClassIsSuper {
+		modifiers |= 0x0020 // SUPER
+	}
+	if access.ClassIsInterface {
+		modifiers |= 0x0200 // INTERFACE
+	}
+	if access.ClassIsAbstract {
+		modifiers |= 0x0400 // ABSTRACT
+	}
+	if access.ClassIsSynthetic {
+		modifiers |= 0x1000 // SYNTHETIC
+	}
+	if access.ClassIsAnnotation {
+		modifiers |= 0x2000 // ANNOTATION
+	}
+	if access.ClassIsEnum {
+		modifiers |= 0x4000 // ENUM
+	}
+
+	return modifiers
 }
 
 // classGetModule returns the unnamed module for any Class object
@@ -337,6 +489,41 @@ func ClassGetName(params []interface{}) interface{} {
 	name = util.ConvertInternalClassNameToUserFormat(name)
 	nameObj := object.StringObjectFromGoString(name)
 	return nameObj
+}
+
+// java/lang/Class.getPackageName()Ljava/lang/String;
+// Returns the package name of this class
+func classGetPackageName(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetPackageName: invalid or null object")
+	}
+
+	name := obj.FieldTable["name"].Fvalue.(string)
+
+	// Arrays have the same package as their component type
+	if strings.HasPrefix(name, "[") {
+		// For primitive arrays, there's no package
+		if len(name) >= 2 && name[1] != 'L' {
+			return object.StringObjectFromGoString("")
+		}
+		// For object arrays, extract the class name
+		if len(name) >= 4 && name[1] == 'L' {
+			name = name[2 : len(name)-1] // Remove [L and ;
+		}
+	}
+
+	// Find the last slash to separate package from class name
+	lastSlash := strings.LastIndex(name, "/")
+	if lastSlash < 0 {
+		return object.StringObjectFromGoString("") // Default package
+	}
+
+	packageName := name[:lastSlash]
+	// Convert internal format (/) to Java format (.)
+	packageName = strings.ReplaceAll(packageName, "/", ".")
+
+	return object.StringObjectFromGoString(packageName)
 }
 
 // getPrimitiveClass() takes a one-word descriptor of a primitive and
@@ -479,12 +666,12 @@ func classGetSuperclass(params []interface{}) interface{} {
 	}
 
 	// if the object is an array, return Object.class
-	if classIsArray(params).(bool) {
+	if classIsArray(params).(int64) == types.JavaBoolTrue {
 		return globals.JLCmap["java/lang/Object"]
 	}
 
 	// if the object is an interface, the superclass is null
-	if classIsInterface(params).(bool) {
+	if classIsInterface(params).(int64) == types.JavaBoolTrue {
 		return nil
 	}
 
@@ -512,6 +699,69 @@ func classGetSuperclass(params []interface{}) interface{} {
 	return scClass
 }
 
+// java/lang/Class.getTypeName()Ljava/lang/String;
+// Returns the type name (similar to getName for most types)
+func classGetTypeName(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetTypeName: invalid or null object")
+	}
+
+	// For most types, getTypeName returns the same as getName
+	// The main difference is in how arrays are represented
+	name := obj.FieldTable["name"].Fvalue.(string)
+
+	// Handle arrays
+	if strings.HasPrefix(name, "[") {
+		// Count dimensions
+		dimensions := 0
+		for dimensions < len(name) && name[dimensions] == '[' {
+			dimensions++
+		}
+
+		// Get the component type
+		componentType := name[dimensions:]
+		var baseType string
+
+		switch componentType {
+		case "Z":
+			baseType = "boolean"
+		case "B":
+			baseType = "byte"
+		case "C":
+			baseType = "char"
+		case "D":
+			baseType = "double"
+		case "F":
+			baseType = "float"
+		case "I":
+			baseType = "int"
+		case "J":
+			baseType = "long"
+		case "S":
+			baseType = "short"
+		default:
+			if strings.HasPrefix(componentType, "L") && strings.HasSuffix(componentType, ";") {
+				baseType = componentType[1 : len(componentType)-1]
+				baseType = strings.ReplaceAll(baseType, "/", ".")
+			} else {
+				baseType = componentType
+			}
+		}
+
+		// Add array brackets
+		for i := 0; i < dimensions; i++ {
+			baseType += "[]"
+		}
+
+		return object.StringObjectFromGoString(baseType)
+	}
+
+	// For non-arrays, convert / to .
+	typeName := strings.ReplaceAll(name, "/", ".")
+	return object.StringObjectFromGoString(typeName)
+}
+
 // java/lang/Class.isArray()Z
 func classIsArray(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
@@ -526,17 +776,55 @@ func classIsArray(params []interface{}) interface{} {
 }
 
 // java/lang/Class.isEnum()Z
+// Returns true if this class is an enum
 func classIsEnum(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsEnum: invalid or null object")
 	}
 
-	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
-	return klass.Access.ClassIsEnum
+	klassPtr := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	if klassPtr.Access.ClassIsEnum {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
 
-// java/lang/Class.isInterface()Z
+// java/lang/Class.isInstance(Ljava/lang/Object;)Z
+// Determines if the specified Object is assignment-compatible with this Class
+func classIsInstance(params []interface{}) interface{} {
+	classObj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(classObj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsInstance: invalid or null class object")
+	}
+
+	obj := params[1]
+	if object.IsNull(obj) {
+		return types.JavaBoolFalse // null is not an instance of any type
+	}
+
+	objPtr, ok := obj.(*object.Object)
+	if !ok {
+		return types.JavaBoolFalse
+	}
+
+	// Get the class names
+	className := object.GoStringFromStringPoolIndex(classObj.KlassName)
+	objClassName := object.GoStringFromStringPoolIndex(objPtr.KlassName)
+
+	// Direct match
+	if className == objClassName {
+		return types.JavaBoolTrue
+	}
+
+	// TODO: Check if objClassName is a subclass of className
+	// TODO: Check if objClassName implements className (if className is an interface)
+	// For now, we only support direct type matching
+
+	return types.JavaBoolFalse
+}
+
+// java/lang/Class.isInterface()Z -- returns types.JavaBoolTrue or types.JavaBoolFalse (both of which are int64)
 func classIsInterface(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
@@ -544,10 +832,13 @@ func classIsInterface(params []interface{}) interface{} {
 	}
 
 	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
-	return klass.Access.ClassIsInterface
+	if klass.Access.ClassIsInterface {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
 
-// java/lang/Class.isPrimitive()Z
+// java/lang/Class.isPrimitive()Z -- returns types.JavaBoolTrue or types.JavaBoolFalse (both of which are int64)
 func classIsPrimitive(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
@@ -560,15 +851,32 @@ func classIsPrimitive(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
+// java/lang/Class.isSealed()Z
+// Returns true if this class is sealed
+func classIsSealed(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsSealed: invalid or null object")
+	}
+
+	// TODO: Need to add sealed class support to ClData
+	// For now, return false as sealed classes are a Java 17+ feature
+	return types.JavaBoolFalse
+}
+
 // java/lang/Class.isSynthetic()Z
+// Returns true if this class is synthetic
 func classIsSynthetic(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsSynthetic: invalid or null object")
 	}
 
-	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
-	return klass.Access.ClassIsSynthetic
+	klassPtr := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	if klassPtr.Access.ClassIsSynthetic {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
 
 /* JDK Javadoc:

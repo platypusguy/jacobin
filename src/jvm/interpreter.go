@@ -2242,7 +2242,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	prevLoaded, ok := statics.QueryStatic(className, field.FldName)
 	if !ok { // if field is not already loaded, then
 		if globals.TraceInst {
-			msg := fmt.Sprintf("doPutStatic: Field was NOT previously loaded: %s", fieldName)
+			msg := fmt.Sprintf("doPutStatic: Field was not previously loaded: %s", fieldName)
 			trace.Trace(msg)
 		}
 		// the class has not been instantiated, so
@@ -2262,7 +2262,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		}
 	} else {
 		if globals.TraceInst {
-			msg := fmt.Sprintf("doPutStatic: Field was INDEED previously loaded: %s", fieldName)
+			msg := fmt.Sprintf("doPutStatic: Field was previously loaded: %s", fieldName)
 			trace.Trace(msg)
 		}
 	}
@@ -2929,9 +2929,9 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 	// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
 	// that function simply returns. So test for it here and if it is, skip the rest
 	// fullConstructorName := className + "." + methodName + methodType
-	//if fqn == "java/lang/Object.<init>()V" { // the java/lang/Object plain constructor just returns
+	// if fqn == "java/lang/Object.<init>()V" { // the java/lang/Object plain constructor just returns
 	//	return 3 // 2 for the CPslot + 1 for next bytecode
-	//}
+	// }
 
 	mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 	if err != nil || mtEntry.Meth == nil {

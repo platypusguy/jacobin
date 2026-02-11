@@ -62,6 +62,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Character()
 	javaLang.Load_Lang_CharSequence()
 	javaLang.Load_Lang_Class()
+	javaLang.Load_Lang_Reflect_Modifier()
 	javaLang.ClassClinitIsh()
 	javaLang.Load_Lang_Double()
 	javaLang.Load_Lang_Float()
