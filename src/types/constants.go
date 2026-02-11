@@ -56,6 +56,9 @@ const SecurityProviderName = "GoSecurityProvider"
 const SecurityProviderInfo = "Security + Cryptography"
 const SecurityProviderVersion = 1.0
 
+const SecurityServiceKeyPairGenerator = "KeyPairGenerator"
+const SecurityServiceMessageDigest = "MessageDigest"
+
 var ClassNameDHParameterSpec = "javax/crypto/spec/DHParameterSpec"
 var ClassNameDHPublicKey = "javax/crypto/interfaces/DHPublicKey"
 var ClassNameDHPrivateKey = "javax/crypto/interfaces/DHPrivateKey"
@@ -67,10 +70,8 @@ var ClassNameECPublicKey = "java/security/interfaces/ECPublicKey"
 var ClassNameECPrivateKey = "java/security/interfaces/ECPrivateKey"
 var ClassNameECParameterSpec = "java/security/ECParameterSpec"
 var ClassNameECPoint = "java/security/ECPoint"
-var ClassNameEd25519PrivateKey = "java/security/interfaces/Ed25519PrivateKey"
-var ClassNameEd25519PublicKey = "java/security/interfaces/Ed25519PublicKey"
-var ClassNameEd448PrivateKey = "java/security/interfaces/Ed448PrivateKey"
-var ClassNameEd448PublicKey = "java/security/interfaces/Ed448PublicKey"
+var ClassNameEdECPrivateKey = "java/security/interfaces/EdECPrivateKey"
+var ClassNameEdECPublicKey = "java/security/interfaces/EdECPublicKey"
 var ClassNameEllipticCurve = "java/security/EllipticCurve"
 var ClassNameKeyPairGenerator = "java/security/KeyPairGenerator"
 var ClassNameKeyPair = "java/security/KeyPair"
@@ -83,10 +84,6 @@ var ClassNameSecurityProvider = "java/security/Provider"
 var ClassNameSecurityProviderService = "java/security/Provider$Service"
 var ClassNameSignature = "java/security/Signature"
 var ClassNameSecureRandom = "java/security/SecureRandom"
-var ClassNameX25519PrivateKey = "java/security/interfaces/X25519PrivateKey"
-var ClassNameX25519PublicKey = "java/security/interfaces/X25519PublicKey"
-var ClassNameX448PrivateKey = "java/security/interfaces/X448PrivateKey"
-var ClassNameX448PublicKey = "java/security/interfaces/X448PublicKey"
 
 // File system
 var FileSystemProviderValue = &struct{}{}

@@ -56,7 +56,7 @@ func TestKeyMethods(t *testing.T) {
 
 	// 3. Ed25519
 	pubEd, _, _ := ed25519.GenerateKey(rand.Reader)
-	pubEdObj := NewGoRuntimeService("Ed25519PublicKey", "Ed25519", types.ClassNameEd25519PublicKey)
+	pubEdObj := NewGoRuntimeService("Ed25519", "Ed25519", types.ClassNameEdECPublicKey)
 	pubEdObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubEd}
 
 	alg = keyGetAlgorithm([]any{pubEdObj})

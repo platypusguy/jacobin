@@ -781,7 +781,7 @@ func getRequiredPrivateKeyType(algo string) string {
 	} else if strings.Contains(algo, "DSA") {
 		return types.ClassNameDSAPrivateKey
 	} else if algo == "Ed25519" {
-		return types.ClassNameEd25519PrivateKey
+		return types.ClassNameEdECPrivateKey
 	}
 	return ""
 }
@@ -794,7 +794,7 @@ func getRequiredPublicKeyType(algo string) string {
 	} else if strings.Contains(algo, "DSA") {
 		return types.ClassNameDSAPublicKey
 	} else if algo == "Ed25519" {
-		return types.ClassNameEd25519PublicKey
+		return types.ClassNameEdECPublicKey
 	}
 	return ""
 }

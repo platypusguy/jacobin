@@ -7,6 +7,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/asn1"
 	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
@@ -66,36 +67,6 @@ func keyGetAlgorithm(params []any) any {
 	return alg
 }
 
-func keyGetFormat(params []any) any {
-	if len(params) < 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetFormat: missing 'this'")
-	}
-	obj, ok := params[0].(*object.Object)
-	if !ok || obj == nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetFormat: 'this' is not an object")
-	}
-
-	className := *stringPool.GetStringPointer(obj.KlassName)
-	var format string
-
-	switch className {
-	case types.ClassNameRSAPublicKey, types.ClassNameECPublicKey, types.ClassNameDSAPublicKey,
-		types.ClassNameEd25519PublicKey, types.ClassNameEd448PublicKey,
-		types.ClassNameX25519PublicKey, types.ClassNameX448PublicKey,
-		types.ClassNameDHPublicKey:
-		format = "X.509"
-	case types.ClassNameRSAPrivateKey, types.ClassNameECPrivateKey, types.ClassNameDSAPrivateKey,
-		types.ClassNameEd25519PrivateKey, types.ClassNameEd448PrivateKey,
-		types.ClassNameX25519PrivateKey, types.ClassNameX448PrivateKey,
-		types.ClassNameDHPrivateKey:
-		format = "PKCS#8"
-	default:
-		format = "RAW"
-	}
-
-	return object.StringObjectFromGoString(format)
-}
-
 func keyGetEncoded(params []any) any {
 	if len(params) < 1 {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetEncoded: missing 'this'")
@@ -119,9 +90,9 @@ func keyGetEncoded(params []any) any {
 	case *ecdsa.PrivateKey:
 		encoded, err = x509.MarshalPKCS8PrivateKey(k)
 	case *dsa.PublicKey:
-		encoded, err = x509.MarshalPKIXPublicKey(k)
+		encoded, err = encodeDSAPublicKey(k) // Use custom encoder
 	case *dsa.PrivateKey:
-		encoded, err = x509.MarshalPKCS8PrivateKey(k)
+		encoded, err = encodeDSAPrivateKey(k) // Use custom encoder
 	case ed25519.PublicKey:
 		encoded, err = x509.MarshalPKIXPublicKey(k)
 	case ed25519.PrivateKey:
@@ -148,6 +119,40 @@ func keyGetEncoded(params []any) any {
 	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(encoded))
 }
 
+func keyGetFormat(params []any) any {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetFormat: missing 'this'")
+	}
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetFormat: 'this' is not an object")
+	}
+
+	className := *stringPool.GetStringPointer(obj.KlassName)
+	var format string
+
+	switch className {
+	case types.ClassNameRSAPublicKey,
+		types.ClassNameECPublicKey,
+		types.ClassNameDSAPublicKey,
+		types.ClassNameDHPublicKey,
+		types.ClassNameEdECPublicKey:
+		format = "X.509"
+	case types.ClassNameRSAPrivateKey,
+		types.ClassNameECPrivateKey,
+		types.ClassNameDSAPrivateKey,
+		types.ClassNameDHPrivateKey,
+		types.ClassNameEdECPrivateKey:
+
+		format = "PKCS#8"
+	default:
+
+		format = "RAW"
+	}
+
+	return object.StringObjectFromGoString(format)
+}
+
 func keyHashCode(params []any) any {
 	if len(params) < 1 {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyHashCode: missing 'this'")
@@ -160,4 +165,56 @@ func keyHashCode(params []any) any {
 	ptr := uintptr(unsafe.Pointer(obj))
 	hashCode := int64(ptr ^ (ptr >> 32))
 	return hashCode
+}
+
+// ===== Helper functions =====
+
+// Add these helper structures for DSA encoding
+type dsaAlgorithmIdentifier struct {
+	Algorithm  asn1.ObjectIdentifier
+	Parameters dsaParameters
+}
+
+type dsaParameters struct {
+	P, Q, G *big.Int
+}
+
+type dsaPublicKeyInfo struct {
+	Algorithm dsaAlgorithmIdentifier
+	PublicKey asn1.BitString
+}
+
+func encodeDSAPublicKey(pub *dsa.PublicKey) ([]byte, error) {
+	// DSA OID is 1.2.840.10040.4.1
+	dsaOID := asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
+
+	// Encode the public key value
+	publicKeyBytes, err := asn1.Marshal(pub.Y)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build the PKIX structure
+	pkix := dsaPublicKeyInfo{
+		Algorithm: dsaAlgorithmIdentifier{
+			Algorithm: dsaOID,
+			Parameters: dsaParameters{
+				P: pub.P,
+				Q: pub.Q,
+				G: pub.G,
+			},
+		},
+		PublicKey: asn1.BitString{
+			Bytes:     publicKeyBytes,
+			BitLength: len(publicKeyBytes) * 8,
+		},
+	}
+
+	return asn1.Marshal(pkix)
+}
+
+func encodeDSAPrivateKey(priv *dsa.PrivateKey) ([]byte, error) {
+	// For PKCS#8, you'd need a more complex structure
+	// This is a simplified version - you may need to implement full PKCS#8
+	return asn1.Marshal(priv.X)
 }

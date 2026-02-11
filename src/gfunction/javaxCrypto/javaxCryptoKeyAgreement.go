@@ -210,7 +210,7 @@ func keyagreementInit(params []any) any {
 			)
 		}
 	} else if algorithm == "XDH" || algorithm == "X25519" {
-		if keyClassName != types.ClassNameX25519PrivateKey {
+		if keyClassName != types.ClassNameEdECPrivateKey {
 			return ghelpers.GetGErrBlk(
 				excNames.InvalidKeyException,
 				fmt.Sprintf("X25519 requires X25519 private key, got %s", keyClassName),
@@ -290,7 +290,7 @@ func keyagreementDoPhase(params []any) any {
 			)
 		}
 	} else if algorithm == "X25519" || algorithm == "XDH" {
-		if keyClassName != types.ClassNameX25519PublicKey {
+		if keyClassName != types.ClassNameEdECPublicKey {
 			return ghelpers.GetGErrBlk(
 				excNames.InvalidKeyException,
 				fmt.Sprintf("X25519 requires X25519 public key, got %s", keyClassName),

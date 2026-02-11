@@ -58,65 +58,65 @@ The outer map is keyed by the service type (KeyPairGenerator, MessageDigest, etc
 The inner map is keyed by the algorithm name.
 */
 var SecurityProviderServices = map[string]map[string]func() *object.Object{
-	"KeyPairGenerator": {
+	types.SecurityServiceKeyPairGenerator: {
 		"DH": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "DH", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "DH", types.ClassNameKeyPairGenerator)
 		},
 		"DSA": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "DSA", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "DSA", types.ClassNameKeyPairGenerator)
 		},
 		"RSA": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "RSA", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "RSA", types.ClassNameKeyPairGenerator)
 		},
 		"RSASSA-PSS": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "RSASSA-PSS", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "RSASSA-PSS", types.ClassNameKeyPairGenerator)
 		},
 		"EC": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "EC", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "EC", types.ClassNameKeyPairGenerator)
 		},
 		"EdDSA": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "EdDSA", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "EdDSA", types.ClassNameKeyPairGenerator)
 		},
 		"Ed25519": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "Ed25519", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "Ed25519", types.ClassNameKeyPairGenerator)
 		},
 		"Ed448": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "Ed448", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "Ed448", types.ClassNameKeyPairGenerator)
 		},
 		"XDH": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "XDH", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "XDH", types.ClassNameKeyPairGenerator)
 		},
 		"X25519": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "X25519", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "X25519", types.ClassNameKeyPairGenerator)
 		},
 		"X448": func() *object.Object {
-			return NewGoRuntimeService("KeyPairGenerator", "X448", types.ClassNameKeyPairGenerator)
+			return NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "X448", types.ClassNameKeyPairGenerator)
 		},
 	},
-	"MessageDigest": {
+	types.SecurityServiceMessageDigest: {
 		"MD5": func() *object.Object {
-			return NewGoRuntimeService("MessageDigest", "MD5", types.ClassNameMessageDigest)
+			return NewGoRuntimeService(types.SecurityServiceMessageDigest, "MD5", types.ClassNameMessageDigest)
 		},
 		"SHA-1": func() *object.Object {
-			return NewGoRuntimeService("MessageDigest", "SHA-1", types.ClassNameMessageDigest)
+			return NewGoRuntimeService(types.SecurityServiceMessageDigest, "SHA-1", types.ClassNameMessageDigest)
 		},
 		"SHA-224": func() *object.Object {
-			return NewGoRuntimeService("MessageDigest", "SHA-224", types.ClassNameMessageDigest)
+			return NewGoRuntimeService(types.SecurityServiceMessageDigest, "SHA-224", types.ClassNameMessageDigest)
 		},
 		"SHA-256": func() *object.Object {
-			return NewGoRuntimeService("MessageDigest", "SHA-256", types.ClassNameMessageDigest)
+			return NewGoRuntimeService(types.SecurityServiceMessageDigest, "SHA-256", types.ClassNameMessageDigest)
 		},
 		"SHA-384": func() *object.Object {
-			return NewGoRuntimeService("MessageDigest", "SHA-384", types.ClassNameMessageDigest)
+			return NewGoRuntimeService(types.SecurityServiceMessageDigest, "SHA-384", types.ClassNameMessageDigest)
 		},
 		"SHA-512": func() *object.Object {
-			return NewGoRuntimeService("MessageDigest", "SHA-512", types.ClassNameMessageDigest)
+			return NewGoRuntimeService(types.SecurityServiceMessageDigest, "SHA-512", types.ClassNameMessageDigest)
 		},
 		"SHA-512/224": func() *object.Object {
-			return NewGoRuntimeService("MessageDigest", "SHA-512/224", types.ClassNameMessageDigest)
+			return NewGoRuntimeService(types.SecurityServiceMessageDigest, "SHA-512/224", types.ClassNameMessageDigest)
 		},
 		"SHA-512/256": func() *object.Object {
-			return NewGoRuntimeService("MessageDigest", "SHA-512/256", types.ClassNameMessageDigest)
+			return NewGoRuntimeService(types.SecurityServiceMessageDigest, "SHA-512/256", types.ClassNameMessageDigest)
 		},
 	},
 }
