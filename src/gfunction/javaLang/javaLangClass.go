@@ -255,7 +255,8 @@ func classGetCanonicalName(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetCanonicalName: invalid or null object")
 	}
 
-	rawName := object.GoStringFromStringPoolIndex(obj.KlassName)
+	// we don't use obj.KlassName because that's always java/lang/Class for Class objects
+	rawName := obj.FieldTable["name"].Fvalue.(string)
 	if strings.HasPrefix(rawName, types.Array) {
 		switch rawName[1] {
 		case 'B':
@@ -304,7 +305,8 @@ func classGetCanonicalName(params []interface{}) interface{} {
 		return object.StringObjectFromGoString(canonicalName)
 	}
 
-	return object.StringObjectFromGoString(rawName)
+	name := util.ConvertInternalClassNameToUserFormat(rawName)
+	return object.StringObjectFromGoString(name)
 }
 
 // getComponentType() returns a pointer to class of the type of an array.
