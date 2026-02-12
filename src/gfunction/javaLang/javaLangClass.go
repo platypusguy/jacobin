@@ -75,6 +75,8 @@ func Load_Lang_Class() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: getComponentType}
 	ghelpers.MethodSignatures["java/lang/Class.getDeclaringClass()Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetDeclaringClass}
+	ghelpers.MethodSignatures["java/lang/Class.getInterfaces()[Ljava/lang/Class;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetInterfaces}
 	ghelpers.MethodSignatures["java/lang/Class.getModifiers()I"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetModifiers}
 	ghelpers.MethodSignatures["java/lang/Class.getModule()Ljava/lang/Module;"] =
@@ -144,7 +146,7 @@ func Load_Lang_Class() {
 	addTrap("java/lang/Class.getFields()[Ljava/lang/reflect/Field;", 0)
 	addTrap("java/lang/Class.getGenericInterfaces()[Ljava/lang/reflect/Type;", 0)
 	addTrap("java/lang/Class.getGenericSuperclass()Ljava/lang/reflect/Type;", 0)
-	addTrap("java/lang/Class.getInterfaces()[Ljava/lang/Class;", 0)
+	// addTrap("java/lang/Class.getInterfaces()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getNestHost()Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getNestMembers()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getPackage()Ljava/lang/Package;", 0)
@@ -413,6 +415,22 @@ func classGetField(params []interface{}) interface{} {
 	}
 
 	return NewField(cl, fieldName)
+}
+
+// java/lang/Class.getInterfaces()[Ljava/lang/Class;
+// Returns an array of pointers to Class instances for the interfaces implemented by this class
+func classGetInterfaces(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetInterfaces: invalid or null object")
+	}
+
+	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	interfaceCount := len(klass.Interfaces)
+	if interfaceCount == 0 { // if no interfaces, then return an empty array
+		return object.Make1DimRefArray("java/lang/Class", 0)
+	}
+	return nil // TODO: replace with array of pointers to interface Class instances
 }
 
 // java/lang/Class.getModifiers()I
