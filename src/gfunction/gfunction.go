@@ -57,13 +57,12 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaIo.Load_Io_RandomAccessFile()
 
 	// java/lang/*
+	javaLang.ClassClinitIsh() // Special case clinit for java/lang/Class.
 	javaLang.Load_Lang_Boolean()
 	javaLang.Load_Lang_Byte()
 	javaLang.Load_Lang_Character()
 	javaLang.Load_Lang_CharSequence()
 	javaLang.Load_Lang_Class()
-	javaLang.Load_Lang_Reflect_Modifier()
-	javaLang.ClassClinitIsh()
 	javaLang.Load_Lang_Double()
 	javaLang.Load_Lang_Float()
 	javaLang.Load_Lang_Integer()
@@ -73,6 +72,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Process()
 	javaLang.Load_Lang_Process_Builder()
 	javaLang.Load_Lang_Process_Handle_Impl()
+	javaLang.Load_Lang_Reflect_Modifier()
 	javaLang.Load_Lang_Runtime()
 	javaLang.Load_Lang_SecurityManager()
 	javaLang.Load_Lang_Short()

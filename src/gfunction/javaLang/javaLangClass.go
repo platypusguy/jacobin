@@ -29,14 +29,11 @@ var unnamedModule = object.Null
 var classNameModule = "java/lang/Module"
 
 // ClassClinitIsh is handled special because the natural <clinit> function is never called.
-/*
-JVM spec:
-"The java.lang.Class class is automatically initialized when the JVM is started.
-However, because it is so tightly integrated with the JVM itself, its static initializer
-s not necessarily run in the same way as other classes."
-*/
-
-// TODO: What is this?
+// Per the JVM spec: "The java.lang.Class class is automatically initialized when the JVM is
+// started. However, because it is so tightly integrated with the JVM itself, its static initializer
+// is not necessarily run in the same way as other classes."
+//
+// This function is called by the JVM to initialize the unnamed module.
 func ClassClinitIsh() {
 	// Initialize the unnamedModule singleton.
 	if unnamedModule == nil {
