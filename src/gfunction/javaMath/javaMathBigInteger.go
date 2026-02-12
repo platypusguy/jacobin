@@ -188,7 +188,7 @@ func Load_Math_Big_Integer() {
 	ghelpers.MethodSignatures["java/math/BigInteger.hashCode()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  bigIntegerHashCode,
 		}
 
 	ghelpers.MethodSignatures["java/math/BigInteger.intValue()I"] =
@@ -891,6 +891,18 @@ func bigIntegerGCD(params []interface{}) interface{} {
 	return obj
 }
 
+// Compute the hash code based on the big.Int value.
+func bigIntegerHashCode(params []interface{}) interface{} {
+	objBase := params[0].(*object.Object)
+	bi := objBase.FieldTable["value"].Fvalue.(*big.Int)
+	bytes := bi.Bytes()
+	var hash int32 = 0
+	for _, b := range bytes {
+		hash = 31*hash + int32(b)
+	}
+	return int64(hash)
+}
+
 // "java/math/BigInteger.intValue()I"
 // "java/math/BigInteger.intValueExact()I"
 // "java/math/BigInteger.longValue()J"
@@ -1146,7 +1158,7 @@ func bigIntegerNegate(params []interface{}) interface{} {
 	return obj
 }
 
-// "java/math/BigInteger.negate()Ljava/math/BigInteger;"
+// "java/math/BigInteger.not()Ljava/math/BigInteger;"
 func bigIntegerNot(params []interface{}) interface{} {
 	// params[0]:  base object (xx)
 	// zz = not xx
@@ -1169,11 +1181,11 @@ func bigIntegerNot(params []interface{}) interface{} {
 	return obj
 }
 
-// "java/math/BigInteger.xor(Ljava/math/BigInteger;)Ljava/math/BigInteger;"
+// "java/math/BigInteger.or(Ljava/math/BigInteger;)Ljava/math/BigInteger;"
 func bigIntegerOr(params []interface{}) interface{} {
 	// params[0]: base object (xx)
 	// params[1]: argument object (yy)
-	// zz = xx XOR yy
+	// zz = xx OR yy
 
 	objBase := params[0].(*object.Object)
 	objArg := params[1].(*object.Object)
