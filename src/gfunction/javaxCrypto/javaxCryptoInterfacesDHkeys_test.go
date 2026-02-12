@@ -20,7 +20,7 @@ func TestLoad_Security_Interfaces_DH_Keys(t *testing.T) {
 	globals.InitGlobals("test")
 	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
 
-	Load_Security_Interfaces_DH_Keys()
+	Load_Crypto_Interfaces_DH_Keys()
 
 	expectedSignatures := []string{
 		"java/security/interfaces/DHKey.<clinit>()V",

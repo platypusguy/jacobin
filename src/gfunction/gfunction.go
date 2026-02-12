@@ -110,7 +110,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaSecurity.Load_KeyPairGenerator()
 	javaSecurity.Load_PublicAndPrivateKeys()
 	javaSecurity.Load_Security()
-	javaxCrypto.Load_Security_Interfaces_DH_Keys()
 	javaSecurity.Load_Security_Interfaces_DSA_Keys()
 	javaSecurity.Load_Security_Interfaces_EC_Keys()
 	javaSecurity.Load_Security_Interfaces_RSA_Keys()
@@ -124,7 +123,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaSecurity.Load_Security_Spec_AlgorithmParameterSpec()
 
 	// javax/crypto/*
+	javaxCrypto.Load_Crypto_Interfaces_DH_Keys()
 	javaxCrypto.Load_Crypto_KeyAgreement()
+	javaxCrypto.Load_Crypto_Spec_SecretKeySpec()
 
 	// java/util/*
 	javaUtil.Load_Util_ArrayList()

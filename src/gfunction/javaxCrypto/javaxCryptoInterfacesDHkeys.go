@@ -18,7 +18,7 @@ import (
 
 // Placeholder: use simple DH big.Int values
 
-func Load_Security_Interfaces_DH_Keys() {
+func Load_Crypto_Interfaces_DH_Keys() {
 
 	// =====DHKey =====
 
