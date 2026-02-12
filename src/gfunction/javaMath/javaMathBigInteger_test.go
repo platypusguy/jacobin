@@ -347,3 +347,168 @@ func TestBigInteger_ByteArray_Construct_And_ToByteArray(t *testing.T) {
 		t.Fatalf("toByteArray mismatch: expected %v, got %v", want, got)
 	}
 }
+
+func TestBigInteger_HashCode(t *testing.T) {
+	globals.InitStringPool()
+
+	a := biFromInt64(12345)
+	b := biFromInt64(12345)
+	c := biFromInt64(54321)
+
+	ha := bigIntegerHashCode([]interface{}{a}).(int64)
+	hb := bigIntegerHashCode([]interface{}{b}).(int64)
+	hc := bigIntegerHashCode([]interface{}{c}).(int64)
+
+	if ha != hb {
+		t.Errorf("hashCode mismatch for equal objects: %d != %d", ha, hb)
+	}
+	if ha == hc {
+		t.Errorf("hashCode collision for different objects: %d == %d", ha, hc)
+	}
+
+	// Additional test cases from issue description
+	testCases := []struct {
+		val  string
+		want int64
+	}{
+		{
+			val:  "93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000",
+			want: -575588423,
+		},
+		{
+			val:  "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007",
+			want: 838100529,
+		},
+	}
+
+	for _, tc := range testCases {
+		bi := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
+		bigIntegerInitString([]interface{}{bi, object.StringObjectFromGoString(tc.val)})
+		got := bigIntegerHashCode([]interface{}{bi}).(int64)
+		if got != tc.want {
+			t.Errorf("hashCode(%s) mismatch: got %d, want %d", tc.val, got, tc.want)
+		}
+	}
+}
+
+func TestBigInteger_Conversions(t *testing.T) {
+	globals.InitStringPool()
+
+	val := int64(1234567890)
+	bi := biFromInt64(val)
+
+	if got := bigIntegerInt64Value([]interface{}{bi}).(int64); got != val {
+		t.Errorf("intValue/longValue mismatch: expected %d, got %d", val, got)
+	}
+
+	if got := bigIntegerFloat64Value([]interface{}{bi}).(float64); got != float64(val) {
+		t.Errorf("float64Value mismatch: expected %f, got %f", float64(val), got)
+	}
+
+	// byteValueExact
+	biByte := biFromInt64(127)
+	if got := bigIntegerByteValueExact([]interface{}{biByte}).(int64); got != 127 {
+		t.Errorf("byteValueExact mismatch: expected 127, got %d", got)
+	}
+
+	biLarge := biFromInt64(128)
+	if err := bigIntegerByteValueExact([]interface{}{biLarge}); err == nil {
+		t.Error("expected ArithmeticException for byteValueExact out of range")
+	}
+}
+
+func TestBigInteger_ToStringRadix(t *testing.T) {
+	globals.InitStringPool()
+
+	bi := biFromInt64(255)
+
+	// Hex
+	s := bigIntegerToStringRadix([]interface{}{bi, int64(16)}).(*object.Object)
+	if asString(s) != "ff" {
+		t.Errorf("toString(16) mismatch: expected ff, got %s", asString(s))
+	}
+
+	// Base 36
+	s = bigIntegerToStringRadix([]interface{}{bi, int64(36)}).(*object.Object)
+	if asString(s) != "73" {
+		t.Errorf("toString(36) mismatch: expected 73, got %s", asString(s))
+	}
+
+	// Invalid radix
+	if err := bigIntegerToStringRadix([]interface{}{bi, int64(1)}); err == nil {
+		t.Error("expected IllegalArgumentException for radix < 2")
+	}
+	if err := bigIntegerToStringRadix([]interface{}{bi, int64(63)}); err == nil {
+		t.Error("expected IllegalArgumentException for radix > 62")
+	}
+}
+
+func TestBigInteger_Shift(t *testing.T) {
+	globals.InitStringPool()
+
+	bi := biFromInt64(1) // 0b1
+
+	// shiftLeft
+	res := bigIntegerShiftLeft([]interface{}{bi, int64(3)}).(*object.Object)
+	if bigIntOf(res).Int64() != 8 {
+		t.Errorf("shiftLeft(3) mismatch: expected 8, got %d", bigIntOf(res).Int64())
+	}
+
+	// shiftRight
+	bi = biFromInt64(8)
+	res = bigIntegerShiftRight([]interface{}{bi, int64(2)}).(*object.Object)
+	if bigIntOf(res).Int64() != 2 {
+		t.Errorf("shiftRight(2) mismatch: expected 2, got %d", bigIntOf(res).Int64())
+	}
+}
+
+func TestBigInteger_Bitwise(t *testing.T) {
+	globals.InitStringPool()
+
+	a := biFromInt64(0b1100)
+	b := biFromInt64(0b1010)
+
+	// AND: 1100 & 1010 = 1000 (8)
+	res := bigIntegerAnd([]interface{}{a, b}).(*object.Object)
+	if bigIntOf(res).Int64() != 8 {
+		t.Errorf("and mismatch: expected 8, got %d", bigIntOf(res).Int64())
+	}
+
+	// OR: 1100 | 1010 = 1110 (14)
+	res = bigIntegerOr([]interface{}{a, b}).(*object.Object)
+	if bigIntOf(res).Int64() != 14 {
+		t.Errorf("or mismatch: expected 14, got %d", bigIntOf(res).Int64())
+	}
+
+	// XOR: 1100 ^ 1010 = 0110 (6)
+	res = bigIntegerXor([]interface{}{a, b}).(*object.Object)
+	if bigIntOf(res).Int64() != 6 {
+		t.Errorf("xor mismatch: expected 6, got %d", bigIntOf(res).Int64())
+	}
+
+	// NOT: ~0 = -1
+	res = bigIntegerNot([]interface{}{biFromInt64(0)}).(*object.Object)
+	if bigIntOf(res).Int64() != -1 {
+		t.Errorf("not mismatch: expected -1, got %d", bigIntOf(res).Int64())
+	}
+
+	// ANDNOT: 1100 & ~1010 = 1100 & 0101 = 0100 (4)
+	res = bigIntegerAndNot([]interface{}{a, b}).(*object.Object)
+	if bigIntOf(res).Int64() != 4 {
+		t.Errorf("andNot mismatch: expected 4, got %d", bigIntOf(res).Int64())
+	}
+}
+
+func TestBigInteger_StaticProbablyPrime(t *testing.T) {
+	globals.InitStringPool()
+
+	// bitLength 10
+	res := bigIntegerProbablyPrime([]interface{}{int64(10), nil}).(*object.Object)
+	bi := bigIntOf(res)
+	if bi.BitLen() > 10 {
+		t.Errorf("probablyPrime(10) bit length too large: %d", bi.BitLen())
+	}
+	if !bi.ProbablyPrime(10) {
+		t.Errorf("probablyPrime(10) returned a non-prime: %s", bi.String())
+	}
+}
