@@ -895,12 +895,37 @@ func bigIntegerGCD(params []interface{}) interface{} {
 func bigIntegerHashCode(params []interface{}) interface{} {
 	objBase := params[0].(*object.Object)
 	bi := objBase.FieldTable["value"].Fvalue.(*big.Int)
+
+	// Java's BigInteger.hashCode() uses mag array which is big-endian.
+	// big.Int.Bytes() returns big-endian bytes.
 	bytes := bi.Bytes()
-	var hash int32 = 0
-	for _, b := range bytes {
-		hash = 31*hash + int32(b)
+
+	// Convert bytes to int32 array (mag array in Java)
+	var mag []int32
+	// If the byte array length is not a multiple of 4, we need to handle the first few bytes.
+	firstIntLen := len(bytes) % 4
+	if firstIntLen > 0 {
+		var firstInt int32
+		for i := 0; i < firstIntLen; i++ {
+			firstInt = (firstInt << 8) | int32(bytes[i])
+		}
+		mag = append(mag, firstInt)
 	}
-	return int64(hash)
+
+	for i := firstIntLen; i < len(bytes); i += 4 {
+		var val int32
+		for j := 0; j < 4; j++ {
+			val = (val << 8) | int32(bytes[i+j])
+		}
+		mag = append(mag, val)
+	}
+
+	var hashCode int32 = 0
+	for _, val := range mag {
+		hashCode = 31*hashCode + val
+	}
+
+	return int64(hashCode * int32(bi.Sign()))
 }
 
 // "java/math/BigInteger.intValue()I"

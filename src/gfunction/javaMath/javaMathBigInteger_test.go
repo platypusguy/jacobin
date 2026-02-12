@@ -365,6 +365,30 @@ func TestBigInteger_HashCode(t *testing.T) {
 	if ha == hc {
 		t.Errorf("hashCode collision for different objects: %d == %d", ha, hc)
 	}
+
+	// Additional test cases from issue description
+	testCases := []struct {
+		val  string
+		want int64
+	}{
+		{
+			val:  "93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000",
+			want: -575588423,
+		},
+		{
+			val:  "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007",
+			want: 838100529,
+		},
+	}
+
+	for _, tc := range testCases {
+		bi := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
+		bigIntegerInitString([]interface{}{bi, object.StringObjectFromGoString(tc.val)})
+		got := bigIntegerHashCode([]interface{}{bi}).(int64)
+		if got != tc.want {
+			t.Errorf("hashCode(%s) mismatch: got %d, want %d", tc.val, got, tc.want)
+		}
+	}
 }
 
 func TestBigInteger_Conversions(t *testing.T) {
