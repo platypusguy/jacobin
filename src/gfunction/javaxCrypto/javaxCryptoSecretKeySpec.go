@@ -7,6 +7,7 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"slices"
 )
 
 func Load_Crypto_Spec_SecretKeySpec() {
@@ -165,7 +166,7 @@ func secretKeySpecInit(params []any) any {
 	// Store the key and algorithm in the object's fields
 	obj.FieldTable["key"] = object.Field{
 		Ftype:  types.ByteArray,
-		Fvalue: keyBytes,
+		Fvalue: slices.Clone(keyBytes),
 	}
 	obj.FieldTable["algorithm"] = object.Field{
 		Ftype:  types.StringClassName,
@@ -267,12 +268,8 @@ func secretKeySpecGetEncoded(params []any) any {
 			"secretKeySpecGetEncoded: key field not found or invalid")
 	}
 
-	// Return a copy to prevent external modification
-	keyCopy := make([]byte, len(keyBytes))
-	copy(keyCopy, keyBytes)
-
 	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray,
-		object.JavaByteArrayFromGoByteArray(keyCopy))
+		object.JavaByteArrayFromGoByteArray(slices.Clone(keyBytes)))
 }
 
 // secretKeySpecGetFormat implements getFormat()
