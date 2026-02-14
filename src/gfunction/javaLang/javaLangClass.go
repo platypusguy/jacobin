@@ -83,6 +83,8 @@ func Load_Lang_Class() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetModule}
 	ghelpers.MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ClassGetName}
+	ghelpers.MethodSignatures["java/lang/Class.getPackage()Ljava/lang/Package;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetPackage}
 	ghelpers.MethodSignatures["java/lang/Class.getPackageName()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetPackageName}
 	ghelpers.MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
@@ -149,7 +151,7 @@ func Load_Lang_Class() {
 	// addTrap("java/lang/Class.getInterfaces()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getNestHost()Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getNestMembers()[Ljava/lang/Class;", 0)
-	addTrap("java/lang/Class.getPackage()Ljava/lang/Package;", 0)
+	// addTrap("java/lang/Class.getPackage()Ljava/lang/Package;", 0)
 	addTrap("java/lang/Class.getPermittedSubclasses()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getProtectionDomain()Ljava/security/ProtectionDomain;", 0)
 	addTrap("java/lang/Class.getRecordComponents()[Ljava/lang/reflect/RecordComponent;", 0)
@@ -504,6 +506,30 @@ func ClassGetName(params []interface{}) interface{} {
 	name = util.ConvertInternalClassNameToUserFormat(name)
 	nameObj := object.StringObjectFromGoString(name)
 	return nameObj
+}
+
+// java/lang/Class.getPackage()Ljava/lang/Package;
+// Returns the package of this class
+func classGetPackage(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetPackage: invalid or null object")
+	}
+
+	klassPtr := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	pkgName := klassPtr.Pkg
+
+	// If the package name is empty, return null
+	if pkgName == "" {
+		return nil
+	}
+
+	// TODO: We should return a java.lang.Package object here.
+	// For now, we'll return null as we don't have full Package support yet.
+	// This is better than crashing or returning an error.
+	// In a full implementation, we would look up the Package object for this package name.
+
+	return nil
 }
 
 // java/lang/Class.getPackageName()Ljava/lang/String;
