@@ -136,7 +136,7 @@ func secretKeySpecInit(params []any) any {
 
 		// Validate offset and length
 		if offset < 0 || length < 0 || int(offset+length) > len(fullKeyBytes) {
-			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			return ghelpers.GetGErrBlk(excNames.InvalidKeyException,
 				"secretKeySpecInit: invalid offset or length")
 		}
 
@@ -154,15 +154,12 @@ func secretKeySpecInit(params []any) any {
 			"secretKeySpecInit: algorithm cannot be empty")
 	}
 
-	// Validate algorithm is a known secret key algorithm
-	if !isValidSecretKeyAlgorithm(algorithm) {
+	// Get configuration for this algorithm.
+	// TODO: Just validation at present time. Much work is needed to process the returned config!
+	_, enabled := ValidateCipherTransformation(algorithm)
+	if !enabled {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
 			fmt.Sprintf("secretKeySpecInit: unknown or invalid algorithm: %s", algorithm))
-	}
-
-	// Optionally validate key length for the algorithm
-	if err := validateKeyLength(algorithm, len(keyBytes)); err != nil {
-		return ghelpers.GetGErrBlk(excNames.InvalidKeyException, err.Error())
 	}
 
 	// Store the key and algorithm in the object's fields
@@ -333,52 +330,4 @@ func secretKeySpecHashCode(params []any) any {
 	hash ^= keyHash
 
 	return int64(hash)
-}
-
-// Helpers
-
-// isValidSecretKeyAlgorithm checks if the algorithm is a valid secret key algorithm
-func isValidSecretKeyAlgorithm(algorithm string) bool {
-	validAlgorithms := map[string]bool{
-		"AES":                  true,
-		"DES":                  true,
-		"DESede":               true,
-		"TripleDES":            true,
-		"Blowfish":             true,
-		"RC2":                  true,
-		"RC4":                  true,
-		"RC5":                  true,
-		"ARCFOUR":              true,
-		"ChaCha20":             true,
-		"HmacSHA1":             true,
-		"HmacSHA224":           true,
-		"HmacSHA256":           true,
-		"HmacSHA384":           true,
-		"HmacSHA512":           true,
-		"HmacMD5":              true,
-		"PBEWithMD5AndDES":     true,
-		"PBEWithSHA1AndDESede": true,
-		"PBEWithSHA1AndRC2_40": true,
-	}
-	return validAlgorithms[algorithm]
-}
-
-// validateKeyLength checks if the key length is valid for the algorithm
-func validateKeyLength(algorithm string, keyLen int) error {
-	switch algorithm {
-	case "DES":
-		if keyLen != 8 {
-			return fmt.Errorf("DES key must be 8 bytes, got %d", keyLen)
-		}
-	case "DESede", "TripleDES":
-		if keyLen != 24 && keyLen != 16 {
-			return fmt.Errorf("DESede key must be 16 or 24 bytes, got %d", keyLen)
-		}
-	case "AES":
-		if keyLen != 16 && keyLen != 24 && keyLen != 32 {
-			return fmt.Errorf("AES key must be 16, 24, or 32 bytes, got %d", keyLen)
-		}
-		// For other algorithms, accept any reasonable length
-	}
-	return nil
 }
