@@ -188,7 +188,7 @@ func Load_Math_Big_Integer() {
 	ghelpers.MethodSignatures["java/math/BigInteger.hashCode()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  bigIntegerHashCode,
 		}
 
 	ghelpers.MethodSignatures["java/math/BigInteger.intValue()I"] =
@@ -891,6 +891,43 @@ func bigIntegerGCD(params []interface{}) interface{} {
 	return obj
 }
 
+// Compute the hash code based on the big.Int value.
+func bigIntegerHashCode(params []interface{}) interface{} {
+	objBase := params[0].(*object.Object)
+	bi := objBase.FieldTable["value"].Fvalue.(*big.Int)
+
+	// Java's BigInteger.hashCode() uses mag array which is big-endian.
+	// big.Int.Bytes() returns big-endian bytes.
+	bytes := bi.Bytes()
+
+	// Convert bytes to int32 array (mag array in Java)
+	var mag []int32
+	// If the byte array length is not a multiple of 4, we need to handle the first few bytes.
+	firstIntLen := len(bytes) % 4
+	if firstIntLen > 0 {
+		var firstInt int32
+		for i := 0; i < firstIntLen; i++ {
+			firstInt = (firstInt << 8) | int32(bytes[i])
+		}
+		mag = append(mag, firstInt)
+	}
+
+	for i := firstIntLen; i < len(bytes); i += 4 {
+		var val int32
+		for j := 0; j < 4; j++ {
+			val = (val << 8) | int32(bytes[i+j])
+		}
+		mag = append(mag, val)
+	}
+
+	var hashCode int32 = 0
+	for _, val := range mag {
+		hashCode = 31*hashCode + val
+	}
+
+	return int64(hashCode * int32(bi.Sign()))
+}
+
 // "java/math/BigInteger.intValue()I"
 // "java/math/BigInteger.intValueExact()I"
 // "java/math/BigInteger.longValue()J"
@@ -1146,7 +1183,7 @@ func bigIntegerNegate(params []interface{}) interface{} {
 	return obj
 }
 
-// "java/math/BigInteger.negate()Ljava/math/BigInteger;"
+// "java/math/BigInteger.not()Ljava/math/BigInteger;"
 func bigIntegerNot(params []interface{}) interface{} {
 	// params[0]:  base object (xx)
 	// zz = not xx
@@ -1169,11 +1206,11 @@ func bigIntegerNot(params []interface{}) interface{} {
 	return obj
 }
 
-// "java/math/BigInteger.xor(Ljava/math/BigInteger;)Ljava/math/BigInteger;"
+// "java/math/BigInteger.or(Ljava/math/BigInteger;)Ljava/math/BigInteger;"
 func bigIntegerOr(params []interface{}) interface{} {
 	// params[0]: base object (xx)
 	// params[1]: argument object (yy)
-	// zz = xx XOR yy
+	// zz = xx OR yy
 
 	objBase := params[0].(*object.Object)
 	objArg := params[1].(*object.Object)
