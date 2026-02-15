@@ -148,11 +148,11 @@ func TestKeyPairGeneratorInitializeParmSpec(t *testing.T) {
 	}
 
 	params := []any{kpgObj, specObj}
-	result := keypairgeneratorInitializeParmSpec(params)
+	result := keypairgeneratorInitializeWithParmSpec(params)
 
 	if result != nil {
 		if err, ok := result.(*ghelpers.GErrBlk); ok {
-			t.Fatalf("keypairgeneratorInitializeParmSpec failed: %s", err.ErrMsg)
+			t.Fatalf("keypairgeneratorInitializeWithParmSpec failed: %s", err.ErrMsg)
 		}
 		t.Errorf("Expected nil result, got %v", result)
 	}

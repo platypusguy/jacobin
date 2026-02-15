@@ -128,3 +128,8 @@ func TestDisableEnableTransformation(t *testing.T) {
 		t.Error("EnableTransformation(NonExistent) should return false")
 	}
 }
+
+func TestCountTableEntries(t *testing.T) {
+	count := len(CipherConfigTable)
+	t.Logf("CipherConfigTable has %d entries", count)
+}

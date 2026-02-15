@@ -8,12 +8,11 @@ package javaxCrypto
 
 import (
 	"fmt"
-	"math/big"
-
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"math/big"
 )
 
 // Placeholder: use simple DH big.Int values
@@ -31,13 +30,13 @@ func Load_Crypto_Interfaces_DH_Keys() {
 	ghelpers.MethodSignatures["java/security/interfaces/DHKey.<init>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapKeyPairGeneration,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/security/interfaces/DHKey.getParams()Ljavax/crypto/spec/DHParameterSpec;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.ReturnNull,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	// =====DHPrivateKey =====
@@ -51,10 +50,10 @@ func Load_Crypto_Interfaces_DH_Keys() {
 	ghelpers.MethodSignatures["java/security/interfaces/DHPrivateKey.<init>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapKeyPairGeneration,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
-	ghelpers.MethodSignatures["java/security/interfaces/DHPrivateKey.getX()()Ljava/math/BigInteger;"] =
+	ghelpers.MethodSignatures["java/security/interfaces/DHPrivateKey.getX()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dhPrivateGetX,
@@ -71,7 +70,7 @@ func Load_Crypto_Interfaces_DH_Keys() {
 	ghelpers.MethodSignatures["java/security/interfaces/DHPublicKey.<init>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapKeyPairGeneration,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/security/interfaces/DHPublicKey.getY()Ljava/math/BigInteger;"] =
@@ -83,7 +82,7 @@ func Load_Crypto_Interfaces_DH_Keys() {
 	ghelpers.MethodSignatures["java/security/interfaces/DHPublicKey.getParams()Ljava/security/spec/AlgorithmParameterSpec;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.ReturnNull,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 }
@@ -108,7 +107,7 @@ func dhPrivateGetX(params []any) any {
 		)
 	}
 
-	dhprvkey, ok := thisObj.FieldTable["value"].Fvalue.(*big.Int)
+	dhprvkey, ok := thisObj.FieldTable["value"].Fvalue.(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.VirtualMachineError,
@@ -116,9 +115,16 @@ func dhPrivateGetX(params []any) any {
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, dhprvkey)
+	xValue, ok := dhprvkey.FieldTable["x"].Fvalue.(*big.Int)
+	if !ok {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalStateException,
+			"dhPrivateKeyGetX: DH private key x-field extraction failed",
+		)
+	}
+	xObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, xValue)
 
-	return bigint
+	return xObj
 }
 
 func dhPublicKeyGetY(params []any) any {
@@ -137,7 +143,7 @@ func dhPublicKeyGetY(params []any) any {
 		)
 	}
 
-	dhpubkey, ok := thisObj.FieldTable["value"].Fvalue.(*big.Int)
+	dhpubkey, ok := thisObj.FieldTable["value"].Fvalue.(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalStateException,
@@ -145,7 +151,14 @@ func dhPublicKeyGetY(params []any) any {
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, dhpubkey)
+	yValue, ok := dhpubkey.FieldTable["y"].Fvalue.(*big.Int)
+	if !ok {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalStateException,
+			"dhPublicKeyGetY: DH public key y-field extraction failed",
+		)
+	}
+	yObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, yValue)
 
-	return bigint
+	return yObj
 }

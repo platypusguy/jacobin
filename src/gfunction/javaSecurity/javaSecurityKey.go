@@ -77,16 +77,35 @@ func keyGetEncoded(params []any) any {
 	if len(params) < 1 {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetEncoded: missing 'this'")
 	}
-	obj, ok := params[0].(*object.Object)
-	if !ok || obj == nil {
+	keyObj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(keyObj) {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetEncoded: 'this' is not an object")
 	}
+	keyClassName := object.GoStringFromStringPoolIndex(keyObj.KlassName)
 
-	val := obj.FieldTable["value"].Fvalue
+	var value any
+	switch keyClassName {
+	case types.ClassNameDHPrivateKey:
+		value, ok = keyObj.FieldTable["x"].Fvalue.(*big.Int)
+		if !ok {
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetEncoded: field `x` not found")
+		}
+	case types.ClassNameDHPublicKey:
+		value, ok = keyObj.FieldTable["y"].Fvalue.(*big.Int)
+		if !ok {
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetEncoded: field `y` not found")
+		}
+	default:
+		value, ok = keyObj.FieldTable["value"].Fvalue.(any)
+		if !ok {
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetEncoded: field `value` not found")
+		}
+	}
+
 	var encoded []byte
 	var err error = nil
 
-	switch k := val.(type) {
+	switch k := value.(type) {
 	case *rsa.PublicKey:
 		encoded, err = x509.MarshalPKIXPublicKey(k)
 	case *rsa.PrivateKey:
@@ -115,7 +134,7 @@ func keyGetEncoded(params []any) any {
 		// DH keys often stored as *big.Int
 		encoded = k.Bytes()
 	default:
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("keyGetEncoded: unsupported key type %T", val))
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("keyGetEncoded: unsupported key type %T", value))
 	}
 
 	if err != nil {
