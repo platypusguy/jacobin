@@ -77,12 +77,12 @@ func keyGetEncoded(params []any) any {
 	if len(params) < 1 {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetEncoded: missing 'this'")
 	}
-	obj, ok := params[0].(*object.Object)
-	if !ok || obj == nil {
+	keyObj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(keyObj) {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyGetEncoded: 'this' is not an object")
 	}
 
-	val := obj.FieldTable["value"].Fvalue
+	val := keyObj.FieldTable["value"].Fvalue
 	var encoded []byte
 	var err error = nil
 

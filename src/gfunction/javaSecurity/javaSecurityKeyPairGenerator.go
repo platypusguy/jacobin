@@ -86,7 +86,7 @@ func Load_KeyPairGenerator() {
 	ghelpers.MethodSignatures["java/security/KeyPairGenerator.initialize(Ljava/security/spec/AlgorithmParameterSpec;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  keypairgeneratorInitializeParmSpec,
+			GFunction:  keypairgeneratorInitializeWithParmSpec,
 		}
 
 	ghelpers.MethodSignatures["java/security/KeyPairGenerator.initialize(Ljava/security/spec/AlgorithmParameterSpec;Ljava/security/SecureRandom;)V"] =
@@ -235,8 +235,8 @@ func keypairgeneratorInitializeWithRandom(params []any) any {
 	return nil
 }
 
-// keypairgeneratorInitializeParmSpec initializes the key pair generator with algorithm parameter spec
-func keypairgeneratorInitializeParmSpec(params []any) any {
+// keypairgeneratorInitializeWithParmSpec initializes the key pair generator with algorithm parameter spec
+func keypairgeneratorInitializeWithParmSpec(params []any) any {
 	if len(params) != 2 {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalArgumentException,
@@ -359,17 +359,36 @@ func keypairgeneratorInitializeParmSpec(params []any) any {
 				fmt.Sprintf("DH requires DHParameterSpec, got %s", paramSpecClassName),
 			)
 		}
+
 		// Extract key size from P parameter
 		pField, exists := paramSpecObj.FieldTable["p"]
 		if !exists {
 			return ghelpers.GetGErrBlk(
 				excNames.InvalidAlgorithmParameterException,
-				"DHParameterSpec missing p field",
+				"DHParameterSpec missing P field",
 			)
 		}
-		pObj := pField.Fvalue.(*object.Object)
-		p := pObj.FieldTable["value"].Fvalue.(*big.Int)
-		keySize = int64(p.BitLen())
+		kpgObj.FieldTable["p"] = object.Field{pField.Ftype, pField.Fvalue}
+
+		// Extract key size from G parameter
+		gField, exists := paramSpecObj.FieldTable["g"]
+		if !exists {
+			return ghelpers.GetGErrBlk(
+				excNames.InvalidAlgorithmParameterException,
+				"DHParameterSpec missing G field",
+			)
+		}
+		kpgObj.FieldTable["g"] = object.Field{gField.Ftype, gField.Fvalue}
+
+		// Extract key size from L parameter
+		lField, exists := paramSpecObj.FieldTable["l"]
+		if !exists {
+			return ghelpers.GetGErrBlk(
+				excNames.InvalidAlgorithmParameterException,
+				"DHParameterSpec missing L field",
+			)
+		}
+		kpgObj.FieldTable["l"] = object.Field{lField.Ftype, lField.Fvalue}
 
 	case "EdDSA":
 		// Accept only NamedParameterSpec

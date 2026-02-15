@@ -39,7 +39,7 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 		)
 	}
 
-	obj, ok := params[0].(*object.Object)
+	kpgObj, ok := params[0].(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalArgumentException,
@@ -47,7 +47,7 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 		)
 	}
 
-	algObj, ok := obj.FieldTable["algorithm"].Fvalue.(*object.Object)
+	algObj, ok := kpgObj.FieldTable["algorithm"].Fvalue.(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(
 			excNames.IllegalArgumentException,
@@ -56,7 +56,7 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 	}
 	algorithm := object.GoStringFromStringObject(algObj)
 
-	keySize, ok := obj.FieldTable["keySize"].Fvalue.(int64)
+	keySize, ok := kpgObj.FieldTable["keySize"].Fvalue.(int64)
 	if !ok {
 		keySize = int64(2048)
 	}
@@ -97,16 +97,13 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 		}
 
 	case "DH":
-		// --- Simple DH example ---
-		priv := big.NewInt(6)
-		pub := big.NewInt(8)
-
-		privateKeyObj := NewGoRuntimeService("DH", "DH", types.ClassNameDHPrivateKey)
-		privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
-
-		publicKeyObj := NewGoRuntimeService("DH", "DH", types.ClassNameDHPublicKey)
-		publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pub}
-
+		privateKeyObj, publicKeyObj, err := generateDHKeyPair(kpgObj)
+		if err != nil {
+			return ghelpers.GetGErrBlk(
+				excNames.InvalidKeyException,
+				err.Error(),
+			)
+		}
 		keyPairObj = NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "DH", types.ClassNameKeyPair)
 		keyPairObj.FieldTable["private"] = object.Field{Ftype: types.ClassNameDHPrivateKey, Fvalue: privateKeyObj}
 		keyPairObj.FieldTable["public"] = object.Field{Ftype: types.ClassNameDHPublicKey, Fvalue: publicKeyObj}
@@ -194,7 +191,7 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 		// --- Handle EdDSA / Ed25519 / Ed448 ---
 		var curveName string
 		if algorithm == "EdDSA" {
-			paramSpecObj, ok := obj.FieldTable["paramSpec"].Fvalue.(*object.Object)
+			paramSpecObj, ok := kpgObj.FieldTable["paramSpec"].Fvalue.(*object.Object)
 			if !ok {
 				return ghelpers.GetGErrBlk(
 					excNames.InvalidAlgorithmParameterException,
