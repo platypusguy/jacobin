@@ -70,6 +70,7 @@ func generateDHKeyPair(kpgObj *object.Object) (*object.Object, *object.Object, e
 	privKey.FieldTable["g"] = object.Field{Ftype: types.BigInteger, Fvalue: gBI}
 	privKey.FieldTable["l"] = object.Field{Ftype: types.Int, Fvalue: lValue}
 	privKey.FieldTable["params"] = object.Field{Ftype: types.Ref, Fvalue: kpgObj.FieldTable["paramSpec"].Fvalue}
+	privKey.FieldTable["algorithm"] = object.Field{Ftype: types.Ref, Fvalue: kpgObj.FieldTable["algorithm"].Fvalue}
 
 	// --- Construct DHPublicKey object ---
 	pubKey := object.MakeEmptyObjectWithClassName(&types.ClassNameDHPublicKey)
@@ -78,6 +79,7 @@ func generateDHKeyPair(kpgObj *object.Object) (*object.Object, *object.Object, e
 	pubKey.FieldTable["g"] = object.Field{Ftype: types.BigInteger, Fvalue: gBI}
 	pubKey.FieldTable["l"] = object.Field{Ftype: types.Int, Fvalue: lValue}
 	pubKey.FieldTable["params"] = object.Field{Ftype: types.Ref, Fvalue: kpgObj.FieldTable["paramSpec"].Fvalue}
+	pubKey.FieldTable["algorithm"] = object.Field{Ftype: types.Ref, Fvalue: kpgObj.FieldTable["algorithm"].Fvalue}
 
 	return privKey, pubKey, nil
 }
