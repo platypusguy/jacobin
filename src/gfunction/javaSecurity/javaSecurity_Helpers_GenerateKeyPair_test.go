@@ -42,6 +42,32 @@ func makeKeyPairGenerator(algo string, keySize int64) *object.Object {
 	return obj
 }
 
+// makeDHKeyPairGenerator creates a KeyPairGenerator for DH with required parameters
+func makeDHKeyPairGenerator(p, g int64, l int64) *object.Object {
+	obj := makeKeyPairGenerator("DH", -1)
+	obj.FieldTable["p"] = object.Field{
+		Ftype:  types.BigInteger,
+		Fvalue: big.NewInt(p),
+	}
+	obj.FieldTable["g"] = object.Field{
+		Ftype:  types.BigInteger,
+		Fvalue: big.NewInt(g),
+	}
+	obj.FieldTable["l"] = object.Field{
+		Ftype:  types.Int,
+		Fvalue: l,
+	}
+
+	// Mock DHParameterSpec and store it in paramSpec field
+	paramSpec := object.MakeEmptyObjectWithClassName(&types.ClassNameDHParameterSpec)
+	paramSpec.FieldTable["p"] = object.Field{Ftype: types.BigInteger, Fvalue: p}
+	paramSpec.FieldTable["g"] = object.Field{Ftype: types.BigInteger, Fvalue: g}
+	paramSpec.FieldTable["l"] = object.Field{Ftype: types.Int, Fvalue: l}
+	obj.FieldTable["paramSpec"] = object.Field{Ftype: types.Ref, Fvalue: paramSpec}
+
+	return obj
+}
+
 func TestGenerateKeyPairRSA(t *testing.T) {
 	globals.InitGlobals("test")
 	InitDefaultSecurityProvider()
@@ -170,22 +196,27 @@ func TestGenerateKeyPairDH(t *testing.T) {
 	globals.InitGlobals("test")
 	InitDefaultSecurityProvider()
 
-	kpg := makeKeyPairGenerator("DH", -1)
+	// Use small primes for testing
+	kpg := makeDHKeyPairGenerator(23, 5, 0)
 	result := keypairgeneratorGenerateKeyPair([]any{kpg})
 
 	kpObj, ok := result.(*object.Object)
 	if !ok {
-		t.Fatalf("Expected *object.Object, got %T", result)
+		gerr, isErr := result.(*ghelpers.GErrBlk)
+		if isErr {
+			t.Fatalf("Expected *object.Object, got GErrBlk: %s", gerr.ErrMsg)
+		}
+		t.Fatalf("Expected *object.Object, got: %T", result)
 	}
 
 	privObj := kpObj.FieldTable["private"].Fvalue.(*object.Object)
 	pubObj := kpObj.FieldTable["public"].Fvalue.(*object.Object)
 
-	if privObj.FieldTable["value"].Fvalue.(*big.Int) == nil {
-		t.Error("DH Private key value is nil")
+	if privObj.FieldTable["x"].Fvalue.(*big.Int) == nil {
+		t.Error("DH Private key value (x) is nil")
 	}
-	if pubObj.FieldTable["value"].Fvalue.(*big.Int) == nil {
-		t.Error("DH Public key value is nil")
+	if pubObj.FieldTable["y"].Fvalue.(*big.Int) == nil {
+		t.Error("DH Public key value (y) is nil")
 	}
 }
 

@@ -2,6 +2,7 @@ package javaxCrypto
 
 import (
 	"crypto/ecdsa"
+	"errors"
 	"math/big"
 
 	"fmt"
@@ -115,6 +116,9 @@ func keyagreementGetInstance(params []any) any {
 	}
 
 	algorithm := object.GoStringFromStringObject(algorithmObj)
+	if algorithm == "DiffieHellman" {
+		algorithm = "DH"
+	}
 
 	// Validate algorithm
 	if !isSupportedKeyAgreementAlgorithm(algorithm) {
@@ -191,6 +195,9 @@ func keyagreementInit(params []any) any {
 	// Get algorithm
 	algoObj := kaObj.FieldTable["algorithm"].Fvalue.(*object.Object)
 	algorithm := object.GoStringFromStringObject(algoObj)
+	if algorithm == "DiffieHellman" {
+		algorithm = "DH"
+	}
 
 	// Validate key type matches algorithm
 	keyClassName := object.GoStringFromStringPoolIndex(privateKeyObj.KlassName)
@@ -293,7 +300,7 @@ func keyagreementDoPhase(params []any) any {
 		if keyClassName != types.ClassNameEdECPublicKey {
 			return ghelpers.GetGErrBlk(
 				excNames.InvalidKeyException,
-				fmt.Sprintf("X25519 requires X25519 public key, got %s", keyClassName),
+				fmt.Sprintf("X25519 requires EdEc public key, got %s", keyClassName),
 			)
 		}
 	}
@@ -311,7 +318,7 @@ func keyagreementDoPhase(params []any) any {
 	}
 
 	// For single-phase protocols (ECDH, X25519), return null
-	if lastPhase != 0 { // Java boolean true
+	if lastPhase != 0 {
 		return object.Null
 	}
 
@@ -362,7 +369,7 @@ func keyagreementGenerateSecret(params []any) any {
 	case "X25519", "XDH":
 		secretBytes, err = genSecretX25519(privateKeyObj, publicKeyObj)
 	case "DH", "DiffieHellman":
-		secretBytes, err = genSecretDH(privateKeyObj, publicKeyObj, kaObj.FieldTable["params"].Fvalue.(*object.Object))
+		secretBytes, err = genSecretDH(privateKeyObj, publicKeyObj)
 	default:
 		return ghelpers.GetGErrBlk(
 			excNames.NoSuchAlgorithmException,
@@ -390,29 +397,77 @@ func isSupportedKeyAgreementAlgorithm(algo string) bool {
 	return false
 }
 
-// genSecretDH performs classic Diffie-Hellman key exchange
-func genSecretDH(privateKeyObj, publicKeyObj, paramsObj *object.Object) ([]byte, error) {
-	// Extract private key (a big integer)
-	privKeyValue := privateKeyObj.FieldTable["value"].Fvalue.(*big.Int)
+// genSecretDH performs classic Diffie-Hellman secret generation to expedite secret key exchange.
+func genSecretDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
 
-	// Extract public key (a big integer)
-	pubKeyValue := publicKeyObj.FieldTable["value"].Fvalue.(*big.Int)
+	// --- Extract fields ---
 
-	// Extract DH parameters (p: prime modulus)
-	p := paramsObj.FieldTable["p"].Fvalue.(*big.Int)
-	// Note: generator (g) is not needed for shared secret computation
-
-	// Validate public key is in valid range [2, p-2]
-	two := big.NewInt(2)
-	pMinusTwo := new(big.Int).Sub(p, two)
-	if pubKeyValue.Cmp(two) < 0 || pubKeyValue.Cmp(pMinusTwo) > 0 {
-		return nil, fmt.Errorf("genSecretDH: public key out of valid range")
+	xField, ok := privateKeyObj.FieldTable["x"]
+	if !ok {
+		return nil, errors.New("genSecretDH: private key missing x")
 	}
 
-	// Perform modular exponentiation: shared_secret = (public_key ^ private_key) mod p
-	sharedSecret := new(big.Int).Exp(pubKeyValue, privKeyValue, p)
+	pFieldPriv, ok := privateKeyObj.FieldTable["p"]
+	if !ok {
+		return nil, errors.New("genSecretDH: private key missing p")
+	}
 
-	return sharedSecret.Bytes(), nil
+	yField, ok := publicKeyObj.FieldTable["y"]
+	if !ok {
+		return nil, errors.New("genSecretDH: public key missing y")
+	}
+
+	pFieldPub, ok := publicKeyObj.FieldTable["p"]
+	if !ok {
+		return nil, errors.New("genSecretDH: public key missing p")
+	}
+
+	// --- Type assert to *big.Int ---
+
+	x, ok := xField.Fvalue.(*big.Int)
+	if !ok {
+		return nil, errors.New("genSecretDH: x is not *big.Int")
+	}
+
+	y, ok := yField.Fvalue.(*big.Int)
+	if !ok {
+		return nil, errors.New("genSecretDH: y is not *big.Int")
+	}
+
+	pPriv, ok := pFieldPriv.Fvalue.(*big.Int)
+	if !ok {
+		return nil, errors.New("genSecretDH: private p is not *big.Int")
+	}
+
+	pPub, ok := pFieldPub.Fvalue.(*big.Int)
+	if !ok {
+		return nil, errors.New("genSecretDH: public p is not *big.Int")
+	}
+
+	// --- Validate parameters match ---
+
+	if pPriv.Cmp(pPub) != 0 {
+		return nil, errors.New("genSecretDH: mismatched domain parameters")
+	}
+
+	// --- Compute secret: y^x mod p ---
+
+	secret := new(big.Int).Exp(y, x, pPriv)
+
+	// --- Convert to fixed-length big-endian bytes ---
+
+	modSize := (pPriv.BitLen() + 7) / 8
+	raw := secret.Bytes()
+
+	if len(raw) == modSize {
+		return raw, nil
+	}
+
+	// Left pad with zeros (Java-compatible)
+	out := make([]byte, modSize)
+	copy(out[modSize-len(raw):], raw)
+
+	return out, nil
 }
 
 // genSecretECDH performs Elliptic Curve Diffie-Hellman
