@@ -30,7 +30,7 @@ func TestSecretKeySpecInit(t *testing.T) {
 		'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
 	}
 	keyObj := makeByteArrayObject(key)
-	algo := "AES"
+	algo := "AES/ECB/PKCS5Padding"
 	algoObj := object.StringObjectFromGoString(algo)
 
 	// Test SecretKeySpec(byte[] key, String algorithm)
@@ -70,7 +70,7 @@ func TestSecretKeySpecInit(t *testing.T) {
 
 	// Test error: invalid offset/length
 	specObj3 := object.MakeEmptyObjectWithClassName(&className)
-	params3 := []any{specObj3, keyObj, int64(3), int64(3), algoObj} // 3+3 > 5
+	params3 := []any{specObj3, keyObj, int64(23), int64(8), algoObj}
 	result3 := secretKeySpecInit(params3)
 	errBlk, ok := result3.(*ghelpers.GErrBlk)
 	if !ok || errBlk.ExceptionType != excNames.InvalidKeyException {
@@ -85,6 +85,14 @@ func TestSecretKeySpecInit(t *testing.T) {
 	errBlk, ok = result4.(*ghelpers.GErrBlk)
 	if !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
 		t.Errorf("Expected IllegalArgumentException for empty algorithm, got %v", result4)
+	}
+
+	// Test error: VALID offset/length
+	specObj5 := object.MakeEmptyObjectWithClassName(&className)
+	params5 := []any{specObj5, keyObj, int64(8), int64(16), algoObj} // up to the last allowed length of 4
+	result5 := secretKeySpecInit(params5)
+	if result5 != nil {
+		t.Errorf("Unexpected InvalidKeyException, got %v", result5)
 	}
 }
 
