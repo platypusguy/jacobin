@@ -148,10 +148,8 @@ func Load_Lang_Class() {
 	addTrap("java/lang/Class.getFields()[Ljava/lang/reflect/Field;", 0)
 	addTrap("java/lang/Class.getGenericInterfaces()[Ljava/lang/reflect/Type;", 0)
 	addTrap("java/lang/Class.getGenericSuperclass()Ljava/lang/reflect/Type;", 0)
-	// addTrap("java/lang/Class.getInterfaces()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getNestHost()Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getNestMembers()[Ljava/lang/Class;", 0)
-	// addTrap("java/lang/Class.getPackage()Ljava/lang/Package;", 0)
 	addTrap("java/lang/Class.getPermittedSubclasses()[Ljava/lang/Class;", 0)
 	addTrap("java/lang/Class.getProtectionDomain()Ljava/security/ProtectionDomain;", 0)
 	addTrap("java/lang/Class.getRecordComponents()[Ljava/lang/reflect/RecordComponent;", 0)
@@ -432,7 +430,27 @@ func classGetInterfaces(params []interface{}) interface{} {
 	if interfaceCount == 0 { // if no interfaces, then return an empty array
 		return object.Make1DimRefArray("java/lang/Class", 0)
 	}
-	return nil // TODO: replace with array of pointers to interface Class instances
+
+	var interfaces []*object.Object
+	if len(klass.Interfaces) > 0 {
+		for i := 0; i < len(klass.Interfaces); i++ {
+			index := uint32(klass.Interfaces[i])
+			interfaceName := *stringPool.GetStringPointer(index)
+			interfaceClass, err := simpleClassLoadByName(interfaceName)
+			if err == nil && interfaceClass != nil {
+				interfaces = append(interfaces, interfaceClass.Data.ClassObject)
+			}
+		}
+	}
+
+	// copy the pointers to java/lang/Class instances of the interfaces into the array
+	interfacesArray := object.Make1DimRefArray("java/lang/Class", int64(len(interfaces)))
+	rawArray := interfacesArray.FieldTable["value"].Fvalue.([]*object.Object)
+	for i := 0; i < len(interfaces); i++ {
+		rawArray[i] = interfaces[i]
+	}
+
+	return interfacesArray
 }
 
 // java/lang/Class.getModifiers()I
@@ -621,11 +639,11 @@ func getPrimitiveClass(params []interface{}) interface{} {
 // | Primitive array | [I                      | int[]
 //
 // > getName() returns the fully qualified name with package,
-// and it uses internal JVM notation for arrays (e.g., `[L...;`)
+// and it uses internal JVM notation for arrays (e.g., [L...;)
 //
 // > getSimpleName() returns just the class name as written in source code,
 // and it returns empty string for anonymous classes and it uses
-// readable array notation (e.g., `[]`)
+// readable array notation (e.g., [])
 //
 // java/lang/Class.getSimpleName()Ljava/lang/String;
 func ClassGetSimpleName(params []interface{}) interface{} {
