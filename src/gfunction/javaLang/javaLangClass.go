@@ -432,10 +432,12 @@ func classGetInterfaces(params []interface{}) interface{} {
 	}
 
 	var interfaces []*object.Object
+	var index uint32
+	var interfaceName string
 	if len(klass.Interfaces) > 0 {
 		for i := 0; i < len(klass.Interfaces); i++ {
-			index := uint32(klass.Interfaces[i])
-			interfaceName := *stringPool.GetStringPointer(index)
+			index = uint32(klass.Interfaces[i])
+			interfaceName = *stringPool.GetStringPointer(index)
 			interfaceClass, err := simpleClassLoadByName(interfaceName)
 			if err == nil && interfaceClass != nil {
 				interfaces = append(interfaces, interfaceClass.Data.ClassObject)
@@ -447,7 +449,7 @@ func classGetInterfaces(params []interface{}) interface{} {
 	interfacesArray := object.Make1DimRefArray("java/lang/Class", int64(len(interfaces)))
 	rawArray := interfacesArray.FieldTable["value"].Fvalue.([]*object.Object)
 	for i := 0; i < len(interfaces); i++ {
-		rawArray[i] = interfaces[i]
+		rawArray[i] = globals.JLCmap[interfaceName].(*object.Object)
 	}
 
 	return interfacesArray
