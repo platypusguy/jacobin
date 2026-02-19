@@ -1,3 +1,9 @@
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2025 by Jacobin authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ */
+
 package object
 
 import (

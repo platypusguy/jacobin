@@ -39,7 +39,6 @@ func GoByteArrayFromJavaByteArray(jbarr []types.JavaByte) []byte {
 }
 
 // JavaByteFromStringObject: convenience method to extract a Java byte array from a String object (Java string)
-// JavaByteFromStringObject: convenience method to extract a Java byte array from a String object (Java string)
 func JavaByteArrayFromStringObject(obj *Object) []types.JavaByte {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
 		fvalue := obj.FieldTable["value"].Fvalue
