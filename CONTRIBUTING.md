@@ -34,10 +34,55 @@ by Java package. For example, `java/lang/Float` is found in `gfunction/javaLang/
 main.go contains the main function. All other source code is located in the `src/` directory.
 The main packages/directories are:
 * `classloader` contains all the class parsing and loading logic
-* `gfunction` and its subdirectories contain all the gfunctions, which implement Java library methods
+* `gfunction` and its subdirectories contain all the gfunctions, which implement Java library methods in go
 * `jvm` is the heart of Jacobin: it contains the interpreter and numerous run utitlities
-* `object` contains a definition 
+* `object` contains a definition of objects
 * `types` contains definitions of various types as well as a variety of constants
 
 ### Coding Conventions
+
+* All objects are passed as pointers to `object.Object`
+* All integers used internally are `int64` with the exception of `uint16` values used by Java in the class constant pool
+* All raw strings stored in objects are `object.javaByteArray` instances, rather than golang strings, or as
+instances of Java string objects (as defined in `object/string.go`)
+* All bytes used for data are not golang `byte`s (which are unsigned) but rather `types.JavaByte`, which are signed
+* All floating point values are `float64`
+* When exceptions or errors are thrown in Java methods, we first create a variable named `errMsg`, which contains error data for the user;
+the exception is thrown using `exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)`
+where the first argument is the name of the exception class, the second is the error message, and the third is the frame
+where the exception was thrown. If the frame data is not known, it can be passed as `nil`
+
+#### Coding conventions for gfunctions
+Gfunctions are golang implementations of Java library functions. Not all library methods,
+but mostly methods that are implemented as native code in the JDK. They have tight coding constraints:
+* All gfunctions have the same signature: `funcName(params []any)any` All parameters are passed
+in the `params` array. This includes the `this` pointer, which is a reference to the object whose
+the method is called. For example, `s.length()`, s is the `this` object. If there is no `this`
+and no argument, params is an empty array. 
+* When errors occur in gfunctions, they are handled by creating an `errMsg` variable, which contains
+error data for the user. This error message and the name of the exception/error to throw are returned
+using `ghelpers.GetGErrBlk(excNames.ClassNotLoadedException, errMsg)`
+
+#### Coding conventions for unit tests
+* Tests that involve any variable or reference outside the function under test should start with
+a call to `globals.InitGlobals("test")`, which initializes many global variables required
+for almost any action outside the function under test.
+* If it's necessary to capture stderr, the code to be used is shown 
+[here](https://github.com/platypusguy/jacobin/blob/main/notes/StderrInTests.txt). This
+code enables the stderr messages to be viewed as a single golang string.
+* As a rule, we do not use tables in unit tests. 
+* All unit tests should be in alphabetical order in the file; helper functions should be
+segregated at the top or bottom of the file with conspicuous comments.
+* All unit tests should be preceded with a comment of 1 or more lines explaining the test.
+If a specific condition is being tested, it should be mentioned, so that we can quickly
+see which conditions have/have not been tested without reading the code.
+
+#### General coding conventions
+* All comments should be in English.
+* We follow the [golang style guide](https://golang.org/doc/effective_go.html)
+* All functions should have a preceding comment that explains what they do. Each 
+file should start with an introductory block comment that will allow us to know
+right away if it contains the functionality we're looking for.
+* We generally refer to the Go language as "golang," because this facilitates search
+* 
 
