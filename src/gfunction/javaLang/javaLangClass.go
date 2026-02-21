@@ -431,24 +431,18 @@ func classGetInterfaces(params []interface{}) interface{} {
 		return object.Make1DimRefArray("java/lang/Class", 0)
 	}
 
-	var interfaces []*object.Object
+	// var interfaces []*object.Object
 	var index uint32
 	var interfaceName string
-	if len(klass.Interfaces) > 0 {
-		for i := 0; i < len(klass.Interfaces); i++ {
-			index = uint32(klass.Interfaces[i])
-			interfaceName = *stringPool.GetStringPointer(index)
-			interfaceClass, err := simpleClassLoadByName(interfaceName)
-			if err == nil && interfaceClass != nil {
-				interfaces = append(interfaces, interfaceClass.Data.ClassObject)
-			}
-		}
-	}
 
 	// copy the pointers to java/lang/Class instances of the interfaces into the array
-	interfacesArray := object.Make1DimRefArray("java/lang/Class", int64(len(interfaces)))
+	// after making sure that the interfaces have been loaded
+	interfacesArray := object.Make1DimRefArray("java/lang/Class", int64(len(klass.Interfaces)))
 	rawArray := interfacesArray.FieldTable["value"].Fvalue.([]*object.Object)
-	for i := 0; i < len(interfaces); i++ {
+	for i := 0; i < len(klass.Interfaces); i++ {
+		index = uint32(klass.Interfaces[i])
+		interfaceName = *stringPool.GetStringPointer(index)
+		_, _ = simpleClassLoadByName(interfaceName)
 		rawArray[i] = globals.JLCmap[interfaceName].(*object.Object)
 	}
 
