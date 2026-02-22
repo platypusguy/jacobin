@@ -233,7 +233,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doInvokespecial,   // INVOKESPECIAL   0xB7
 	nil,               // INVOKESTATIC    0xB8 initialized in initializeDispatchTable()
 	doInvokeinterface, // INVOKEINTERFACE 0xB9
-	notImplemented,    // INVOKEDYNAMIC   0xBA
+	doInvokedynamic,   // INVOKEDYNAMIC   0xBA
 	nil,               // NEW             0xBB initialized in initializeDispatchTable()
 	doNewarray,        // NEWARRAY        0xBC
 	doAnewarray,       // ANEWARRAY       0xBD
@@ -3273,6 +3273,28 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 	return notImplemented(fr, 0) // in theory, unreachable code
 }
 
+// 0xBA INVOKEDYNAMIC
+func doInvokedynamic(fr *frames.Frame, _ int64) int {
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
+	CP := fr.CP.(*classloader.CPool)
+	CPentry := CP.CpIndex[CPslot]
+
+	if CPentry.Type != classloader.InvokeDynamic {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg :=
+			fmt.Sprintf("INVOKEDYNAMIC: constant pool entry is (%d) rather than Constant_InvokeDynamic_info", CPentry.Type)
+		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURRED // applies only if in test
+		} else {
+			return RESUME_HERE // caught
+		}
+	}
+
+	return 5 // the two bytes for the CP slot + 2 bytes with value 0x00 + 1 for next bytecode
+
+}
+
 // 0xBB NEW create a new object
 func doNew(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
@@ -4184,6 +4206,8 @@ func load(fr *frames.Frame, local int64) int {
 	return 1
 }
 
+// load a constant
+// TODO: eventually need to handle CONSTANT_Dynamic_info (tag 17)
 func ldc(fr *frames.Frame, width int) int {
 	var idx int
 	if width == 1 { // LDC uses a 1-byte index into the CP, LDC_W uses a 2-byte index
