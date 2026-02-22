@@ -746,7 +746,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					kdbs.Args = append(kdbs.Args, uint16(fullyParsedClass.bootstraps[j].args[l]))
 				}
 			}
-			kd.Bootstraps = append(kd.Bootstraps, kdbs)
+			kd.CP.Bootstraps = append(kd.CP.Bootstraps, kdbs)
 		}
 	}
 	kd.Access.ClassIsPublic = fullyParsedClass.classIsPublic

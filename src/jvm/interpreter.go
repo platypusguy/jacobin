@@ -3291,6 +3291,15 @@ func doInvokedynamic(fr *frames.Frame, _ int64) int {
 		}
 	}
 
+	id := CP.InvokeDynamics[CPentry.Slot]
+	bootstrapIndex := id.BootstrapIndex
+	bootstrap := CP.Bootstraps[bootstrapIndex]
+	if bootstrap.MethodRef < 0 { // dummy test to get a compilation
+		return ERROR_OCCURRED
+	}
+
+	// bootstrapNAT := id.NameAndType
+	
 	return 5 // the two bytes for the CP slot + 2 bytes with value 0x00 + 1 for next bytecode
 
 }

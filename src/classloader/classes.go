@@ -38,7 +38,6 @@ type ClData struct {
 	MethodTable     map[string]*Method // the methods defined in this class
 	Attributes      []Attr
 	SourceFile      string
-	Bootstraps      []BootstrapMethod
 	CP              CPool
 	Access          AccessFlags
 	ClInit          byte           // 0 = no clinit, 1 = clinit not run, 2 clinit
@@ -63,6 +62,7 @@ type CPool struct {
 	NameAndTypes   []NameAndTypeEntry
 	//	StringRefs     []uint16 // all StringRefs are converted into utf8Refs
 	Utf8Refs              []string
+	Bootstraps            []BootstrapMethod           // not technically part of the CP, but convenient to store here
 	ResolvedInterfaceRefs []ResolvedInterfaceRefEntry // resolved interface references
 	ResolvedMethodRefs    []ResolvedMethodRefEntry    // resolved method references
 }
