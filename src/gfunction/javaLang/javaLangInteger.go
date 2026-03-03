@@ -17,6 +17,7 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math/bits"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -353,21 +354,19 @@ var classNameInteger = "java/lang/Integer"
 
 // integerClinit initializes the static fields of java.lang.Integer.
 // Specifically, it sets the TYPE field to the primitive class for "int".
-func integerClinit(params []interface{}) interface{} {
+func integerClinit(_ []interface{}) interface{} {
 	// Create the primitive java/lang/Class instance for "int"
-	// primName := "int"
-	// primClassObj := object.MakeJlcObject(&primName)
-	primClassObj := classloader.MakeJlcEntry("int")
+	primClassJlc := classloader.MakeJlcEntry("int", true)
 
 	// Register it in the JLCmap so it can be found by name "int"
 	classloader.JlcMapLock.Lock()
-	classloader.JLCmap["int"] = primClassObj
+	classloader.JLCmap["int"] = primClassJlc
 	classloader.JlcMapLock.Unlock()
 
 	// Set the static field Integer.TYPE to this object
 	_ = statics.AddStatic("java/lang/Integer.TYPE", statics.Static{
 		Type:  types.Jlc,
-		Value: primClassObj,
+		Value: primClassJlc,
 	})
 
 	// Also update the Jlc entry for Integer to include this static field in its Statics list
@@ -377,8 +376,7 @@ func integerClinit(params []interface{}) interface{} {
 	classloader.JlcMapLock.RUnlock()
 
 	if ok {
-		// The Statics slice stores strings like "NameDesc"
-		// For TYPE, the name is "TYPE" and the descriptor is "Ljava/lang/Class;"
+		// The Statics slice stores strings that hold the names of all static fields, as loaded in statics
 		fieldName := "TYPE"
 		fieldDesc := types.Jlc
 		entry := fieldName + fieldDesc
@@ -386,11 +384,8 @@ func integerClinit(params []interface{}) interface{} {
 		// Check if it's already there to avoid duplicates
 		found := false
 		integerJlc.Lock.Lock()
-		for _, s := range integerJlc.Statics {
-			if s == entry {
-				found = true
-				break
-			}
+		if slices.Contains(integerJlc.Statics, entry) {
+			found = true
 		}
 		if !found {
 			integerJlc.Statics = append(integerJlc.Statics, entry)

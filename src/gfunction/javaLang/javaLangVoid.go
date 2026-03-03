@@ -9,8 +9,11 @@ package javaLang
 import (
 	"jacobin/src/classloader"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
 	"jacobin/src/statics"
+	"jacobin/src/trace"
 	"jacobin/src/types"
+	"slices"
 )
 
 func Load_Lang_Void() {
@@ -26,19 +29,19 @@ var classNameVoid = "java/lang/Void"
 
 // voidClinit initializes the static fields of java.lang.Void.
 // Specifically, it sets the TYPE field to the primitive class for "void".
-func voidClinit(params []interface{}) interface{} {
+func voidClinit(_ []interface{}) interface{} {
 	// Create the primitive class object for "void"
-	primClassObj := classloader.MakeJlcEntry("void")
+	primJlc := classloader.MakeJlcEntry("void", true)
 
 	// Register it in the JLCmap so it can be found by name "void"
 	classloader.JlcMapLock.Lock()
-	classloader.JLCmap["void"] = primClassObj
+	classloader.JLCmap["void"] = primJlc
 	classloader.JlcMapLock.Unlock()
 
 	// Set the static field Void.TYPE to this object
 	_ = statics.AddStatic("java/lang/Void.TYPE", statics.Static{
 		Type:  types.Jlc,
-		Value: primClassObj,
+		Value: primJlc,
 	})
 
 	// Also update the Jlc entry for Void to include this static field in its Statics list
@@ -53,17 +56,18 @@ func voidClinit(params []interface{}) interface{} {
 
 		found := false
 		voidJlc.Lock.Lock()
-		for _, s := range voidJlc.Statics {
-			if s == entry {
-				found = true
-				break
-			}
+		if slices.Contains(voidJlc.Statics, entry) {
+			found = true
 		}
 		if !found {
 			voidJlc.Statics = append(voidJlc.Statics, entry)
 		}
 		voidJlc.Lock.Unlock()
+	} else {
+		// This should not happen if LoadBaseClasses ran and loaded Integer
+		if globals.TraceClass {
+			trace.Warning("voidClinit: java/lang/Void not found in JLCmap")
+		}
 	}
-
 	return nil
 }
