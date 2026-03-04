@@ -175,11 +175,21 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 runInitializer:
 
 	// check the code for validity before running initialization blocks
-	if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) { // we don't code check JDK classes
+	if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) {
+		var err error // we don't code check JDK classes
 		for _, m := range k.Data.MethodTable {
 			code := m.CodeAttr.Code
-			err := classloader.CheckCodeValidity(
-				&code, &k.Data.CP, m.CodeAttr.MaxStack, k.Data.Access)
+			if globals.TraceCodeCheck { // if we're tracing code checks, we need the method name and type
+				methName := k.Data.CP.Utf8Refs[m.Name]
+				methDesc := k.Data.CP.Utf8Refs[m.Desc]
+				fullMethodName := fmt.Sprintf("%s.%s%s", k.Data.Name, methName, methDesc)
+				err = classloader.CheckCodeValidity(
+					&code, &k.Data.CP, m.CodeAttr.MaxStack, k.Data.Access, &fullMethodName)
+			} else { // most common path:
+				err = classloader.CheckCodeValidity(
+					&code, &k.Data.CP, m.CodeAttr.MaxStack, k.Data.Access, nil)
+			}
+
 			if err != nil {
 				methName := k.Data.CP.Utf8Refs[m.Name]
 				methDesc := k.Data.CP.Utf8Refs[m.Desc]

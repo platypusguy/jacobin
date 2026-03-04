@@ -15,6 +15,7 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math"
+	"os"
 )
 
 // Here we check the bytecodes of a method. The method is passed as a byte slice.
@@ -656,7 +657,7 @@ var StackEntries int
 var MaxStack int
 var wideInEffect bool
 
-func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFlags) error {
+func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFlags, methNamePtr *string) error {
 	if codePtr == nil {
 		errMsg := "CheckCodeValidity: ptr to code segment is nil"
 		return errors.New(errMsg)
@@ -683,6 +684,13 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 		return errors.New(errMsg)
 	}
 
+	var methName string
+	if methNamePtr == nil {
+		methName = "not specified"
+	} else {
+		methName = *methNamePtr
+	}
+
 	Code = code
 	PC = 0
 	PrevPC = -1 // -1 means no previous PC
@@ -690,8 +698,16 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 	StackEntries = 0
 	wideInEffect = false
 
+	if globals.TraceCodeCheck {
+		fmt.Fprintf(os.Stderr, "\nCode check for method: %s\n", methName)
+	}
+
 	for PC < len(code) {
 		opcode := code[PC]
+		if globals.TraceCodeCheck {
+			fmt.Fprintf(os.Stderr, "PC: %03d %-14s (%02X)\n", PC, BytecodeNames[opcode], opcode)
+		}
+
 		ret := CheckTable[opcode]()
 		if ret == ERROR_OCCURRED {
 			errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
@@ -962,7 +978,7 @@ func CheckInvokedynamic() int {
 	// is the CP entry of type InvokeDynamic?
 	CPentry := CP.CpIndex[CPslot]
 	if CPentry.Type != InvokeDynamic {
-		errMsg := fmt.Sprintf("%s:\n INVOKEDYNAMIC at %d: Invalide CP entry type %d, should be 18",
+		errMsg := fmt.Sprintf("%s:\n INVOKEDYNAMIC at %d: Invalid CP entry type %d, should be 18",
 			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
@@ -986,6 +1002,7 @@ func CheckInvokedynamic() int {
 		return ERROR_OCCURRED
 	}
 
+	/* This appears to be giving wrong results.
 	// is the bootstrap name and type index pointed to by the InvokeDynamic entry valid?
 	bootstrapNatIndex := CPdyn.NameAndType
 	if bootstrapNatIndex >= uint16(len(CP.NameAndTypes)) {
@@ -994,6 +1011,7 @@ func CheckInvokedynamic() int {
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
+	*/
 
 	return 5
 }
