@@ -120,10 +120,11 @@ type Globals struct {
 var Galt bool // gfunction alternative processing flag -- used strictly for testing
 
 // ---- trace categories
-var TraceInit bool
-var TraceCloadi bool
-var TraceInst bool
 var TraceClass bool
+var TraceCloadi bool
+var TraceCodeCheck bool
+var TraceInit bool
+var TraceInst bool
 var TraceVerbose bool
 
 // ----- String Pool
