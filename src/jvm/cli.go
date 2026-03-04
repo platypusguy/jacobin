@@ -226,12 +226,13 @@ where options include:
 
 Jacobin-specific options:
     -strictJDK            make user messages conform closely to the JDK's format
-    -trace=<selections>   display selected tracing to the console
-                          where the <selections> are one or more of the following separated by commas (,):
-                          * init - process initilization
-                          * cloadi - classloader initialization
-                          * inst - bytecode interpreter trace
+    -trace=<options>      display selected tracing to the console
+                          where the <options> are one or more of the following separated by commas (,):
+                          * check - code check results
                           * class - class & method support for the interpreter
+                          * cloadi - classloader initialization
+                          * init - process initilization
+                          * inst - bytecode interpreter trace
                           * verbose - inst, class, and more details of the interpreter
     -JJ:galt              Do not use this unless you are a Jacobin developer! `
 
