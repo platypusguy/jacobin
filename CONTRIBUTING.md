@@ -143,3 +143,7 @@ implements, so that we can quickly tell whether the file is relevant to our pres
 search.
 * We generally refer to the Go language as "golang," because this facilitates search
 
+## AI Assistant Guidelines
+*   **No Conversational Fillers:** Do not include summaries, "I have finished", or "Here is the code" banners in the chat response. Just perform the action.
+*   **No Header Comments:** Do not add block comments summarizing the file or function at the top of files unless specifically requested.
+*   **Concise Output:** Keep chat responses to the absolute minimum required to confirm the action.
