@@ -73,7 +73,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	}
 
 	// create the object whose instantiation we're doing
-	obj := *object.MakeEmptyObject()
+	obj := object.MakeEmptyObject()
 	obj.KlassName = stringPool.GetStringIndex(&classname)
 
 	// go up the chain of superclasses until we hit java/lang/Object
@@ -110,7 +110,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	}
 
 	// initialize the map of this object's fields
-	obj.FieldTable = make(map[string]object.Field)
+	// obj.FieldTable = make(map[string]object.Field) // not necessary after calling MakeEmptyObject
 
 	if len(superclasses) == 0 {
 		for i := 0; i < len(k.Data.Fields); i++ {
@@ -220,7 +220,7 @@ runInitializer:
 		}
 	}
 
-	return &obj, nil
+	return obj, nil
 }
 
 // creates a field for insertion into the object representation

@@ -105,9 +105,9 @@ type javaLangClass struct {
 }
 
 func objectClinitInit(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	if obj == nil {
-		errMsg := fmt.Sprintf("objectClinitInit: Invalid or missing object: %T", params[0])
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		errMsg := fmt.Sprintf("objectClinitInit: Invalid or null object: %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	obj = object.MakeEmptyObjectWithClassName(&types.ObjectClassName)
@@ -119,9 +119,9 @@ func objectClinitInit(params []interface{}) interface{} {
 // It returns a pointer to a Class object for this object, with fields derived
 // from the entry in the classloader.JLC table (JLC = java/lang/Class).
 func ObjectGetClass(params []interface{}) interface{} {
-	objPtr := params[0].(*object.Object)
-	if objPtr == nil || objPtr.KlassName == types.InvalidStringIndex {
-		errMsg := fmt.Sprintf("java/lang/Object.getClass: Invalid object: %T", params[0])
+	objPtr, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(objPtr) || objPtr.KlassName == types.InvalidStringIndex {
+		errMsg := fmt.Sprintf("java/lang/Object.getClass: Invalid or null object: %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -221,7 +221,11 @@ func objectToString(params []interface{}) interface{} {
 
 	switch params[0].(type) {
 	case *object.Object:
-		inObj := params[0].(*object.Object)
+		inObj, ok := params[0].(*object.Object)
+		if !ok || object.IsNull(inObj) {
+			errMsg := fmt.Sprintf("objectToString: Invalid or null object, saw: %T", params[0])
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
 		classNameSuffix := object.GetClassNameSuffix(inObj, false)
 		if classNameSuffix == "LinkedList" {
 			return javaUtil.LinkedlistToString(params)
@@ -238,6 +242,11 @@ func objectHashCode(params []interface{}) interface{} {
 	// params[0]: input Object
 	switch params[0].(type) {
 	case *object.Object:
+		obj, ok := params[0].(*object.Object)
+		if !ok || object.IsNull(obj) {
+			errMsg := fmt.Sprintf("objectToString: Invalid or null object, saw: %T", params[0])
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
 		ptr := uintptr(unsafe.Pointer(params[0].(*object.Object)))
 		hashCode := int64(ptr ^ (ptr >> 32))
 		return hashCode
@@ -249,7 +258,7 @@ func objectHashCode(params []interface{}) interface{} {
 
 func objectEquals(params []interface{}) interface{} {
 	this, ok := params[0].(*object.Object)
-	if !ok {
+	if !ok || object.IsNull(this) {
 		return types.JavaBoolFalse
 	}
 	that, ok := params[1].(*object.Object)
@@ -281,8 +290,8 @@ func objectWait(params []interface{}) interface{} {
 
 	// Get the object of the synchronized method.
 	obj, ok := params[1].(*object.Object)
-	if !ok {
-		errMsg := fmt.Sprintf("objectWait: params[1] must be an Object, saw: %T", params[1])
+	if !ok || object.IsNull(obj) || object.IsNull(obj) {
+		errMsg := fmt.Sprintf("objectWait: params[1] must be a non-null Object, saw: %T", params[1])
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
 
@@ -335,8 +344,8 @@ func objectNotify(params []interface{}) interface{} {
 
 	// Get the object of the synchronized method.
 	obj, ok := params[1].(*object.Object)
-	if !ok {
-		errMsg := fmt.Sprintf("objectNotify: params[1] must be an Object, saw: %T", params[1])
+	if !ok || object.IsNull(obj) {
+		errMsg := fmt.Sprintf("objectNotify: params[1] must be a non-null Object, saw: %T", params[1])
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
 
@@ -362,8 +371,8 @@ func objectNotifyAll(params []interface{}) interface{} {
 
 	// Get the object of the synchronized method.
 	obj, ok := params[1].(*object.Object)
-	if !ok {
-		errMsg := fmt.Sprintf("objectNotifyAll: params[1] must be an Object, saw: %T", params[1])
+	if !ok || object.IsNull(obj) {
+		errMsg := fmt.Sprintf("objectNotifyAll: params[1] must be a non-null Object, saw: %T", params[1])
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
 
