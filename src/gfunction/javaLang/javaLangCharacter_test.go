@@ -27,7 +27,7 @@ func TestLoad_Lang_Character_RegistersMethods(t *testing.T) {
 		slots int
 		fn    func([]interface{}) interface{}
 	}{
-		{"java/lang/Character.<clinit>()V", 0, ghelpers.ClinitGeneric},
+		{"java/lang/Character.<clinit>()V", 0, characterClinit},
 		{"java/lang/Character.compare(CC)I", 2, charCompare},
 		{"java/lang/Character.digit(CI)I", 2, charDigit},
 		{"java/lang/Character.equals(Ljava/lang/Object;)Z", 1, charEquals},

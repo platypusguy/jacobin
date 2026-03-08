@@ -28,7 +28,7 @@ func TestLoad_Lang_Byte_RegistersMethods(t *testing.T) {
 		slots int
 		fn    func([]interface{}) interface{}
 	}{
-		{"java/lang/Byte.<clinit>()V", 0, ghelpers.ClinitGeneric},
+		{"java/lang/Byte.<clinit>()V", 0, byteClinit},
 		{"java/lang/Byte.byteValue()B", 0, byteIntLongShortByteValue},
 		{"java/lang/Byte.compare(BB)I", 2, byteCompare},
 		{"java/lang/Byte.compareUnsigned(BB)I", 2, byteCompareUnsigned},
