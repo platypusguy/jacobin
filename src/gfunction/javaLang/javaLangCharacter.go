@@ -7,12 +7,17 @@
 package javaLang
 
 import (
-	"jacobin/src/excNames"
-	"jacobin/src/gfunction/ghelpers"
-	"jacobin/src/object"
-	"jacobin/src/types"
-	"strconv"
-	"unicode"
+    "jacobin/src/classloader"
+    "jacobin/src/excNames"
+    "jacobin/src/gfunction/ghelpers"
+    "jacobin/src/globals"
+    "jacobin/src/object"
+    "jacobin/src/statics"
+    "jacobin/src/trace"
+    "jacobin/src/types"
+    "strconv"
+    "unicode"
+    "slices"
 )
 
 var classNameCharacter = "java/lang/Character"
@@ -21,11 +26,11 @@ func Load_Lang_Character() {
 
 	// ---- class initialization ----
 
-	ghelpers.MethodSignatures["java/lang/Character.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
-		}
+ ghelpers.MethodSignatures["java/lang/Character.<clinit>()V"] =
+        ghelpers.GMeth{
+            ParamSlots: 0,
+            GFunction:  characterClinit,
+        }
 
 	// ---- constructors ----
 
@@ -277,6 +282,43 @@ func Load_Lang_Character() {
 			ParamSlots: 1,
 			GFunction:  characterValueOf,
 		}
+}
+
+// characterClinit initializes the static fields of java.lang.Character.
+// Specifically, it sets the TYPE field to the primitive class for "char".
+func characterClinit(_ []interface{}) interface{} {
+    // Create the primitive java/lang/Class instance for "char"
+    primClassJlc := classloader.MakeJlcEntry("char", true)
+
+    // Register it in the JLCmap so it can be found by name "char"
+    classloader.JlcMapLock.Lock()
+    classloader.JLCmap["char"] = primClassJlc
+    classloader.JlcMapLock.Unlock()
+
+    // Set the static field Character.TYPE to this object
+    _ = statics.AddStatic("java/lang/Character.TYPE", statics.Static{
+        Type:  types.Jlc,
+        Value: primClassJlc,
+    })
+
+    // Also update the Jlc entry for Character to include this static field in its Statics list
+    classloader.JlcMapLock.RLock()
+    charJlc, ok := classloader.JLCmap[classNameCharacter]
+    classloader.JlcMapLock.RUnlock()
+    if ok {
+        entry := "TYPE" + types.Jlc
+        charJlc.Lock.Lock()
+        if !slices.Contains(charJlc.Statics, entry) {
+            charJlc.Statics = append(charJlc.Statics, entry)
+        }
+        charJlc.Lock.Unlock()
+    } else {
+        if globals.TraceClass {
+            trace.Warning("characterClinit: java/lang/Character not found in JLCmap")
+        }
+    }
+
+    return nil
 }
 
 func charCount([]interface{}) interface{} {

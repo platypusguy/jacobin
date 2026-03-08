@@ -8,11 +8,15 @@ package javaLang
 
 import (
 	"fmt"
+	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math/bits"
+	"slices"
 	"strconv"
 )
 
@@ -21,7 +25,7 @@ func Load_Lang_Long() {
 	ghelpers.MethodSignatures["java/lang/Long.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
+			GFunction:  longClinit,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Long.bitCount(J)I"] =
@@ -192,6 +196,41 @@ func Load_Lang_Long() {
 			GFunction:  longValueOf,
 		}
 
+}
+
+// longClinit initializes the static fields of java.lang.Long.
+// Specifically, it sets the TYPE field to the primitive class for "long".
+func longClinit(_ []interface{}) interface{} {
+	// Create the primitive java/lang/Class instance for "long"
+	primClassJlc := classloader.MakeJlcEntry("long", true)
+
+	// Register it in the JLCmap so it can be found by name "long"
+	classloader.JlcMapLock.Lock()
+	classloader.JLCmap["long"] = primClassJlc
+	classloader.JlcMapLock.Unlock()
+
+	// Set the static field Long.TYPE to this object
+	_ = statics.AddStatic("java/lang/Long.TYPE", statics.Static{
+		Type:  types.Jlc,
+		Value: primClassJlc,
+	})
+
+	// Also update the Jlc entry for Long to include this static field in its Statics list
+	classloader.JlcMapLock.RLock()
+	longJlc, ok := classloader.JLCmap["java/lang/Long"]
+	classloader.JlcMapLock.RUnlock()
+	if ok {
+		entry := "TYPE" + types.Jlc
+		longJlc.Lock.Lock()
+		if !slices.Contains(longJlc.Statics, entry) {
+			longJlc.Statics = append(longJlc.Statics, entry)
+		}
+		longJlc.Lock.Unlock()
+	} else {
+		trace.Warning("longClinit: java/lang/Long not found in JLCmap")
+	}
+
+	return nil
 }
 
 // "java/lang/Long.doubleValue()D"

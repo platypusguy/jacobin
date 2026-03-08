@@ -7,22 +7,26 @@
 package javaLang
 
 import (
-	"fmt"
-	"jacobin/src/excNames"
-	"jacobin/src/gfunction/ghelpers"
-	"jacobin/src/object"
-	"jacobin/src/types"
-	"math"
-	"strconv"
+    "fmt"
+    "jacobin/src/classloader"
+    "jacobin/src/excNames"
+    "jacobin/src/gfunction/ghelpers"
+    "jacobin/src/object"
+    "jacobin/src/statics"
+    "jacobin/src/trace"
+    "jacobin/src/types"
+    "math"
+    "strconv"
+    "slices"
 )
 
 func Load_Lang_Float() {
 
-	ghelpers.MethodSignatures["java/lang/Float.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
-		}
+    ghelpers.MethodSignatures["java/lang/Float.<clinit>()V"] =
+        ghelpers.GMeth{
+            ParamSlots: 0,
+            GFunction:  floatClinit,
+        }
 
 	ghelpers.MethodSignatures["java/lang/Float.<init>(F)V"] =
 		ghelpers.GMeth{
@@ -221,6 +225,41 @@ func Load_Lang_Float() {
 			ParamSlots: 1,
 			GFunction:  floatValueOfString,
 		}
+}
+
+// floatClinit initializes the static fields of java.lang.Float.
+// Specifically, it sets the TYPE field to the primitive class for "float".
+func floatClinit(_ []interface{}) interface{} {
+    // Create the primitive java/lang/Class instance for "float"
+    primClassJlc := classloader.MakeJlcEntry("float", true)
+
+    // Register it in the JLCmap so it can be found by name "float"
+    classloader.JlcMapLock.Lock()
+    classloader.JLCmap["float"] = primClassJlc
+    classloader.JlcMapLock.Unlock()
+
+    // Set the static field Float.TYPE to this object
+    _ = statics.AddStatic("java/lang/Float.TYPE", statics.Static{
+        Type:  types.Jlc,
+        Value: primClassJlc,
+    })
+
+    // Also update the Jlc entry for Float to include this static field in its Statics list
+    classloader.JlcMapLock.RLock()
+    floatJlc, ok := classloader.JLCmap["java/lang/Float"]
+    classloader.JlcMapLock.RUnlock()
+    if ok {
+        entry := "TYPE" + types.Jlc
+        floatJlc.Lock.Lock()
+        if !slices.Contains(floatJlc.Statics, entry) {
+            floatJlc.Statics = append(floatJlc.Statics, entry)
+        }
+        floatJlc.Lock.Unlock()
+    } else {
+        trace.Warning("floatClinit: java/lang/Float not found in JLCmap")
+    }
+
+    return nil
 }
 
 var classNameFloat = "java/lang/Float"
