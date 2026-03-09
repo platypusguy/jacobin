@@ -7,38 +7,42 @@
 package javaLang
 
 import (
+	"jacobin/src/classloader"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/trace"
 	"testing"
 )
 
 func TestMethodTypeFromMethodDescriptorString(t *testing.T) {
-	// globals.InitGlobals("test")
-	// trace.Init()
-	// classloader.Init()
-	// classloader.LoadBaseClasses()
-	//
-	// // Initialize primitive wrappers to ensure TYPE fields are populated
-	// // Since we cannot import jvm package here, we call the clinit functions directly.
-	// // This mimics what jvm.InitializePrimitiveWrappers does via gfunction invocation.
-	//
-	// // Initialize Integer (for "int")
-	// integerClinit(nil)
-	//
-	// // Initialize Void (for "void")
-	// voidClinit(nil)
-	//
-	// // Test Case 1: Simple descriptor with primitives
-	// // (II)V -> int, int -> void
-	// descriptor1 := "(II)V"
-	// descObj1 := object.StringObjectFromGoString(descriptor1)
-	// params1 := []interface{}{descObj1, nil} // ClassLoader is nil for now
-	//
-	// result1 := MethodTypeFromMethodDescriptorString(params1)
-	// mtObj1, ok := result1.(*object.Object)
-	// if !ok {
-	// 	t.Fatalf("Expected *object.Object, got %T", result1)
-	// }
-	//
-	// // Verify return type (void)
+	globals.InitGlobals("test")
+	trace.Init()
+	classloader.Init()
+	classloader.LoadBaseClasses()
+
+	// Initialize primitive wrappers to ensure TYPE fields are populated
+	// Because we cannot import the jvm package, we call the clinit functions directly.
+	// This mimics what jvm.InitializePrimitiveWrappers does via gfunction invocation.
+
+	// Initialize Integer (for "int")
+	integerClinit(nil)
+
+	// Initialize Void (for "void")
+	voidClinit(nil)
+
+	// Test Case 1: Simple descriptor with primitives
+	// (II)V -> int, int -> void
+	descriptor1 := "(II)V"
+	descObj1 := object.StringObjectFromGoString(descriptor1)
+	params1 := []interface{}{descObj1, nil} // ClassLoader is nil for now
+
+	result1 := MethodTypeFromMethodDescriptorString(params1)
+	mtObj1, ok := result1.(*object.Object)
+	if !ok || object.IsNull(mtObj1) {
+		t.Fatalf("Expected *object.Object, got %T", result1)
+	}
+
+	// Verify return type (void)
 	// rtype1 := mtObj1.FieldTable["rtype"].Fvalue.(*object.Object)
 	// // In Jacobin, primitive classes like void.class are stored in JLCmap
 	// // We can check the name.
