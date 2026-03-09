@@ -7,26 +7,26 @@
 package javaLang
 
 import (
-    "fmt"
-    "jacobin/src/classloader"
-    "jacobin/src/excNames"
-    "jacobin/src/gfunction/ghelpers"
-    "jacobin/src/object"
-    "jacobin/src/statics"
-    "jacobin/src/trace"
-    "jacobin/src/types"
-    "math"
-    "strconv"
-    "slices"
+	"fmt"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
+	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/trace"
+	"jacobin/src/types"
+	"math"
+	"slices"
+	"strconv"
 )
 
 func Load_Lang_Double() {
 
-    ghelpers.MethodSignatures["java/lang/Double.<clinit>()V"] =
-        ghelpers.GMeth{
-            ParamSlots: 0,
-            GFunction:  doubleClinit,
-        }
+	ghelpers.MethodSignatures["java/lang/Double.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  doubleClinit,
+		}
 
 	ghelpers.MethodSignatures["java/lang/Double.<init>(D)V"] =
 		ghelpers.GMeth{
@@ -218,36 +218,36 @@ func Load_Lang_Double() {
 // doubleClinit initializes the static fields of java.lang.Double.
 // Specifically, it sets the TYPE field to the primitive class for "double".
 func doubleClinit(_ []interface{}) interface{} {
-    // Create the primitive java/lang/Class instance for "double"
-    primClassJlc := classloader.MakeJlcEntry("double", true)
+	// Create the primitive java/lang/Class instance for "double"
+	primClassJlc := classloader.MakeJlcEntry("double", true)
 
-    // Register it in the JLCmap so it can be found by name "double"
-    classloader.JlcMapLock.Lock()
-    classloader.JLCmap["double"] = primClassJlc
-    classloader.JlcMapLock.Unlock()
+	// Register it in the JLCmap so it can be found by name "double"
+	classloader.JlcMapLock.Lock()
+	classloader.JLCmap["double"] = primClassJlc
+	classloader.JlcMapLock.Unlock()
 
-    // Set the static field Double.TYPE to this object
-    _ = statics.AddStatic("java/lang/Double.TYPE", statics.Static{
-        Type:  types.Jlc,
-        Value: primClassJlc,
-    })
+	// Set the static field Double.TYPE to this object
+	_ = statics.AddStatic("java/lang/Double.TYPE", statics.Static{
+		Type:  types.Ref,
+		Value: object.MakePrimitiveObjectFromJlcInstance("double"),
+	})
 
-    // Also update the Jlc entry for Double to include this static field in its Statics list
-    classloader.JlcMapLock.RLock()
-    doubleJlc, ok := classloader.JLCmap["java/lang/Double"]
-    classloader.JlcMapLock.RUnlock()
-    if ok {
-        entry := "TYPE" + types.Jlc
-        doubleJlc.Lock.Lock()
-        if !slices.Contains(doubleJlc.Statics, entry) {
-            doubleJlc.Statics = append(doubleJlc.Statics, entry)
-        }
-        doubleJlc.Lock.Unlock()
-    } else {
-        trace.Warning("doubleClinit: java/lang/Double not found in JLCmap")
-    }
+	// Also update the Jlc entry for Double to include this static field in its Statics list
+	classloader.JlcMapLock.RLock()
+	doubleJlc, ok := classloader.JLCmap["java/lang/Double"]
+	classloader.JlcMapLock.RUnlock()
+	if ok {
+		entry := "TYPE" + types.Jlc
+		doubleJlc.Lock.Lock()
+		if !slices.Contains(doubleJlc.Statics, entry) {
+			doubleJlc.Statics = append(doubleJlc.Statics, entry)
+		}
+		doubleJlc.Lock.Unlock()
+	} else {
+		trace.Warning("doubleClinit: java/lang/Double not found in JLCmap")
+	}
 
-    return nil
+	return nil
 }
 
 var classNameDouble = "java/lang/Double"

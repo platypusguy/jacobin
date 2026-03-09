@@ -123,11 +123,14 @@ func MakeEmptyObjectWithClassName(className *string) *Object {
 	return &o
 }
 
-// makes an instance of a JLC (java/lang/Class) object, which has special considerations.
-func MakeJlcObject(className *string) *Object {
+// makes a JLC (java/lang/Class) object from a JLC instance of a primitive
+// These objects, like the JLC entry, have no pointer back to class metadata and
+// also have no relevant static fields.
+func MakePrimitiveObjectFromJlcInstance(className string) *Object {
+	// jlc := classloader.JLCmap[*className]
 	o := MakeEmptyObject()
 	o.KlassName = types.StringPoolJavaLangClassIndex
-	o.FieldTable["name"] = Field{Ftype: types.GolangString, Fvalue: *className}
+	o.FieldTable["name"] = Field{Ftype: types.GolangString, Fvalue: className}
 	o.FieldTable["$klass"] = Field{Ftype: types.RawGoPointer, Fvalue: nil}          // points to the Klass object in metadata
 	o.FieldTable["$statics"] = Field{Ftype: types.Array, Fvalue: make([]string, 0)} // array of static field names for this class
 	return o

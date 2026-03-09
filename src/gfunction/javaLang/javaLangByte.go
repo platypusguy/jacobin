@@ -22,11 +22,11 @@ import (
 
 func Load_Lang_Byte() {
 
-    ghelpers.MethodSignatures["java/lang/Byte.<clinit>()V"] =
-        ghelpers.GMeth{
-            ParamSlots: 0,
-            GFunction:  byteClinit,
-        }
+	ghelpers.MethodSignatures["java/lang/Byte.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  byteClinit,
+		}
 
 	ghelpers.MethodSignatures["java/lang/Byte.byteValue()B"] =
 		ghelpers.GMeth{
@@ -159,36 +159,36 @@ func Load_Lang_Byte() {
 // byteClinit initializes the static fields of java.lang.Byte.
 // Specifically, it sets the TYPE field to the primitive class for "byte".
 func byteClinit(_ []interface{}) interface{} {
-    // Create the primitive java/lang/Class instance for "byte"
-    primClassJlc := classloader.MakeJlcEntry("byte", true)
+	// Create the primitive java/lang/Class instance for "byte"
+	primClassJlc := classloader.MakeJlcEntry("byte", true)
 
-    // Register it in the JLCmap so it can be found by name "byte"
-    classloader.JlcMapLock.Lock()
-    classloader.JLCmap["byte"] = primClassJlc
-    classloader.JlcMapLock.Unlock()
+	// Register it in the JLCmap so it can be found by name "byte"
+	classloader.JlcMapLock.Lock()
+	classloader.JLCmap["byte"] = primClassJlc
+	classloader.JlcMapLock.Unlock()
 
-    // Set the static field Byte.TYPE to this object
-    _ = statics.AddStatic("java/lang/Byte.TYPE", statics.Static{
-        Type:  types.Jlc,
-        Value: primClassJlc,
-    })
+	// Set the static field Byte.TYPE to this object
+	_ = statics.AddStatic("java/lang/Byte.TYPE", statics.Static{
+		Type:  types.Ref,
+		Value: object.MakePrimitiveObjectFromJlcInstance("byte"),
+	})
 
-    // Also update the Jlc entry for Byte to include this static field in its Statics list
-    classloader.JlcMapLock.RLock()
-    byteJlc, ok := classloader.JLCmap["java/lang/Byte"]
-    classloader.JlcMapLock.RUnlock()
-    if ok {
-        entry := "TYPE" + types.Jlc
-        byteJlc.Lock.Lock()
-        if !slices.Contains(byteJlc.Statics, entry) {
-            byteJlc.Statics = append(byteJlc.Statics, entry)
-        }
-        byteJlc.Lock.Unlock()
-    } else {
-        trace.Warning("byteClinit: java/lang/Byte not found in JLCmap")
-    }
+	// Also update the Jlc entry for Byte to include this static field in its Statics list
+	classloader.JlcMapLock.RLock()
+	byteJlc, ok := classloader.JLCmap["java/lang/Byte"]
+	classloader.JlcMapLock.RUnlock()
+	if ok {
+		entry := "TYPE" + types.Jlc
+		byteJlc.Lock.Lock()
+		if !slices.Contains(byteJlc.Statics, entry) {
+			byteJlc.Statics = append(byteJlc.Statics, entry)
+		}
+		byteJlc.Lock.Unlock()
+	} else {
+		trace.Warning("byteClinit: java/lang/Byte not found in JLCmap")
+	}
 
-    return nil
+	return nil
 }
 
 var classNameByte = "java/lang/Byte"

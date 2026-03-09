@@ -211,8 +211,8 @@ func longClinit(_ []interface{}) interface{} {
 
 	// Set the static field Long.TYPE to this object
 	_ = statics.AddStatic("java/lang/Long.TYPE", statics.Static{
-		Type:  types.Jlc,
-		Value: primClassJlc,
+		Type:  types.Ref,
+		Value: object.MakePrimitiveObjectFromJlcInstance("long"),
 	})
 
 	// Also update the Jlc entry for Long to include this static field in its Statics list

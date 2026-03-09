@@ -10,6 +10,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"jacobin/src/statics"
 	"jacobin/src/trace"
 	"jacobin/src/types"
@@ -40,8 +41,8 @@ func voidClinit(_ []interface{}) interface{} {
 
 	// Set the static field Void.TYPE to this object
 	_ = statics.AddStatic("java/lang/Void.TYPE", statics.Static{
-		Type:  types.Jlc,
-		Value: primJlc,
+		Type:  types.Ref,
+		Value: object.MakePrimitiveObjectFromJlcInstance("void"),
 	})
 
 	// Also update the Jlc entry for Void to include this static field in its Statics list

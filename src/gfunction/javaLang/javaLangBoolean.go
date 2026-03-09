@@ -7,26 +7,26 @@
 package javaLang
 
 import (
-    "fmt"
-    "jacobin/src/classloader"
-    "jacobin/src/excNames"
-    "jacobin/src/gfunction/ghelpers"
-    "jacobin/src/globals"
-    "jacobin/src/object"
-    "jacobin/src/statics"
-    "jacobin/src/trace"
-    "jacobin/src/types"
-    "strings"
-    "slices"
+	"fmt"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
+	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/trace"
+	"jacobin/src/types"
+	"slices"
+	"strings"
 )
 
 func Load_Lang_Boolean() {
 
- ghelpers.MethodSignatures["java/lang/Boolean.<clinit>()V"] =
-        ghelpers.GMeth{
-            ParamSlots: 0,
-            GFunction:  booleanClinit,
-        }
+	ghelpers.MethodSignatures["java/lang/Boolean.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  booleanClinit,
+		}
 
 	ghelpers.MethodSignatures["java/lang/Boolean.<init>(Z)V"] =
 		ghelpers.GMeth{
@@ -139,48 +139,48 @@ func Load_Lang_Boolean() {
 }
 
 func booleanClinit(_ []interface{}) interface{} {
-    className := "java/lang/Boolean"
+	className := "java/lang/Boolean"
 
-    // Create the primitive java/lang/Class instance for "boolean"
-    primClassJlc := classloader.MakeJlcEntry("boolean", true)
+	// Create the primitive java/lang/Class instance for "boolean"
+	primClassJlc := classloader.MakeJlcEntry("boolean", true)
 
-    // Register it in the JLCmap so it can be found by name "boolean"
-    classloader.JlcMapLock.Lock()
-    classloader.JLCmap["boolean"] = primClassJlc
-    classloader.JlcMapLock.Unlock()
+	// Register it in the JLCmap so it can be found by name "boolean"
+	classloader.JlcMapLock.Lock()
+	classloader.JLCmap["boolean"] = primClassJlc
+	classloader.JlcMapLock.Unlock()
 
-    // Set the static field Boolean.TYPE to this object
-    _ = statics.AddStatic("java/lang/Boolean.TYPE", statics.Static{
-        Type:  types.Jlc,
-        Value: primClassJlc,
-    })
+	// Set the static field Boolean.TYPE to this object
+	_ = statics.AddStatic("java/lang/Boolean.TYPE", statics.Static{
+		Type:  types.Ref,
+		Value: object.MakePrimitiveObjectFromJlcInstance("boolean"),
+	})
 
-    // Also update the Jlc entry for Boolean to include this static field in its Statics list
-    classloader.JlcMapLock.RLock()
-    booleanJlc, ok := classloader.JLCmap[className]
-    classloader.JlcMapLock.RUnlock()
-    if ok {
-        fieldName := "TYPE"
-        fieldDesc := types.Jlc
-        entry := fieldName + fieldDesc
+	// Also update the Jlc entry for Boolean to include this static field in its Statics list
+	classloader.JlcMapLock.RLock()
+	booleanJlc, ok := classloader.JLCmap[className]
+	classloader.JlcMapLock.RUnlock()
+	if ok {
+		fieldName := "TYPE"
+		fieldDesc := types.Jlc
+		entry := fieldName + fieldDesc
 
-        booleanJlc.Lock.Lock()
-        if !slices.Contains(booleanJlc.Statics, entry) {
-            booleanJlc.Statics = append(booleanJlc.Statics, entry)
-        }
-        booleanJlc.Lock.Unlock()
-    } else {
-        if globals.TraceClass {
-            trace.Warning("booleanClinit: java/lang/Boolean not found in JLCmap")
-        }
-    }
+		booleanJlc.Lock.Lock()
+		if !slices.Contains(booleanJlc.Statics, entry) {
+			booleanJlc.Statics = append(booleanJlc.Statics, entry)
+		}
+		booleanJlc.Lock.Unlock()
+	} else {
+		if globals.TraceClass {
+			trace.Warning("booleanClinit: java/lang/Boolean not found in JLCmap")
+		}
+	}
 
-    // Initialize static references for Boolean.TRUE and Boolean.FALSE
-    obj := object.MakeOneFieldObject(className, "value", types.Bool, types.JavaBoolFalse)
-    _ = statics.AddStatic("java/lang/Boolean.FALSE", statics.Static{Type: types.Ref, Value: obj})
-    obj = object.MakeOneFieldObject(className, "value", types.Bool, types.JavaBoolTrue)
-    _ = statics.AddStatic("java/lang/Boolean.TRUE", statics.Static{Type: types.Ref, Value: obj})
-    return nil
+	// Initialize static references for Boolean.TRUE and Boolean.FALSE
+	obj := object.MakeOneFieldObject(className, "value", types.Bool, types.JavaBoolFalse)
+	_ = statics.AddStatic("java/lang/Boolean.FALSE", statics.Static{Type: types.Ref, Value: obj})
+	obj = object.MakeOneFieldObject(className, "value", types.Bool, types.JavaBoolTrue)
+	_ = statics.AddStatic("java/lang/Boolean.TRUE", statics.Static{Type: types.Ref, Value: obj})
+	return nil
 }
 
 // Return the value of this Boolean object as a boolean primitive.

@@ -365,8 +365,8 @@ func integerClinit(_ []interface{}) interface{} {
 
 	// Set the static field Integer.TYPE to this object
 	_ = statics.AddStatic("java/lang/Integer.TYPE", statics.Static{
-		Type:  types.Jlc,
-		Value: primClassJlc,
+		Type:  types.Ref,
+		Value: object.MakePrimitiveObjectFromJlcInstance("int"),
 	})
 
 	// Also update the Jlc entry for Integer to include this static field in its Statics list
