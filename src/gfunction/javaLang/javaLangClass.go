@@ -893,16 +893,19 @@ func classIsInterface(params []interface{}) interface{} {
 }
 
 // java/lang/Class.isPrimitive()Z -- returns types.JavaBoolTrue or types.JavaBoolFalse (both of which are int64)
+// note only special primitive classes return true, wrappers and all other objects return false
 func classIsPrimitive(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(obj) {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsPrimitive: invalid or null object")
 	}
-	fldType := obj.FieldTable["value"].Ftype
-	if types.IsPrimitive(fldType) {
+	name := stringPool.GetStringPointer(obj.KlassName)
+	switch *name {
+	case "boolean", "byte", "char", "short", "int", "long", "float", "double", "void":
 		return types.JavaBoolTrue
+	default:
+		return types.JavaBoolFalse
 	}
-	return types.JavaBoolFalse
 }
 
 // java/lang/Class.isSealed()Z

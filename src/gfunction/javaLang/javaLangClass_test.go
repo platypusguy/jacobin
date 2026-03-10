@@ -144,6 +144,26 @@ func TestGetPrimitiveClass_Void(t *testing.T) {
 	}
 }
 
+func TestIsPrimitive_False(t *testing.T) {
+	setup()
+	className := "java/lang/Integer"
+	nonPrimitive := object.MakeEmptyObjectWithClassName(&className)
+	ret := classIsPrimitive([]interface{}{nonPrimitive})
+	if ret != types.JavaBoolFalse {
+		t.Errorf("Expected JavaBoolFalse for non-primitive class, got %v", ret)
+	}
+}
+
+func TestIsPrimitive_True(t *testing.T) {
+	setup()
+	className := "int"
+	nonPrimitive := object.MakeEmptyObjectWithClassName(&className)
+	ret := classIsPrimitive([]interface{}{nonPrimitive})
+	if ret == types.JavaBoolFalse {
+		t.Errorf("Expected JavaBoolTrue for isPrimitive() with class 'int', got %v", ret)
+	}
+}
+
 func TestSimpleClassLoadByName(t *testing.T) {
 	setup()
 	k, err := simpleClassLoadByName("java/lang/String")
