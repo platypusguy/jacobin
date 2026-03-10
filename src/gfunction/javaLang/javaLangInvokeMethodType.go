@@ -9,6 +9,7 @@ package javaLang
 import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
+	"strings"
 )
 
 func Load_Lang_Invoke_MethodType() {
@@ -35,7 +36,7 @@ func MethodTypeFromMethodDescriptorString(params []interface{}) interface{} {
 	// classLoaderObj := params[1].(*object.Object) // TODO: Might need later if we support custom class loaders
 
 	descriptor := object.GoStringFromStringObject(descriptorObj)
-	return descriptor
+	return object.StringObjectFromGoString(descriptor) // delete later
 }
 
 // 	// Parse the descriptor to get Class objects for return and parameter types
@@ -60,83 +61,84 @@ func MethodTypeFromMethodDescriptorString(params []interface{}) interface{} {
 //
 // 	return mtObj
 // }
-//
+
 // // parseDescriptorToClasses parses a method descriptor string and resolves each type
 // // to its corresponding java.lang.Class object. Returns the return type of the method and the parameter types
 // // as pointers to java.lang.Class instances.
-// func parseDescriptorToClasses(descriptor string) (returnType *classloader.Jlc, paramTypes []*classloader.Jlc, err error) {
-// 	if len(descriptor) == 0 || descriptor[0] != '(' {
-// 		return nil, nil, fmt.Errorf("invalid method descriptor: %s", descriptor)
-// 	}
 //
-// 	// Find the end of the parameter list
-// 	endParen := strings.IndexRune(descriptor, ')')
-// 	if endParen == -1 {
-// 		return nil, nil, fmt.Errorf("invalid method descriptor: missing ')' in %s", descriptor)
-// 	}
+//	func parseDescriptorToClasses(descriptor string) (returnType *classloader.Jlc, paramTypes []*classloader.Jlc, err error) {
+//		if len(descriptor) == 0 || descriptor[0] != '(' {
+//			return nil, nil, fmt.Errorf("invalid method descriptor: %s", descriptor)
+//		}
 //
-// 	paramStr := descriptor[1:endParen]
-// 	returnStr := descriptor[endParen+1:]
+//		// Find the end of the parameter list
+//		endParen := strings.IndexRune(descriptor, ')')
+//		if endParen == -1 {
+//			return nil, nil, fmt.Errorf("invalid method descriptor: missing ')' in %s", descriptor)
+//		}
 //
-// 	// Parse parameter types
-// 	paramTypes = make([]*classloader.Jlc, 0)
-// 	for i := 0; i < len(paramStr); {
-// 		typeStr, width := getNextTypeDescriptor(paramStr[i:])
-// 		if width == 0 {
-// 			return nil, nil, fmt.Errorf("malformed parameter descriptor in %s", descriptor)
-// 		}
-// 		classObj, err := resolveTypeDescriptor(typeStr)
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 		paramTypes = append(paramTypes, classObj)
-// 		i += width
-// 	}
+//		paramStr := descriptor[1:endParen]
+//		returnStr := descriptor[endParen+1:]
 //
-// 	// Parse return type
-// 	typeStr, width := getNextTypeDescriptor(returnStr)
-// 	if width == 0 || width != len(returnStr) {
-// 		return nil, nil, fmt.Errorf("malformed return descriptor in %s", descriptor)
-// 	}
-// 	returnType, err = resolveTypeDescriptor(typeStr)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
+//		// Parse parameter types
+//		paramTypes = make([]*classloader.Jlc, 0)
+//		for i := 0; i < len(paramStr); {
+//			typeStr, width := getNextTypeDescriptor(paramStr[i:])
+//			if width == 0 {
+//				return nil, nil, fmt.Errorf("malformed parameter descriptor in %s", descriptor)
+//			}
+//			classObj, err := resolveTypeDescriptor(typeStr)
+//			if err != nil {
+//				return nil, nil, err
+//			}
+//			paramTypes = append(paramTypes, classObj)
+//			i += width
+//		}
 //
-// 	return returnType, paramTypes, nil
-// }
+//		// Parse return type
+//		typeStr, width := getNextTypeDescriptor(returnStr)
+//		if width == 0 || width != len(returnStr) {
+//			return nil, nil, fmt.Errorf("malformed return descriptor in %s", descriptor)
+//		}
+//		returnType, err = resolveTypeDescriptor(typeStr)
+//		if err != nil {
+//			return nil, nil, err
+//		}
 //
-// // getNextTypeDescriptor extracts the next full type descriptor from a string.
-// // It returns the descriptor and the number of characters it consumed.
-// func getNextTypeDescriptor(d string) (string, int) {
-// 	if len(d) == 0 {
-// 		return "", 0
-// 	}
-// 	switch d[0] {
-// 	case 'B', 'C', 'D', 'F', 'I', 'J', 'S', 'Z', 'V':
-// 		return d[0:1], 1
-// 	case 'L':
-// 		end := strings.IndexRune(d, ';')
-// 		if end == -1 {
-// 			return "", 0 // Malformed
-// 		}
-// 		return d[0 : end+1], end + 1
-// 	case '[':
-// 		// It's an array, find the underlying type
-// 		i := 1
-// 		for i < len(d) && d[i] == '[' {
-// 			i++
-// 		}
-// 		_, width := getNextTypeDescriptor(d[i:])
-// 		if width == 0 {
-// 			return "", 0 // Malformed
-// 		}
-// 		return d[0 : i+width], i + width
-// 	default:
-// 		return "", 0 // Invalid character
-// 	}
-// }
+//		return returnType, paramTypes, nil
+//	}
 //
+// getNextTypeDescriptor extracts the next full type descriptor from a string.
+// It returns the descriptor and the number of characters it consumed.
+func getNextTypeDescriptor(d string) (string, int) {
+	if len(d) == 0 {
+		return "", 0
+	}
+	switch d[0] {
+	case 'B', 'C', 'D', 'F', 'I', 'J', 'S', 'Z', 'V':
+		return d[0:1], 1
+	case 'L':
+		end := strings.IndexRune(d, ';')
+		if end == -1 {
+			return "", 0 // Malformed
+		}
+		return d[0 : end+1], end + 1
+	case '[':
+		// It's an array, find the underlying type
+		i := 1
+		for i < len(d) && d[i] == '[' {
+			i++
+		}
+		_, width := getNextTypeDescriptor(d[i:])
+		if width == 0 {
+			return "", 0 // Malformed
+		}
+		return d[0 : i+width], i + width
+	default:
+		return "", 0 // Invalid character
+	}
+}
+
 // // resolveTypeDescriptor converts a type descriptor string into a java.lang.Class object.
 // func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
 // 	var className string
