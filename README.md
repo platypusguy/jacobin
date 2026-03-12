@@ -56,11 +56,12 @@ A more-than-minimal JVM written in Go.
 * Executes all bytecodes except INVOKEDYNAMIC, including one- and multi-dimensional arrays
 * Static initialization blocks
 * Throwing and catching exceptions
+* Calls to superclasses
 * Running native functions (written in go). [Details here.](https://github.com/platypusguy/jacobin/wiki/Native-golang-functions-methods )
+* Threading (tested up to 64 threads), fully implements synchronized methods, monitorenter, and monitorexit
   
 **To do:**
 * Method handles
-* Calls to superclasses
 * Inner and nested classes
 * invokedynamic bytecode 
 * Annotations
