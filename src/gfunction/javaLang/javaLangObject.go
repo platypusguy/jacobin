@@ -290,7 +290,7 @@ func objectWait(params []interface{}) interface{} {
 
 	// Get the object of the synchronized method.
 	obj, ok := params[1].(*object.Object)
-	if !ok || object.IsNull(obj) || object.IsNull(obj) {
+	if !ok || object.IsNull(obj) {
 		errMsg := fmt.Sprintf("objectWait: params[1] must be a non-null Object, saw: %T", params[1])
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}

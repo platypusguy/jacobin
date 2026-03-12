@@ -3293,7 +3293,7 @@ func doInvokedynamic(fr *frames.Frame, _ int64) int {
 	callSite, err := classloader.ResolveCallSite(CP, CPslot, fr)
 	if callSite == nil || err != nil {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("INVOKEDYNAMIC: error resolving callsite")
+		errMsg := fmt.Sprintf("INVOKEDYNAMIC: error resolving callsite: %s", err.Error())
 		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
 		if status != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
