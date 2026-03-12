@@ -7,7 +7,7 @@ module jacobin
 // go 1.21.4 // as of 2023-11-08
 // go 1.24.0 // as of 2025-02-27 (v. 0.7.0)   per JACOBIN-636
 // go 1.25   // as of 2026-02-05 (v. 0.8.113) per JACOBIN-867
-go 1.26.1 // as of 2026-03-10 (v. 0.9.0)   per JACOBIN-863
+go 1.26.1    // as of 2026-03-10 (v. 0.9.0)   per JACOBIN-863
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0
@@ -18,11 +18,7 @@ require (
 )
 
 require (
-	golang.org/x/mod v0.34.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
-	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
 )
 
 tool golang.org/x/tools/cmd/deadcode
