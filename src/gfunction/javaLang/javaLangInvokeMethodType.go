@@ -7,8 +7,12 @@
 package javaLang
 
 import (
+	"fmt"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
+	"jacobin/src/statics"
 	"strings"
 )
 
@@ -36,78 +40,76 @@ func MethodTypeFromMethodDescriptorString(params []interface{}) interface{} {
 	// classLoaderObj := params[1].(*object.Object) // TODO: Might need later if we support custom class loaders
 
 	descriptor := object.GoStringFromStringObject(descriptorObj)
-	return object.StringObjectFromGoString(descriptor) // delete later
+
+	// Parse the descriptor to get Class objects for return and parameter types
+	returnType, paramTypes, err := parseDescriptorToClasses(descriptor)
+	if err != nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, err.Error())
+	}
+
+	// Now, construct the java.lang.invoke.MethodType object
+	mtObj := object.MakeEmptyObject()
+	mtObj.KlassName = object.StringPoolIndexFromGoString(methodTypeClassName)
+
+	// Create a Java array of Class objects for the parameters
+	paramArray := object.Make1DimRefArray("java/lang/Class", int64(len(paramTypes)))
+	rawPtypeArray := paramArray.FieldTable["value"].Fvalue.([]*object.Object)
+	copy(rawPtypeArray, paramTypes)
+
+	// Set the fields of the MethodType object.
+	// Based on OpenJDK, the fields are 'rtype' and 'ptypes'.
+	mtObj.FieldTable["rtype"] = object.Field{Ftype: "Ljava/lang/Class;", Fvalue: returnType}
+	mtObj.FieldTable["ptypes"] = object.Field{Ftype: "[Ljava/lang/Class;", Fvalue: paramArray}
+
+	return mtObj
 }
 
-// 	// Parse the descriptor to get Class objects for return and parameter types
-// 	returnType, paramTypes, err := parseDescriptorToClasses(descriptor)
-// 	if err != nil {
-// 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, err.Error())
-// 	}
-//
-// 	// Now, construct the java.lang.invoke.MethodType object
-// 	mtObj := object.MakeEmptyObject()
-// 	mtObj.KlassName = object.StringPoolIndexFromGoString(methodTypeClassName)
-//
-// 	// Create a Java array of Class objects for the parameters
-// 	paramArray := object.Make1DimRefArray("java/lang/Class", int64(len(paramTypes)))
-// 	rawPtypeArray := paramArray.FieldTable["value"].Fvalue.([]*classloader.Jlc)
-// 	copy(rawPtypeArray, paramTypes)
-//
-// 	// Set the fields of the MethodType object.
-// 	// Based on OpenJDK, the fields are 'rtype' and 'ptypes'.
-// 	mtObj.FieldTable["rtype"] = object.Field{Ftype: "Ljava/lang/Class;", Fvalue: returnType}
-// 	mtObj.FieldTable["ptypes"] = object.Field{Ftype: "[Ljava/lang/Class;", Fvalue: paramArray}
-//
-// 	return mtObj
-// }
+// parseDescriptorToClasses parses a method descriptor string and resolves each type
+// to its corresponding java.lang.Class object. Returns the return type of the method and the parameter types
+// as pointers to java.lang.Class instances.
+func parseDescriptorToClasses(descriptor string) (returnType *object.Object,
+	paramTypes []*object.Object, err error) {
+	if len(descriptor) == 0 || descriptor[0] != '(' {
+		return nil, nil, fmt.Errorf("invalid method descriptor: %s", descriptor)
+	}
 
-// // parseDescriptorToClasses parses a method descriptor string and resolves each type
-// // to its corresponding java.lang.Class object. Returns the return type of the method and the parameter types
-// // as pointers to java.lang.Class instances.
-//
-//	func parseDescriptorToClasses(descriptor string) (returnType *classloader.Jlc, paramTypes []*classloader.Jlc, err error) {
-//		if len(descriptor) == 0 || descriptor[0] != '(' {
-//			return nil, nil, fmt.Errorf("invalid method descriptor: %s", descriptor)
-//		}
-//
-//		// Find the end of the parameter list
-//		endParen := strings.IndexRune(descriptor, ')')
-//		if endParen == -1 {
-//			return nil, nil, fmt.Errorf("invalid method descriptor: missing ')' in %s", descriptor)
-//		}
-//
-//		paramStr := descriptor[1:endParen]
-//		returnStr := descriptor[endParen+1:]
-//
-//		// Parse parameter types
-//		paramTypes = make([]*classloader.Jlc, 0)
-//		for i := 0; i < len(paramStr); {
-//			typeStr, width := getNextTypeDescriptor(paramStr[i:])
-//			if width == 0 {
-//				return nil, nil, fmt.Errorf("malformed parameter descriptor in %s", descriptor)
-//			}
-//			classObj, err := resolveTypeDescriptor(typeStr)
-//			if err != nil {
-//				return nil, nil, err
-//			}
-//			paramTypes = append(paramTypes, classObj)
-//			i += width
-//		}
-//
-//		// Parse return type
-//		typeStr, width := getNextTypeDescriptor(returnStr)
-//		if width == 0 || width != len(returnStr) {
-//			return nil, nil, fmt.Errorf("malformed return descriptor in %s", descriptor)
-//		}
-//		returnType, err = resolveTypeDescriptor(typeStr)
-//		if err != nil {
-//			return nil, nil, err
-//		}
-//
-//		return returnType, paramTypes, nil
-//	}
-//
+	// Find the end of the parameter list
+	endParen := strings.IndexRune(descriptor, ')')
+	if endParen == -1 {
+		return nil, nil, fmt.Errorf("invalid method descriptor: missing ')' in %s", descriptor)
+	}
+
+	paramStr := descriptor[1:endParen]
+	returnStr := descriptor[endParen+1:]
+
+	// Parse parameter types
+	paramTypes = make([]*object.Object, 0)
+	for i := 0; i < len(paramStr); {
+		typeStr, width := getNextTypeDescriptor(paramStr[i:])
+		if width == 0 {
+			return nil, nil, fmt.Errorf("malformed parameter descriptor in %s", descriptor)
+		}
+		classObj, err := resolveTypeDescriptor(typeStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		paramTypes = append(paramTypes, classObj)
+		i += width
+	}
+
+	// Parse return type
+	typeStr, width := getNextTypeDescriptor(returnStr)
+	if width == 0 || width != len(returnStr) {
+		return nil, nil, fmt.Errorf("malformed return descriptor in %s", descriptor)
+	}
+	returnType, err = resolveTypeDescriptor(typeStr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return returnType, paramTypes, nil
+}
+
 // getNextTypeDescriptor extracts the next full type descriptor from a string.
 // It returns the descriptor and the number of characters it consumed.
 func getNextTypeDescriptor(d string) (string, int) {
@@ -139,73 +141,135 @@ func getNextTypeDescriptor(d string) (string, int) {
 	}
 }
 
-// // resolveTypeDescriptor converts a type descriptor string into a java.lang.Class object.
-// func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
-// 	var className string
-// 	var isPrimitive bool
-//
-// 	switch typeStr {
-// 	case "B":
-// 		className, isPrimitive = "java/lang/Byte", true
-// 	case "C":
-// 		className, isPrimitive = "java/lang/Character", true
-// 	case "D":
-// 		className, isPrimitive = "java/lang/Double", true
-// 	case "F":
-// 		className, isPrimitive = "java/lang/Float", true
-// 	case "I":
-// 		className, isPrimitive = "java/lang/Integer", true
-// 	case "J":
-// 		className, isPrimitive = "java/lang/Long", true
-// 	case "S":
-// 		className, isPrimitive = "java/lang/Short", true
-// 	case "Z":
-// 		className, isPrimitive = "java/lang/Boolean", true
-// 	case "V":
-// 		className, isPrimitive = "java/lang/Void", true
-// 	default:
-// 		// Object or Array type
-// 		className = strings.ReplaceAll(typeStr, ".", "/")
-// 		if strings.HasPrefix(className, "L") && strings.HasSuffix(className, ";") {
-// 			className = className[1 : len(className)-1]
-// 		}
-// 	}
-//
-// 	// For primitive types, we need the special TYPE field (e.g., Integer.TYPE)
-// 	if isPrimitive {
-// 		staticField, ok := statics.QueryStatic(className, "TYPE")
-// 		if !ok {
-// 			// The wrapper class might not be initialized yet.
-// 			if err := classloader.LoadClassFromNameOnly(className); err != nil {
-// 				return nil, fmt.Errorf("could not load wrapper class %s: %v", className, err)
-// 			}
-// 			// Trigger static initialization which should populate the TYPE field.
-// 			k := classloader.MethAreaFetch(className)
-// 			if k.Data.ClInit == types.ClInitNotRun {
-// 				globals.GetGlobalRef().FuncInvokeGFunction(k.Data.Name+".<clinit>()V", nil)
-// 			}
-// 			staticField, ok = statics.QueryStatic(className, "TYPE")
-// 			if !ok {
-// 				return nil, fmt.Errorf("primitive TYPE field not found for %s", className)
-// 			}
-// 		}
-// 		return staticField.Value.(*object.Object), nil
-// 	}
-//
-// 	// For non-primitive types, load the class and get its Class object.
-// 	if err := classloader.LoadClassFromNameOnly(className); err != nil {
-// 		return nil, fmt.Errorf("could not load class for descriptor %s: %v", className, err)
-// 	}
-//
-//
-// 	classloader.JlcMapLock.RLock()
-// 	jlc, ok := classloader.JLCmap[className]
-// 	classloader.JlcMapLock.RUnlock()
-//
-// 	if !ok {
-// 		return nil, fmt.Errorf("Class object not found in JLCmap for %s", className)
-// 	}
-//
-// 	// The JLC object itself is the java.lang.Class instance.
-// 	return object.MakePrimitiveObjectFromJlcInstance(className), nil
-// }
+func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
+	var className string
+	var primitiveName string
+	var isPrimitive bool
+
+	switch typeStr {
+	case "B":
+		className, primitiveName, isPrimitive = "java/lang/Byte", "byte", true
+	case "C":
+		className, primitiveName, isPrimitive = "java/lang/Character", "char", true
+	case "D":
+		className, primitiveName, isPrimitive = "java/lang/Double", "double", true
+	case "F":
+		className, primitiveName, isPrimitive = "java/lang/Float", "float", true
+	case "I":
+		className, primitiveName, isPrimitive = "java/lang/Integer", "int", true
+	case "J":
+		className, primitiveName, isPrimitive = "java/lang/Long", "long", true
+	case "S":
+		className, primitiveName, isPrimitive = "java/lang/Short", "short", true
+	case "Z":
+		className, primitiveName, isPrimitive = "java/lang/Boolean", "boolean", true
+	case "V":
+		className, primitiveName, isPrimitive = "java/lang/Void", "void", true
+	default:
+		// Object or Array type
+		className = strings.ReplaceAll(typeStr, ".", "/")
+		if strings.HasPrefix(className, "L") && strings.HasSuffix(className, ";") {
+			className = className[1 : len(className)-1]
+		}
+	}
+
+	if primitiveName == "" { // delete this once we know what primitive name is used for
+		return nil, fmt.Errorf("invalid primitive type descriptor: %s", typeStr)
+	}
+
+	// For primitive types, first try to find the primitive class directly (e.g. "int")
+	if isPrimitive {
+		classloader.JlcMapLock.RLock()
+		// jlc, ok := classloader.JLCmap[primitiveName]
+		classloader.JlcMapLock.RUnlock()
+
+		// If we found the Jlc for the primitive, we need to return its associated Class object.
+		// For primitives, the Jlc doesn't have a ClData/KlassPtr usually.
+		// However, we set Integer.TYPE to point to the *object.Object.
+		// Let's rely on the wrapper's TYPE field which is the canonical way to get the object.
+
+		staticField, ok := statics.QueryStatic(className, "TYPE")
+		if !ok {
+			// The wrapper class might not be initialized yet.
+			// (Assuming LoadClassFromNameOnly has been called or base classes loaded)
+
+			// Trigger static initialization which should populate the TYPE field.
+			// Note: We can't easily run <clinit> here without the interpreter.
+			// We rely on InitializePrimitiveWrappers having been called.
+
+			return nil, fmt.Errorf("primitive TYPE field not found for %s (ensure InitializePrimitiveWrappers ran)", className)
+		}
+		return staticField.Value.(*object.Object), nil
+	}
+
+	// For non-primitive types (including arrays), check if it's already loaded.
+	k := classloader.MethAreaFetch(className)
+	if k == nil {
+		// Not loaded.
+
+		// If it's an array type, we shouldn't try to load it from a file.
+		if strings.HasPrefix(className, "[") {
+			// It's an array. If not found, create a synthetic class for it.
+
+			// Create Klass structure
+			k = &classloader.Klass{
+				Status: 'L',         // Loaded/Linked
+				Loader: "bootstrap", // or app
+				Data: &classloader.ClData{
+					Name:            className,
+					NameIndex:       object.StringPoolIndexFromGoString(className),
+					SuperclassIndex: object.StringPoolIndexFromGoString("java/lang/Object"),
+				},
+			}
+
+			// Create the java.lang.Class object
+			// We must ensure java/lang/Class is loaded to create an instance of it
+			if err := classloader.LoadClassFromNameOnly("java/lang/Class"); err != nil {
+				return nil, err
+			}
+
+			classObj := object.MakeEmptyObject()
+			classObj.KlassName = object.StringPoolIndexFromGoString("java/lang/Class")
+
+			// Set the "name" field for the Class object so tests (and reflection) can verify it
+			classObj.ThMutex.Lock()
+			classObj.FieldTable["name"] = object.Field{Ftype: "Ljava/lang/String;", Fvalue: className}
+			classObj.ThMutex.Unlock()
+
+			k.Data.ClassObject = classObj
+
+			classloader.MethAreaInsert(className, k)
+
+			return classObj, nil
+		}
+
+		// For regular classes, load them.
+		if err := classloader.LoadClassFromNameOnly(className); err != nil {
+			return nil, fmt.Errorf("could not load class for descriptor %s: %v", className, err)
+		}
+		k = classloader.MethAreaFetch(className)
+	}
+
+	if k == nil || k.Data == nil {
+		return nil, fmt.Errorf("class %s loaded but not found in MethArea", className)
+	}
+
+	if k.Data.ClassObject == nil {
+		// Create the Class object if it doesn't exist (lazy creation)
+		if err := classloader.LoadClassFromNameOnly("java/lang/Class"); err != nil {
+			return nil, err
+		}
+		classObj := object.MakeEmptyObject()
+		classObj.KlassName = object.StringPoolIndexFromGoString("java/lang/Class")
+
+		// Set the "name" field
+		classObj.ThMutex.Lock()
+		classObj.FieldTable["name"] = object.Field{Ftype: "Ljava/lang/String;", Fvalue: className}
+		classObj.ThMutex.Unlock()
+
+		// Link it back
+		k.Data.ClassObject = classObj
+	}
+
+	return k.Data.ClassObject, nil
+}
