@@ -37,6 +37,10 @@ const methodTypeClassName = "java/lang/invoke/MethodType"
 func MethodTypeFromMethodDescriptorString(params []interface{}) interface{} {
 
 	descriptorObj := params[0].(*object.Object)
+	if object.IsNull(descriptorObj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "descriptorObj is null")
+	}
+
 	// classLoaderObj := params[1].(*object.Object) // TODO: Might need later if we support custom class loaders
 
 	descriptor := object.GoStringFromStringObject(descriptorObj)
@@ -66,7 +70,9 @@ func MethodTypeFromMethodDescriptorString(params []interface{}) interface{} {
 
 // parseDescriptorToClasses parses a method descriptor string and resolves each type
 // to its corresponding java.lang.Class object. Returns the return type of the method and the parameter types
-// as pointers to java.lang.Class instances.
+// as pointers to java.lang.Class objects. The format for descriptors is specified here:
+// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.3.3
+// Ex: Object m(int i, double d, Thread t) {...} has descriptor: (IDLjava/lang/Thread;)Ljava/lang/Object;
 func parseDescriptorToClasses(descriptor string) (returnType *object.Object,
 	paramTypes []*object.Object, err error) {
 	if len(descriptor) == 0 || descriptor[0] != '(' {
@@ -79,15 +85,15 @@ func parseDescriptorToClasses(descriptor string) (returnType *object.Object,
 		return nil, nil, fmt.Errorf("invalid method descriptor: missing ')' in %s", descriptor)
 	}
 
-	paramStr := descriptor[1:endParen]
-	returnStr := descriptor[endParen+1:]
+	paramStr := descriptor[1:endParen]   // everything inside the parentheses
+	returnStr := descriptor[endParen+1:] // the bytes after the closing parenthesis
 
 	// Parse parameter types
 	paramTypes = make([]*object.Object, 0)
 	for i := 0; i < len(paramStr); {
 		typeStr, width := getNextTypeDescriptor(paramStr[i:])
 		if width == 0 {
-			return nil, nil, fmt.Errorf("malformed parameter descriptor in %s", descriptor)
+			return nil, nil, fmt.Errorf("invalid parameter descriptor in %s", descriptor)
 		}
 		classObj, err := resolveTypeDescriptor(typeStr)
 		if err != nil {
@@ -100,7 +106,7 @@ func parseDescriptorToClasses(descriptor string) (returnType *object.Object,
 	// Parse return type
 	typeStr, width := getNextTypeDescriptor(returnStr)
 	if width == 0 || width != len(returnStr) {
-		return nil, nil, fmt.Errorf("malformed return descriptor in %s", descriptor)
+		return nil, nil, fmt.Errorf("invalid return descriptor in %s", descriptor)
 	}
 	returnType, err = resolveTypeDescriptor(typeStr)
 	if err != nil {

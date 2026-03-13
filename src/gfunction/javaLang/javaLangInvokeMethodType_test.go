@@ -138,20 +138,34 @@ func TestMethodTypeFromMethodDescriptorString(t *testing.T) {
 	*/
 }
 
-func TestParseDescriptorToClasses_Invalid(t *testing.T) {
-	// // Test invalid descriptors
-	// invalidDescriptors := []string{
-	// 	"",
-	// 	"()",                   // Missing return type
-	// 	"(I",                   // Missing closing paren
-	// 	"I)V",                  // Missing opening paren
-	// 	"(Ljava/lang/String)V", // Missing semicolon
-	// }
-	//
-	// for _, desc := range invalidDescriptors {
-	// 	_, _, err := parseDescriptorToClasses(desc)
-	// 	if err == nil {
-	// 		t.Errorf("Expected error for invalid descriptor: %s", desc)
-	// 	}
-	// }
+// Get the tokens of the parameter types for methods that don't take arrays
+func TestGetNextTypeDescriptorNonArray(t *testing.T) {
+	// (ZILjava/lang/String;)V is passed in as: ZILjava/lang/String;
+	paramStr := "ZILjava/lang/String;"
+	results := make([]string, 0)
+	for i := 0; i < len(paramStr); {
+		typeStr, width := getNextTypeDescriptor(paramStr[i:])
+		results = append(results, typeStr)
+		i += width
+	}
+	if results[0] != "Z" || results[1] != "I" ||
+		results[2] != "Ljava/lang/String;" {
+		t.Errorf("Expected Z, I, and Ljava/lang/String;, got %s", results)
+	}
+}
+
+// Get the tokens of the parameter types for methods that take arrays
+func TestGetNextTypeDescriptorWithArray(t *testing.T) {
+	// (ZI[[Ljava/lang/String;)V is passed in as: ZI[[Ljava/lang/String;
+	paramStr := "ZI[[Ljava/lang/String;"
+	results := make([]string, 0)
+	for i := 0; i < len(paramStr); {
+		typeStr, width := getNextTypeDescriptor(paramStr[i:])
+		results = append(results, typeStr)
+		i += width
+	}
+	if results[0] != "Z" || results[1] != "I" ||
+		results[2] != "[[Ljava/lang/String;" {
+		t.Errorf("Expected Z, I, and [[Ljava/lang/String;, got %s", results)
+	}
 }
