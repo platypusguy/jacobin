@@ -89,6 +89,9 @@ func IsFloatingPoint(t string) bool {
 	return false
 }
 
+// This function should not be used for determining whether an object
+// would return a true from java/lang/Class.isPrimitive(). That method
+// tests a set of special cases (which include void as a primitive).
 func IsPrimitive(t string) bool {
 	if IsIntegral(t) || IsFloatingPoint(t) { // bool is tested for in IsIntegral() (in the JVM a boolean is an integer)
 		return true
