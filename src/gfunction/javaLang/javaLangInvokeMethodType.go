@@ -147,6 +147,13 @@ func getNextTypeDescriptor(d string) (string, int) {
 	}
 }
 
+// resolveTypeDescriptor converts a type descriptor string into a java.lang.Class object.
+// The descriptor formats are described here: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.3.2
+// and https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.3.3
+// For primitives, the function maps the single-character descriptor (e.g. 'I') to the wrapper
+// class name ('java/lang/Integer') and accesses the TYPE static variable of the wrapper class
+// to get the java/lang/Class object for the primitive type.
+// If the TYPE field is missing, it means InitializePrimitiveWrappers() hasn't run.
 func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
 	var className string
 	var primitiveName string
@@ -179,30 +186,26 @@ func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
 		}
 	}
 
-	if primitiveName == "" { // delete this once we know what primitive name is used for
+	if primitiveName == "" && isPrimitive { // delete this once we know what primitive name is used for
 		return nil, fmt.Errorf("invalid primitive type descriptor: %s", typeStr)
 	}
 
-	// For primitive types, first try to find the primitive class directly (e.g. "int")
+	// For primitive types, we need to return the java.lang.Class object that represents
+	// the primitive. In Jacobin, this object is created during the <clinit> of the
+	// corresponding wrapper class (e.g., java/lang/Integer.<clinit> creates the Class
+	// object for 'int'). That Class object is then stored in the wrapper's TYPE static field.
+	//
+	// To resolve a primitive descriptor (like "I"):
+	// 1. We determine the wrapper class name (className = "java/lang/Integer").
+	// 2. We look up the "TYPE" static field for that wrapper class in the statics map.
+	// 3. If found, its value is the *object.Object representing the primitive class.
+	//
+	// If the TYPE field is not found, it means the wrapper class hasn't been initialized
+	// (its <clinit> hasn't run). In the Jacobin boot sequence, InitializePrimitiveWrappers()
+	// is expected to run these initializers. If it fails here, that initialization was missed.
 	if isPrimitive {
-		classloader.JlcMapLock.RLock()
-		// jlc, ok := classloader.JLCmap[primitiveName]
-		classloader.JlcMapLock.RUnlock()
-
-		// If we found the Jlc for the primitive, we need to return its associated Class object.
-		// For primitives, the Jlc doesn't have a ClData/KlassPtr usually.
-		// However, we set Integer.TYPE to point to the *object.Object.
-		// Let's rely on the wrapper's TYPE field which is the canonical way to get the object.
-
 		staticField, ok := statics.QueryStatic(className, "TYPE")
 		if !ok {
-			// The wrapper class might not be initialized yet.
-			// (Assuming LoadClassFromNameOnly has been called or base classes loaded)
-
-			// Trigger static initialization which should populate the TYPE field.
-			// Note: We can't easily run <clinit> here without the interpreter.
-			// We rely on InitializePrimitiveWrappers having been called.
-
 			return nil, fmt.Errorf("primitive TYPE field not found for %s (ensure InitializePrimitiveWrappers ran)", className)
 		}
 		return staticField.Value.(*object.Object), nil
@@ -215,29 +218,27 @@ func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
 
 		// If it's an array type, we shouldn't try to load it from a file.
 		if strings.HasPrefix(className, "[") {
-			// It's an array. If not found, create a synthetic class for it.
+			// It's an array. Jacobin preloads primitive arrays.
+			// If it's not found in MethArea, it's an object array that hasn't been created yet.
+			// We create a synthetic class for it.
 
-			// Create Klass structure
+			// Create Klass
 			k = &classloader.Klass{
-				Status: 'L',         // Loaded/Linked
+				Status: 'L', // Loaded/Linked
 				Loader: "bootstrap", // or app
 				Data: &classloader.ClData{
-					Name:            className,
-					NameIndex:       object.StringPoolIndexFromGoString(className),
+					Name: className,
+					NameIndex: object.StringPoolIndexFromGoString(className),
 					SuperclassIndex: object.StringPoolIndexFromGoString("java/lang/Object"),
 				},
 			}
 
-			// Create the java.lang.Class object
-			// We must ensure java/lang/Class is loaded to create an instance of it
+			// Create Class Object
 			if err := classloader.LoadClassFromNameOnly("java/lang/Class"); err != nil {
 				return nil, err
 			}
-
 			classObj := object.MakeEmptyObject()
 			classObj.KlassName = object.StringPoolIndexFromGoString("java/lang/Class")
-
-			// Set the "name" field for the Class object so tests (and reflection) can verify it
 			classObj.ThMutex.Lock()
 			classObj.FieldTable["name"] = object.Field{Ftype: "Ljava/lang/String;", Fvalue: className}
 			classObj.ThMutex.Unlock()
@@ -262,13 +263,15 @@ func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
 
 	if k.Data.ClassObject == nil {
 		// Create the Class object if it doesn't exist (lazy creation)
+		// This usually happens during class loading, but if it's missing, create it now.
 		if err := classloader.LoadClassFromNameOnly("java/lang/Class"); err != nil {
 			return nil, err
 		}
 		classObj := object.MakeEmptyObject()
 		classObj.KlassName = object.StringPoolIndexFromGoString("java/lang/Class")
 
-		// Set the "name" field
+		// Set the "name" field for the Class object so tests can verify it
+		// This mirrors what we did for primitives in MakeJlcObject
 		classObj.ThMutex.Lock()
 		classObj.FieldTable["name"] = object.Field{Ftype: "Ljava/lang/String;", Fvalue: className}
 		classObj.ThMutex.Unlock()
