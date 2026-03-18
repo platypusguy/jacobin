@@ -149,45 +149,39 @@ func getNextTypeDescriptor(d string) (string, int) {
 
 // resolveTypeDescriptor converts a type descriptor string into a java.lang.Class object.
 // The descriptor formats are described here: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.3.2
-// and https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.3.3
-// For primitives, the function maps the single-character descriptor (e.g. 'I') to the wrapper
+// and https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.3.3 For primitives,
+// Fthe function uses the single-character descriptor (e.g. 'I') to locate the wrapper
 // class name ('java/lang/Integer') and accesses the TYPE static variable of the wrapper class
 // to get the java/lang/Class object for the primitive type.
-// If the TYPE field is missing, it means InitializePrimitiveWrappers() hasn't run.
 func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
 	var className string
-	var primitiveName string
 	var isPrimitive bool
 
 	switch typeStr {
 	case "B":
-		className, primitiveName, isPrimitive = "java/lang/Byte", "byte", true
+		className, isPrimitive = "java/lang/Byte", true
 	case "C":
-		className, primitiveName, isPrimitive = "java/lang/Character", "char", true
+		className, isPrimitive = "java/lang/Character", true
 	case "D":
-		className, primitiveName, isPrimitive = "java/lang/Double", "double", true
+		className, isPrimitive = "java/lang/Double", true
 	case "F":
-		className, primitiveName, isPrimitive = "java/lang/Float", "float", true
+		className, isPrimitive = "java/lang/Float", true
 	case "I":
-		className, primitiveName, isPrimitive = "java/lang/Integer", "int", true
+		className, isPrimitive = "java/lang/Integer", true
 	case "J":
-		className, primitiveName, isPrimitive = "java/lang/Long", "long", true
+		className, isPrimitive = "java/lang/Long", true
 	case "S":
-		className, primitiveName, isPrimitive = "java/lang/Short", "short", true
+		className, isPrimitive = "java/lang/Short", true
 	case "Z":
-		className, primitiveName, isPrimitive = "java/lang/Boolean", "boolean", true
+		className, isPrimitive = "java/lang/Boolean", true
 	case "V":
-		className, primitiveName, isPrimitive = "java/lang/Void", "void", true
+		className, isPrimitive = "java/lang/Void", true
 	default:
 		// Object or Array type
 		className = strings.ReplaceAll(typeStr, ".", "/")
 		if strings.HasPrefix(className, "L") && strings.HasSuffix(className, ";") {
 			className = className[1 : len(className)-1]
 		}
-	}
-
-	if primitiveName == "" && isPrimitive { // delete this once we know what primitive name is used for
-		return nil, fmt.Errorf("invalid primitive type descriptor: %s", typeStr)
 	}
 
 	// For primitive types, we need to return the java.lang.Class object that represents
@@ -206,7 +200,9 @@ func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
 	if isPrimitive {
 		staticField, ok := statics.QueryStatic(className, "TYPE")
 		if !ok {
-			return nil, fmt.Errorf("primitive TYPE field not found for %s (ensure InitializePrimitiveWrappers ran)", className)
+			return nil,
+				fmt.Errorf("primitive TYPE field not found for %s (ensure InitializePrimitiveWrappers ran)",
+					className)
 		}
 		return staticField.Value.(*object.Object), nil
 	}
@@ -224,11 +220,11 @@ func resolveTypeDescriptor(typeStr string) (*object.Object, error) {
 
 			// Create Klass
 			k = &classloader.Klass{
-				Status: 'L', // Loaded/Linked
+				Status: 'L',         // Loaded/Linked
 				Loader: "bootstrap", // or app
 				Data: &classloader.ClData{
-					Name: className,
-					NameIndex: object.StringPoolIndexFromGoString(className),
+					Name:            className,
+					NameIndex:       object.StringPoolIndexFromGoString(className),
 					SuperclassIndex: object.StringPoolIndexFromGoString("java/lang/Object"),
 				},
 			}
