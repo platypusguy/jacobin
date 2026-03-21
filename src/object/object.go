@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-25 by Jacobin Authors. All rights reserved.
+ * Copyright (c) 2021-26 by Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -9,7 +9,6 @@ package object
 import (
 	"errors"
 	"fmt"
-	// "jacobin/src/classloader"
 	"jacobin/src/globals"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
@@ -26,18 +25,12 @@ import (
 // This file contains basic functions of object creation. (Array objects
 // are created in object\arrays.go.)
 
-/*
-ObjectMonitor is a simple structure that holds the owner thread ID and recursion depth.
-* Thin locks (2-bit Misc) are fast for uncontended objects.
-* Recursive acquisition inflates the lock to a fat lock.
-* Fat lock tracks the owning thread and recursion count.
-* Unlocking decrements recursion and only releases when recursion hits zero.
-*/
-
 // With regard to the layout of a created object in Jacobin, note that
 // on some architectures, but not Jacobin, there is an additional field
 // that insures that the fields that follow the oops (the mark word and
 // the class pointer) are aligned in memory for maximal performance.
+//
+// The fields below are further explained in their respective definitions.
 type Object struct {
 	Mark       MarkWord
 	KlassName  uint32           // the index of the class name in the string pool
