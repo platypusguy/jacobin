@@ -7,6 +7,8 @@
 package classloader
 
 import (
+	"jacobin/src/object"
+	"jacobin/src/types"
 	"sync"
 )
 
@@ -31,6 +33,34 @@ func InitJlcMap() {
 	JlcMapLock.Lock()
 	defer JlcMapLock.Unlock()
 	JLCmap = make(map[string]*Jlc, 2000)
+}
+
+// GetJlcEntry returns the JLC entry for a class.
+func GetJlcEntry(className string) *Jlc {
+	JlcMapLock.RLock()
+	defer JlcMapLock.RUnlock()
+	return JLCmap[className]
+}
+
+// GetJlcObject fetches the JLC entry for a class and converts
+// it into a java/lang/Class object
+func GetJlcObject(className string) *object.Object {
+	JlcMapLock.RLock()
+	defer JlcMapLock.RUnlock()
+	jlc := JLCmap[className]
+	if jlc == nil {
+		return nil
+	}
+
+	o := object.MakeEmptyObject()
+	o.KlassName = types.StringPoolJavaLangClassIndex
+	o.FieldTable["name"] = object.Field{Ftype: types.GolangString,
+		Fvalue: object.StringObjectFromGoString(jlc.Name)}
+	o.FieldTable["$klass"] = object.Field{Ftype: types.RawGoPointer,
+		Fvalue: jlc.KlassPtr} // points to the Klass object in metadata
+	o.FieldTable["$statics"] = object.Field{Ftype: types.Array,
+		Fvalue: jlc.Statics} // array of static field names for this class
+	return o
 }
 
 // MakeJlcEntry creates a new JLC entry for a class.

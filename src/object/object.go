@@ -9,6 +9,7 @@ package object
 import (
 	"errors"
 	"fmt"
+	// "jacobin/src/classloader"
 	"jacobin/src/globals"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"

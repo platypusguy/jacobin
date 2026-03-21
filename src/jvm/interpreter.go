@@ -4252,8 +4252,24 @@ func ldc(fr *frames.Frame, width int) int {
 	case classloader.IS_STRING_ADDR: // returns a string object whose "value" field is a byte array
 		stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
 		push(fr, stringAddr)
-	case classloader.IS_CLASS_REF: // push a class object in support of static synchronized methods
-		push(fr, fr.ObjSync)
+	case classloader.IS_CLASS_REF:
+		className := *CPe.StringVal
+		if loadThisClass(className) != nil {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("LDC: Class to be loaded not found: %s",
+				util.ConvertInternalClassNameToUserFormat(className))
+			status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
+		}
+		// if the class has been loaded, then we know a JLC instance exists,
+		// we convert the JLC instance into an object and push the reference to it
+		jlcToPush := classloader.GetJlcObject(className)
+		push(fr, jlcToPush)
+		// case classloader.IS_CLASS_REF: // push a class object in support of static synchronized methods
+		// 	push(fr, fr.ObjSync)
 	}
 
 	if width == 1 {

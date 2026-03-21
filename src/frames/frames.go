@@ -127,7 +127,7 @@ func PeekFrame(fs *list.List, which int) *Frame {
 	return e.Value.(*Frame)
 }
 
-// From the given frame, return the FQN as a formatted string.
+// From the given frame, return the FQN of the method being executed as a formatted string.
 func FormatFQN(fr *Frame) string {
 	clName := strings.ReplaceAll(fr.ClName, "/", ".")
 	return fmt.Sprintf("%s.%s%s", clName, fr.MethName, fr.MethType)
