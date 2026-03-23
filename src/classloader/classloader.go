@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"jacobin/src/excNames"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
@@ -574,9 +575,13 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		kd.Interfaces = append(kd.Interfaces, uint16(fullyParsedClass.interfaces[i]))
 	}
 
-	// create a java/lang/Class mirror object for this class. It'll be used below.
-	jlc := Jlc{}
+	// create a java/lang/Class (jlc) object for this class
+	jlc := object.MakeEmptyObject()
+	jlc.KlassName = types.StringPoolJavaLangClassIndex
+	jlc.FieldTable["name"] = object.Field{Ftype: types.StringClassRef,
+		Fvalue: object.StringObjectFromGoString(fullyParsedClass.className)}
 
+	statics := []string{}
 	if len(fullyParsedClass.fields) > 0 {
 		for i := 0; i < len(fullyParsedClass.fields); i++ {
 			kdf := Field{}
@@ -598,17 +603,15 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			kd.Fields = append(kd.Fields, kdf)
 
 			if kdf.IsStatic {
-				statics := jlc.Statics
 				statics = append(statics, kdf.NameStr+kdf.DescStr)
 			}
 		}
 	}
-	jlc.KlassPtr = &kd
-
-	// insert the pointer to the java/lang/Class mirror object into the JLCMap (for static fields access and introspection)
-	JlcMapLock.Lock()
-	JLCmap[fullyParsedClass.className] = &jlc
-	JlcMapLock.Unlock()
+	jlc.FieldTable["$statics"] = object.Field{Ftype: types.Array,
+		Fvalue: statics}
+	jlc.FieldTable["$klass"] = object.Field{Ftype: types.RawGoPointer,
+		Fvalue: &kd}
+	kd.ClassObject = jlc // add the java/lang/Class object to the class data
 
 	kd.MethodList = make(map[string]string)
 	// insert the methods from java/lang/Object into the MethodList
