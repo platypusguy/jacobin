@@ -63,6 +63,19 @@ func GetJlcObject(className string) *object.Object {
 	return o
 }
 
+// Makes a JLC object for a class and fills in only the name
+func MakeJlcObject(classname string) *object.Object {
+	o := object.MakeEmptyObject()
+	o.KlassName = types.StringPoolJavaLangClassIndex
+	o.FieldTable["name"] = object.Field{Ftype: types.GolangString,
+		Fvalue: object.StringObjectFromGoString(classname)}
+	o.FieldTable["$klass"] = object.Field{Ftype: types.RawGoPointer,
+		Fvalue: nil} // points to the Klass object in metadata
+	o.FieldTable["$statics"] = object.Field{Ftype: types.Array,
+		Fvalue: []string{}} // array of static field names for this class
+	return o
+}
+
 // MakeJlcEntry creates a new JLC entry for a class.
 func MakeJlcEntry(className string, primitive bool) *Jlc {
 	jlc := Jlc{}

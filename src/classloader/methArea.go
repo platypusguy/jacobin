@@ -37,8 +37,8 @@ func InitMethodArea() {
 	MethAreaPreload()
 }
 
-// MethAreaPreload preloads the synthetic entries for array types into
-// the method area.
+// MethAreaPreload preloads the synthetic entries for array types and the dummy classes
+// for primitives into the method area
 func MethAreaPreload() {
 	emptyKlass := Klass{
 		Status: 'N', // N = instantiated
@@ -64,6 +64,46 @@ func MethAreaPreload() {
 		k.Data.Name = x
 		k.Data.NameIndex = stringPool.GetStringIndex(&x)
 		MethAreaInsert(x, &emptyKlass)
+	}
+
+	MethAreaPreloadPrimitives()
+}
+
+// MethAreaPreloadPrimitives creates barebones Klass structures for the 9 Java primitive types
+// (including void) and inserts them into the Method Area.
+func MethAreaPreloadPrimitives() {
+	primitives := []string{
+		"byte", "short", "int", "long",
+		"float", "double", "char", "boolean", "void",
+	}
+
+	for _, primName := range primitives {
+		// 1. Create the barebones Klass metadata
+		k := &Klass{
+			Status: 'N', // N = instantiated/ready
+			Loader: "bootstrap",
+			Data: &ClData{
+				Name:            primName,
+				NameIndex:       stringPool.GetStringIndex(&primName),
+				SuperclassIndex: types.InvalidStringIndex, // Primitives have no superclass
+			},
+		}
+
+		// 2. Create the java/lang/Class mirror object
+		// Note: object.MakeJlcObject sets the KlassName to "java/lang/Class"
+		// and adds the $klass and $statics hidden fields.
+		classObj := MakeJlcObject(primName)
+
+		// 3. Link them together
+		k.Data.ClassObject = classObj
+
+		// Update the hidden $klass field in the object to point back to the metadata
+		klassField := classObj.FieldTable["$klass"]
+		klassField.Fvalue = k.Data
+		classObj.FieldTable["$klass"] = klassField
+
+		// 4. Insert into the Method Area
+		MethAreaInsert(primName, k)
 	}
 }
 
