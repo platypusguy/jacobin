@@ -132,44 +132,62 @@ func Load_Lang_Short() {
 // shortClinit initializes the static fields of java.lang.Short.
 // Specifically, it sets the TYPE field to the primitive class for "short".
 func shortClinit(_ []interface{}) interface{} {
-	// Create the primitive java/lang/Class instance for "short"
-	primClassJlc := classloader.MakeJlcEntry("short", true)
-
-	// Register it in the JLCmap so it can be found by name "short"
-	classloader.JlcMapLock.Lock()
-	classloader.JLCmap["short"] = primClassJlc
-	classloader.JlcMapLock.Unlock()
-
-	// Set the static field Short.TYPE to this object
-	_ = statics.AddStatic("java/lang/Short.TYPE", statics.Static{
-		Type:  types.Ref,
-		Value: object.MakePrimitiveObjectFromJlcInstance("short"),
-	})
-
-	// Also update the Jlc entry for Short to include this static field in its Statics list
-	classloader.JlcMapLock.RLock()
-	shortJlc, ok := classloader.JLCmap["java/lang/Short"]
-	classloader.JlcMapLock.RUnlock()
-	if ok {
-		entry := "TYPE" + types.Jlc
-		shortJlc.Lock.Lock()
-		// Avoid duplicates
-		found := false
-		for _, s := range shortJlc.Statics {
-			if s == entry {
-				found = true
-				break
-			}
-		}
-		if !found {
-			shortJlc.Statics = append(shortJlc.Statics, entry)
-		}
-		shortJlc.Lock.Unlock()
-	} else {
-		trace.Warning("shortClinit: java/lang/Short not found in JLCmap")
+	// Fetch the dummy "short" class from the Method Area
+	k := classloader.MethAreaFetch("short")
+	if k == nil || k.Data.ClassObject == nil {
+		// Fatal error: boot sequence failed
+		trace.Error("shortClinit: primitive 'short' class not found in MethArea")
+		return nil
 	}
 
+	// Set the static field Short.TYPE to this object
+	statics.AddStatic("java/lang/Short.TYPE", statics.Static{
+		Type:  types.Ref,
+		Value: k.Data.ClassObject,
+	})
+
 	return nil
+	/*
+		// Create the primitive java/lang/Class instance for "short"
+		primClassJlc := classloader.MakeJlcEntry("short", true)
+
+		// Register it in the JLCmap so it can be found by name "short"
+		classloader.JlcMapLock.Lock()
+		classloader.JLCmap["short"] = primClassJlc
+		classloader.JlcMapLock.Unlock()
+
+		// Set the static field Short.TYPE to this object
+		_ = statics.AddStatic("java/lang/Short.TYPE", statics.Static{
+			Type:  types.Ref,
+			Value: object.MakePrimitiveObjectFromJlcInstance("short"),
+		})
+
+		// Also update the Jlc entry for Short to include this static field in its Statics list
+		classloader.JlcMapLock.RLock()
+		shortJlc, ok := classloader.JLCmap["java/lang/Short"]
+		classloader.JlcMapLock.RUnlock()
+		if ok {
+			entry := "TYPE" + types.Jlc
+			shortJlc.Lock.Lock()
+			// Avoid duplicates
+			found := false
+			for _, s := range shortJlc.Statics {
+				if s == entry {
+					found = true
+					break
+				}
+			}
+			if !found {
+				shortJlc.Statics = append(shortJlc.Statics, entry)
+			}
+			shortJlc.Lock.Unlock()
+		} else {
+			trace.Warning("shortClinit: java/lang/Short not found in JLCmap")
+		}
+
+		return nil
+
+	*/
 }
 
 // "java/lang/Short.byteValue()B"

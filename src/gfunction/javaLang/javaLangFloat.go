@@ -16,7 +16,6 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math"
-	"slices"
 	"strconv"
 )
 
@@ -230,36 +229,54 @@ func Load_Lang_Float() {
 // floatClinit initializes the static fields of java.lang.Float.
 // Specifically, it sets the TYPE field to the primitive class for "float".
 func floatClinit(_ []interface{}) interface{} {
-	// Create the primitive java/lang/Class instance for "float"
-	primClassJlc := classloader.MakeJlcEntry("float", true)
-
-	// Register it in the JLCmap so it can be found by name "float"
-	classloader.JlcMapLock.Lock()
-	classloader.JLCmap["float"] = primClassJlc
-	classloader.JlcMapLock.Unlock()
-
-	// Set the static field Float.TYPE to this object
-	_ = statics.AddStatic("java/lang/Float.TYPE", statics.Static{
-		Type:  types.Ref,
-		Value: object.MakePrimitiveObjectFromJlcInstance("float"),
-	})
-
-	// Also update the Jlc entry for Float to include this static field in its Statics list
-	classloader.JlcMapLock.RLock()
-	floatJlc, ok := classloader.JLCmap["java/lang/Float"]
-	classloader.JlcMapLock.RUnlock()
-	if ok {
-		entry := "TYPE" + types.Jlc
-		floatJlc.Lock.Lock()
-		if !slices.Contains(floatJlc.Statics, entry) {
-			floatJlc.Statics = append(floatJlc.Statics, entry)
-		}
-		floatJlc.Lock.Unlock()
-	} else {
-		trace.Warning("floatClinit: java/lang/Float not found in JLCmap")
+	// Fetch the dummy "float" class from the Method Area
+	k := classloader.MethAreaFetch("float")
+	if k == nil || k.Data.ClassObject == nil {
+		// Fatal error: boot sequence failed
+		trace.Error("floatClinit: primitive 'float' class not found in MethArea")
+		return nil
 	}
 
+	// Set the static field Float.TYPE to this object
+	statics.AddStatic("java/lang/Float.TYPE", statics.Static{
+		Type:  types.Ref,
+		Value: k.Data.ClassObject,
+	})
+
 	return nil
+	/*
+		// Create the primitive java/lang/Class instance for "float"
+		primClassJlc := classloader.MakeJlcEntry("float", true)
+
+		// Register it in the JLCmap so it can be found by name "float"
+		classloader.JlcMapLock.Lock()
+		classloader.JLCmap["float"] = primClassJlc
+		classloader.JlcMapLock.Unlock()
+
+		// Set the static field Float.TYPE to this object
+		_ = statics.AddStatic("java/lang/Float.TYPE", statics.Static{
+			Type:  types.Ref,
+			Value: object.MakePrimitiveObjectFromJlcInstance("float"),
+		})
+
+		// Also update the Jlc entry for Float to include this static field in its Statics list
+		classloader.JlcMapLock.RLock()
+		floatJlc, ok := classloader.JLCmap["java/lang/Float"]
+		classloader.JlcMapLock.RUnlock()
+		if ok {
+			entry := "TYPE" + types.Jlc
+			floatJlc.Lock.Lock()
+			if !slices.Contains(floatJlc.Statics, entry) {
+				floatJlc.Statics = append(floatJlc.Statics, entry)
+			}
+			floatJlc.Lock.Unlock()
+		} else {
+			trace.Warning("floatClinit: java/lang/Float not found in JLCmap")
+		}
+
+		return nil
+
+	*/
 }
 
 var classNameFloat = "java/lang/Float"

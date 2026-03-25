@@ -138,7 +138,7 @@ func Load_Lang_Boolean() {
 }
 
 func booleanClinit(_ []interface{}) interface{} {
-	// Fetch the unified "boolean" class from the Method Area
+	// Fetch the dummy "boolean" class from the Method Area
 	k := classloader.MethAreaFetch("boolean")
 	if k == nil || k.Data.ClassObject == nil {
 		// Fatal error: boot sequence failed

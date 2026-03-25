@@ -354,7 +354,7 @@ var classNameInteger = "java/lang/Integer"
 // integerClinit initializes the static fields of java.lang.Integer.
 // Specifically, it sets the TYPE field to the primitive class for "int".
 func integerClinit(_ []interface{}) interface{} {
-	// Fetch the unified "int" class from the Method Area
+	// Fetch the dummy "int" class from the Method Area
 	k := classloader.MethAreaFetch("int")
 	if k == nil || k.Data.ClassObject == nil {
 		// Fatal error: boot sequence failed

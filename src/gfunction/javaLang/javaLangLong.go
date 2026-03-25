@@ -16,7 +16,6 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math/bits"
-	"slices"
 	"strconv"
 )
 
@@ -201,36 +200,54 @@ func Load_Lang_Long() {
 // longClinit initializes the static fields of java.lang.Long.
 // Specifically, it sets the TYPE field to the primitive class for "long".
 func longClinit(_ []interface{}) interface{} {
-	// Create the primitive java/lang/Class instance for "long"
-	primClassJlc := classloader.MakeJlcEntry("long", true)
-
-	// Register it in the JLCmap so it can be found by name "long"
-	classloader.JlcMapLock.Lock()
-	classloader.JLCmap["long"] = primClassJlc
-	classloader.JlcMapLock.Unlock()
-
-	// Set the static field Long.TYPE to this object
-	_ = statics.AddStatic("java/lang/Long.TYPE", statics.Static{
-		Type:  types.Ref,
-		Value: object.MakePrimitiveObjectFromJlcInstance("long"),
-	})
-
-	// Also update the Jlc entry for Long to include this static field in its Statics list
-	classloader.JlcMapLock.RLock()
-	longJlc, ok := classloader.JLCmap["java/lang/Long"]
-	classloader.JlcMapLock.RUnlock()
-	if ok {
-		entry := "TYPE" + types.Jlc
-		longJlc.Lock.Lock()
-		if !slices.Contains(longJlc.Statics, entry) {
-			longJlc.Statics = append(longJlc.Statics, entry)
-		}
-		longJlc.Lock.Unlock()
-	} else {
-		trace.Warning("longClinit: java/lang/Long not found in JLCmap")
+	// Fetch the dummy "long" class from the Method Area
+	k := classloader.MethAreaFetch("long")
+	if k == nil || k.Data.ClassObject == nil {
+		// Fatal error: boot sequence failed
+		trace.Error("longClinit: primitive 'long' class not found in MethArea")
+		return nil
 	}
 
+	// Set the static field Long.TYPE to this object
+	statics.AddStatic("java/lang/Long.TYPE", statics.Static{
+		Type:  types.Ref,
+		Value: k.Data.ClassObject,
+	})
+
 	return nil
+	/*
+		// Create the primitive java/lang/Class instance for "long"
+		primClassJlc := classloader.MakeJlcEntry("long", true)
+
+		// Register it in the JLCmap so it can be found by name "long"
+		classloader.JlcMapLock.Lock()
+		classloader.JLCmap["long"] = primClassJlc
+		classloader.JlcMapLock.Unlock()
+
+		// Set the static field Long.TYPE to this object
+		_ = statics.AddStatic("java/lang/Long.TYPE", statics.Static{
+			Type:  types.Ref,
+			Value: object.MakePrimitiveObjectFromJlcInstance("long"),
+		})
+
+		// Also update the Jlc entry for Long to include this static field in its Statics list
+		classloader.JlcMapLock.RLock()
+		longJlc, ok := classloader.JLCmap["java/lang/Long"]
+		classloader.JlcMapLock.RUnlock()
+		if ok {
+			entry := "TYPE" + types.Jlc
+			longJlc.Lock.Lock()
+			if !slices.Contains(longJlc.Statics, entry) {
+				longJlc.Statics = append(longJlc.Statics, entry)
+			}
+			longJlc.Lock.Unlock()
+		} else {
+			trace.Warning("longClinit: java/lang/Long not found in JLCmap")
+		}
+
+		return nil
+
+	*/
 }
 
 // "java/lang/Long.doubleValue()D"
