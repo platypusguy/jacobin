@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-6 by  the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -17,7 +17,6 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math/bits"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -355,6 +354,24 @@ var classNameInteger = "java/lang/Integer"
 // integerClinit initializes the static fields of java.lang.Integer.
 // Specifically, it sets the TYPE field to the primitive class for "int".
 func integerClinit(_ []interface{}) interface{} {
+	// Fetch the unified "int" class from the Method Area
+	k := classloader.MethAreaFetch("int")
+	if k == nil || k.Data.ClassObject == nil {
+		// Fatal error: boot sequence failed
+		trace.Error("integerClinit: primitive 'int' class not found in MethArea")
+		return nil
+	}
+
+	// Set the static field Integer.TYPE to this object
+	statics.AddStatic("java/lang/Integer.TYPE", statics.Static{
+		Type:  types.Ref,
+		Value: k.Data.ClassObject,
+	})
+
+	return nil
+}
+
+/*
 	// Create the primitive java/lang/Class instance for "int"
 	primClassJlc := classloader.MakeJlcEntry("int", true)
 
@@ -398,7 +415,8 @@ func integerClinit(_ []interface{}) interface{} {
 		}
 	}
 	return nil
-}
+
+*/
 
 // "java/lang/Integer.byteValue()B"
 func integerByteValue(params []interface{}) interface{} {

@@ -16,7 +16,6 @@ import (
 	"jacobin/src/statics"
 	"jacobin/src/trace"
 	"jacobin/src/types"
-	"slices"
 	"strings"
 )
 
@@ -139,8 +138,24 @@ func Load_Lang_Boolean() {
 }
 
 func booleanClinit(_ []interface{}) interface{} {
-	className := "java/lang/Boolean"
+	// Fetch the unified "boolean" class from the Method Area
+	k := classloader.MethAreaFetch("boolean")
+	if k == nil || k.Data.ClassObject == nil {
+		// Fatal error: boot sequence failed
+		trace.Error("integerClinit: primitive 'boolean' class not found in MethArea")
+		return nil
+	}
 
+	// Set the static field Boolean.TYPE to this object
+	statics.AddStatic("java/lang/Boolean.TYPE", statics.Static{
+		Type:  types.Ref,
+		Value: k.Data.ClassObject,
+	})
+
+	return nil
+}
+
+/*
 	// Create the primitive java/lang/Class instance for "boolean"
 	primClassJlc := classloader.MakeJlcEntry("boolean", true)
 
@@ -181,7 +196,8 @@ func booleanClinit(_ []interface{}) interface{} {
 	obj = object.MakeOneFieldObject(className, "value", types.Bool, types.JavaBoolTrue)
 	_ = statics.AddStatic("java/lang/Boolean.TRUE", statics.Static{Type: types.Ref, Value: obj})
 	return nil
-}
+
+*/
 
 // Return the value of this Boolean object as a boolean primitive.
 func booleanBooleanValue(params []interface{}) interface{} {

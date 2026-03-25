@@ -15,7 +15,6 @@ import (
 	"jacobin/src/statics"
 	"jacobin/src/trace"
 	"jacobin/src/types"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -159,6 +158,24 @@ func Load_Lang_Byte() {
 // byteClinit initializes the static fields of java.lang.Byte.
 // Specifically, it sets the TYPE field to the primitive class for "byte".
 func byteClinit(_ []interface{}) interface{} {
+	// Fetch the unified "byte" class from the Method Area
+	k := classloader.MethAreaFetch("byte")
+	if k == nil || k.Data.ClassObject == nil {
+		// Fatal error: boot sequence failed
+		trace.Error("integerClinit: primitive 'byte' class not found in MethArea")
+		return nil
+	}
+
+	// Set the static field Byte.TYPE to this object
+	statics.AddStatic("java/lang/Byte.TYPE", statics.Static{
+		Type:  types.Ref,
+		Value: k.Data.ClassObject,
+	})
+
+	return nil
+}
+
+/*
 	// Create the primitive java/lang/Class instance for "byte"
 	primClassJlc := classloader.MakeJlcEntry("byte", true)
 
@@ -189,7 +206,8 @@ func byteClinit(_ []interface{}) interface{} {
 	}
 
 	return nil
-}
+
+*/
 
 var classNameByte = "java/lang/Byte"
 
