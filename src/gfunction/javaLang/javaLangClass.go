@@ -516,8 +516,9 @@ func ClassGetName(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "java/lang/class.GetName(): invalid or null object")
 	}
 	nameObj := obj.FieldTable["name"].Fvalue.(*object.Object)
-	// name = util.ConvertInternalClassNameToUserFormat(name)
-	// nameObj := object.StringObjectFromGoString(name)
+	name := object.GoStringFromStringObject(nameObj)
+	name = util.ConvertInternalClassNameToUserFormat(name)
+	nameObj = object.StringObjectFromGoString(name)
 	return nameObj
 }
 
