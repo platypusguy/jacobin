@@ -67,7 +67,7 @@ func GetJlcObject(className string) *object.Object {
 func MakeJlcObject(classname string) *object.Object {
 	o := object.MakeEmptyObject()
 	o.KlassName = types.StringPoolJavaLangClassIndex
-	o.FieldTable["name"] = object.Field{Ftype: types.GolangString,
+	o.FieldTable["name"] = object.Field{Ftype: types.Ref,
 		Fvalue: object.StringObjectFromGoString(classname)}
 	o.FieldTable["$klass"] = object.Field{Ftype: types.RawGoPointer,
 		Fvalue: nil} // points to the Klass object in metadata

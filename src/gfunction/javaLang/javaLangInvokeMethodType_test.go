@@ -41,7 +41,8 @@ func TestResolveTypeDescriptorPrimitives(t *testing.T) {
 		t.Fatalf("Primitive Class object is missing the 'name' field")
 	}
 
-	nameStr, ok := nameField.Fvalue.(string)
+	nameObj, ok := nameField.Fvalue.(*object.Object)
+	nameStr := object.GoStringFromStringObject(nameObj)
 	if !ok {
 		t.Fatalf("Primitive Class object 'name' field is not a string, got %T", nameField.Fvalue)
 	}
@@ -76,7 +77,8 @@ func TestResolveTypeDescriptorObjects(t *testing.T) {
 		t.Fatalf("Class object is missing the 'name' field")
 	}
 
-	nameStr, ok := nameField.Fvalue.(string)
+	nameObj, ok := nameField.Fvalue.(*object.Object)
+	nameStr := object.GoStringFromStringObject(nameObj)
 	if !ok {
 		t.Fatalf("Class object 'name' field is not a string, got %T", nameField.Fvalue)
 	}
@@ -125,13 +127,13 @@ func TestResolveTypeDescriptorArrays(t *testing.T) {
 
 func TestParseDescriptorToClasses_Invalid(t *testing.T) {
 	globals.InitGlobals("test")
-	
+
 	// Test invalid descriptors
 	invalidDescriptors := []string{
 		"",
-		"()", // Missing return type
-		"(I", // Missing closing paren
-		"I)V", // Missing opening paren
+		"()",                   // Missing return type
+		"(I",                   // Missing closing paren
+		"I)V",                  // Missing opening paren
 		"(Ljava/lang/String)V", // Missing semicolon
 	}
 

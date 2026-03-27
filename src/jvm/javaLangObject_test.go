@@ -30,6 +30,7 @@ func setup() {
 		classloader.InitMethodArea()
 		_ = classloader.Init()
 		classloader.LoadBaseClasses()
+		classloader.MethAreaPreload()
 		setUpRun = true
 	}
 }
