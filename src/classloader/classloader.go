@@ -965,9 +965,6 @@ func Init() error {
 	// initialize the method area
 	InitMethodArea()
 
-	// Initialize the JLCmap
-	InitJlcMap()
-
 	// Success!
 	return nil
 }

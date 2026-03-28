@@ -9,9 +9,9 @@ package classloader
 import (
 	"jacobin/src/object"
 	"jacobin/src/types"
-	"sync"
 )
 
+/*
 // instances of java/lang/Class as stored in global.JLCmap
 type Jlc struct {
 	Lock        sync.RWMutex
@@ -62,6 +62,7 @@ func GetJlcObject(className string) *object.Object {
 		Fvalue: jlc.Statics} // array of static field names for this class
 	return o
 }
+*/
 
 // Makes a JLC object for a class and fills in only the name
 func MakeJlcObject(classname string) *object.Object {
@@ -75,6 +76,8 @@ func MakeJlcObject(classname string) *object.Object {
 		Fvalue: []string{}} // array of static field names for this class
 	return o
 }
+
+/*
 
 // MakeJlcEntry creates a new JLC entry for a class.
 func MakeJlcEntry(className string, primitive bool) *Jlc {
@@ -90,3 +93,4 @@ func MakeJlcEntry(className string, primitive bool) *Jlc {
 	jlc.Statics = make([]string, 0)
 	return &jlc
 }
+*/
