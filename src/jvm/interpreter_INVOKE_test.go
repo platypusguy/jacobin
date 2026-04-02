@@ -18,7 +18,6 @@ import (
 	"jacobin/src/types"
 	"os"
 	"strings"
-	"sync"
 	"testing"
 )
 
@@ -627,14 +626,15 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 		Data:   &clData,
 	}
 
-	classloader.MethAreaInsert(className, &k)
-	jlc := classloader.Jlc{
-		Lock:     sync.RWMutex{},
-		Statics:  []string{},
-		KlassPtr: nil,
-	}
-	classloader.JLCmap[className] = &jlc
+	// classloader.MethAreaInsert(className, &k)
+	// jlc := classloader.Jlc{
+	// 	Lock:     sync.RWMutex{},
+	// 	Statics:  []string{},
+	// 	KlassPtr: nil,
+	// }
+	// classloader.JLCmap[className] = &jlc
 
+	classloader.MethAreaInsert(className, &k)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
@@ -730,12 +730,12 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 	}
 
 	classloader.MethAreaInsert(className, &k)
-	jlc := classloader.Jlc{
-		Lock:     sync.RWMutex{},
-		Statics:  []string{},
-		KlassPtr: nil,
-	}
-	classloader.JLCmap[className] = &jlc
+	// jlc := classloader.Jlc{
+	// 	Lock:     sync.RWMutex{},
+	// 	Statics:  []string{},
+	// 	KlassPtr: nil,
+	// }
+	// classloader.JLCmap[className] = &jlc
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
