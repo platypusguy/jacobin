@@ -729,8 +729,10 @@ func classGetSuperclass(params []interface{}) interface{} {
 	}
 
 	// if the object is an array, return Object.class
+	className := object.GoStringFromStringPoolIndex(obj.KlassName)
 	if classIsArray(params).(int64) == types.JavaBoolTrue {
-		return classloader.JLCmap["java/lang/Object"]
+		jlo, _ := simpleClassLoadByName("java/lang/Object")
+		return jlo.Data.ClassObject
 	}
 
 	// if the object is an interface, the superclass is null
@@ -739,7 +741,7 @@ func classGetSuperclass(params []interface{}) interface{} {
 	}
 
 	// java/lang/Object, primitives, and void all return null for the superclass
-	className := object.GoStringFromStringPoolIndex(obj.KlassName)
+
 	switch className {
 	case "java/lang/Object",
 		"java/lang/Byte",
@@ -757,9 +759,8 @@ func classGetSuperclass(params []interface{}) interface{} {
 	klassPtr := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
 	scNameIndex := klassPtr.SuperclassIndex
 	scName := *stringPool.GetStringPointer(scNameIndex)
-
-	scClass := classloader.JLCmap[scName]
-	return scClass
+	sc, _ := simpleClassLoadByName(scName)
+	return sc.Data.ClassObject
 }
 
 // java/lang/Class.getTypeName()Ljava/lang/String;

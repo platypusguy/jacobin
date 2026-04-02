@@ -380,61 +380,62 @@ func createAndInitNewFrame(
 
 // Check a synchronized method
 func CkSyncStaticMeth(fram *frames.Frame) error {
+	return nil
+	// //// This needs to be thought through carefully.
+	/*
+		// Synchronized method?
+		if fram.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
 
-	// Synchronized method?
-	if fram.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
-
-		// Look for the synchronized static entry in the JLCmap.
-		classloader.JlcMapLock.RLock()
-		jlc, found := classloader.JLCmap[fram.ClName]
-		classloader.JlcMapLock.RUnlock()
-		if !found || jlc == nil { // second test for nil is to keep golang happy that jlc is not used below
-			fqn := fram.ClName + "." + fram.MethName + fram.MethType
-			errMsg := fmt.Sprintf("CkSyncStaticMeth: error running initializer block in %s", fqn)
-			return errors.New(errMsg)
-		}
-
-		/* is this still needed?
-		// Do first-time processing if necessary.
-		var obj *object.Object
-		switch jlc.(type) {
-		case *object.Object:
-			// Not the first time for this class name.
-			// Fetch the lockable object.
+			// Look for the synchronized static entry in the JLCmap.
 			classloader.JlcMapLock.RLock()
-			obj = jlc.(*object.Object)
+			jlc, found := classloader.JLCmap[fram.ClName]
 			classloader.JlcMapLock.RUnlock()
-		case *classloader.Jlc:
-			// First time for this class name.
-			// Convert JLCmap data to the lockable object.
-			jlc = jlc.(*classloader.Jlc)
-			obj = object.MakeOneFieldObject(fram.ClName, "jlc", types.Ref, jlc)
-			classloader.JlcMapLock.Lock()
-			classloader.JLCmap[fram.ClName] = obj
-			classloader.JlcMapLock.Unlock()
-		}
-		*/
-
-		/* TODO: update to reflect the new implementation of JLCmap
-			// Lock the class-object.
-			err := obj.ObjLock(int32(fram.Thread))
-			if err != nil {
+			if !found || jlc == nil { // second test for nil is to keep golang happy that jlc is not used below
 				fqn := fram.ClName + "." + fram.MethName + fram.MethType
-				errMsg := fmt.Sprintf("CkSyncStaticMeth: ObjLock error, PC: %d, FQN: %s", fram.PC, fqn)
+				errMsg := fmt.Sprintf("CkSyncStaticMeth: error running initializer block in %s", fqn)
 				return errors.New(errMsg)
 			}
-			if globals.TraceInst {
-				traceInfo := fmt.Sprintf("\tCkSyncStaticMeth: Locked class-object %s", fram.ClName)
-				trace.Trace(traceInfo)
+
+			/* is this still needed?
+			// Do first-time processing if necessary.
+			var obj *object.Object
+			switch jlc.(type) {
+			case *object.Object:
+				// Not the first time for this class name.
+				// Fetch the lockable object.
+				classloader.JlcMapLock.RLock()
+				obj = jlc.(*object.Object)
+				classloader.JlcMapLock.RUnlock()
+			case *classloader.Jlc:
+				// First time for this class name.
+				// Convert JLCmap data to the lockable object.
+				jlc = jlc.(*classloader.Jlc)
+				obj = object.MakeOneFieldObject(fram.ClName, "jlc", types.Ref, jlc)
+				classloader.JlcMapLock.Lock()
+				classloader.JLCmap[fram.ClName] = obj
+				classloader.JlcMapLock.Unlock()
 			}
-
-			// Save class-name object pointer in the frame for return and catch-frame processing.
-			fram.ObjSync = obj
-		}
-
-		*/
-	}
-	// Success.
-	return nil
+	*/
+	//
+	// 	 TODO: update to reflect the new implementation of JLCmap
+	// 		// Lock the class-object.
+	// 		err := obj.ObjLock(int32(fram.Thread))
+	// 		if err != nil {
+	// 			fqn := fram.ClName + "." + fram.MethName + fram.MethType
+	// 			errMsg := fmt.Sprintf("CkSyncStaticMeth: ObjLock error, PC: %d, FQN: %s", fram.PC, fqn)
+	// 			return errors.New(errMsg)
+	// 		}
+	// 		if globals.TraceInst {
+	// 			traceInfo := fmt.Sprintf("\tCkSyncStaticMeth: Locked class-object %s", fram.ClName)
+	// 			trace.Trace(traceInfo)
+	// 		}
+	//
+	// 		// Save class-name object pointer in the frame for return and catch-frame processing.
+	// 		fram.ObjSync = obj
+	// 	}
+	//
+	// }
+	// // Success.
+	// return nil
 
 }

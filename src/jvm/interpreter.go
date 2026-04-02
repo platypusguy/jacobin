@@ -4266,8 +4266,9 @@ func ldc(fr *frames.Frame, width int) int {
 		}
 		// if the class has been loaded, then we know a JLC instance exists,
 		// we convert the JLC instance into an object and push the reference to it
-		jlcToPush := classloader.GetJlcObject(className)
-		push(fr, jlcToPush)
+		cl := classloader.MethAreaFetch(className)
+		// jlcToPush := classloader.GetJlcObject(className)
+		push(fr, cl.Data.ClassObject)
 		// case classloader.IS_CLASS_REF: // push a class object in support of static synchronized methods
 		// 	push(fr, fr.ObjSync)
 	}
