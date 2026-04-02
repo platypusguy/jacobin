@@ -419,12 +419,20 @@ func classGetField(params []interface{}) interface{} {
 // java/lang/Class.getInterfaces()[Ljava/lang/Class;
 // Returns an array of pointers to Class instances for the interfaces implemented by this class
 func classGetInterfaces(params []interface{}) interface{} {
-	obj, ok := params[0].(*object.Object)
-	if !ok || object.IsNull(obj) {
+	jlc, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(jlc) {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classGetInterfaces: invalid or null object")
 	}
 
-	klass := obj.FieldTable["$klass"].Fvalue.(*classloader.ClData)
+	objNameRaw := jlc.FieldTable["name"].Fvalue.(*object.Object)
+	objName := object.GoStringFromStringObject(objNameRaw)
+	obj, err := simpleClassLoadByName(objName)
+	if err != nil {
+		errMsg := fmt.Sprintf("classGetInterfaces: failed to load class %s: %s", objName, err.Error())
+		return ghelpers.GetGErrBlk(excNames.ClassNotFoundException, errMsg)
+	}
+
+	klass := obj.Data
 	interfaceCount := len(klass.Interfaces)
 	if interfaceCount == 0 { // if no interfaces, then return an empty array
 		return object.Make1DimRefArray("java/lang/Class", 0)
@@ -437,12 +445,12 @@ func classGetInterfaces(params []interface{}) interface{} {
 	// copy the pointers to java/lang/Class instances of the interfaces into the array
 	// after making sure that the interfaces have been loaded
 	interfacesArray := object.Make1DimRefArray("java/lang/Class", int64(len(klass.Interfaces)))
-	rawArray := interfacesArray.FieldTable["value"].Fvalue.([]*classloader.Jlc)
+	rawArray := interfacesArray.FieldTable["value"].Fvalue.([]*object.Object)
 	for i := 0; i < len(klass.Interfaces); i++ {
 		index = uint32(klass.Interfaces[i])
 		interfaceName = *stringPool.GetStringPointer(index)
-		// _, _ = simpleClassLoadByName(interfaceName)
-		rawArray[i] = classloader.JLCmap[interfaceName]
+		iface, _ := simpleClassLoadByName(interfaceName)
+		rawArray[i] = iface.Data.ClassObject
 	}
 
 	return interfacesArray
