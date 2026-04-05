@@ -4253,6 +4253,8 @@ func ldc(fr *frames.Frame, width int) int {
 		stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
 		push(fr, stringAddr)
 	case classloader.IS_CLASS_REF:
+		// Loading a class reference via LDC is always a push of a reference to
+		// the java/lang/Class instance for the given class.
 		className := *CPe.StringVal
 		if loadThisClass(className) != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -4264,13 +4266,9 @@ func ldc(fr *frames.Frame, width int) int {
 			}
 			return RESUME_HERE // caught
 		}
-		// if the class has been loaded, then we know a JLC instance exists,
-		// we convert the JLC instance into an object and push the reference to it
+		// every loaded class has a corresponding java/lang/Class instance
 		cl := classloader.MethAreaFetch(className)
-		// jlcToPush := classloader.GetJlcObject(className)
 		push(fr, cl.Data.ClassObject)
-		// case classloader.IS_CLASS_REF: // push a class object in support of static synchronized methods
-		// 	push(fr, fr.ObjSync)
 	}
 
 	if width == 1 {
