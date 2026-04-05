@@ -378,7 +378,8 @@ func createAndInitNewFrame(
 	return fram, nil
 }
 
-// Check a synchronized method
+// CkSyncStaticMeth checks whether this frame is for a synchronized (implictly static) method.
+// If so, lock the corresponding instance of // java/lang/Class.
 func CkSyncStaticMeth(fram *frames.Frame) error {
 
 	// Synchronized method?
@@ -397,26 +398,6 @@ func CkSyncStaticMeth(fram *frames.Frame) error {
 			trace.Trace(traceInfo)
 		}
 	}
-
-	//
-	// 	 TODO: update to reflect the new implementation of JLCmap
-	// 		// Lock the class-object.
-	// 		err := obj.ObjLock(int32(fram.Thread))
-	// 		if err != nil {
-	// 			fqn := fram.ClName + "." + fram.MethName + fram.MethType
-	// 			errMsg := fmt.Sprintf("CkSyncStaticMeth: ObjLock error, PC: %d, FQN: %s", fram.PC, fqn)
-	// 			return errors.New(errMsg)
-	// 		}
-	// 		if globals.TraceInst {
-	// 			traceInfo := fmt.Sprintf("\tCkSyncStaticMeth: Locked class-object %s", fram.ClName)
-	// 			trace.Trace(traceInfo)
-	// 		}
-	//
-	// 		// Save class-name object pointer in the frame for return and catch-frame processing.
-	// 		fram.ObjSync = obj
-	// 	}
-	//
-	// }
 
 	// Success.
 	return nil
