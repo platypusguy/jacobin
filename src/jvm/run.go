@@ -385,7 +385,7 @@ func CkSyncStaticMeth(fram *frames.Frame) error {
 	// Synchronized method?
 	if fram.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
 		cl := classloader.MethAreaFetch(fram.ClName) // this cannot fail b/c we know class is already loaded
-		fram.ObjSync = cl.Data.ClassObject           // point the ObjSync to the java/lang/Class instance
+		fram.ObjSync = cl.Data.ClassObject           // point the ObjSync field to the java/lang/Class instance
 		// Lock the class-object.
 		err := fram.ObjSync.ObjLock(int32(fram.Thread))
 		if err != nil {
@@ -399,6 +399,5 @@ func CkSyncStaticMeth(fram *frames.Frame) error {
 		}
 	}
 
-	// Success.
 	return nil
 }
