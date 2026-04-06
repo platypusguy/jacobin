@@ -153,9 +153,9 @@ func booleanClinit(_ []interface{}) interface{} {
 	})
 
 	// Initialize static references for Boolean.TRUE and Boolean.FALSE
-	obj := object.MakeOneFieldObject(types.ClassNameBigBoolean, "value", types.Bool, types.JavaBoolFalse)
+	obj := object.MakeOneFieldObject(types.ClassNameBoolean, "value", types.Bool, types.JavaBoolFalse)
 	_ = statics.AddStatic("java/lang/Boolean.FALSE", statics.Static{Type: types.Ref, Value: obj})
-	obj = object.MakeOneFieldObject(types.ClassNameBigBoolean, "value", types.Bool, types.JavaBoolTrue)
+	obj = object.MakeOneFieldObject(types.ClassNameBoolean, "value", types.Bool, types.JavaBoolTrue)
 	_ = statics.AddStatic("java/lang/Boolean.TRUE", statics.Static{Type: types.Ref, Value: obj})
 
 	return nil
