@@ -35,6 +35,7 @@ var EmptyString = ""
 var NullString = "null"
 
 // Other useful class names in alpha order
+var ClassNameBoolean = "java/lang/Boolean"
 var ClassNameBigDecimal = "java/math/BigDecimal"
 var ClassNameBigInteger = "java/math/BigInteger"
 var ClassNameJavaLangClass = "java/lang/Class"
