@@ -91,4 +91,4 @@ var FileSystemProviderValue = &struct{}{}
 var FileSystemProviderType = "Ljava/nio/file/spi/FileSystemProvider;"
 
 // ---- experimental values ----
-var StackInflator = 2 // for toying with whether to increase # of stack entries
+var StackInflator = 0 // for toying with whether to increase # of stack entries

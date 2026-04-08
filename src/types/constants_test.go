@@ -59,11 +59,8 @@ func TestMiscStringConstants(t *testing.T) {
 	}
 }
 
-func TestInvalidStringIndexAndStackInflator(t *testing.T) {
+func TestInvalidStringIndex(t *testing.T) {
 	if InvalidStringIndex != 0xffffffff {
 		t.Fatalf("InvalidStringIndex expected 0xffffffff, got 0x%x", InvalidStringIndex)
-	}
-	if StackInflator != 2 {
-		t.Fatalf("StackInflator expected 2, got %d", StackInflator)
 	}
 }
