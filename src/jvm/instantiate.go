@@ -16,7 +16,6 @@ import (
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
 	"jacobin/src/object"
-	"jacobin/src/shutdown"
 	"jacobin/src/statics"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
@@ -319,8 +318,7 @@ func loadThisClass(className string) error {
 	// Try to load class by name
 	err := classloader.LoadClassFromNameOnly(className)
 	if err != nil {
-		shutdown.Exit(shutdown.APP_EXCEPTION)
-		return errors.New(err.Error()) // needed for testing, which does not shutdown on failure
+		return errors.New(err.Error())
 	}
 	// Success in loaded by name
 	if globals.TraceCloadi {
