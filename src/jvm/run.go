@@ -69,7 +69,7 @@ func RunJavaThread(args []any) {
 	fs := frames.CreateFrameStack()
 
 	// Create the initial frame for this thread.
-	f := frames.CreateFrame(meth.MaxStack + types.StackInflator) // experiment with stack size. See JACOBIN-494
+	f := frames.CreateFrame(meth.MaxStack)
 	t.ThMutex.RLock()
 	tID := t.FieldTable["ID"].Fvalue.(int64)
 	t.ThMutex.RUnlock()
@@ -210,7 +210,7 @@ func createAndInitNewFrame(
 
 	f := currFrame
 
-	stackSize := m.MaxStack + types.StackInflator // Experimental addition, see JACOBIN-494
+	stackSize := m.MaxStack
 	if stackSize < 1 {
 		stackSize = 2
 	}

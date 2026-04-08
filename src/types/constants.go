@@ -89,6 +89,3 @@ var ClassNameSecureRandom = "java/security/SecureRandom"
 // File system
 var FileSystemProviderValue = &struct{}{}
 var FileSystemProviderType = "Ljava/nio/file/spi/FileSystemProvider;"
-
-// ---- experimental values ----
-var StackInflator = 0 // for toying with whether to increase # of stack entries

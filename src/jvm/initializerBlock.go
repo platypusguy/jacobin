@@ -88,7 +88,7 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 // frame stacks combined into one.)
 func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List) error {
 	meth := m.(classloader.JmEntry)
-	f := frames.CreateFrame(meth.MaxStack + types.StackInflator) // Experimental expansion, see JACOBIN-494
+	f := frames.CreateFrame(meth.MaxStack)
 	if fs.Front() != nil {
 		parentFrame := *(fs.Front().Value.(*frames.Frame))
 		f.Thread = parentFrame.Thread
@@ -175,14 +175,14 @@ func InitializePrimitiveWrappers() {
 		// If they are standard Java classes, this approach relies on FuncInvokeGFunction handling the lookup correctly.
 		// Based on the prompt, we are using the gfunction mechanism.
 		fqn := className + ".<clinit>()V"
-		
+
 		// We pass nil for params as <clinit> takes no arguments.
 		// We ignore the return value as <clinit> is void.
 		_ = globalPtr.FuncInvokeGFunction(fqn, nil)
 
 		// Mark as initialized
 		k.Data.ClInit = types.ClInitRun
-		
+
 		if globals.TraceClass {
 			trace.Trace(fmt.Sprintf("InitializePrimitiveWrappers: Initialized %s", className))
 		}
