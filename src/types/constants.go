@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023-4 by the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-6 by the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -35,9 +35,9 @@ var EmptyString = ""
 var NullString = "null"
 
 // Other useful class names in alpha order
-var ClassNameBoolean = "java/lang/Boolean"
 var ClassNameBigDecimal = "java/math/BigDecimal"
 var ClassNameBigInteger = "java/math/BigInteger"
+var ClassNameBoolean = "java/lang/Boolean"
 var ClassNameJavaLangClass = "java/lang/Class"
 var ClassNameJcaProviderList = "sun/security/jca/ProviderList"
 var ClassNameLinkedList = "java/util/LinkedList"
