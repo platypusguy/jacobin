@@ -177,7 +177,7 @@ func TestSimpleReturnFunctions(t *testing.T) {
 	if ghelpers.JustReturn(nil) != nil {
 		t.Error("ghelpers.JustReturn should return nil")
 	}
-	if ghelpers.ReturnNullObject(nil) != object.Null {
+	if ghelpers.ReturnNull(nil) != object.Null {
 		t.Error("ghelpers.ReturnNullObject should return object.Null")
 	}
 }

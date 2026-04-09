@@ -78,7 +78,7 @@ func JustReturn([]interface{}) interface{} {
 	return nil
 }
 
-// ReturnNull returns a Java null object.
+// ReturnNull returns a Java null reference.
 func ReturnNull([]interface{}) interface{} {
 	return object.Null
 }

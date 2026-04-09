@@ -166,8 +166,9 @@ func UpdateValueFieldFromJavaBytes(objPtr *Object, argBytes []types.JavaByte) {
 	objPtr.ThMutex.Unlock()
 }
 
-// Null is the Jacobin implementation of Java's null
-// JACOBIN-618 changed definition of null to this.
+// Null is the Jacobin implementation of Java's null (as of JACOBIN-618)
+// Note that Null as defined here != nil. In golang for x to be = nil,
+// both the type and the value of x must be nil.
 var Null = (*Object)(nil)
 
 // IsNull determines whether a value is null
@@ -179,7 +180,7 @@ func IsNull(value any) bool {
 	case []*Object:
 		return false
 	}
-	return value == nil
+	return value == nil || value == Null // Null is a typed nil value
 }
 
 // CloneObject makes a replica of an existing object.
