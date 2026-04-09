@@ -3092,8 +3092,12 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 				} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
 					return RESUME_HERE // resume at the present PC, which points to the exception code
 				}
-			default: // if it's not an error, then it's a legitimate return value, which we simply push
-				push(fr, ret)
+			default:
+				if !strings.HasSuffix(methodType, "V") { // if it's not an error,
+					// then it's a legitimate return value, which we push provided
+					// the method does not return void
+					push(fr, ret)
+				}
 			}
 		}
 		return 3
