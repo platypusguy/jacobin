@@ -29,7 +29,7 @@ const (
 	UNKNOWN_ERROR
 )
 
-// This is the exit-to-O/S function.
+// Exit exits the JVM and returns the status code to the OS
 // TODO: Check a list of JVM Shutdown hooks before closing down in order to have an orderly exit.
 func Exit(errorCondition ExitStatus) int {
 	globals.LoaderWg.Wait()
@@ -54,8 +54,10 @@ func Exit(errorCondition ExitStatus) int {
 	}
 
 	if errorCondition != OK {
-		statics.DumpStatics("exit.Exit", statics.SelectUser, "")
-		config.DumpConfig(os.Stderr)
+		if !g.StrictJDK { // dump statics on error, unless in strict JDK mode
+			statics.DumpStatics("exit.Exit", statics.SelectUser, "")
+			_ = config.DumpConfig(os.Stderr)
+		}
 	}
 
 	os.Stderr.Sync() // ensure all output is written before exiting

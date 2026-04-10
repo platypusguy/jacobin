@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func TestShutdownOK(t *testing.T) {
+func TestShutdownWithError(t *testing.T) {
 	globals.InitGlobals("test")
 	gl := globals.GetGlobalRef()
 	gl.JacobinName = "test"
@@ -46,7 +46,39 @@ func TestShutdownOK(t *testing.T) {
 	}
 }
 
-func TestShutdownReturn(t *testing.T) {
+func TestShutdownWithErrorAndStrictJDK(t *testing.T) {
+	globals.InitGlobals("test")
+	gl := globals.GetGlobalRef()
+	gl.JacobinName = "test"
+	gl.StrictJDK = true
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	Exit(UNKNOWN_ERROR)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if len(msg) != 0 {
+		t.Errorf("Expecting empty error msg due to -strictJDK, but got: %s", msg)
+	}
+}
+
+func TestShutdownReturnOK(t *testing.T) {
 	globals.InitGlobals("test")
 	gl := globals.GetGlobalRef()
 	gl.JacobinName = "test"
