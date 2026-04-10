@@ -2141,9 +2141,11 @@ func doIreturn(fr *frames.Frame, _ int64) int {
 		}
 	}
 	valToReturn := pop(fr)
-	f := fr.FrameStack.Front().Next().Value.(*frames.Frame)
-	push(f, valToReturn)
-	fr.FrameStack.Remove(fr.FrameStack.Front())
+	nextFrame := fr.FrameStack.Front().Next().Value.(*frames.Frame)
+	push(nextFrame, valToReturn)
+	fs := fr.FrameStack
+	fs.Remove(fs.Front())
+	fr = nil
 	return 0
 }
 
@@ -2158,7 +2160,9 @@ func doReturn(fr *frames.Frame, _ int64) int {
 			trace.Trace(traceInfo)
 		}
 	}
-	fr.FrameStack.Remove(fr.FrameStack.Front())
+	fs := fr.FrameStack
+	fs.Remove(fs.Front())
+	fr = nil
 	return 0
 }
 
