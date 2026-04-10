@@ -140,7 +140,7 @@ func Load_Other_Methods() {
 
 	ghelpers.MethodSignatures["jdk/internal/misc/CDS.initializeFromArchive(Ljava/lang/Class;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 0,
+			ParamSlots: 1,
 			GFunction:  ghelpers.JustReturn,
 		}
 
