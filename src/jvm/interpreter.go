@@ -3316,18 +3316,9 @@ func doInvokedynamic(fr *frames.Frame, _ int64) int {
 func doNew(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
-	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != classloader.ClassRef && CPentry.Type != classloader.Interface {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("NEW: Invalid type for new object")
-		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
-		}
-		return RESUME_HERE // caught
-	}
+	CPentry := CP.CpIndex[CPslot] // codeCheck's checkNew() ensures CP entry is a ClassRef or Interface
 
-	// the classref points to a UTF8 record with the name of the class to instantiate
+	// the classref/interface ref points to a UTF8 record with the name of the class to instantiate
 	var className string
 	if CPentry.Type == classloader.ClassRef {
 		nameStringPoolIndex := CP.ClassRefs[CPentry.Slot]

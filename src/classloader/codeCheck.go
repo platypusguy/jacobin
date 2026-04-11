@@ -631,7 +631,7 @@ var CheckTable = [203]BytecodeFunc{
 	checkInvokestatic,    // INVOKESTATIC    0xB8
 	CheckInvokeinterface, // INVOKEINTERFACE 0xB9
 	CheckInvokedynamic,   // INVOKEDYNAMIC   0xBA
-	Return3,              // NEW             0xBB
+	CheckNew,             // NEW             0xBB
 	Return2,              // NEWARRAY        0xBC
 	Return3,              // ANEWARRAY       0xBD
 	Return1,              // ARRAYLENGTH     0xBE
@@ -1140,6 +1140,22 @@ func CheckPop() int {
 func CheckPop2() int {
 	StackEntries -= 2
 	return 1
+}
+
+// NEW 0xBB
+func CheckNew() int {
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != ClassRef && CPentry.Type != Interface {
+		errMsg := fmt.Sprintf("NEW: Invalid type for new object")
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	return 3
 }
 
 // PUTFIELD 0xB5 Put non-static field
