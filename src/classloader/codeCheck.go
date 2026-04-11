@@ -710,7 +710,8 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 
 		ret := CheckTable[opcode]()
 		if ret == ERROR_OCCURRED {
-			errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
+			errMsg := fmt.Sprintf("Check of %s instruction: Invalid bytecode or argument at location %d",
+				BytecodeNames[opcode], PC)
 			status := globals.GetGlobalRef().FuncThrowException(excNames.ClassFormatError, errMsg)
 			if status != true { // will only happen in test
 				globals.InitGlobals("test")
@@ -1151,7 +1152,7 @@ func CheckNew() int {
 
 	CPentry := CP.CpIndex[CPslot]
 	if CPentry.Type != ClassRef && CPentry.Type != Interface {
-		errMsg := fmt.Sprintf("NEW: Invalid type for new object")
+		errMsg := fmt.Sprintf("NEW: Invalid reference to object type")
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
