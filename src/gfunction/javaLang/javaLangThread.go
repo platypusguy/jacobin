@@ -199,7 +199,7 @@ func Load_Lang_Thread() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapDeprecated}
 
 	ghelpers.MethodSignatures["java/lang/Thread.run()V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: threadRun}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: threadRun}
 
 	ghelpers.MethodSignatures["java/lang/Thread.setContextClassLoader(Ljava/lang/ClassLoader;)V"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}

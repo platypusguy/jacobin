@@ -140,7 +140,7 @@ func Load_Security_SecureRandom() {
 
 	ghelpers.MethodSignatures["java/security/SecureRandom.nextBoolean()Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  secureRandomNextBoolean,
 		}
 

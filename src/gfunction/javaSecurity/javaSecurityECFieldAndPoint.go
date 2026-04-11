@@ -24,7 +24,7 @@ func Load_ECFieldAndPoint() {
 	ghelpers.MethodSignatures["java/security/spec/ECField.<init>(I)V"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ecFieldInit}
 	ghelpers.MethodSignatures["java/security/spec/ECField.getFieldSize()I"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ecFieldGetFieldSize}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ecFieldGetFieldSize}
 
 	// --------------------------
 	// ECFieldFp
@@ -32,7 +32,7 @@ func Load_ECFieldAndPoint() {
 	ghelpers.MethodSignatures["java/security/spec/ECFieldFp.<init>(Ljava/math/BigInteger;)V"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ecFieldFpInit}
 	ghelpers.MethodSignatures["java/security/spec/ECFieldFp.getP()Ljava/math/BigInteger;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ecFieldFpGetP}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ecFieldFpGetP}
 
 	// --------------------------
 	// ECPoint
@@ -40,9 +40,9 @@ func Load_ECFieldAndPoint() {
 	ghelpers.MethodSignatures["java/security/spec/ECPoint.<init>(Ljava/math/BigInteger;Ljava/math/BigInteger;)V"] =
 		ghelpers.GMeth{ParamSlots: 2, GFunction: ecPointInit}
 	ghelpers.MethodSignatures["java/security/spec/ECPoint.getAffineX()Ljava/math/BigInteger;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ecPointGetAffineX}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ecPointGetAffineX}
 	ghelpers.MethodSignatures["java/security/spec/ECPoint.getAffineY()Ljava/math/BigInteger;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ecPointGetAffineY}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ecPointGetAffineY}
 }
 
 // ---------------------------------------------------------

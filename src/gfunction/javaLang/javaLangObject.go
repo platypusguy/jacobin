@@ -42,7 +42,7 @@ func Load_Lang_Object() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ObjectGetClass} // TODO: finish implementing objectGetClass
 
 	ghelpers.MethodSignatures["java/lang/Object.getResourceAsStream(Ljava/lang/String;)Ljava/io/InputStream;"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["java/lang/Object.hashCode()I"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: objectHashCode}

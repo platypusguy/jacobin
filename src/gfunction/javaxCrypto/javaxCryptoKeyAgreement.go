@@ -44,7 +44,7 @@ func Load_Crypto_KeyAgreement() {
 
 	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.generateSecret(Ljava/lang/String;)Ljavax/crypto/SecretKey;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
