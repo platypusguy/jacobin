@@ -95,7 +95,7 @@ func Load_Util_TimeZone() {
 
 	ghelpers.MethodSignatures["java/util/TimeZone.getOffset(IIIII)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 5,
 			GFunction:  tzGetOffset,
 		}
 

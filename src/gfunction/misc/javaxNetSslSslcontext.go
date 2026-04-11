@@ -44,37 +44,37 @@ func Load_Javax_Net_Ssl_SSLContext() {
 
 	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.engineCreateSSLEngine()Ljavax/net/ssl/SSLEngine;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.engineCreateSSLEngine(Ljava/lang/String;I)Ljavax/net/ssl/SSLEngine;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.engineGetClientSessionContext()Ljavax/net/ssl/SSLSessionContext;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.engineGetServerSessionContext()Ljavax/net/ssl/SSLSessionContext;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.engineGetSocketFactory()Ljavax/net/ssl/SSLSocketFactory;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.engineGetServerSocketFactory()Ljavax/net/ssl/SSLServerSocketFactory;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
 	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.getClientSessionContext()Ljavax/net/ssl/SSLSessionContext;"] =

@@ -95,7 +95,7 @@ func Load_Util_Properties() {
 
 	ghelpers.MethodSignatures["java/util/Properties.propertyNames()Ljava/util/Enumeration;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
 

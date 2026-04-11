@@ -51,7 +51,7 @@ func TestTimeZone_MethodRegistration(t *testing.T) {
 		{"java/util/TimeZone.getDisplayName()Ljava/lang/String;", 0},
 		{"java/util/TimeZone.getDSTSavings()I", 0},
 		{"java/util/TimeZone.getID()Ljava/lang/String;", 0},
-		{"java/util/TimeZone.getOffset(IIIII)I", 6},
+		{"java/util/TimeZone.getOffset(IIIII)I", 5},
 		{"java/util/TimeZone.getOffset(J)I", 1},
 		{"java/util/TimeZone.getRawOffset()I", 0},
 		{"java/util/TimeZone.getTimeZone(Ljava/lang/String;)Ljava/util/TimeZone;", 1},

@@ -28,21 +28,21 @@ func Load_EllipticCurve() {
 	// Getter for field
 	ghelpers.MethodSignatures["java/security/spec/EllipticCurve.getField()Ljava/security/spec/ECField;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  ellipticCurveGetField,
 		}
 
 	// Getter for a
 	ghelpers.MethodSignatures["java/security/spec/EllipticCurve.getA()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  ellipticCurveGetA,
 		}
 
 	// Getter for b
 	ghelpers.MethodSignatures["java/security/spec/EllipticCurve.getB()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  ellipticCurveGetB,
 		}
 }
