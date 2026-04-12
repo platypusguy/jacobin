@@ -65,7 +65,7 @@ func initVarsHello2() error {
 	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
-	_JVM_ARGS = ""
+	_JVM_ARGS = "-trace:inst"
 	_TESTCLASS = "Hello2.class" // the class to test
 	_APP_ARGS = ""
 
