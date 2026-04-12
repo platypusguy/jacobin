@@ -633,7 +633,7 @@ var CheckTable = [203]BytecodeFunc{
 	CheckInvokedynamic,   // INVOKEDYNAMIC   0xBA
 	CheckNew,             // NEW             0xBB
 	Return2,              // NEWARRAY        0xBC
-	Return3,              // ANEWARRAY       0xBD
+	CheckAnewarray,       // ANEWARRAY       0xBD
 	Return1,              // ARRAYLENGTH     0xBE
 	Return1,              // ATHROW          0xBF
 	Return3,              // CHECKCAST       0xC0
@@ -745,6 +745,27 @@ func Arith() int {
 func CheckAconstnull() int {
 	StackEntries += 1
 	return 1
+}
+
+// ANEWARRAY 0x1C Create a new array of reference type elements
+func CheckAnewarray() int {
+	// check that the index points to a field reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != ClassRef && CPentry.Type != Interface {
+		errMsg := fmt.Sprintf("%s:\n ANEWARRAY at %d: CP entry (%d) is not a field or interface reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+
+	// no change to StackEntries
+
+	return 3
 }
 
 // BIPUSH 0x10 Push following byte onto op stack
@@ -1156,6 +1177,7 @@ func CheckNew() int {
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
+	StackEntries += 1
 	return 3
 }
 

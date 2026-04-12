@@ -3376,16 +3376,7 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 
 	refTypeSlot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
-	refType := CP.CpIndex[refTypeSlot]
-	if refType.Type != classloader.ClassRef && refType.Type != classloader.Interface {
-		// TODO: it could also point to an array, per the JVM spec
-		errMsg := fmt.Sprintf("ANEWARRAY: Presently works only with classes and interfaces")
-		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
-		}
-		return RESUME_HERE // caught
-	}
+	refType := CP.CpIndex[refTypeSlot] // codeCheck's checkAnewarray() ensures CP entry is a ClassRef or Interface
 
 	var refTypeName = ""
 	if refType.Type == classloader.ClassRef {
@@ -3698,7 +3689,6 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 	// now, get the class we're casting the object to.
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 	CP := fr.CP.(*classloader.CPool)
-	// CPentry := CP.CpIndex[CPslot]
 	classNamePtr := classloader.FetchCPentry(CP, CPslot)
 	targetClassName := *(classNamePtr.StringVal)
 
@@ -3767,12 +3757,11 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 
 // 0xC1 INSTANCEOF validate the type of object (if not nil or null)
 func doInstanceof(fr *frames.Frame, _ int64) int {
-	//
-	// See detail design documentation in doCheckcast.
+	// See detailed design documentation in doCheckcast.
 	//
 	// Because doInstanceof uses the same middle logic as doCheckcast,
 	// any change here should probably be made to doCheckcast
-	// and vice versa!
+	// and vice versa.
 	//
 	ref := pop(fr)
 	if ref == nil || object.IsNull(ref) {
