@@ -65,7 +65,7 @@ func initVarsHello2() error {
 	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
-	_JVM_ARGS = ""
+	_JVM_ARGS = "-trace:inst"
 	_TESTCLASS = "Hello2.class" // the class to test
 	_APP_ARGS = ""
 
@@ -130,14 +130,77 @@ func TestRunHello2(t *testing.T) {
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
+	bStderr, _ := io.ReadAll(stderr)
+	bStdout, _ := io.ReadAll(stdout)
+	strStdout := string(bStdout)
+
+	// Wait for completion
+	err = cmd.Wait()
+
+	// Success?
+	if err != nil {
+		t.Errorf("Got unexpected output to stderr: %s", string(bStderr))
 	}
 
-	slurp, _ = io.ReadAll(stdout)
+	if !strings.Contains(strStdout, "-1") && !strings.Contains(strStdout, "17") {
+		t.Errorf("Did not get expected output to stdout. Got: %s", strStdout)
+	}
+}
 
-	if !strings.Contains(string(slurp), "-1") && !strings.Contains(string(slurp), "17") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
+func TestRunHello2CauseFail(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
+	initErr := initVarsHello2()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
+	}
+	var cmd *exec.Cmd
+
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
+	// run the various combinations of args. This is necessary b/c the empty string is viewed as
+	// an actual specified option on the command line.
+	_TESTCLASS = "Hello2CauseFail.class"
+	if len(_JVM_ARGS) > 0 {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
+		} else {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
+		}
+	} else {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
+		} else {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS)
+		}
+	}
+
+	// get the stdout and stderr contents from the file execution
+	stderr, err := cmd.StderrPipe()
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// run the command
+	if err = cmd.Start(); err != nil {
+		t.Errorf("Got error running Jacobin: %s", err.Error())
+	}
+
+	// Here begin the actual tests on the output to stderr and stdout
+	_, _ = io.ReadAll(stderr)
+	bStdout, _ := io.ReadAll(stdout)
+	strStdout := string(bStdout)
+
+	// Wait for completion
+	err = cmd.Wait()
+
+	// Did it fail as expected?
+	if err == nil {
+		t.Errorf("Expected failure but it passed, stdout: %s", strStdout)
 	}
 }

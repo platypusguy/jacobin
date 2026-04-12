@@ -102,6 +102,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java/text/*
 	javaText.Load_Math_SimpleDateFormat()
+	javaText.Load_Text_DateFormat()
 
 	// java/security/*
 	javaSecurity.Load_ECFieldAndPoint()

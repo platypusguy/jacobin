@@ -43,6 +43,12 @@ func Load_Math_SimpleDateFormat() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.<init>(Ljava/lang/String;Ljava/util/Locale;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/text/SimpleDateFormat.applyLocalizedPattern(Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
@@ -61,6 +67,18 @@ func Load_Math_SimpleDateFormat() {
 			GFunction:  sdfClone,
 		}
 
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.equals(Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.format(Ljava/lang/Object;Ljava/lang/StringBuffer;Ljava/text/FieldPosition;)Ljava/lang/StringBuffer;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/text/SimpleDateFormat.format(Ljava/util/Date;)Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
@@ -73,6 +91,36 @@ func Load_Math_SimpleDateFormat() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.formatToCharacterIterator(Ljava/lang/Object;)Ljava/text/AttributedCharacterIterator;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.get2DigitYearStart()Ljava/util/Date;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.getAvailableLocales()[Ljava/util/Locale;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.getDateFormatSymbols()Ljava/text/DateFormatSymbols;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.hashCode()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/text/SimpleDateFormat.parse(Ljava/lang/String;)Ljava/util/Date;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
@@ -82,6 +130,24 @@ func Load_Math_SimpleDateFormat() {
 	ghelpers.MethodSignatures["java/text/SimpleDateFormat.parse(Ljava/lang/String;Ljava/text/ParsePosition;)Ljava/util/Date;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.parseObject(Ljava/lang/String;Ljava/text/ParsePosition;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.set2DigitYearStart(Ljava/util/Date;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.setDateFormatSymbols(Ljava/text/DateFormatSymbols;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
