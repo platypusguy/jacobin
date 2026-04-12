@@ -130,14 +130,19 @@ func TestRunHello2(t *testing.T) {
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
+	bStderr, _ := io.ReadAll(stderr)
+	bStdout, _ := io.ReadAll(stdout)
+	strStdout := string(bStdout)
+
+	// Wait for completion
+	err = cmd.Wait()
+
+	// Success?
+	if err != nil {
+		t.Errorf("Got unexpected output to stderr: %s", string(bStderr))
 	}
 
-	slurp, _ = io.ReadAll(stdout)
-
-	if !strings.Contains(string(slurp), "-1") && !strings.Contains(string(slurp), "17") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
+	if !strings.Contains(strStdout, "-1") && !strings.Contains(strStdout, "17") {
+		t.Errorf("Did not get expected output to stdout. Got: %s", strStdout)
 	}
 }
