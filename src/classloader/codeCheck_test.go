@@ -245,6 +245,31 @@ func TestCheckAconstnull_StackIncrement(t *testing.T) {
 	}
 }
 
+// ANEWARRAY
+func TestAnewarrayInvalidReference(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ANEWARRAY, 0x00, 0x01, 0x00}
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	cp.CpIndex[1] = CpEntry{Type: FieldRef, Slot: 0} // should be class or interface
+	// now create the pointed-to FieldRef
+	cp.FieldRefs = make([]ResolvedFieldEntry, 1, 1)
+	cp.FieldRefs[0] = ResolvedFieldEntry{}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for invalid reference in ANEWARRAY, but got none")
+		return
+	}
+
+	if !strings.Contains(err.Error(), "Invalid bytecode") {
+		t.Errorf("Expected error message to contain 'Invalid bytecode', got: %s", err.Error())
+	}
+}
+
 // BIPUSH
 
 func TestCheckBipush_HighLevel(t *testing.T) {
