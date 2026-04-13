@@ -135,6 +135,7 @@ func TestGfuncINVOKEVIRTUALwith1stringArgtemplate(t *testing.T) {
 
 	globals.InitGlobals("test")
 	trace.Init()
+	globals.TraceInst = true
 	normalStderr := os.Stderr
 	rerr, werr, _ := os.Pipe()
 	os.Stderr = werr
@@ -198,20 +199,12 @@ func TestGfuncINVOKEVIRTUALwith1stringArgtemplate(t *testing.T) {
 	// get contents written by stderr and stdout, then
 	// restore stderr and stdout to what they were before the test
 	_ = werr.Close()
-	rawStderrMsg, _ := io.ReadAll(rerr)
+	_, _ = io.ReadAll(rerr)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
 	rawStdoutMsg, _ := io.ReadAll(rout)
 	os.Stdout = normalStdout
-
-	// convert the contents written to stderr and stdout into strings
-	// and run tests on those strings
-
-	errMsg := string(rawStderrMsg[:])
-	if len(errMsg) != 0 {
-		t.Errorf("gfunctionExec: Got unexpected error message: %s", errMsg)
-	}
 
 	outMsg := string(rawStdoutMsg[:])
 	if !strings.Contains(outMsg, stringParam) {

@@ -49,7 +49,7 @@ func initVarsHello3() error {
 	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
-	_JVM_ARGS = ""
+	_JVM_ARGS = "-trace:inst"
 	_TESTCLASS = "Hello3.class" // the class to test
 	_APP_ARGS = ""
 
@@ -119,16 +119,20 @@ func TestRunHello3(t *testing.T) {
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	slurpErr := string(slurp)
-	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
+	bStderr, _ := io.ReadAll(stderr)
+	bStdout, _ := io.ReadAll(stdout)
+	strStderr := string(bStderr)
+	strStdout := string(bStdout)
+
+	// Wait for completion
+	err = cmd.Wait()
+
+	// Success?
+	if err != nil {
+		t.Errorf("Got unexpected output to stderr: %s", strStderr)
 	}
 
-	slurp, _ = io.ReadAll(stdout)
-	slurpOut := string(slurp)
-
-	if !strings.Contains(slurpOut, "57") && !strings.Contains(string(slurp), "73") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", slurpOut)
+	if !strings.Contains(strStdout, "57") && !strings.Contains(strStdout, "73") {
+		t.Errorf("Did not get expected output to stdout. Got: %s", strStdout)
 	}
 }

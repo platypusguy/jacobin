@@ -132,6 +132,7 @@ func TestRunHello2(t *testing.T) {
 	// Here begin the actual tests on the output to stderr and stdout
 	bStderr, _ := io.ReadAll(stderr)
 	bStdout, _ := io.ReadAll(stdout)
+	strStderr := string(bStderr)
 	strStdout := string(bStdout)
 
 	// Wait for completion
@@ -139,7 +140,7 @@ func TestRunHello2(t *testing.T) {
 
 	// Success?
 	if err != nil {
-		t.Errorf("Got unexpected output to stderr: %s", string(bStderr))
+		t.Errorf("Got unexpected output to stderr: %s", strStderr)
 	}
 
 	if !strings.Contains(strStdout, "-1") && !strings.Contains(strStdout, "17") {
