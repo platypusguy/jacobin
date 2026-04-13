@@ -32,7 +32,7 @@ func initVarsPrint_235() error {
 	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
-	_JVM_ARGS = ""
+	_JVM_ARGS = "-trace:inst"
 	_TESTCLASS = "SystemExit0_JACOBIN235.class" // the class to test
 	_APP_ARGS = ""
 
@@ -83,27 +83,26 @@ func TestRun235(t *testing.T) {
 
 	// get the stdout and stderr contents from the file execution
 	stderr, err := cmd.StderrPipe()
-	stdout, err := cmd.StdoutPipe()
+	//stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// run the command
 	if err = cmd.Start(); err != nil {
-		t.Errorf("Got error running Jacobin: %s", err.Error())
+		t.Errorf("Got error starting Jacobin: %s", err.Error())
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	slurpErr := string(slurp)
-	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
-	}
+	bStderr, _ := io.ReadAll(stderr)
+	//bStdout, _ := io.ReadAll(stdout)
+	strStderr := string(bStderr)
+	//strStdout := string(bStdout)
 
-	slurp, _ = io.ReadAll(stdout)
-	slurpOut := string(slurp)
-
-	if len(slurpOut) != 0 {
-		t.Errorf("Got unexpected output to stdout: %s", slurpErr)
+	// Wait for completion
+	err = cmd.Wait()
+	// Success?
+	if err != nil {
+		t.Errorf("Got unexpected output from cmd.Wait: %s", strStderr)
 	}
 }

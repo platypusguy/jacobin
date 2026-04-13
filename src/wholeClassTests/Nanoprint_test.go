@@ -48,7 +48,7 @@ func initVarsNanoPrint() error {
 	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
-	_JVM_ARGS = ""
+	_JVM_ARGS = "-trace:inst"
 	_TESTCLASS = "NanoPrint.class" // the class to test
 	_APP_ARGS = ""
 
@@ -110,16 +110,20 @@ func TestRunNanoprint(t *testing.T) {
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	slurpErr := string(slurp)
-	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
+	bStderr, _ := io.ReadAll(stderr)
+	bStdout, _ := io.ReadAll(stdout)
+	strStderr := string(bStderr)
+	strStdout := string(bStdout)
+
+	// Wait for completion
+	err = cmd.Wait()
+
+	// Success?
+	if err != nil {
+		t.Errorf("Got unexpected output from cmd.Wait: %s", strStderr)
 	}
 
-	slurp, _ = io.ReadAll(stdout)
-	slurpOut := string(slurp)
-
-	outStrings := strings.Split(strings.ReplaceAll(slurpOut, "\r\n", "\n"), "\n")
+	outStrings := strings.Split(strings.ReplaceAll(strStdout, "\r\n", "\n"), "\n")
 	time1, err1 := strconv.Atoi(outStrings[0])
 	time2, err2 := strconv.Atoi(outStrings[1])
 

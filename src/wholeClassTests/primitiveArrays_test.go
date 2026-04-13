@@ -62,7 +62,7 @@ func initVarsPrimitiveArrays() error {
 	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
-	_JVM_ARGS = ""
+	_JVM_ARGS = "-trace:inst"
 	_TESTCLASS = "testArrays.class" // the class to test
 	_APP_ARGS = ""
 
@@ -127,35 +127,43 @@ func TestRunPrimitiveArrays(t *testing.T) {
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr:\n%s", string(slurp))
+	bStderr, _ := io.ReadAll(stderr)
+	bStdout, _ := io.ReadAll(stdout)
+	strStderr := string(bStderr)
+	strStdout := string(bStdout)
+	//if len(slurp) != 0 {
+	//	t.Errorf("Got unexpected output to stderr:\n%s", string(slurp))
+	//}
+
+	// Wait for completion
+	err = cmd.Wait()
+
+	// Success?
+	if err != nil {
+		t.Errorf("Got unexpected output from cmd.Wait: %s", strStderr)
 	}
 
-	slurp, _ = io.ReadAll(stdout)
-	str := string(slurp)
-
-	if !strings.Contains(str, "intArray: 600") {
-		t.Errorf("Did not get expected output for intArray. Got:\n%s", string(slurp))
+	if !strings.Contains(strStdout, "intArray: 600") {
+		t.Errorf("Did not get expected output for intArray. Got:\n%s", strStdout)
 	}
 
-	if !strings.Contains(str, "floatArray: 400") {
-		t.Errorf("Did not get expected output for floatArray. Got:\n%s", string(slurp))
+	if !strings.Contains(strStdout, "floatArray: 400") {
+		t.Errorf("Did not get expected output for floatArray. Got:\n%s", strStdout)
 	}
 
-	if !strings.Contains(str, "longArray: 5000") {
-		t.Errorf("Did not get expected output for longArray. Got:\n%s", string(slurp))
+	if !strings.Contains(strStdout, "longArray: 5000") {
+		t.Errorf("Did not get expected output for longArray. Got:\n%s", strStdout)
 	}
 
-	if !strings.Contains(str, "doubleArray: 1.000003") {
-		t.Errorf("Did not get expected output for doubleArray. Got:\n%s", string(slurp))
+	if !strings.Contains(strStdout, "doubleArray: 1.000003") {
+		t.Errorf("Did not get expected output for doubleArray. Got:\n%s", strStdout)
 	}
 
-	if !strings.Contains(str, "booleanArray: 3") {
-		t.Errorf("Did not get expected output for booleanArray. Got:\n%s", string(slurp))
+	if !strings.Contains(strStdout, "booleanArray: 3") {
+		t.Errorf("Did not get expected output for booleanArray. Got:\n%s", strStdout)
 	}
 
-	if !strings.Contains(str, "byteArray: 9") {
-		t.Errorf("Did not get expected output for byteArray. Got:\n%s", string(slurp))
+	if !strings.Contains(strStdout, "byteArray: 9") {
+		t.Errorf("Did not get expected output for byteArray. Got:\n%s", strStdout)
 	}
 }

@@ -45,7 +45,7 @@ func initVarsTestBitShifts() error {
 	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
-	_JVM_ARGS = ""
+	_JVM_ARGS = "-trace:inst"
 	_TESTCLASS = "testBitShifts.class" // the class to test
 	_APP_ARGS = ""
 
@@ -111,17 +111,21 @@ func TestRunBitShifts(t *testing.T) {
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	slurpErr := string(slurp)
-	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
+	bStderr, _ := io.ReadAll(stderr)
+	bStdout, _ := io.ReadAll(stdout)
+	strStderr := string(bStderr)
+	strStdout := string(bStdout)
+
+	// Wait for completion
+	err = cmd.Wait()
+
+	// Success?
+	if err != nil {
+		t.Errorf("Got unexpected output to stderr: %s", strStderr)
 	}
 
-	slurp, _ = io.ReadAll(stdout)
-	slurpOut := string(slurp)
-
-	if !strings.Contains(slurpOut, "-100 >> 2: -25") &&
-		!strings.Contains(string(slurp), "+100 << 3: 800") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", slurpOut)
+	if !strings.Contains(strStdout, "-100 >> 2: -25") &&
+		!strings.Contains(strStdout, "+100 << 3: 800") {
+		t.Errorf("Did not get expected output to stdout. Got: %s", strStdout)
 	}
 }

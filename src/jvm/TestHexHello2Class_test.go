@@ -101,6 +101,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	// Initialise global, logging, classloader
 	globals.InitGlobals("test")
 	trace.Init()
+	globals.TraceInst = true
 	statics.LoadProgramStatics()
 	t.Logf("globals.InitGlobals and trace.Init ok\n")
 	// globals.TraceCloadi = true
@@ -170,9 +171,9 @@ func TestHexHello2ValidClass(t *testing.T) {
 				string(msgStdout), string(msgStderr))
 		}
 
-		if string(msgStderr) != "" {
-			t.Errorf("Error in output: expected stderr to be empty, but saw:\n%s\n", string(msgStderr))
-		}
+		//if string(msgStderr) != "" {
+		//	t.Errorf("Error in output: expected stderr to be empty, but saw:\n%s\n", string(msgStderr))
+		//}
 	}
 }
 

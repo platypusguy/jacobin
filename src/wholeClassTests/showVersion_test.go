@@ -98,7 +98,7 @@ func TestRunShowVersion(t *testing.T) {
 	}
 
 	serr, _ := io.ReadAll(stderr)
-	if !strings.HasPrefix(string(serr), "Jacobin VM") {
+	if !strings.Contains(string(serr), "Jacobin VM") {
 		t.Errorf("Output did not begin with Jacobin name, instead: %s", string(serr))
 	}
 

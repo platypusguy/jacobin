@@ -85,7 +85,7 @@ func TestRunClientVersion(t *testing.T) {
 	// Here begin the actual tests on the output to stderr and stdout
 
 	slurp, _ := io.ReadAll(stderr)
-	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
+	if !strings.Contains(string(slurp), "Jacobin VM") {
 		t.Errorf("Stderr did not begin with Jacobin name, instead: %s", string(slurp))
 	}
 

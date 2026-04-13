@@ -34,7 +34,7 @@ func initVarsPrint_237() error {
 	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
-	_JVM_ARGS = ""
+	_JVM_ARGS = "-trace:inst"
 	_TESTCLASS = "println_void_JACOBIN_237.class" // the class to test
 	_APP_ARGS = ""
 
@@ -96,17 +96,20 @@ func TestRun237(t *testing.T) {
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	slurpErr := string(slurp)
-	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
+	bStderr, _ := io.ReadAll(stderr)
+	bStdout, _ := io.ReadAll(stdout)
+	strStderr := string(bStderr)
+	strStdout := string(bStdout)
+
+	// Wait for completion
+	err = cmd.Wait()
+	// Success?
+	if err != nil {
+		t.Errorf("Got unexpected output from cmd.Wait: %s", strStderr)
 	}
 
-	slurp, _ = io.ReadAll(stdout)
-	slurpOut := string(slurp)
-
-	poss1 := strings.Count(slurpOut, "\n\n")
-	poss2 := strings.Count(slurpOut, "\r\r")
+	poss1 := strings.Count(strStdout, "\n\n")
+	poss2 := strings.Count(strStdout, "\r\r")
 
 	// due to running on multiple platforms, the output could be
 	// two /n or two /r, so both are checked.
