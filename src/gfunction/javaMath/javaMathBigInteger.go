@@ -900,32 +900,33 @@ func bigIntegerHashCode(params []interface{}) interface{} {
 	// big.Int.Bytes() returns big-endian bytes.
 	bytes := bi.Bytes()
 
-	// Convert bytes to int32 array (mag array in Java)
-	var mag []int32
+	// Convert bytes to uint32 array (mag array in Java)
+	var mag []uint32
 	// If the byte array length is not a multiple of 4, we need to handle the first few bytes.
 	firstIntLen := len(bytes) % 4
 	if firstIntLen > 0 {
-		var firstInt int32
+		var firstInt uint32
 		for i := 0; i < firstIntLen; i++ {
-			firstInt = (firstInt << 8) | int32(bytes[i])
+			firstInt = (firstInt << 8) | uint32(bytes[i])
 		}
 		mag = append(mag, firstInt)
 	}
 
 	for i := firstIntLen; i < len(bytes); i += 4 {
-		var val int32
+		var val uint32
 		for j := 0; j < 4; j++ {
-			val = (val << 8) | int32(bytes[i+j])
+			val = (val << 8) | uint32(bytes[i+j])
 		}
 		mag = append(mag, val)
 	}
 
-	var hashCode int32 = 0
+	var hashCode uint32 = 0
 	for _, val := range mag {
 		hashCode = 31*hashCode + val
 	}
 
-	return int64(hashCode * int32(bi.Sign()))
+	res := int32(hashCode) * int32(bi.Sign())
+	return int64(res)
 }
 
 // "java/math/BigInteger.intValue()I"
