@@ -867,8 +867,17 @@ func signDSA(privateKey *dsa.PrivateKey, data []byte, algo string) ([]byte, erro
 		return nil, err
 	}
 
-	// Concatenate r and s
-	signature := append(r.Bytes(), s.Bytes()...)
+	// DSA signature in Java is typically ASN.1 DER encoded (r, s)
+	// though some libraries use fixed-length concatenation (P1363).
+	// Go's dsa package provides r and s, but doesn't have a built-in ASN.1 encoder.
+	// We'll use fixed-length concatenation (P1363 format) as it's common in some contexts,
+	// but we MUST ensure they are padded to the correct length (size of Q).
+
+	qLen := (privateKey.Q.BitLen() + 7) / 8
+	signature := make([]byte, 2*qLen)
+	r.FillBytes(signature[:qLen])
+	s.FillBytes(signature[qLen:])
+
 	return signature, nil
 }
 
@@ -876,10 +885,13 @@ func verifyDSA(publicKey *dsa.PublicKey, data []byte, signature []byte, algo str
 	hashType := getSigHashForAlgorithm(algo)
 	hashed := hashData(data, hashType)
 
-	// Split signature into r and s
-	sigLen := len(signature) / 2
-	r := new(big.Int).SetBytes(signature[:sigLen])
-	s := new(big.Int).SetBytes(signature[sigLen:])
+	qLen := (publicKey.Q.BitLen() + 7) / 8
+	if len(signature) != 2*qLen {
+		return false
+	}
+
+	r := new(big.Int).SetBytes(signature[:qLen])
+	s := new(big.Int).SetBytes(signature[qLen:])
 
 	return dsa.Verify(publicKey, hashed, r, s)
 }
