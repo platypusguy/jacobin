@@ -7,6 +7,7 @@
 package javaUtil
 
 import (
+	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
@@ -22,7 +23,7 @@ func utilArraysFill(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "utilArraysFill: too few arguments")
 	}
 
-	if params[0] == nil || params[0] == object.Null {
+	if object.IsNull(params[0]) {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "utilArraysFill: null array argument")
 	}
 
@@ -49,78 +50,78 @@ func utilArraysFill(params []interface{}) interface{} {
 		val = params[1]
 	}
 
-	switch a := field.Fvalue.(type) {
+	switch array := field.Fvalue.(type) {
 	case []types.JavaByte:
 		if !isRange {
-			fromIndex, toIndex = 0, len(a)
+			fromIndex, toIndex = 0, len(array)
 		}
-		if fromIndex < 0 || toIndex > len(a) || fromIndex > toIndex {
+		if fromIndex < 0 || toIndex > len(array) || fromIndex > toIndex {
 			return ghelpers.GetGErrBlk(excNames.ArrayIndexOutOfBoundsException, "utilArraysFill: index out of bounds")
 		}
 		fillVal := types.JavaByte(val.(int64))
 		for i := fromIndex; i < toIndex; i++ {
-			a[i] = fillVal
+			array[i] = fillVal
 		}
 	case []int64:
 		if !isRange {
-			fromIndex, toIndex = 0, len(a)
+			fromIndex, toIndex = 0, len(array)
 		}
-		if fromIndex < 0 || toIndex > len(a) || fromIndex > toIndex {
+		if fromIndex < 0 || toIndex > len(array) || fromIndex > toIndex {
 			return ghelpers.GetGErrBlk(excNames.ArrayIndexOutOfBoundsException, "utilArraysFill: index out of bounds")
 		}
 		fillVal := val.(int64)
 		for i := fromIndex; i < toIndex; i++ {
-			a[i] = fillVal
+			array[i] = fillVal
 		}
 	case []int32:
 		if !isRange {
-			fromIndex, toIndex = 0, len(a)
+			fromIndex, toIndex = 0, len(array)
 		}
-		if fromIndex < 0 || toIndex > len(a) || fromIndex > toIndex {
+		if fromIndex < 0 || toIndex > len(array) || fromIndex > toIndex {
 			return ghelpers.GetGErrBlk(excNames.ArrayIndexOutOfBoundsException, "utilArraysFill: index out of bounds")
 		}
 		fillVal := int32(val.(int64))
 		for i := fromIndex; i < toIndex; i++ {
-			a[i] = fillVal
+			array[i] = fillVal
 		}
 	case []int16:
 		if !isRange {
-			fromIndex, toIndex = 0, len(a)
+			fromIndex, toIndex = 0, len(array)
 		}
-		if fromIndex < 0 || toIndex > len(a) || fromIndex > toIndex {
+		if fromIndex < 0 || toIndex > len(array) || fromIndex > toIndex {
 			return ghelpers.GetGErrBlk(excNames.ArrayIndexOutOfBoundsException, "utilArraysFill: index out of bounds")
 		}
 		fillVal := int16(val.(int64))
 		for i := fromIndex; i < toIndex; i++ {
-			a[i] = fillVal
+			array[i] = fillVal
 		}
 	case []float32:
 		if !isRange {
-			fromIndex, toIndex = 0, len(a)
+			fromIndex, toIndex = 0, len(array)
 		}
-		if fromIndex < 0 || toIndex > len(a) || fromIndex > toIndex {
+		if fromIndex < 0 || toIndex > len(array) || fromIndex > toIndex {
 			return ghelpers.GetGErrBlk(excNames.ArrayIndexOutOfBoundsException, "utilArraysFill: index out of bounds")
 		}
 		fillVal := val.(float32)
 		for i := fromIndex; i < toIndex; i++ {
-			a[i] = fillVal
+			array[i] = fillVal
 		}
 	case []float64:
 		if !isRange {
-			fromIndex, toIndex = 0, len(a)
+			fromIndex, toIndex = 0, len(array)
 		}
-		if fromIndex < 0 || toIndex > len(a) || fromIndex > toIndex {
+		if fromIndex < 0 || toIndex > len(array) || fromIndex > toIndex {
 			return ghelpers.GetGErrBlk(excNames.ArrayIndexOutOfBoundsException, "utilArraysFill: index out of bounds")
 		}
 		fillVal := val.(float64)
 		for i := fromIndex; i < toIndex; i++ {
-			a[i] = fillVal
+			array[i] = fillVal
 		}
 	case []*object.Object:
 		if !isRange {
-			fromIndex, toIndex = 0, len(a)
+			fromIndex, toIndex = 0, len(array)
 		}
-		if fromIndex < 0 || toIndex > len(a) || fromIndex > toIndex {
+		if fromIndex < 0 || toIndex > len(array) || fromIndex > toIndex {
 			return ghelpers.GetGErrBlk(excNames.ArrayIndexOutOfBoundsException, "utilArraysFill: index out of bounds")
 		}
 		var fillVal *object.Object
@@ -128,10 +129,10 @@ func utilArraysFill(params []interface{}) interface{} {
 			fillVal = val.(*object.Object)
 		}
 		for i := fromIndex; i < toIndex; i++ {
-			a[i] = fillVal
+			array[i] = fillVal
 		}
 	default:
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "utilArraysFill: unsupported array type")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("utilArraysFill: unsupported array type: %T", array))
 	}
 
 	return nil
