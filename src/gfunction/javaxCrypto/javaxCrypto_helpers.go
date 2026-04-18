@@ -297,6 +297,58 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Notes:           "PBKDF2 with HMAC-SHA512 and AES-256",
 	},
 
+	// PBKDF2 Algorithms
+	"PBKDF2WithHmacSHA1": {
+		Name:            "PBKDF2WithHmacSHA1",
+		Enabled:         true,
+		Category:        CategorySelfContained,
+		NeedsSalt:       true,
+		NeedsIterations: true,
+		KeyDerivation:   true,
+		IsAEAD:          false,
+		Notes:           "PBKDF2 with HMAC-SHA1",
+	},
+	"PBKDF2WithHmacSHA224": {
+		Name:            "PBKDF2WithHmacSHA224",
+		Enabled:         true,
+		Category:        CategorySelfContained,
+		NeedsSalt:       true,
+		NeedsIterations: true,
+		KeyDerivation:   true,
+		IsAEAD:          false,
+		Notes:           "PBKDF2 with HMAC-SHA224",
+	},
+	"PBKDF2WithHmacSHA256": {
+		Name:            "PBKDF2WithHmacSHA256",
+		Enabled:         true,
+		Category:        CategorySelfContained,
+		NeedsSalt:       true,
+		NeedsIterations: true,
+		KeyDerivation:   true,
+		IsAEAD:          false,
+		Notes:           "PBKDF2 with HMAC-SHA256",
+	},
+	"PBKDF2WithHmacSHA384": {
+		Name:            "PBKDF2WithHmacSHA384",
+		Enabled:         true,
+		Category:        CategorySelfContained,
+		NeedsSalt:       true,
+		NeedsIterations: true,
+		KeyDerivation:   true,
+		IsAEAD:          false,
+		Notes:           "PBKDF2 with HMAC-SHA384",
+	},
+	"PBKDF2WithHmacSHA512": {
+		Name:            "PBKDF2WithHmacSHA512",
+		Enabled:         true,
+		Category:        CategorySelfContained,
+		NeedsSalt:       true,
+		NeedsIterations: true,
+		KeyDerivation:   true,
+		IsAEAD:          false,
+		Notes:           "PBKDF2 with HMAC-SHA512",
+	},
+
 	// Other
 	"ECIES": {
 		Name:           "ECIES",
@@ -1039,6 +1091,141 @@ var CipherConfigTable = map[string]CipherTransformation{
 		IsAEAD:         false,
 		Notes:          "Asymmetric cipher. OAEP with SHA-512.",
 	},
+}
+
+// SecretKeySpecAlgorithm entry definition
+type SecretKeySpecAlgorithm struct {
+	Name    string
+	Enabled bool
+	Notes   string
+}
+
+// SecretKeySpecAlgorithmTable contains valid algorithm names for SecretKeySpec.
+// Many of these correspond to the base algorithms used in Cipher transformations,
+// but they also include MAC algorithms.
+var SecretKeySpecAlgorithmTable = map[string]SecretKeySpecAlgorithm{
+	"AES":      {Name: "AES", Enabled: true, Notes: "Advanced Encryption Standard"},
+	"ARCFOUR":  {Name: "ARCFOUR", Enabled: true, Notes: "Alleged RC4 stream cipher"},
+	"Blowfish": {Name: "Blowfish", Enabled: true, Notes: "Blowfish block cipher"},
+	"DES":      {Name: "DES", Enabled: true, Notes: "Data Encryption Standard"},
+	"DESede":   {Name: "DESede", Enabled: true, Notes: "Triple DES (DES-EDE)"},
+	"HmacMD5":  {Name: "HmacMD5", Enabled: true, Notes: "HMAC with MD5"},
+	"HmacSHA1": {Name: "HmacSHA1", Enabled: true, Notes: "HMAC with SHA-1"},
+	"HmacSHA224": {
+		Name:    "HmacSHA224",
+		Enabled: true,
+		Notes:   "HMAC with SHA-224",
+	},
+	"HmacSHA256": {
+		Name:    "HmacSHA256",
+		Enabled: true,
+		Notes:   "HMAC with SHA-256",
+	},
+	"HmacSHA384": {
+		Name:    "HmacSHA384",
+		Enabled: true,
+		Notes:   "HMAC with SHA-384",
+	},
+	"HmacSHA512": {
+		Name:    "HmacSHA512",
+		Enabled: true,
+		Notes:   "HMAC with SHA-512",
+	},
+	"PBEWithMD5AndDES": {
+		Name:    "PBEWithMD5AndDES",
+		Enabled: true,
+		Notes:   "Legacy PBE with MD5 and DES",
+	},
+	"PBEWithMD5AndTripleDES": {
+		Name:    "PBEWithMD5AndTripleDES",
+		Enabled: true,
+		Notes:   "Legacy PBE with MD5 and Triple DES",
+	},
+	"PBEWithSHA1AndDESede": {
+		Name:    "PBEWithSHA1AndDESede",
+		Enabled: true,
+		Notes:   "PBE with SHA-1 and Triple DES",
+	},
+	"PBEWithSHA1AndRC2_40": {
+		Name:    "PBEWithSHA1AndRC2_40",
+		Enabled: true,
+		Notes:   "PBE with SHA-1 and 40-bit RC2",
+	},
+	"PBEWithSHA1AndRC2_128": {
+		Name:    "PBEWithSHA1AndRC2_128",
+		Enabled: true,
+		Notes:   "PBE with SHA-1 and 128-bit RC2",
+	},
+	"PBEWithSHA1AndRC4_40": {
+		Name:    "PBEWithSHA1AndRC4_40",
+		Enabled: true,
+		Notes:   "PBE with SHA-1 and 40-bit RC4",
+	},
+	"PBEWithSHA1AndRC4_128": {
+		Name:    "PBEWithSHA1AndRC4_128",
+		Enabled: true,
+		Notes:   "PBE with SHA-1 and 128-bit RC4",
+	},
+	"PBEWithHmacSHA1AndAES_128": {
+		Name:    "PBEWithHmacSHA1AndAES_128",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA1 and AES-128",
+	},
+	"PBEWithHmacSHA224AndAES_128": {
+		Name:    "PBEWithHmacSHA224AndAES_128",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA224 and AES-128",
+	},
+	"PBEWithHmacSHA256AndAES_128": {
+		Name:    "PBEWithHmacSHA256AndAES_128",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA256 and AES-128",
+	},
+	"PBEWithHmacSHA384AndAES_128": {
+		Name:    "PBEWithHmacSHA384AndAES_128",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA384 and AES-128",
+	},
+	"PBEWithHmacSHA512AndAES_128": {
+		Name:    "PBEWithHmacSHA512AndAES_128",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA512 and AES-128",
+	},
+	"PBEWithHmacSHA1AndAES_256": {
+		Name:    "PBEWithHmacSHA1AndAES_256",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA1 and AES-256",
+	},
+	"PBEWithHmacSHA224AndAES_256": {
+		Name:    "PBEWithHmacSHA224AndAES_256",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA224 and AES-256",
+	},
+	"PBEWithHmacSHA256AndAES_256": {
+		Name:    "PBEWithHmacSHA256AndAES_256",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA256 and AES-256",
+	},
+	"PBEWithHmacSHA384AndAES_256": {
+		Name:    "PBEWithHmacSHA384AndAES_256",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA384 and AES-256",
+	},
+	"PBEWithHmacSHA512AndAES_256": {
+		Name:    "PBEWithHmacSHA512AndAES_256",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA512 and AES-256",
+	},
+	"RC2": {Name: "RC2", Enabled: true, Notes: "RC2 block cipher"},
+}
+
+// ValidateSecretKeySpecAlgorithm checks if an algorithm is valid for SecretKeySpec
+func ValidateSecretKeySpecAlgorithm(algorithm string) (SecretKeySpecAlgorithm, bool) {
+	config, exists := SecretKeySpecAlgorithmTable[algorithm]
+	if !exists {
+		return SecretKeySpecAlgorithm{}, false
+	}
+	return config, config.Enabled
 }
 
 // ValidateCipherTransformation checks if a transformation string is valid

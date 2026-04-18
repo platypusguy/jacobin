@@ -133,3 +133,30 @@ func TestCountTableEntries(t *testing.T) {
 	count := len(CipherConfigTable)
 	t.Logf("CipherConfigTable has %d entries", count)
 }
+
+func TestValidateSecretKeySpecAlgorithm(t *testing.T) {
+	tests := []struct {
+		name       string
+		algorithm  string
+		wantExists bool
+	}{
+		{"Valid AES", "AES", true},
+		{"Valid DESede", "DESede", true},
+		{"Valid HmacSHA256", "HmacSHA256", true},
+		{"Valid PBE", "PBEWithHmacSHA256AndAES_256", true},
+		{"Invalid algorithm", "InvalidAlgo", false},
+		{"Empty algorithm", "", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := ValidateSecretKeySpecAlgorithm(tt.algorithm)
+			if ok != tt.wantExists {
+				t.Errorf("ValidateSecretKeySpecAlgorithm() ok = %v, want %v", ok, tt.wantExists)
+			}
+			if ok && got.Name != tt.algorithm {
+				t.Errorf("ValidateSecretKeySpecAlgorithm() name = %v, want %v", got.Name, tt.algorithm)
+			}
+		})
+	}
+}
