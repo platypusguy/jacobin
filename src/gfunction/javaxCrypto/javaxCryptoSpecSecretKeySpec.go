@@ -18,12 +18,6 @@ func Load_Crypto_Spec_SecretKeySpec() {
 			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	ghelpers.MethodSignatures["javax/crypto/SecretKey.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
-		}
-
 	ghelpers.MethodSignatures["javax/crypto/spec/SecretKeySpec.<init>([BIILjava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
@@ -68,11 +62,9 @@ func Load_Crypto_Spec_SecretKeySpec() {
 }
 
 // secretKeySpecInit handles both constructors:
-// SecretKeySpec(byte[] key, String algorithm)
-// SecretKeySpec(byte[] key, int offset, int len, String algorithm)
-// secretKeySpecInit handles both constructors:
-// SecretKeySpec(byte[] key, String algorithm)
-// SecretKeySpec(byte[] key, int offset, int len, String algorithm)
+//
+//	SecretKeySpec(byte[] key, String algorithm)
+//	SecretKeySpec(byte[] key, int offset, int len, String algorithm)
 func secretKeySpecInit(params []any) any {
 	var algoObj *object.Object
 
@@ -156,15 +148,18 @@ func secretKeySpecInit(params []any) any {
 	}
 
 	// Get configuration for this algorithm.
-	// TODO: Just validation at present time. Much work is needed to process the returned config!
-	_, enabled := ValidateCipherTransformation(algorithm)
+	_, enabled := ValidateSecretKeySpecAlgorithm(algorithm)
 	if !enabled {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			fmt.Sprintf("secretKeySpecInit: unknown or invalid algorithm: %s", algorithm))
+			fmt.Sprintf("secretKeySpecInit: unknown or invalid SecretKeySpec algorithm: %s", algorithm))
 	}
 
 	// Store the key and algorithm in the object's fields
 	obj.FieldTable["key"] = object.Field{
+		Ftype:  types.ByteArray,
+		Fvalue: slices.Clone(keyBytes),
+	}
+	obj.FieldTable["value"] = object.Field{
 		Ftype:  types.ByteArray,
 		Fvalue: slices.Clone(keyBytes),
 	}

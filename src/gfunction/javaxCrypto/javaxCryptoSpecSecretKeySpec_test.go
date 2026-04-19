@@ -30,7 +30,7 @@ func TestSecretKeySpecInit(t *testing.T) {
 		'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
 	}
 	keyObj := makeByteArrayObject(key)
-	algo := "AES/ECB/PKCS5Padding"
+	algo := "AES"
 	algoObj := object.StringObjectFromGoString(algo)
 
 	// Test SecretKeySpec(byte[] key, String algorithm)

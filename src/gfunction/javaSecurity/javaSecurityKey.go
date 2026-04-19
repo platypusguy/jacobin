@@ -21,7 +21,6 @@ import (
 	"jacobin/src/stringPool"
 	"jacobin/src/types"
 	"math/big"
-	"unsafe"
 )
 
 func Load_Security_Key() {
@@ -48,12 +47,6 @@ func Load_Security_Key() {
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  keyGetFormat,
-		}
-
-	ghelpers.MethodSignatures["java/security/Key.hashCode()I"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  keyHashCode,
 		}
 }
 
@@ -178,23 +171,8 @@ func keyGetFormat(params []any) any {
 	return object.StringObjectFromGoString(format)
 }
 
-func keyHashCode(params []any) any {
-	if len(params) < 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyHashCode: missing 'this'")
-	}
-	obj, ok := params[0].(*object.Object)
-	if !ok || obj == nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keyHashCode: 'this' is not an object")
-	}
+// ===================== Add these helper structures and functions for DSA encoding
 
-	ptr := uintptr(unsafe.Pointer(obj))
-	hashCode := int64(ptr ^ (ptr >> 32))
-	return hashCode
-}
-
-// ===== Helper functions =====
-
-// Add these helper structures for DSA encoding
 type dsaAlgorithmIdentifier struct {
 	Algorithm  asn1.ObjectIdentifier
 	Parameters dsaParameters

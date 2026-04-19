@@ -74,11 +74,4 @@ func TestKeyMethods(t *testing.T) {
 	if !object.JavaByteArrayEquals(encoded.FieldTable["value"].Fvalue.([]types.JavaByte), object.JavaByteArrayFromGoByteArray(expectedEncoded)) {
 		t.Error("Encoded bytes mismatch for Ed25519 Public Key")
 	}
-
-	// 4. hashCode
-	h1 := keyHashCode([]any{pubObj})
-	h2 := keyHashCode([]any{pubObj})
-	if h1 != h2 {
-		t.Errorf("Hash codes should be equal for the same object, got %v and %v", h1, h2)
-	}
 }
