@@ -30,10 +30,10 @@ func Load_Crypto_SecretKeyFactory() {
 			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	ghelpers.MethodSignatures["javax/crypto/SecretKeyFactory.getInstance(Ljava/lang/String;)Ljavax/crypto/SecretKeyFactory;"] =
+	ghelpers.MethodSignatures["javax/crypto/SecretKeyFactory.generateSecret(Ljava/security/spec/KeySpec;)Ljavax/crypto/SecretKey;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  secretKeyFactoryGetInstance,
+			GFunction:  secretKeyFactoryGenerateSecret,
 		}
 
 	ghelpers.MethodSignatures["javax/crypto/SecretKeyFactory.getInstance(Ljava/lang/String;Ljava/lang/String;)Ljavax/crypto/SecretKeyFactory;"] =
@@ -48,10 +48,10 @@ func Load_Crypto_SecretKeyFactory() {
 			GFunction:  secretKeyFactoryGetInstance,
 		}
 
-	ghelpers.MethodSignatures["javax/crypto/SecretKeyFactory.generateSecret(Ljava/security/spec/KeySpec;)Ljavax/crypto/SecretKey;"] =
+	ghelpers.MethodSignatures["javax/crypto/SecretKeyFactory.getInstance(Ljava/lang/String;)Ljavax/crypto/SecretKeyFactory;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  secretKeyFactoryGenerateSecret,
+			GFunction:  secretKeyFactoryGetInstance,
 		}
 
 	ghelpers.MethodSignatures["javax/crypto/SecretKeyFactory.getKeySpec(Ljavax/crypto/SecretKey;Ljava/lang/Class;)Ljava/security/spec/KeySpec;"] =
@@ -65,56 +65,6 @@ func Load_Crypto_SecretKeyFactory() {
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
 		}
-}
-
-func secretKeyFactoryGetInstance(params []any) any {
-	algorithmObj, ok := params[0].(*object.Object)
-	if !ok || algorithmObj == nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "secretKeyFactoryGetInstance: algorithm cannot be null")
-	}
-	algorithm := object.GoStringFromStringObject(algorithmObj)
-
-	if _, ok := CipherConfigTable[algorithm]; !ok {
-		return ghelpers.GetGErrBlk(excNames.NoSuchAlgorithmException, fmt.Sprintf("secretKeyFactoryGetInstance: %s not found", algorithm))
-	}
-
-	// Check provider if provided
-	if len(params) > 1 {
-		p := params[1]
-		if pObj, ok := p.(*object.Object); ok && pObj != nil {
-			// provider can be String or Provider object
-			var pName string
-			if pObj.KlassName == object.StringPoolIndexFromGoString(types.StringClassName) {
-				pName = object.GoStringFromStringObject(pObj)
-			} else {
-				// Assume it's a Provider object
-				nameField, ok := pObj.FieldTable["name"]
-				if ok {
-					pName = object.GoStringFromStringObject(nameField.Fvalue.(*object.Object))
-				}
-			}
-
-			if pName != "" && pName != types.SecurityProviderName {
-				return ghelpers.GetGErrBlk(excNames.ProviderNotFoundException, fmt.Sprintf("secretKeyFactoryGetInstance: provider %s not found", pName))
-			}
-		}
-	}
-
-	skf := object.MakeEmptyObjectWithClassName(new("javax/crypto/SecretKeyFactory"))
-
-	skf.FieldTable["algorithm"] = object.Field{
-		Ftype:  types.StringClassName,
-		Fvalue: algorithmObj,
-	}
-
-	providerObj := ghelpers.GetDefaultSecurityProvider()
-	skf.FieldTable["provider"] = object.Field{
-		Ftype:  types.ClassNameSecurityProvider,
-		Fvalue: providerObj,
-	}
-
-	// We don't strictly need a separate SPI object for now as we trap the methods on the factory itself
-	return skf
 }
 
 func secretKeyFactoryGenerateSecret(params []any) any {
@@ -260,4 +210,54 @@ func secretKeyFactoryGenerateSecret(params []any) any {
 	}
 
 	return ghelpers.GetGErrBlk(excNames.InvalidKeyException, "secretKeyFactoryGenerateSecret: unsupported KeySpec")
+}
+
+func secretKeyFactoryGetInstance(params []any) any {
+	algorithmObj, ok := params[0].(*object.Object)
+	if !ok || algorithmObj == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "secretKeyFactoryGetInstance: algorithm cannot be null")
+	}
+	algorithm := object.GoStringFromStringObject(algorithmObj)
+
+	if _, ok := CipherConfigTable[algorithm]; !ok {
+		return ghelpers.GetGErrBlk(excNames.NoSuchAlgorithmException, fmt.Sprintf("secretKeyFactoryGetInstance: %s not found", algorithm))
+	}
+
+	// Check provider if provided
+	if len(params) > 1 {
+		p := params[1]
+		if pObj, ok := p.(*object.Object); ok && pObj != nil {
+			// provider can be String or Provider object
+			var pName string
+			if pObj.KlassName == object.StringPoolIndexFromGoString(types.StringClassName) {
+				pName = object.GoStringFromStringObject(pObj)
+			} else {
+				// Assume it's a Provider object
+				nameField, ok := pObj.FieldTable["name"]
+				if ok {
+					pName = object.GoStringFromStringObject(nameField.Fvalue.(*object.Object))
+				}
+			}
+
+			if pName != "" && pName != types.SecurityProviderName {
+				return ghelpers.GetGErrBlk(excNames.ProviderNotFoundException, fmt.Sprintf("secretKeyFactoryGetInstance: provider %s not found", pName))
+			}
+		}
+	}
+
+	skf := object.MakeEmptyObjectWithClassName(new("javax/crypto/SecretKeyFactory"))
+
+	skf.FieldTable["algorithm"] = object.Field{
+		Ftype:  types.StringClassName,
+		Fvalue: algorithmObj,
+	}
+
+	providerObj := ghelpers.GetDefaultSecurityProvider()
+	skf.FieldTable["provider"] = object.Field{
+		Ftype:  types.ClassNameSecurityProvider,
+		Fvalue: providerObj,
+	}
+
+	// We don't strictly need a separate SPI object for now as we trap the methods on the factory itself
+	return skf
 }

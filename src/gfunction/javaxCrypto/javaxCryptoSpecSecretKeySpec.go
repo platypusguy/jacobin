@@ -11,7 +11,6 @@ import (
 )
 
 func Load_Crypto_Spec_SecretKeySpec() {
-
 	ghelpers.MethodSignatures["javax/crypto/spec/SecretKeySpec.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -61,10 +60,154 @@ func Load_Crypto_Spec_SecretKeySpec() {
 		}
 }
 
-// secretKeySpecInit handles both constructors:
-//
-//	SecretKeySpec(byte[] key, String algorithm)
-//	SecretKeySpec(byte[] key, int offset, int len, String algorithm)
+func secretKeySpecEquals(params []any) any {
+	if len(params) < 2 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecEquals: missing parameters")
+	}
+
+	// params[0] is 'this'
+	thisObj, ok := params[0].(*object.Object)
+	if !ok || thisObj == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecEquals: 'this' is not an object")
+	}
+
+	// params[1] is the object to compare
+	otherObj, ok := params[1].(*object.Object)
+	if !ok || otherObj == nil {
+		return int64(0) // false - not an object or null
+	}
+
+	// Fast path: same instance
+	if thisObj == otherObj {
+		return int64(1) // true
+	}
+
+	// Check if same class
+	if thisObj.KlassName != otherObj.KlassName {
+		return int64(0) // false
+	}
+
+	// Compare algorithms
+	thisAlgo, ok1 := thisObj.FieldTable["algorithm"].Fvalue.(string)
+	otherAlgo, ok2 := otherObj.FieldTable["algorithm"].Fvalue.(string)
+	if !ok1 || !ok2 || thisAlgo != otherAlgo {
+		return int64(0) // false
+	}
+
+	// Compare key bytes
+	thisKey, ok1 := thisObj.FieldTable["key"].Fvalue.([]byte)
+	otherKey, ok2 := otherObj.FieldTable["key"].Fvalue.([]byte)
+	if !ok1 || !ok2 {
+		return int64(0) // false
+	}
+
+	if bytes.Equal(thisKey, otherKey) {
+		return int64(1) // true
+	}
+
+	return int64(0) // false
+}
+
+func secretKeySpecGetAlgorithm(params []any) any {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecGetAlgorithm: missing 'this'")
+	}
+
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecGetAlgorithm: 'this' is not an object")
+	}
+
+	algorithm, ok := obj.FieldTable["algorithm"].Fvalue.(string)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
+			"secretKeySpecGetAlgorithm: algorithm field not found or invalid")
+	}
+
+	return object.StringObjectFromGoString(algorithm)
+}
+
+func secretKeySpecGetEncoded(params []any) any {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecGetEncoded: missing 'this'")
+	}
+
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecGetEncoded: 'this' is not an object")
+	}
+
+	keyBytes, ok := obj.FieldTable["key"].Fvalue.([]byte)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
+			"secretKeySpecGetEncoded: key field not found or invalid")
+	}
+
+	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray,
+		object.JavaByteArrayFromGoByteArray(slices.Clone(keyBytes)))
+}
+
+func secretKeySpecGetFormat(params []any) any {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecGetFormat: missing 'this'")
+	}
+
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecGetFormat: 'this' is not an object")
+	}
+
+	// SecretKeySpec always uses RAW format
+	return object.StringObjectFromGoString("RAW")
+}
+
+func secretKeySpecHashCode(params []any) any {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecHashCode: missing 'this'")
+	}
+
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			"secretKeySpecHashCode: 'this' is not an object")
+	}
+
+	algorithm, ok1 := obj.FieldTable["algorithm"].Fvalue.(string)
+	keyBytes, ok2 := obj.FieldTable["key"].Fvalue.([]byte)
+	if !ok1 || !ok2 {
+		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
+			"secretKeySpecHashCode: fields not found or invalid")
+	}
+
+	// Compute hash based on algorithm and key bytes
+	// Using Java's algorithm: hash = algorithm.hashCode() ^ Arrays.hashCode(key)
+	var hash int64 = 0
+
+	// Hash the algorithm string (Java's String.hashCode algorithm)
+	for i := 0; i < len(algorithm); i++ {
+		hash = 31*hash + int64(algorithm[i])
+	}
+
+	// XOR with key bytes hash (Java's Arrays.hashCode algorithm)
+	var keyHash int64 = 1
+	for _, b := range keyBytes {
+		keyHash = 31*keyHash + int64(b)
+	}
+
+	hash ^= keyHash
+
+	return hash
+}
+
 func secretKeySpecInit(params []any) any {
 	var algoObj *object.Object
 
@@ -169,157 +312,4 @@ func secretKeySpecInit(params []any) any {
 	}
 
 	return nil
-}
-
-// secretKeySpecEquals implements equals(Object obj)
-func secretKeySpecEquals(params []any) any {
-	if len(params) < 2 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecEquals: missing parameters")
-	}
-
-	// params[0] is 'this'
-	thisObj, ok := params[0].(*object.Object)
-	if !ok || thisObj == nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecEquals: 'this' is not an object")
-	}
-
-	// params[1] is the object to compare
-	otherObj, ok := params[1].(*object.Object)
-	if !ok || otherObj == nil {
-		return int64(0) // false - not an object or null
-	}
-
-	// Fast path: same instance
-	if thisObj == otherObj {
-		return int64(1) // true
-	}
-
-	// Check if same class
-	if thisObj.KlassName != otherObj.KlassName {
-		return int64(0) // false
-	}
-
-	// Compare algorithms
-	thisAlgo, ok1 := thisObj.FieldTable["algorithm"].Fvalue.(string)
-	otherAlgo, ok2 := otherObj.FieldTable["algorithm"].Fvalue.(string)
-	if !ok1 || !ok2 || thisAlgo != otherAlgo {
-		return int64(0) // false
-	}
-
-	// Compare key bytes
-	thisKey, ok1 := thisObj.FieldTable["key"].Fvalue.([]byte)
-	otherKey, ok2 := otherObj.FieldTable["key"].Fvalue.([]byte)
-	if !ok1 || !ok2 {
-		return int64(0) // false
-	}
-
-	if bytes.Equal(thisKey, otherKey) {
-		return int64(1) // true
-	}
-
-	return int64(0) // false
-}
-
-// secretKeySpecGetAlgorithm implements getAlgorithm()
-func secretKeySpecGetAlgorithm(params []any) any {
-	if len(params) < 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecGetAlgorithm: missing 'this'")
-	}
-
-	obj, ok := params[0].(*object.Object)
-	if !ok || obj == nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecGetAlgorithm: 'this' is not an object")
-	}
-
-	algorithm, ok := obj.FieldTable["algorithm"].Fvalue.(string)
-	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
-			"secretKeySpecGetAlgorithm: algorithm field not found or invalid")
-	}
-
-	return object.StringObjectFromGoString(algorithm)
-}
-
-// secretKeySpecGetEncoded implements getEncoded()
-func secretKeySpecGetEncoded(params []any) any {
-	if len(params) < 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecGetEncoded: missing 'this'")
-	}
-
-	obj, ok := params[0].(*object.Object)
-	if !ok || obj == nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecGetEncoded: 'this' is not an object")
-	}
-
-	keyBytes, ok := obj.FieldTable["key"].Fvalue.([]byte)
-	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
-			"secretKeySpecGetEncoded: key field not found or invalid")
-	}
-
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray,
-		object.JavaByteArrayFromGoByteArray(slices.Clone(keyBytes)))
-}
-
-// secretKeySpecGetFormat implements getFormat()
-func secretKeySpecGetFormat(params []any) any {
-	if len(params) < 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecGetFormat: missing 'this'")
-	}
-
-	obj, ok := params[0].(*object.Object)
-	if !ok || obj == nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecGetFormat: 'this' is not an object")
-	}
-
-	// SecretKeySpec always uses RAW format
-	return object.StringObjectFromGoString("RAW")
-}
-
-// secretKeySpecHashCode implements hashCode()
-func secretKeySpecHashCode(params []any) any {
-	if len(params) < 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecHashCode: missing 'this'")
-	}
-
-	obj, ok := params[0].(*object.Object)
-	if !ok || obj == nil {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"secretKeySpecHashCode: 'this' is not an object")
-	}
-
-	algorithm, ok1 := obj.FieldTable["algorithm"].Fvalue.(string)
-	keyBytes, ok2 := obj.FieldTable["key"].Fvalue.([]byte)
-	if !ok1 || !ok2 {
-		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
-			"secretKeySpecHashCode: fields not found or invalid")
-	}
-
-	// Compute hash based on algorithm and key bytes
-	// Using Java's algorithm: hash = algorithm.hashCode() ^ Arrays.hashCode(key)
-	var hash int32 = 0
-
-	// Hash the algorithm string (Java's String.hashCode algorithm)
-	for i := 0; i < len(algorithm); i++ {
-		hash = 31*hash + int32(algorithm[i])
-	}
-
-	// XOR with key bytes hash (Java's Arrays.hashCode algorithm)
-	var keyHash int32 = 1
-	for _, b := range keyBytes {
-		keyHash = 31*keyHash + int32(b)
-	}
-
-	hash ^= keyHash
-
-	return int64(hash)
 }

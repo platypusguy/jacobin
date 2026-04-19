@@ -84,6 +84,7 @@ var ClassNameRSAPublicKey = "java/security/interfaces/RSAPublicKey"
 var ClassNameSecurityProvider = "java/security/Provider"
 var ClassNameSecurityProviderService = "java/security/Provider$Service"
 var ClassNameSignature = "java/security/Signature"
+var ClassNameCipher = "javax/crypto/Cipher"
 var ClassNameSecretKey = "javax/crypto/SecretKey"
 var ClassNameSecureRandom = "java/security/SecureRandom"
 

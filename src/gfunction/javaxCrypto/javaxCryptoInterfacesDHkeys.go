@@ -18,9 +18,6 @@ import (
 // Placeholder: use simple DH big.Int values
 
 func Load_Crypto_Interfaces_DH_Keys() {
-
-	// =====DHKey =====
-
 	ghelpers.MethodSignatures["java/security/interfaces/DHKey.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -38,8 +35,6 @@ func Load_Crypto_Interfaces_DH_Keys() {
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
-
-	// =====DHPrivateKey =====
 
 	ghelpers.MethodSignatures["java/security/interfaces/DHPrivateKey.<clinit>()V"] =
 		ghelpers.GMeth{
@@ -59,8 +54,6 @@ func Load_Crypto_Interfaces_DH_Keys() {
 			GFunction:  dhPrivateGetX,
 		}
 
-	// =====DHPublicKey =====
-
 	ghelpers.MethodSignatures["java/security/interfaces/DHPublicKey.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -73,23 +66,18 @@ func Load_Crypto_Interfaces_DH_Keys() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-	ghelpers.MethodSignatures["java/security/interfaces/DHPublicKey.getY()Ljava/math/BigInteger;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  dhPublicKeyGetY,
-		}
-
 	ghelpers.MethodSignatures["java/security/interfaces/DHPublicKey.getParams()Ljava/security/spec/AlgorithmParameterSpec;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/security/interfaces/DHPublicKey.getY()Ljava/math/BigInteger;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  dhPublicKeyGetY,
+		}
 }
-
-// ---------------------------------------------------------
-// G functions
-// ---------------------------------------------------------
 
 func dhPrivateGetX(params []any) any {
 	if len(params) != 1 {
