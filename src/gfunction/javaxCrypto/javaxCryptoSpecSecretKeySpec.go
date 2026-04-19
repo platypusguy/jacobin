@@ -90,9 +90,14 @@ func secretKeySpecEquals(params []any) any {
 	}
 
 	// Compare algorithms
-	thisAlgo, ok1 := thisObj.FieldTable["algorithm"].Fvalue.(string)
-	otherAlgo, ok2 := otherObj.FieldTable["algorithm"].Fvalue.(string)
-	if !ok1 || !ok2 || thisAlgo != otherAlgo {
+	thisAlgoObj, ok1 := thisObj.FieldTable["algorithm"].Fvalue.(*object.Object)
+	otherAlgoObj, ok2 := otherObj.FieldTable["algorithm"].Fvalue.(*object.Object)
+	if !ok1 || !ok2 {
+		return int64(0) // false
+	}
+	thisAlgo := object.GoStringFromStringObject(thisAlgoObj)
+	otherAlgo := object.GoStringFromStringObject(otherAlgoObj)
+	if thisAlgo != otherAlgo {
 		return int64(0) // false
 	}
 
@@ -122,13 +127,13 @@ func secretKeySpecGetAlgorithm(params []any) any {
 			"secretKeySpecGetAlgorithm: 'this' is not an object")
 	}
 
-	algorithm, ok := obj.FieldTable["algorithm"].Fvalue.(string)
+	algorithmObj, ok := obj.FieldTable["algorithm"].Fvalue.(*object.Object)
 	if !ok {
 		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
 			"secretKeySpecGetAlgorithm: algorithm field not found or invalid")
 	}
 
-	return object.StringObjectFromGoString(algorithm)
+	return algorithmObj
 }
 
 func secretKeySpecGetEncoded(params []any) any {
@@ -181,12 +186,14 @@ func secretKeySpecHashCode(params []any) any {
 			"secretKeySpecHashCode: 'this' is not an object")
 	}
 
-	algorithm, ok1 := obj.FieldTable["algorithm"].Fvalue.(string)
+	algorithmObj, ok1 := obj.FieldTable["algorithm"].Fvalue.(*object.Object)
 	keyBytes, ok2 := obj.FieldTable["key"].Fvalue.([]byte)
 	if !ok1 || !ok2 {
 		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
 			"secretKeySpecHashCode: fields not found or invalid")
 	}
+
+	algorithm := object.GoStringFromStringObject(algorithmObj)
 
 	// Compute hash based on algorithm and key bytes
 	// Using Java's algorithm: hash = algorithm.hashCode() ^ Arrays.hashCode(key)

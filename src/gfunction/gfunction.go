@@ -132,6 +132,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaxCrypto.Load_Crypto_KeyAgreement()
 	javaxCrypto.Load_Crypto_SecretKeyFactory()
 	javaxCrypto.Load_Crypto_Spec_DHParameterSpec()
+	javaxCrypto.Load_Crypto_Spec_IvParameterSpec()
 	javaxCrypto.Load_Crypto_Spec_PBEKeySpec()
 	javaxCrypto.Load_Crypto_Spec_SecretKeySpec()
 
