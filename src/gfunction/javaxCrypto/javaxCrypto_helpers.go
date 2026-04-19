@@ -80,6 +80,22 @@ func performCipher(config CipherTransformation, opmode int64, key []byte, iv []b
 		mode := cipher.NewCTR(block, iv)
 		mode.XORKeyStream(result, input)
 		// No padding for CTR
+	case "GCM":
+		aesgcm, err := cipher.NewGCM(block)
+		if err != nil {
+			return nil, err
+		}
+		if len(iv) != aesgcm.NonceSize() {
+			return nil, fmt.Errorf("invalid nonce length: expected %d, got %d", aesgcm.NonceSize(), len(iv))
+		}
+		if isEncrypt {
+			result = aesgcm.Seal(nil, iv, input, nil)
+		} else {
+			result, err = aesgcm.Open(nil, iv, input, nil)
+			if err != nil {
+				return nil, err
+			}
+		}
 	default:
 		return nil, fmt.Errorf("unsupported mode: %s", config.Mode)
 	}

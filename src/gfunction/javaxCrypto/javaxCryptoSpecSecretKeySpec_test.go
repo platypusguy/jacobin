@@ -16,11 +16,6 @@ import (
 	"testing"
 )
 
-func makeByteArrayObject(b []byte) *object.Object {
-	jBytes := object.JavaByteArrayFromGoByteArray(b)
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
-}
-
 func TestSecretKeySpecInit(t *testing.T) {
 	globals.InitGlobals("test")
 

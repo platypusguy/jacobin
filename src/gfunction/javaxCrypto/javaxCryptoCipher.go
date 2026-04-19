@@ -570,6 +570,16 @@ func cipherInit(params []any) any {
 					self.FieldTable["iv"] = ivField
 					ivProvided = true
 				}
+			} else if spec.KlassName == object.StringPoolIndexFromGoString("javax/crypto/spec/GCMParameterSpec") {
+				ivField, ok := spec.FieldTable["iv"]
+				if ok {
+					self.FieldTable["iv"] = ivField
+					ivProvided = true
+				}
+				// GCMParameterSpec also has tLen (tag length in bits)
+				if tLenField, ok := spec.FieldTable["tLen"]; ok {
+					self.FieldTable["tLen"] = tLenField
+				}
 			} else {
 				// Other spec types: we don't handle them as IV providers for now,
 				// but they are "provided" so we don't auto-generate.
