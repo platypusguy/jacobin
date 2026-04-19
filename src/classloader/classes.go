@@ -184,7 +184,7 @@ type NameAndTypeEntry struct { // type 12 (name and type reference)
 }
 
 type MethodHandleEntry struct { // type: 15 (method handle)
-	RefKind  uint16
+	RefKind  uint8
 	RefIndex uint16
 }
 

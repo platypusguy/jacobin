@@ -145,7 +145,7 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 	case MethodHandle:
 		mh := cp.MethodHandles[entry.Slot]
 		cpe := CPuint16s{
-			entry1: mh.RefKind,
+			entry1: uint16(mh.RefKind),
 			entry2: mh.RefIndex,
 		}
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}

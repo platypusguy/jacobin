@@ -7,7 +7,7 @@
 *.dylib
 
 # Test binary, built with `go test -c`
-*.test
+#*.test
 
 # Output of the go coverage tool
 *.out
@@ -28,5 +28,5 @@ docs/
 
 # Dependency directories (remove the comment below to include it)
 /mytestdata/
-/myNotes
-/devNotes/
+#/myNotes
+#/devNotes/

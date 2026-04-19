@@ -884,7 +884,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	if len(fullyParsedClass.methodHandles) > 0 {
 		for i := 0; i < len(fullyParsedClass.methodHandles); i++ {
 			mh := MethodHandleEntry{
-				RefKind:  uint16(fullyParsedClass.methodHandles[i].referenceKind),
+				RefKind:  uint8(fullyParsedClass.methodHandles[i].referenceKind),
 				RefIndex: uint16(fullyParsedClass.methodHandles[i].referenceIndex),
 			}
 			kd.CP.MethodHandles = append(kd.CP.MethodHandles, mh)
