@@ -49,6 +49,7 @@ func InitDefaultSecurityProvider() *object.Object {
 		}
 	}
 
+	ghelpers.DefaultSecurityProvider = provider
 	return provider
 }
 
@@ -117,6 +118,20 @@ var SecurityProviderServices = map[string]map[string]func() *object.Object{
 		},
 		"SHA-512/256": func() *object.Object {
 			return NewGoRuntimeService(types.SecurityServiceMessageDigest, "SHA-512/256", types.ClassNameMessageDigest)
+		},
+	},
+	types.SecurityServiceAlgorithmParameters: {
+		"AES": func() *object.Object {
+			return NewGoRuntimeService(types.SecurityServiceAlgorithmParameters, "AES", types.ClassNameAlgorithmParameters)
+		},
+		"DES": func() *object.Object {
+			return NewGoRuntimeService(types.SecurityServiceAlgorithmParameters, "DES", types.ClassNameAlgorithmParameters)
+		},
+		"DESede": func() *object.Object {
+			return NewGoRuntimeService(types.SecurityServiceAlgorithmParameters, "DESede", types.ClassNameAlgorithmParameters)
+		},
+		"GCM": func() *object.Object {
+			return NewGoRuntimeService(types.SecurityServiceAlgorithmParameters, "GCM", types.ClassNameAlgorithmParameters)
 		},
 	},
 }

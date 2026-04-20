@@ -6,6 +6,8 @@
 
 package javaxCrypto
 
+import "strings"
+
 // CipherTransformation entry definition
 type CipherTransformation struct {
 	Name            string
@@ -130,16 +132,24 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithMD5AndDES",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "DES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
+		NeedsIV:         true,
+		IVLength:        8,
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
 		IsAEAD:          false,
-		Notes:           "Legacy PBE, uses PBEParameterSpec(salt, iterations), deprecated",
+		Notes:           "Legacy PBE, uses PBEParameterSpec(salt, iterations); DES/CBC/PKCS5Padding with 8-byte IV",
 	},
 	"PBEWithMD5AndTripleDES": {
 		Name:            "PBEWithMD5AndTripleDES",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "DESede",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -150,6 +160,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithSHA1AndDESede",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "DESede",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -160,26 +173,37 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithSHA1AndRC2_40",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "RC2",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
 		IsAEAD:          false,
+		IVLength:        8,
 		Notes:           "PBE with SHA1 and 40-bit RC2",
 	},
 	"PBEWithSHA1AndRC2_128": {
 		Name:            "PBEWithSHA1AndRC2_128",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "RC2",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
 		IsAEAD:          false,
+		IVLength:        8,
 		Notes:           "PBE with SHA1 and 128-bit RC2",
 	},
 	"PBEWithSHA1AndRC4_40": {
 		Name:            "PBEWithSHA1AndRC4_40",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "RC4",
+		Mode:            "RC4",
+		Padding:         "NoPadding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -190,6 +214,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithSHA1AndRC4_128",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "RC4",
+		Mode:            "RC4",
+		Padding:         "NoPadding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -200,6 +227,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA1AndAES_128",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -210,6 +240,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA224AndAES_128",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -220,6 +253,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA256AndAES_128",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -230,6 +266,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA384AndAES_128",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -240,6 +279,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA512AndAES_128",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -250,6 +292,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA1AndAES_256",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -260,6 +305,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA224AndAES_256",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -270,6 +318,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA256AndAES_256",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -280,6 +331,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA384AndAES_256",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -290,11 +344,66 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBEWithHmacSHA512AndAES_256",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
 		IsAEAD:          false,
 		Notes:           "PBKDF2 with HMAC-SHA512 and AES-256",
+	},
+	"PBEWithHmacSHA512/224AndAES_128": {
+		Name:            "PBEWithHmacSHA512/224AndAES_128",
+		Enabled:         true,
+		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
+		NeedsSalt:       true,
+		NeedsIterations: true,
+		KeyDerivation:   true,
+		IsAEAD:          false,
+		Notes:           "PBKDF2 with HMAC-SHA512/224 and AES-128",
+	},
+	"PBEWithHmacSHA512/224AndAES_256": {
+		Name:            "PBEWithHmacSHA512/224AndAES_256",
+		Enabled:         true,
+		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
+		NeedsSalt:       true,
+		NeedsIterations: true,
+		KeyDerivation:   true,
+		IsAEAD:          false,
+		Notes:           "PBKDF2 with HMAC-SHA512/224 and AES-256",
+	},
+	"PBEWithHmacSHA512/256AndAES_128": {
+		Name:            "PBEWithHmacSHA512/256AndAES_128",
+		Enabled:         true,
+		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
+		NeedsSalt:       true,
+		NeedsIterations: true,
+		KeyDerivation:   true,
+		IsAEAD:          false,
+		Notes:           "PBKDF2 with HMAC-SHA512/256 and AES-128",
+	},
+	"PBEWithHmacSHA512/256AndAES_256": {
+		Name:            "PBEWithHmacSHA512/256AndAES_256",
+		Enabled:         true,
+		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
+		NeedsSalt:       true,
+		NeedsIterations: true,
+		KeyDerivation:   true,
+		IsAEAD:          false,
+		Notes:           "PBKDF2 with HMAC-SHA512/256 and AES-256",
 	},
 
 	// PBKDF2 Algorithms
@@ -302,6 +411,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBKDF2WithHmacSHA1",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -312,6 +424,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBKDF2WithHmacSHA224",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -322,6 +437,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBKDF2WithHmacSHA256",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -332,6 +450,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBKDF2WithHmacSHA384",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -342,6 +463,9 @@ var CipherConfigTable = map[string]CipherTransformation{
 		Name:            "PBKDF2WithHmacSHA512",
 		Enabled:         true,
 		Category:        CategorySelfContained,
+		Algorithm:       "AES",
+		Mode:            "CBC",
+		Padding:         "PKCS5Padding",
 		NeedsSalt:       true,
 		NeedsIterations: true,
 		KeyDerivation:   true,
@@ -1216,6 +1340,26 @@ var SecretKeySpecAlgorithmTable = map[string]SecretKeySpecAlgorithm{
 		Enabled: true,
 		Notes:   "PBKDF2 with HMAC-SHA512 and AES-256",
 	},
+	"PBEWithHmacSHA512/224AndAES_128": {
+		Name:    "PBEWithHmacSHA512/224AndAES_128",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA512/224 and AES-128",
+	},
+	"PBEWithHmacSHA512/224AndAES_256": {
+		Name:    "PBEWithHmacSHA512/224AndAES_256",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA512/224 and AES-256",
+	},
+	"PBEWithHmacSHA512/256AndAES_128": {
+		Name:    "PBEWithHmacSHA512/256AndAES_128",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA512/256 and AES-128",
+	},
+	"PBEWithHmacSHA512/256AndAES_256": {
+		Name:    "PBEWithHmacSHA512/256AndAES_256",
+		Enabled: true,
+		Notes:   "PBKDF2 with HMAC-SHA512/256 and AES-256",
+	},
 	"RC2": {Name: "RC2", Enabled: true, Notes: "RC2 block cipher"},
 }
 
@@ -1276,17 +1420,19 @@ func (ct CipherTransformation) GetRequiredParameters() []string {
 }
 
 func ValidateCipherTransformation(transformation string) (CipherTransformation, bool) {
-	config, exists := CipherConfigTable[transformation]
-	if !exists {
-		return CipherTransformation{}, false
+	for name, config := range CipherConfigTable {
+		if strings.EqualFold(name, transformation) {
+			return config, config.Enabled
+		}
 	}
-	return config, config.Enabled
+	return CipherTransformation{}, false
 }
 
 func ValidateSecretKeySpecAlgorithm(algorithm string) (SecretKeySpecAlgorithm, bool) {
-	config, exists := SecretKeySpecAlgorithmTable[algorithm]
-	if !exists {
-		return SecretKeySpecAlgorithm{}, false
+	for name, config := range SecretKeySpecAlgorithmTable {
+		if strings.EqualFold(name, algorithm) {
+			return config, config.Enabled
+		}
 	}
-	return config, config.Enabled
+	return SecretKeySpecAlgorithm{}, false
 }
