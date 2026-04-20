@@ -17,7 +17,6 @@ import (
 )
 
 func Load_Crypto_KeyAgreement() {
-	// <clinit>
 	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -36,15 +35,15 @@ func Load_Crypto_KeyAgreement() {
 			GFunction:  keyagreementGenerateSecret,
 		}
 
-	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.generateSecret([BI)I"] =
-		ghelpers.GMeth{
-			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
-		}
-
 	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.generateSecret(Ljava/lang/String;)Ljavax/crypto/SecretKey;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.generateSecret([BI)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
@@ -52,12 +51,6 @@ func Load_Crypto_KeyAgreement() {
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  keyagreementGetAlgorithm,
-		}
-
-	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.getInstance(Ljava/lang/String;)Ljavax/crypto/KeyAgreement;"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  keyagreementGetInstance,
 		}
 
 	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.getInstance(Ljava/lang/String;Ljava/lang/String;)Ljavax/crypto/KeyAgreement;"] =
@@ -72,22 +65,16 @@ func Load_Crypto_KeyAgreement() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.getInstance(Ljava/lang/String;)Ljavax/crypto/KeyAgreement;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  keyagreementGetInstance,
+		}
+
 	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.getProvider()Ljava/security/Provider;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  javaSecurity.SecurityGetProvider,
-		}
-
-	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.init(Ljava/security/Key;)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  keyagreementInit,
-		}
-
-	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.init(Ljava/security/Key;Ljava/security/spec/AlgorithmParameterSpec;)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.init(Ljava/security/Key;Ljava/security/spec/AlgorithmParameterSpec;Ljava/security/SecureRandom;)V"] =
@@ -96,151 +83,136 @@ func Load_Crypto_KeyAgreement() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-}
-
-// keyagreementGetInstance creates a new KeyAgreement object
-func keyagreementGetInstance(params []any) any {
-	if len(params) != 1 {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			fmt.Sprintf("keyagreementGetInstance: expected 1 parameter, got %d", len(params)),
-		)
-	}
-
-	algorithmObj, ok := params[0].(*object.Object)
-	if !ok {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"keyagreementGetInstance: algorithm is not a String object",
-		)
-	}
-
-	algorithm := object.GoStringFromStringObject(algorithmObj)
-	if algorithm == "DiffieHellman" {
-		algorithm = "DH"
-	}
-
-	// Validate algorithm
-	if !isSupportedKeyAgreementAlgorithm(algorithm) {
-		return ghelpers.GetGErrBlk(
-			excNames.NoSuchAlgorithmException,
-			fmt.Sprintf("keyagreementGetInstance: unsupported key agreement algorithm: %s", algorithm),
-		)
-	}
-
-	// Create KeyAgreement object
-	kaClassName := "javax/crypto/KeyAgreement"
-	kaObj := object.MakeEmptyObjectWithClassName(&kaClassName)
-
-	// Store algorithm
-	kaObj.FieldTable["algorithm"] = object.Field{
-		Ftype:  types.StringClassName,
-		Fvalue: object.StringObjectFromGoString(algorithm),
-	}
-
-	// State: 0=uninitialized, 1=initialized, 2=phase complete
-	kaObj.FieldTable["state"] = object.Field{
-		Ftype:  types.Int,
-		Fvalue: int64(0),
-	}
-
-	return kaObj
-}
-
-// keyagreementGetAlgorithm returns the algorithm name
-func keyagreementGetAlgorithm(params []any) any {
-	if len(params) != 1 {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"keyagreementGetAlgorithm: expected 0 parameters",
-		)
-	}
-
-	kaObj, ok := params[0].(*object.Object)
-	if !ok {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"keyagreementGetAlgorithm: this is not an Object",
-		)
-	}
-
-	return kaObj.FieldTable["algorithm"].Fvalue
-}
-
-// keyagreementInit initializes the KeyAgreement with a private key
-func keyagreementInit(params []any) any {
-	if len(params) != 2 {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"keyagreementInit: expected 1 parameter",
-		)
-	}
-
-	kaObj, ok := params[0].(*object.Object)
-	if !ok {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"keyagreementInit: `this` is not an Object",
-		)
-	}
-
-	privateKeyObj, ok := params[1].(*object.Object)
-	if !ok {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"keyagreementInit: key is not an Object",
-		)
-	}
-
-	// Get algorithm
-	algoObj := kaObj.FieldTable["algorithm"].Fvalue.(*object.Object)
-	algorithm := object.GoStringFromStringObject(algoObj)
-	if algorithm == "DiffieHellman" {
-		algorithm = "DH"
-	}
-
-	// Validate key type matches algorithm
-	keyClassName := object.GoStringFromStringPoolIndex(privateKeyObj.KlassName)
-
-	if algorithm == "ECDH" || algorithm == "EC" {
-		if keyClassName != types.ClassNameECPrivateKey {
-			return ghelpers.GetGErrBlk(
-				excNames.InvalidKeyException,
-				fmt.Sprintf("ECDH requires EC private key, got %s", keyClassName),
-			)
+	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.init(Ljava/security/Key;Ljava/security/spec/AlgorithmParameterSpec;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
 		}
-	} else if algorithm == "DH" {
-		if keyClassName != types.ClassNameDHPrivateKey {
-			return ghelpers.GetGErrBlk(
-				excNames.InvalidKeyException,
-				fmt.Sprintf("DH requires DH private key, got %s", keyClassName),
-			)
+
+	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.init(Ljava/security/Key;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  keyagreementInit,
 		}
-	} else if algorithm == "XDH" || algorithm == "X25519" {
-		if keyClassName != types.ClassNameEdECPrivateKey {
-			return ghelpers.GetGErrBlk(
-				excNames.InvalidKeyException,
-				fmt.Sprintf("X25519 requires X25519 private key, got %s", keyClassName),
-			)
-		}
-	}
-
-	// Store private key
-	kaObj.FieldTable["privateKey"] = object.Field{
-		Ftype:  types.Ref,
-		Fvalue: privateKeyObj,
-	}
-
-	// Set state to initialized
-	kaObj.FieldTable["state"] = object.Field{
-		Ftype:  types.Int,
-		Fvalue: int64(1),
-	}
-
-	return nil
 }
 
-// keyagreementDoPhase performs a phase of the key agreement
+func genSecretDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
+
+	// --- Extract fields ---
+
+	xField, ok := privateKeyObj.FieldTable["x"]
+	if !ok {
+		return nil, errors.New("genSecretDH: private key missing x")
+	}
+
+	pFieldPriv, ok := privateKeyObj.FieldTable["p"]
+	if !ok {
+		return nil, errors.New("genSecretDH: private key missing p")
+	}
+
+	yField, ok := publicKeyObj.FieldTable["y"]
+	if !ok {
+		return nil, errors.New("genSecretDH: public key missing y")
+	}
+
+	pFieldPub, ok := publicKeyObj.FieldTable["p"]
+	if !ok {
+		return nil, errors.New("genSecretDH: public key missing p")
+	}
+
+	// --- Type assert to *big.Int ---
+
+	x, ok := xField.Fvalue.(*big.Int)
+	if !ok {
+		return nil, errors.New("genSecretDH: x is not *big.Int")
+	}
+
+	y, ok := yField.Fvalue.(*big.Int)
+	if !ok {
+		return nil, errors.New("genSecretDH: y is not *big.Int")
+	}
+
+	pPriv, ok := pFieldPriv.Fvalue.(*big.Int)
+	if !ok {
+		return nil, errors.New("genSecretDH: private p is not *big.Int")
+	}
+
+	pPub, ok := pFieldPub.Fvalue.(*big.Int)
+	if !ok {
+		return nil, errors.New("genSecretDH: public p is not *big.Int")
+	}
+
+	// --- Validate parameters match ---
+
+	if pPriv.Cmp(pPub) != 0 {
+		return nil, errors.New("genSecretDH: mismatched domain parameters")
+	}
+
+	// --- Compute secret: y^x mod p ---
+
+	secret := new(big.Int).Exp(y, x, pPriv)
+
+	// --- Convert to fixed-length big-endian bytes ---
+
+	modSize := (pPriv.BitLen() + 7) / 8
+	raw := secret.Bytes()
+
+	if len(raw) == modSize {
+		return raw, nil
+	}
+
+	// Left pad with zeros (Java-compatible)
+	out := make([]byte, modSize)
+	copy(out[modSize-len(raw):], raw)
+
+	return out, nil
+}
+
+func genSecretECDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
+	// Extract private key
+	privKeyValue := privateKeyObj.FieldTable["value"].Fvalue.(*ecdsa.PrivateKey)
+
+	// Extract public key
+	pubKeyValue := publicKeyObj.FieldTable["value"].Fvalue.(*ecdsa.PublicKey)
+
+	// Validate curves match
+	if privKeyValue.Curve.Params().Name != pubKeyValue.Curve.Params().Name {
+		return nil, fmt.Errorf("curve mismatch")
+	}
+
+	// Perform scalar multiplication: shared_secret = private_key * public_key_point
+	bigInt, _ := pubKeyValue.Curve.ScalarMult(pubKeyValue.X, pubKeyValue.Y, privKeyValue.D.Bytes())
+
+	// The shared secret is the x-coordinate
+	return bigInt.Bytes(), nil
+}
+
+func genSecretX25519(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
+	// Extract private key (32 bytes)
+	privKey := privateKeyObj.FieldTable["value"].Fvalue.([]byte)
+
+	// Extract public key (32 bytes)
+	pubKey := publicKeyObj.FieldTable["value"].Fvalue.([]byte)
+
+	// Perform X25519 scalar multiplication
+	secret, err := curve25519.X25519(privKey, pubKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return secret, nil
+}
+
+func isSupportedKeyAgreementAlgorithm(algo string) bool {
+	supported := []string{"ECDH", "EC", "X25519", "XDH", "DH"}
+	for _, s := range supported {
+		if s == algo {
+			return true
+		}
+	}
+	return false
+}
+
 func keyagreementDoPhase(params []any) any {
 	if len(params) != 3 {
 		return ghelpers.GetGErrBlk(
@@ -326,7 +298,6 @@ func keyagreementDoPhase(params []any) any {
 	return object.Null
 }
 
-// keyagreementGenerateSecret generates the shared secret
 func keyagreementGenerateSecret(params []any) any {
 	if len(params) != 1 {
 		return ghelpers.GetGErrBlk(
@@ -385,124 +356,141 @@ func keyagreementGenerateSecret(params []any) any {
 	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(secretBytes))
 }
 
-// Helper functions
+func keyagreementGetAlgorithm(params []any) any {
+	if len(params) != 1 {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalArgumentException,
+			"keyagreementGetAlgorithm: expected 0 parameters",
+		)
+	}
 
-func isSupportedKeyAgreementAlgorithm(algo string) bool {
-	supported := []string{"ECDH", "EC", "X25519", "XDH", "DH"}
-	for _, s := range supported {
-		if s == algo {
-			return true
+	kaObj, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalArgumentException,
+			"keyagreementGetAlgorithm: this is not an Object",
+		)
+	}
+
+	return kaObj.FieldTable["algorithm"].Fvalue
+}
+
+func keyagreementGetInstance(params []any) any {
+	if len(params) != 1 {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalArgumentException,
+			fmt.Sprintf("keyagreementGetInstance: expected 1 parameter, got %d", len(params)),
+		)
+	}
+
+	algorithmObj, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalArgumentException,
+			"keyagreementGetInstance: algorithm is not a String object",
+		)
+	}
+
+	algorithm := object.GoStringFromStringObject(algorithmObj)
+	if algorithm == "DiffieHellman" {
+		algorithm = "DH"
+	}
+
+	// Validate algorithm
+	if !isSupportedKeyAgreementAlgorithm(algorithm) {
+		return ghelpers.GetGErrBlk(
+			excNames.NoSuchAlgorithmException,
+			fmt.Sprintf("keyagreementGetInstance: unsupported key agreement algorithm: %s", algorithm),
+		)
+	}
+
+	// Create KeyAgreement object
+	kaClassName := "javax/crypto/KeyAgreement"
+	kaObj := object.MakeEmptyObjectWithClassName(&kaClassName)
+
+	// Store algorithm
+	kaObj.FieldTable["algorithm"] = object.Field{
+		Ftype:  types.StringClassName,
+		Fvalue: object.StringObjectFromGoString(algorithm),
+	}
+
+	// State: 0=uninitialized, 1=initialized, 2=phase complete
+	kaObj.FieldTable["state"] = object.Field{
+		Ftype:  types.Int,
+		Fvalue: int64(0),
+	}
+
+	return kaObj
+}
+
+func keyagreementInit(params []any) any {
+	if len(params) != 2 {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalArgumentException,
+			"keyagreementInit: expected 1 parameter",
+		)
+	}
+
+	kaObj, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalArgumentException,
+			"keyagreementInit: `this` is not an Object",
+		)
+	}
+
+	privateKeyObj, ok := params[1].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalArgumentException,
+			"keyagreementInit: key is not an Object",
+		)
+	}
+
+	// Get algorithm
+	algoObj := kaObj.FieldTable["algorithm"].Fvalue.(*object.Object)
+	algorithm := object.GoStringFromStringObject(algoObj)
+	if algorithm == "DiffieHellman" {
+		algorithm = "DH"
+	}
+
+	// Validate key type matches algorithm
+	keyClassName := object.GoStringFromStringPoolIndex(privateKeyObj.KlassName)
+
+	if algorithm == "ECDH" || algorithm == "EC" {
+		if keyClassName != types.ClassNameECPrivateKey {
+			return ghelpers.GetGErrBlk(
+				excNames.InvalidKeyException,
+				fmt.Sprintf("ECDH requires EC private key, got %s", keyClassName),
+			)
+		}
+	} else if algorithm == "DH" {
+		if keyClassName != types.ClassNameDHPrivateKey {
+			return ghelpers.GetGErrBlk(
+				excNames.InvalidKeyException,
+				fmt.Sprintf("DH requires DH private key, got %s", keyClassName),
+			)
+		}
+	} else if algorithm == "XDH" || algorithm == "X25519" {
+		if keyClassName != types.ClassNameEdECPrivateKey {
+			return ghelpers.GetGErrBlk(
+				excNames.InvalidKeyException,
+				fmt.Sprintf("X25519 requires X25519 private key, got %s", keyClassName),
+			)
 		}
 	}
-	return false
-}
 
-// genSecretDH performs classic Diffie-Hellman secret generation to expedite secret key exchange.
-func genSecretDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
-
-	// --- Extract fields ---
-
-	xField, ok := privateKeyObj.FieldTable["x"]
-	if !ok {
-		return nil, errors.New("genSecretDH: private key missing x")
+	// Store private key
+	kaObj.FieldTable["privateKey"] = object.Field{
+		Ftype:  types.Ref,
+		Fvalue: privateKeyObj,
 	}
 
-	pFieldPriv, ok := privateKeyObj.FieldTable["p"]
-	if !ok {
-		return nil, errors.New("genSecretDH: private key missing p")
+	// Set state to initialized
+	kaObj.FieldTable["state"] = object.Field{
+		Ftype:  types.Int,
+		Fvalue: int64(1),
 	}
 
-	yField, ok := publicKeyObj.FieldTable["y"]
-	if !ok {
-		return nil, errors.New("genSecretDH: public key missing y")
-	}
-
-	pFieldPub, ok := publicKeyObj.FieldTable["p"]
-	if !ok {
-		return nil, errors.New("genSecretDH: public key missing p")
-	}
-
-	// --- Type assert to *big.Int ---
-
-	x, ok := xField.Fvalue.(*big.Int)
-	if !ok {
-		return nil, errors.New("genSecretDH: x is not *big.Int")
-	}
-
-	y, ok := yField.Fvalue.(*big.Int)
-	if !ok {
-		return nil, errors.New("genSecretDH: y is not *big.Int")
-	}
-
-	pPriv, ok := pFieldPriv.Fvalue.(*big.Int)
-	if !ok {
-		return nil, errors.New("genSecretDH: private p is not *big.Int")
-	}
-
-	pPub, ok := pFieldPub.Fvalue.(*big.Int)
-	if !ok {
-		return nil, errors.New("genSecretDH: public p is not *big.Int")
-	}
-
-	// --- Validate parameters match ---
-
-	if pPriv.Cmp(pPub) != 0 {
-		return nil, errors.New("genSecretDH: mismatched domain parameters")
-	}
-
-	// --- Compute secret: y^x mod p ---
-
-	secret := new(big.Int).Exp(y, x, pPriv)
-
-	// --- Convert to fixed-length big-endian bytes ---
-
-	modSize := (pPriv.BitLen() + 7) / 8
-	raw := secret.Bytes()
-
-	if len(raw) == modSize {
-		return raw, nil
-	}
-
-	// Left pad with zeros (Java-compatible)
-	out := make([]byte, modSize)
-	copy(out[modSize-len(raw):], raw)
-
-	return out, nil
-}
-
-// genSecretECDH performs Elliptic Curve Diffie-Hellman
-func genSecretECDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
-	// Extract private key
-	privKeyValue := privateKeyObj.FieldTable["value"].Fvalue.(*ecdsa.PrivateKey)
-
-	// Extract public key
-	pubKeyValue := publicKeyObj.FieldTable["value"].Fvalue.(*ecdsa.PublicKey)
-
-	// Validate curves match
-	if privKeyValue.Curve.Params().Name != pubKeyValue.Curve.Params().Name {
-		return nil, fmt.Errorf("curve mismatch")
-	}
-
-	// Perform scalar multiplication: shared_secret = private_key * public_key_point
-	bigInt, _ := pubKeyValue.Curve.ScalarMult(pubKeyValue.X, pubKeyValue.Y, privKeyValue.D.Bytes())
-
-	// The shared secret is the x-coordinate
-	return bigInt.Bytes(), nil
-}
-
-// genSecretX25519 performs X25519 key agreement
-func genSecretX25519(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
-	// Extract private key (32 bytes)
-	privKey := privateKeyObj.FieldTable["value"].Fvalue.([]byte)
-
-	// Extract public key (32 bytes)
-	pubKey := publicKeyObj.FieldTable["value"].Fvalue.([]byte)
-
-	// Perform X25519 scalar multiplication
-	secret, err := curve25519.X25519(privKey, pubKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return secret, nil
+	return nil
 }

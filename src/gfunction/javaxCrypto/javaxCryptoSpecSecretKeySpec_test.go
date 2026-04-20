@@ -16,11 +16,6 @@ import (
 	"testing"
 )
 
-func makeByteArrayObject(b []byte) *object.Object {
-	jBytes := object.JavaByteArrayFromGoByteArray(b)
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
-}
-
 func TestSecretKeySpecInit(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -105,7 +100,7 @@ func TestSecretKeySpecMethods(t *testing.T) {
 
 	specObj := object.MakeEmptyObjectWithClassName(&className)
 	specObj.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key}
-	specObj.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: algo}
+	specObj.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo)}
 
 	// Test getAlgorithm()
 	resAlgo := secretKeySpecGetAlgorithm([]any{specObj})
@@ -151,19 +146,19 @@ func TestSecretKeySpecEqualsAndHashCode(t *testing.T) {
 
 	spec1 := object.MakeEmptyObjectWithClassName(&className)
 	spec1.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key1}
-	spec1.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: algo1}
+	spec1.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo1)}
 
 	spec1Clone := object.MakeEmptyObjectWithClassName(&className)
 	spec1Clone.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key1}
-	spec1Clone.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: algo1}
+	spec1Clone.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo1)}
 
 	spec2 := object.MakeEmptyObjectWithClassName(&className)
 	spec2.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key2}
-	spec2.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: algo1}
+	spec2.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo1)}
 
 	spec3 := object.MakeEmptyObjectWithClassName(&className)
 	spec3.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key1}
-	spec3.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: algo2}
+	spec3.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo2)}
 
 	// Test equals
 	if secretKeySpecEquals([]any{spec1, spec1Clone}) != int64(1) {

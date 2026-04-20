@@ -237,6 +237,10 @@ const (
 	InvalidKeyException
 	SignatureException
 	InvalidAlgorithmParameterException
+	ShortBufferException
+	IllegalBlockSizeException
+	BadPaddingException
+	NoSuchPaddingException
 )
 
 // -----------------------------------------------------------------------//
@@ -461,12 +465,16 @@ var JVMexceptionNamesJacobin = []string{
 	"java.io.CharConversionException",           // VERIFIED
 	"java.io.UnsupportedEncodingException",      // VERIFIED
 	"java.io.UTFDataFormatException",            // VERIFIED
-	
+
 	// Java and JCA Security exceptions
 	"java.security.NoSuchAlgorithmException",
 	"java.security.InvalidKeyException",
 	"java.security.SignatureException",
 	"java.security.InvalidAlgorithmParameterException",
+	"javax.crypto.ShortBufferException",
+	"javax.crypto.IllegalBlockSizeException",
+	"javax.crypto.BadPaddingException",
+	"javax.crypto.NoSuchPaddingException",
 }
 
 // -----------------------------------------------------------------------//

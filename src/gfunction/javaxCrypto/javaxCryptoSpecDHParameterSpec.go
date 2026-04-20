@@ -15,41 +15,94 @@ import (
 )
 
 func Load_Crypto_Spec_DHParameterSpec() {
-
-	// <init>(BigInteger p, BigInteger g)
-	ghelpers.MethodSignatures["javax/crypto/spec/DHParameterSpec.<init>(Ljava/math/BigInteger;Ljava/math/BigInteger;)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 2,
-			GFunction:  dhparameterspecInit,
-		}
-
-	// <init>(BigInteger p, BigInteger g, int l)
 	ghelpers.MethodSignatures["javax/crypto/spec/DHParameterSpec.<init>(Ljava/math/BigInteger;Ljava/math/BigInteger;I)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
 			GFunction:  dhparameterspecInit,
 		}
 
-	// getP()
-	ghelpers.MethodSignatures["javax/crypto/spec/DHParameterSpec.getP()Ljava/math/BigInteger;"] =
+	ghelpers.MethodSignatures["javax/crypto/spec/DHParameterSpec.<init>(Ljava/math/BigInteger;Ljava/math/BigInteger;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  dhparameterspecGetP,
+			ParamSlots: 2,
+			GFunction:  dhparameterspecInit,
 		}
 
-	// getG()
 	ghelpers.MethodSignatures["javax/crypto/spec/DHParameterSpec.getG()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dhparameterspecGetG,
 		}
 
-	// getL()
 	ghelpers.MethodSignatures["javax/crypto/spec/DHParameterSpec.getL()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  dhparameterspecGetL,
 		}
+
+	ghelpers.MethodSignatures["javax/crypto/spec/DHParameterSpec.getP()Ljava/math/BigInteger;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  dhparameterspecGetP,
+		}
+}
+
+func dhparameterspecGetG(args []interface{}) interface{} {
+
+	const funcName = "dhparameterspecGetG"
+
+	if len(args) != 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			funcName+": wrong number of arguments")
+	}
+
+	obj := args[0].(*object.Object)
+
+	g, ok := obj.FieldTable["g"].Fvalue.(*big.Int)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
+			funcName+": g not initialized")
+	}
+
+	return object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, g)
+}
+
+func dhparameterspecGetL(args []interface{}) interface{} {
+
+	const funcName = "dhparameterspecGetL"
+
+	if len(args) != 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			funcName+": wrong number of arguments")
+	}
+
+	obj := args[0].(*object.Object)
+
+	field, ok := obj.FieldTable["l"].Fvalue.(int64)
+	if !ok {
+		return int64(0) // matches JDK behavior
+	}
+
+	return field
+}
+
+func dhparameterspecGetP(args []interface{}) interface{} {
+
+	const funcName = "dhparameterspecGetP"
+
+	if len(args) != 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
+			funcName+": wrong number of arguments")
+	}
+
+	obj := args[0].(*object.Object)
+
+	p, ok := obj.FieldTable["p"].Fvalue.(*big.Int)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
+			funcName+": p not initialized")
+	}
+
+	return object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, p)
 }
 
 func dhparameterspecInit(args []interface{}) interface{} {
@@ -113,63 +166,4 @@ func dhparameterspecInit(args []interface{}) interface{} {
 	}
 
 	return nil
-}
-
-func dhparameterspecGetP(args []interface{}) interface{} {
-
-	const funcName = "dhparameterspecGetP"
-
-	if len(args) != 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			funcName+": wrong number of arguments")
-	}
-
-	obj := args[0].(*object.Object)
-
-	p, ok := obj.FieldTable["p"].Fvalue.(*big.Int)
-	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
-			funcName+": p not initialized")
-	}
-
-	return object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, p)
-}
-
-func dhparameterspecGetG(args []interface{}) interface{} {
-
-	const funcName = "dhparameterspecGetG"
-
-	if len(args) != 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			funcName+": wrong number of arguments")
-	}
-
-	obj := args[0].(*object.Object)
-
-	g, ok := obj.FieldTable["g"].Fvalue.(*big.Int)
-	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
-			funcName+": g not initialized")
-	}
-
-	return object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, g)
-}
-
-func dhparameterspecGetL(args []interface{}) interface{} {
-
-	const funcName = "dhparameterspecGetL"
-
-	if len(args) != 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			funcName+": wrong number of arguments")
-	}
-
-	obj := args[0].(*object.Object)
-
-	field, ok := obj.FieldTable["l"].Fvalue.(int64)
-	if !ok {
-		return int64(0) // matches JDK behavior
-	}
-
-	return field
 }

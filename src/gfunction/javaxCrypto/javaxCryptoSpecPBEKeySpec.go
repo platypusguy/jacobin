@@ -64,6 +64,40 @@ func Load_Crypto_Spec_PBEKeySpec() {
 
 }
 
+func pbeKeySpecClearPassword(params []any) any {
+	this := params[0].(*object.Object)
+	passwordVal := this.FieldTable["password"].Fvalue
+	if !object.IsNull(passwordVal) {
+		passwordObj := passwordVal.(*object.Object)
+		passwordChars := passwordObj.FieldTable["value"].Fvalue.([]int64)
+		for i := range passwordChars {
+			passwordChars[i] = 0
+		}
+	}
+	this.FieldTable["password"] = object.Field{Ftype: "[C", Fvalue: object.Null}
+	return nil
+}
+
+func pbeKeySpecGetIterationCount(params []any) any {
+	this := params[0].(*object.Object)
+	return this.FieldTable["iterationCount"].Fvalue
+}
+
+func pbeKeySpecGetKeyLength(params []any) any {
+	this := params[0].(*object.Object)
+	return this.FieldTable["keyLength"].Fvalue
+}
+
+func pbeKeySpecGetPassword(params []any) any {
+	this := params[0].(*object.Object)
+	return this.FieldTable["password"].Fvalue
+}
+
+func pbeKeySpecGetSalt(params []any) any {
+	this := params[0].(*object.Object)
+	return this.FieldTable["salt"].Fvalue
+}
+
 func pbeKeySpecInit(params []any) any {
 	this, ok := params[0].(*object.Object)
 	if !ok {
@@ -98,38 +132,4 @@ func pbeKeySpecInit(params []any) any {
 	}
 
 	return nil
-}
-
-func pbeKeySpecClearPassword(params []any) any {
-	this := params[0].(*object.Object)
-	passwordVal := this.FieldTable["password"].Fvalue
-	if !object.IsNull(passwordVal) {
-		passwordObj := passwordVal.(*object.Object)
-		passwordChars := passwordObj.FieldTable["value"].Fvalue.([]int64)
-		for i := range passwordChars {
-			passwordChars[i] = 0
-		}
-	}
-	this.FieldTable["password"] = object.Field{Ftype: "[C", Fvalue: object.Null}
-	return nil
-}
-
-func pbeKeySpecGetPassword(params []any) any {
-	this := params[0].(*object.Object)
-	return this.FieldTable["password"].Fvalue
-}
-
-func pbeKeySpecGetSalt(params []any) any {
-	this := params[0].(*object.Object)
-	return this.FieldTable["salt"].Fvalue
-}
-
-func pbeKeySpecGetIterationCount(params []any) any {
-	this := params[0].(*object.Object)
-	return this.FieldTable["iterationCount"].Fvalue
-}
-
-func pbeKeySpecGetKeyLength(params []any) any {
-	this := params[0].(*object.Object)
-	return this.FieldTable["keyLength"].Fvalue
 }

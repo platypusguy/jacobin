@@ -1219,25 +1219,34 @@ var SecretKeySpecAlgorithmTable = map[string]SecretKeySpecAlgorithm{
 	"RC2": {Name: "RC2", Enabled: true, Notes: "RC2 block cipher"},
 }
 
-// ValidateSecretKeySpecAlgorithm checks if an algorithm is valid for SecretKeySpec
-func ValidateSecretKeySpecAlgorithm(algorithm string) (SecretKeySpecAlgorithm, bool) {
-	config, exists := SecretKeySpecAlgorithmTable[algorithm]
-	if !exists {
-		return SecretKeySpecAlgorithm{}, false
+func DisableTransformation(name string) bool {
+	if config, exists := CipherConfigTable[name]; exists {
+		config.Enabled = false
+		CipherConfigTable[name] = config
+		return true
 	}
-	return config, config.Enabled
+	return false
 }
 
-// ValidateCipherTransformation checks if a transformation string is valid
-func ValidateCipherTransformation(transformation string) (CipherTransformation, bool) {
-	config, exists := CipherConfigTable[transformation]
-	if !exists {
-		return CipherTransformation{}, false
+func EnableTransformation(name string) bool {
+	if config, exists := CipherConfigTable[name]; exists {
+		config.Enabled = true
+		CipherConfigTable[name] = config
+		return true
 	}
-	return config, config.Enabled
+	return false
 }
 
-// GetRequiredParameters returns what parameters are needed for initialization
+func GetEnabledTransformations() map[string]CipherTransformation {
+	enabled := make(map[string]CipherTransformation)
+	for name, config := range CipherConfigTable {
+		if config.Enabled {
+			enabled[name] = config
+		}
+	}
+	return enabled
+}
+
 func (ct CipherTransformation) GetRequiredParameters() []string {
 	params := []string{}
 
@@ -1266,33 +1275,18 @@ func (ct CipherTransformation) GetRequiredParameters() []string {
 	return params
 }
 
-// GetEnabledTransformations returns all enabled cipher transformations
-func GetEnabledTransformations() map[string]CipherTransformation {
-	enabled := make(map[string]CipherTransformation)
-	for name, config := range CipherConfigTable {
-		if config.Enabled {
-			enabled[name] = config
-		}
+func ValidateCipherTransformation(transformation string) (CipherTransformation, bool) {
+	config, exists := CipherConfigTable[transformation]
+	if !exists {
+		return CipherTransformation{}, false
 	}
-	return enabled
+	return config, config.Enabled
 }
 
-// DisableTransformation marks a cipher transformation as disabled
-func DisableTransformation(name string) bool {
-	if config, exists := CipherConfigTable[name]; exists {
-		config.Enabled = false
-		CipherConfigTable[name] = config
-		return true
+func ValidateSecretKeySpecAlgorithm(algorithm string) (SecretKeySpecAlgorithm, bool) {
+	config, exists := SecretKeySpecAlgorithmTable[algorithm]
+	if !exists {
+		return SecretKeySpecAlgorithm{}, false
 	}
-	return false
-}
-
-// EnableTransformation marks a cipher transformation as enabled
-func EnableTransformation(name string) bool {
-	if config, exists := CipherConfigTable[name]; exists {
-		config.Enabled = true
-		CipherConfigTable[name] = config
-		return true
-	}
-	return false
+	return config, config.Enabled
 }
