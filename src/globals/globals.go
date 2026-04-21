@@ -171,8 +171,8 @@ func InitGlobals(progName string) Globals {
 		JmodBaseBytes:        nil,
 		JVMframeStack:        nil,
 		JvmFrameStackShown:   false,
-		MaxJavaVersion:       21, // this value and MaxJavaVersionRaw must *always* be in sync
-		MaxJavaVersionRaw:    65, // this value and MaxJavaVersion must *always* be in sync
+		MaxJavaVersion:       25, // this value and MaxJavaVersionRaw must *always* be in sync
+		MaxJavaVersionRaw:    69, // this value and MaxJavaVersion must *always* be in sync
 		Options:              make(map[string]Option),
 		PanicCauseShown:      false,
 		StartingClass:        "",
