@@ -260,6 +260,149 @@ func TestPerformCipherDESede(t *testing.T) {
 	}
 }
 
+func TestPerformCipherBlowfish(t *testing.T) {
+	key := []byte("12345678") // 8 bytes
+	iv := []byte("iviviviv")  // 8 bytes
+	input := []byte("Blowfish test")
+
+	transformation := CipherTransformation{
+		Algorithm: "Blowfish",
+		Mode:      "CBC",
+		Padding:   "PKCS5Padding",
+	}
+
+	// Encrypt
+	encrypted, err := performCipher(transformation, 1, key, iv, input)
+	if err != nil {
+		t.Fatalf("Encryption failed: %v", err)
+	}
+
+	// Decrypt
+	decrypted, err := performCipher(transformation, 2, key, iv, encrypted)
+	if err != nil {
+		t.Fatalf("Decryption failed: %v", err)
+	}
+
+	if !bytes.Equal(decrypted, input) {
+		t.Errorf("Decrypted data does not match input. Got %v, want %v", decrypted, input)
+	}
+}
+
+func TestPerformCipherRC4(t *testing.T) {
+	key := []byte("1234567812345678") // 16 bytes
+	input := []byte("RC4 test message")
+
+	transformation := CipherTransformation{
+		Algorithm: "AES", // Note: Algorithm not used for RC4 in performCipher current switch
+		Mode:      "RC4",
+	}
+
+	// Encrypt
+	encrypted, err := performCipher(transformation, 1, key, nil, input)
+	if err != nil {
+		t.Fatalf("Encryption failed: %v", err)
+	}
+
+	// RC4 is symmetric, but performCipher creates a new cipher each time, so it works
+	decrypted, err := performCipher(transformation, 2, key, nil, encrypted)
+	if err != nil {
+		t.Fatalf("Decryption failed: %v", err)
+	}
+
+	if !bytes.Equal(decrypted, input) {
+		t.Errorf("Decrypted data does not match input. Got %v, want %v", decrypted, input)
+	}
+}
+
+func TestPerformCipherChaCha20(t *testing.T) {
+	key := make([]byte, 32)
+	for i := range key {
+		key[i] = byte(i)
+	}
+	iv := []byte("123456781234") // 12 bytes
+	input := []byte("ChaCha20 test")
+
+	transformation := CipherTransformation{
+		Algorithm: "AES",
+		Mode:      "ChaCha20",
+	}
+
+	// Encrypt
+	encrypted, err := performCipher(transformation, 1, key, iv, input)
+	if err != nil {
+		t.Fatalf("Encryption failed: %v", err)
+	}
+
+	// Decrypt
+	decrypted, err := performCipher(transformation, 2, key, iv, encrypted)
+	if err != nil {
+		t.Fatalf("Decryption failed: %v", err)
+	}
+
+	if !bytes.Equal(decrypted, input) {
+		t.Errorf("Decrypted data does not match input. Got %v, want %v", decrypted, input)
+	}
+}
+
+func TestPerformCipherChaCha20Poly1305(t *testing.T) {
+	key := make([]byte, 32)
+	for i := range key {
+		key[i] = byte(i)
+	}
+	iv := make([]byte, 12) // 12 bytes
+	copy(iv, "nonce")
+	input := []byte("ChaCha20-Poly1305 test")
+
+	transformation := CipherTransformation{
+		Algorithm: "AES",
+		Mode:      "ChaCha20-Poly1305",
+	}
+
+	// Encrypt
+	encrypted, err := performCipher(transformation, 1, key, iv, input)
+	if err != nil {
+		t.Fatalf("Encryption failed: %v", err)
+	}
+
+	// Decrypt
+	decrypted, err := performCipher(transformation, 2, key, iv, encrypted)
+	if err != nil {
+		t.Fatalf("Decryption failed: %v", err)
+	}
+
+	if !bytes.Equal(decrypted, input) {
+		t.Errorf("Decrypted data does not match input. Got %v, want %v", decrypted, input)
+	}
+}
+
+func TestPerformCipherRC2(t *testing.T) {
+	key := []byte("12345678") // 8 bytes
+	iv := []byte("iviviviv")  // 8 bytes
+	input := []byte("RC2 test message")
+
+	transformation := CipherTransformation{
+		Algorithm: "RC2",
+		Mode:      "CBC",
+		Padding:   "PKCS5Padding",
+	}
+
+	// Encrypt
+	encrypted, err := performCipher(transformation, 1, key, iv, input)
+	if err != nil {
+		t.Fatalf("Encryption failed: %v", err)
+	}
+
+	// Decrypt
+	decrypted, err := performCipher(transformation, 2, key, iv, encrypted)
+	if err != nil {
+		t.Fatalf("Decryption failed: %v", err)
+	}
+
+	if !bytes.Equal(decrypted, input) {
+		t.Errorf("Decrypted data does not match input. Got %v, want %v", decrypted, input)
+	}
+}
+
 func TestPerformCipherErrors(t *testing.T) {
 	key := []byte("1234567812345678")
 	iv := []byte("iviviviviviviviv")

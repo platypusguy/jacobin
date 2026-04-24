@@ -123,6 +123,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaSecurity.Load_Security_Provider_Service()
 	javaSecurity.Load_Security_SecureRandom()
 	javaSecurity.Load_Security_Signature()
+	javaSecurity.Load_Security_AlgorithmParameters()
 	javaSecurity.Load_Security_Spec_NamedParameterSpec()
 	javaSecurity.Load_Security_Spec_AlgorithmParameterSpec()
 
@@ -135,6 +136,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaxCrypto.Load_Crypto_Spec_GCMParameterSpec()
 	javaxCrypto.Load_Crypto_Spec_IvParameterSpec()
 	javaxCrypto.Load_Crypto_Spec_PBEKeySpec()
+	javaxCrypto.Load_Crypto_Spec_PBEParameterSpec()
 	javaxCrypto.Load_Crypto_Spec_SecretKeySpec()
 
 	// java/util/*

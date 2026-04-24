@@ -58,6 +58,7 @@ const SecurityProviderInfo = "Security + Cryptography"
 const SecurityProviderVersion = 1.0
 
 const SecurityServiceKeyPairGenerator = "KeyPairGenerator"
+const SecurityServiceAlgorithmParameters = "AlgorithmParameters"
 const SecurityServiceMessageDigest = "MessageDigest"
 
 var ClassNameDHParameterSpec = "javax/crypto/spec/DHParameterSpec"
@@ -76,6 +77,7 @@ var ClassNameEdECPublicKey = "java/security/interfaces/EdECPublicKey"
 var ClassNameEllipticCurve = "java/security/EllipticCurve"
 var ClassNameKeyPairGenerator = "java/security/KeyPairGenerator"
 var ClassNameKeyPair = "java/security/KeyPair"
+var ClassNameAlgorithmParameters = "java/security/AlgorithmParameters"
 var ClassNamePrivateKey = "java/security/PrivateKey"
 var ClassNamePublicKey = "java/security/PublicKey"
 var ClassNameRSAKeyGenParameterSpec = "java/security/spec/RSAKeyGenParameterSpec"
@@ -85,6 +87,7 @@ var ClassNameSecurityProvider = "java/security/Provider"
 var ClassNameSecurityProviderService = "java/security/Provider$Service"
 var ClassNameSignature = "java/security/Signature"
 var ClassNameCipher = "javax/crypto/Cipher"
+var ClassNamePBEParameterSpec = "javax/crypto/spec/PBEParameterSpec"
 var ClassNameSecretKey = "javax/crypto/SecretKey"
 var ClassNameSecureRandom = "java/security/SecureRandom"
 

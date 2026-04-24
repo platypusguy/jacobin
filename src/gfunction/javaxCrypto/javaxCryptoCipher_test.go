@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/javaSecurity"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
@@ -287,6 +288,79 @@ func TestCipherGetters(t *testing.T) {
 	// 10 + blockSize (16) = 26
 	if resOS.(int64) != 26 {
 		t.Errorf("Expected output size 26, got %v", resOS)
+	}
+
+	// getParameters
+	resParams := cipherGetParameters([]any{cipherObj})
+	if !object.IsNull(resParams) {
+		t.Error("Expected null parameters before IV is set")
+	}
+
+	// Set IV and check getParameters
+	iv := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+	ivObj := makeByteArrayObject(iv)
+	cipherObj.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+	resParams = cipherGetParameters([]any{cipherObj})
+	if object.IsNull(resParams) {
+		t.Error("Expected non-null parameters after IV is set")
+	} else {
+		paramsObj := resParams.(*object.Object)
+		if paramsObj.KlassName != object.StringPoolIndexFromGoString(types.ClassNameAlgorithmParameters) {
+			t.Errorf("Expected AlgorithmParameters object, got %d", paramsObj.KlassName)
+		}
+		// Verify parameters field is set in Cipher
+		if cipherParams, ok := cipherObj.FieldTable["parameters"]; !ok || cipherParams.Fvalue != paramsObj {
+			t.Error("Expected parameters field to be set in Cipher")
+		}
+	}
+
+	// getMaxAllowedParameterSpec
+	resMaxSpec := cipherGetMaxAllowedParameterSpec([]any{cipherObj, object.StringObjectFromGoString("AES")})
+	if !object.IsNull(resMaxSpec) {
+		t.Errorf("Expected null getMaxAllowedParameterSpec, got %v", resMaxSpec)
+	}
+}
+
+func TestCipherInitWithAlgorithmParameters(t *testing.T) {
+	globals.InitGlobals("test")
+	javaSecurity.InitDefaultSecurityProvider()
+
+	trans := "AES/CBC/PKCS5Padding"
+	transObj := object.StringObjectFromGoString(trans)
+	cipherObj := cipherGetInstance([]any{transObj}).(*object.Object)
+
+	keyBytes := []byte("1234567812345678")
+	keyObj := makeByteArrayObject(keyBytes)
+
+	// Create AlgorithmParameters
+	algo := "AES"
+	paramsObj := javaSecurity.AlgparamsGetInstance([]any{nil, object.StringObjectFromGoString(algo)}).(*object.Object)
+	iv := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	javaSecurity.AlgparamsInit([]any{paramsObj, makeByteArrayObject(iv)})
+
+	// init(opmode, key, AlgorithmParameters)
+	cipherInit([]any{cipherObj, int64(1), keyObj, paramsObj})
+
+	// Verify IV was extracted
+	ivField := cipherObj.FieldTable["iv"]
+	if object.IsNull(ivField.Fvalue) {
+		t.Fatal("IV should have been extracted from AlgorithmParameters")
+	}
+
+	var extractedIv []byte
+	switch v := ivField.Fvalue.(type) {
+	case *object.Object:
+		extractedIv = object.GoByteArrayFromJavaByteArray(v.FieldTable["value"].Fvalue.([]types.JavaByte))
+	case []byte:
+		extractedIv = v
+	case []types.JavaByte:
+		extractedIv = object.GoByteArrayFromJavaByteArray(v)
+	default:
+		t.Fatalf("Unexpected IV field type: %T", v)
+	}
+
+	if !bytes.Equal(extractedIv, iv) {
+		t.Errorf("Expected extracted IV %v, got %v", iv, extractedIv)
 	}
 }
 

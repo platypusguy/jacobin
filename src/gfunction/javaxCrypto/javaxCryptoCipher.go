@@ -7,10 +7,14 @@
 package javaxCrypto
 
 import (
+	"bytes"
 	"crypto/rand"
 	"fmt"
+	"strings"
+
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/javaSecurity"
 	"jacobin/src/object"
 	"jacobin/src/statics"
 	"jacobin/src/types"
@@ -122,7 +126,7 @@ func Load_Crypto_Cipher() {
 	ghelpers.MethodSignatures["javax/crypto/Cipher.getMaxAllowedParameterSpec(Ljava/lang/String;)Ljava/security/spec/AlgorithmParameterSpec;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  cipherGetMaxAllowedParameterSpec,
 		}
 
 	ghelpers.MethodSignatures["javax/crypto/Cipher.getOutputSize(I)I"] =
@@ -134,7 +138,7 @@ func Load_Crypto_Cipher() {
 	ghelpers.MethodSignatures["javax/crypto/Cipher.getParameters()Ljava/security/AlgorithmParameters;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  cipherGetParameters,
 		}
 
 	ghelpers.MethodSignatures["javax/crypto/Cipher.getProvider()Ljava/security/Provider;"] =
@@ -303,14 +307,45 @@ func cipherDoFinal(params []any) any {
 	}
 	keyObj := keyField.Fvalue.(*object.Object)
 	var keyBytes []byte
+
 	if kb, ok := keyObj.FieldTable["key"]; ok {
-		keyBytes, ok = kb.Fvalue.([]byte)
+		keyBytes, _ = kb.Fvalue.([]byte)
+		config, ok := self.FieldTable["config"].Fvalue.(CipherTransformation)
+		if ok && strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC") {
+			// Legacy PBE keys generated via SecretKeyFactory may contain both Key and IV.
+			// Extract just the key part for the underlying block cipher.
+			switch {
+			case strings.Contains(config.Name, "DESede") || strings.Contains(config.Name, "TripleDES"):
+				if len(keyBytes) >= 24 {
+					keyBytes = keyBytes[:24]
+				}
+			case strings.Contains(config.Name, "DES"):
+				if len(keyBytes) >= 8 {
+					keyBytes = keyBytes[:8]
+				}
+			case strings.Contains(config.Name, "RC2"), strings.Contains(config.Name, "RC4"):
+				bits := 128
+				if strings.Contains(config.Name, "40") {
+					bits = 40
+				}
+				if len(keyBytes) >= bits/8 {
+					keyBytes = keyBytes[:bits/8]
+				}
+			}
+		}
 	} else if vb, ok := keyObj.FieldTable["value"]; ok {
 		// Handle cases where the key is just a byte array object (common in tests)
 		if jBytes, ok := vb.Fvalue.([]types.JavaByte); ok {
 			keyBytes = object.GoByteArrayFromJavaByteArray(jBytes)
 		} else if bBytes, ok := vb.Fvalue.([]byte); ok {
 			keyBytes = bBytes
+		}
+		config, ok := self.FieldTable["config"].Fvalue.(CipherTransformation)
+		if ok && strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC") {
+			// If we fell back to the "value" field, and it's a legacy PBE,
+			// this is likely the raw password which is NOT the derived key.
+			// We MUST NOT use it as the DES/RC2 key.
+			return ghelpers.GetGErrBlk(excNames.InvalidKeyException, fmt.Sprintf("cipherDoFinal: derived key missing for PBE (found raw password of length %d instead)", len(keyBytes)))
 		}
 	}
 
@@ -510,6 +545,11 @@ func cipherGetIV(params []any) any {
 	}
 }
 
+func cipherGetMaxAllowedParameterSpec(params []any) any {
+	// For now, return null, which in many cases means unlimited or no specific restrictions
+	return ghelpers.ReturnNull(params)
+}
+
 func cipherGetOutputSize(params []any) any {
 	self, ok := params[0].(*object.Object)
 	if !ok || self == nil {
@@ -527,6 +567,58 @@ func cipherGetOutputSize(params []any) any {
 
 	// Simplified: assume padding might add up to one block
 	return totalLen + blockSize
+}
+
+func cipherGetParameters(params []any) any {
+	self, ok := params[0].(*object.Object)
+	if !ok || self == nil {
+		return ghelpers.ReturnNull(params)
+	}
+
+	// Check if we already have an AlgorithmParameters object
+	if paramsField, ok := self.FieldTable["parameters"]; ok && !object.IsNull(paramsField.Fvalue) {
+		return paramsField.Fvalue
+	}
+
+	// If not, but we have an IV (and it's a suitable algorithm), we can create one
+	ivField, ok := self.FieldTable["iv"]
+	if !ok || object.IsNull(ivField.Fvalue) {
+		return ghelpers.ReturnNull(params)
+	}
+
+	config, ok := self.FieldTable["config"].Fvalue.(CipherTransformation)
+	if !ok {
+		return ghelpers.ReturnNull(params)
+	}
+
+	// Create AlgorithmParameters for the algorithm
+	paramsObj := javaSecurity.AlgparamsGetInstance([]any{nil, object.StringObjectFromGoString(config.Algorithm)})
+	if errBlk, ok := paramsObj.(*ghelpers.GErrBlk); ok {
+		// If we can't get an instance for this algorithm, just return null
+		_ = errBlk
+		return ghelpers.ReturnNull(params)
+	}
+
+	pObj := paramsObj.(*object.Object)
+
+	// Initialize it with the IV
+	var ivObj *object.Object
+	switch v := ivField.Fvalue.(type) {
+	case *object.Object:
+		ivObj = v
+	case []types.JavaByte:
+		ivObj = object.MakePrimitiveObject(types.ByteArray, types.ByteArray, v)
+	case []byte:
+		ivObj = object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(v))
+	}
+
+	if ivObj != nil {
+		javaSecurity.AlgparamsInit([]any{pObj, ivObj})
+		self.FieldTable["parameters"] = object.Field{Ftype: types.ClassNameAlgorithmParameters, Fvalue: pObj}
+		return pObj
+	}
+
+	return ghelpers.ReturnNull(params)
 }
 
 func cipherGetProvider(params []any) any {
@@ -555,50 +647,128 @@ func cipherInit(params []any) any {
 	// Key is params[2]
 	if len(params) > 2 {
 		key := params[2].(*object.Object)
+		config, hasConfig := self.FieldTable["config"].Fvalue.(CipherTransformation)
+		isLegacyPBE := hasConfig && strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC")
+		isHmacPBE := hasConfig && strings.Contains(config.Name, "PBEWith") && (strings.Contains(config.Name, "Hmac") || strings.Contains(config.Name, "HMAC"))
+
+		if isLegacyPBE || isHmacPBE {
+			if _, ok := key.FieldTable["key"]; !ok {
+				// Key is NOT derived. Check if we have an old key that WAS derived for the same password.
+				if oldKeyField, ok := self.FieldTable["key"]; ok {
+					if oldKeyObj, ok := oldKeyField.Fvalue.(*object.Object); ok {
+						if _, ok := oldKeyObj.FieldTable["key"]; ok {
+							if oldValField, ok := self.FieldTable["pbe_password"]; ok {
+								oldVal := oldValField.Fvalue
+								if newValField, ok := key.FieldTable["value"]; ok {
+									newVal := newValField.Fvalue
+									var oldGoBytes []byte
+									switch v := oldVal.(type) {
+									case []types.JavaByte:
+										oldGoBytes = object.GoByteArrayFromJavaByteArray(v)
+									case []byte:
+										oldGoBytes = v
+									}
+									var newGoBytes []byte
+									switch v := newVal.(type) {
+									case []types.JavaByte:
+										newGoBytes = object.GoByteArrayFromJavaByteArray(v)
+									case []byte:
+										newGoBytes = v
+									}
+									if oldGoBytes != nil && newGoBytes != nil && bytes.Equal(oldGoBytes, newGoBytes) {
+										// Match! Re-use the already derived key.
+										key = oldKeyObj
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		self.FieldTable["key"] = object.Field{Ftype: "java/security/Key", Fvalue: key}
 	}
 
 	ivProvided := false
-	// Handle IV if provided via AlgorithmParameterSpec (IvParameterSpec)
+	// Handle parameters if provided via AlgorithmParameters or AlgorithmParameterSpec
 	if len(params) > 3 {
-		spec := params[3].(*object.Object)
-		if !object.IsNull(spec) {
-			// Check if it's IvParameterSpec
-			if spec.KlassName == object.StringPoolIndexFromGoString("javax/crypto/spec/IvParameterSpec") {
-				ivField, ok := spec.FieldTable["iv"]
-				if ok {
-					self.FieldTable["iv"] = ivField
-					ivProvided = true
-				}
-			} else if spec.KlassName == object.StringPoolIndexFromGoString("javax/crypto/spec/GCMParameterSpec") {
-				ivField, ok := spec.FieldTable["iv"]
-				if ok {
-					self.FieldTable["iv"] = ivField
-					ivProvided = true
-				}
-				// GCMParameterSpec also has tLen (tag length in bits)
-				if tLenField, ok := spec.FieldTable["tLen"]; ok {
-					self.FieldTable["tLen"] = tLenField
+		param := params[3]
+		if spec, ok := param.(*object.Object); ok && !object.IsNull(spec) {
+			if spec.KlassName == object.StringPoolIndexFromGoString(types.ClassNameAlgorithmParameters) {
+				// java.security.AlgorithmParameters
+				self.FieldTable["parameters"] = object.Field{Ftype: types.ClassNameAlgorithmParameters, Fvalue: spec}
+				// Extract spec from AlgorithmParameters
+				innerSpec := javaSecurity.AlgparamsGetParameterSpec([]any{spec})
+				if specObj, ok := innerSpec.(*object.Object); ok && !object.IsNull(specObj) {
+					// Recurse or handle directly
+					handleInitSpec(self, specObj, &ivProvided)
 				}
 			} else {
-				// Other spec types: we don't handle them as IV providers for now,
-				// but they are "provided" so we don't auto-generate.
+				// java.security.spec.AlgorithmParameterSpec
+				handleInitSpec(self, spec, &ivProvided)
+			}
+		} else if param == nil || object.IsNull(param) {
+			config, hasConfig := self.FieldTable["config"].Fvalue.(CipherTransformation)
+			isLegacyPBE := hasConfig && strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC")
+			isHmacPBE := hasConfig && strings.Contains(config.Name, "PBEWith") && (strings.Contains(config.Name, "Hmac") || strings.Contains(config.Name, "HMAC"))
+			if isLegacyPBE || isHmacPBE {
+				// For legacy PBE, a null spec might mean "use defaults/extract from key"
+				// So we DON'T set ivProvided = true yet.
+				self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
+				ivProvided = false
+			} else {
+				// If spec is explicitly provided as null, we treat it as "provided" but empty.
+				// This prevents auto-generation.
+				self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
 				ivProvided = true
 			}
-		} else {
-			// If spec is explicitly provided as null, we treat it as "provided" but empty.
-			// This prevents auto-generation.
-			self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
-			ivProvided = true
 		}
-	} else {
-		// If no spec parameter provided at all, it's NOT provided, so it's a candidate for auto-generation.
-		// However, we should clear any existing IV from a previous init.
-		self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
 	}
 
-	// Automatically generate IV if needed and not provided (only for ENCRYPT_MODE)
-	if !ivProvided && opmode == 1 { // ENCRYPT_MODE is 1
+	// After handling spec (which might have derived the key), update 'old_derived_key' if we now have a derived key.
+	if keyField, ok := self.FieldTable["key"]; ok {
+		keyObj := keyField.Fvalue.(*object.Object)
+		if _, ok := keyObj.FieldTable["key"]; ok {
+			self.FieldTable["old_derived_key"] = keyField
+		}
+	}
+
+	if len(params) <= 3 {
+		// If no spec parameter provided at all, it's NOT provided, so it's a candidate for auto-generation.
+		// However, we should clear any existing IV from a previous init, UNLESS it's a legacy PBE
+		// where we might want to keep the derived IV.
+		config, hasConfig := self.FieldTable["config"].Fvalue.(CipherTransformation)
+		isLegacyPBE := hasConfig && strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC")
+		isHmacPBE := hasConfig && strings.Contains(config.Name, "PBEWith") && (strings.Contains(config.Name, "Hmac") || strings.Contains(config.Name, "HMAC"))
+
+		if isLegacyPBE || isHmacPBE {
+			// Try to handle PBE key derivation if no spec is provided but key might need it.
+			keyField, ok := self.FieldTable["key"]
+			if ok {
+				keyObj := keyField.Fvalue.(*object.Object)
+				if _, ok := keyObj.FieldTable["key"]; !ok {
+					// Key is NOT derived. We already handled potential reuse above,
+					// so if it's still not derived, it will fail in cipherDoFinal.
+				}
+			}
+		}
+
+		ivObj, ok := self.FieldTable["iv"]
+		if !ok || object.IsNull(ivObj.Fvalue) {
+			self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
+			ivProvided = false
+		} else if isLegacyPBE {
+			// Keep existing derived IV for legacy PBE
+			ivProvided = true
+		} else {
+			// For non-legacy PBE, we typically want a fresh IV if none provided
+			self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
+			ivProvided = false
+		}
+	}
+
+	// Automatically generate IV if needed and not provided
+	if !ivProvided {
 		config, ok := self.FieldTable["config"].Fvalue.(CipherTransformation)
 		if ok && config.NeedsIV {
 			ivLen := config.IVLength
@@ -608,11 +778,63 @@ func cipherInit(params []any) any {
 			}
 
 			if ivLen > 0 {
-				iv := make([]byte, ivLen)
-				if _, err := rand.Read(iv); err == nil {
-					jBytes := object.JavaByteArrayFromGoByteArray(iv)
-					ivObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
-					self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+				// Special case for legacy PBE: check if key already contains derived IV
+				if strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC") {
+					keyField, ok := self.FieldTable["key"]
+					if ok {
+						keyObj := keyField.Fvalue.(*object.Object)
+						if kb, ok := keyObj.FieldTable["key"]; ok {
+							keyBytes := kb.Fvalue.([]byte)
+							// Legacy PBE: Extract Key AND IV if not provided
+							var derivedIV []byte
+							if strings.Contains(config.Name, "DESede") || strings.Contains(config.Name, "TripleDES") {
+								if len(keyBytes) >= 32 {
+									derivedIV = keyBytes[24:32]
+								}
+							} else if strings.Contains(config.Name, "DES") {
+								if len(keyBytes) >= 16 {
+									derivedIV = keyBytes[8:16]
+								}
+							} else if strings.Contains(config.Name, "RC2") {
+								bits := 128
+								if strings.Contains(config.Name, "40") {
+									bits = 40
+								}
+								if len(keyBytes) >= (bits/8)+8 {
+									derivedIV = keyBytes[bits/8 : (bits/8)+8]
+								}
+							}
+
+							if len(derivedIV) > 0 {
+								jBytes := object.JavaByteArrayFromGoByteArray(derivedIV)
+								ivObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+								self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+								ivProvided = true
+							}
+						}
+					}
+				}
+
+				if !ivProvided {
+					if opmode == 1 { // ENCRYPT_MODE is 1
+						// Generate random IV only for ENCRYPT_MODE
+						iv := make([]byte, ivLen)
+						if _, err := rand.Read(iv); err == nil {
+							jBytes := object.JavaByteArrayFromGoByteArray(iv)
+							ivObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+							self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+						}
+					} else {
+						// For decryption and other modes, if IV is still not provided and it's not a legacy PBE,
+						// it might be an error or it might default to zero IV.
+						// Legacy Java PBE algorithms (when not deriving IV) often default to a zero IV.
+						if strings.Contains(config.Name, "PBEWith") {
+							iv := make([]byte, ivLen)
+							jBytes := object.JavaByteArrayFromGoByteArray(iv)
+							ivObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+							self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+						}
+					}
 				}
 			}
 		}
@@ -621,6 +843,108 @@ func cipherInit(params []any) any {
 	self.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: []byte{}}
 
 	return nil
+}
+
+func handleInitSpec(self *object.Object, spec *object.Object, ivProvided *bool) {
+	if spec.KlassName == object.StringPoolIndexFromGoString("javax/crypto/spec/IvParameterSpec") {
+		ivField, ok := spec.FieldTable["iv"]
+		if ok {
+			self.FieldTable["iv"] = ivField
+			*ivProvided = true
+		}
+	} else if spec.KlassName == object.StringPoolIndexFromGoString("javax/crypto/spec/GCMParameterSpec") {
+		ivField, ok := spec.FieldTable["iv"]
+		if ok {
+			self.FieldTable["iv"] = ivField
+			*ivProvided = true
+		}
+		// GCMParameterSpec also has tLen (tag length in bits)
+		if tLenField, ok := spec.FieldTable["tLen"]; ok {
+			self.FieldTable["tLen"] = tLenField
+		}
+	} else if spec.KlassName == object.StringPoolIndexFromGoString("javax/crypto/spec/PBEParameterSpec") {
+		saltField, ok := spec.FieldTable["salt"]
+		if ok {
+			self.FieldTable["iv"] = saltField // Default: use salt as IV. May be overwritten by derived IV later.
+			*ivProvided = true
+		}
+
+		// Perform PBE key derivation if the key is not already derived
+		keyField, ok := self.FieldTable["key"]
+		if ok {
+			keyObj := keyField.Fvalue.(*object.Object)
+			config := self.FieldTable["config"].Fvalue.(CipherTransformation)
+			if config.KeyDerivation {
+				// We need to re-derive if the current key looks like a password (un-derived)
+				// Or more simply, if we have a PBEParameterSpec, we should use it to derive.
+				// For PBKDF2-based PBE, we need salt and iterations.
+				iterations := spec.FieldTable["iterationCount"].Fvalue.(int64)
+
+				// Re-derive the key only if it's not already derived.
+				// A derived key will have a "key" field in its FieldTable.
+				if _, ok := keyObj.FieldTable["key"]; !ok {
+					// Create a PBEKeySpec from the existing password and the new salt/iterations
+					passwordBytes := keyObj.FieldTable["value"].Fvalue.([]byte)
+					passwordChars := make([]int64, len(passwordBytes))
+					for i, b := range passwordBytes {
+						passwordChars[i] = int64(b)
+					}
+					passwordCharsObj := object.MakePrimitiveObject(types.CharArray, types.CharArray, passwordChars)
+
+					pbeKeySpecClassName := "javax/crypto/spec/PBEKeySpec"
+					pbeKeySpec := object.MakeEmptyObjectWithClassName(&pbeKeySpecClassName)
+					pbeKeySpec.FieldTable["password"] = object.Field{Ftype: "[C", Fvalue: passwordCharsObj}
+
+					var jSalt []types.JavaByte
+					switch v := saltField.Fvalue.(type) {
+					case []types.JavaByte:
+						jSalt = v
+					case []byte:
+						jSalt = object.JavaByteArrayFromGoByteArray(v)
+					}
+					pbeKeySpec.FieldTable["salt"] = object.Field{Ftype: "[B", Fvalue: object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jSalt)}
+					pbeKeySpec.FieldTable["iterationCount"] = object.Field{Ftype: types.Int, Fvalue: iterations}
+
+					keyLength := int64(0)
+					if f, ok := keyObj.FieldTable["inferred_key_length"]; ok {
+						keyLength = f.Fvalue.(int64)
+					}
+					pbeKeySpec.FieldTable["keyLength"] = object.Field{Ftype: types.Int, Fvalue: keyLength}
+
+					// Reuse secretKeyFactoryGenerateSecret to derive the key
+					// We need a SKF object for this.
+					skfAlgoObj := self.FieldTable["transformation"].Fvalue.(*object.Object)
+					skf := secretKeyFactoryGetInstance([]any{skfAlgoObj}).(*object.Object)
+
+					derivedKey := secretKeyFactoryGenerateSecret([]any{skf, pbeKeySpec})
+					if derivedKeyObj, ok := derivedKey.(*object.Object); ok {
+						self.FieldTable["key"] = object.Field{Ftype: "java/security/Key", Fvalue: derivedKeyObj}
+						// Store the password in the cipher for potential reuse later (in case of another init with underived key)
+						if pwVal, ok := keyObj.FieldTable["value"]; ok {
+							self.FieldTable["pbe_password"] = pwVal
+						}
+
+						// If this is a legacy PBE algorithm that should have a derived IV,
+						// we signal that the IV is NOT provided so that cipherInit can extract it from the newly derived key.
+						// We also clear any existing salt-based IV to ensure extraction happens.
+						if strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC") {
+							self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
+							*ivProvided = false
+						} else if strings.Contains(config.Name, "PBEWith") {
+							// For HMAC-based PBE, we use salt as IV by default (if 16 bytes).
+							// But if we already set *ivProvided = true above with saltField, it's fine.
+							// The issue is that for legacy PBE we want to extract IV from key material.
+						}
+					}
+				} else {
+				}
+			}
+		}
+	} else {
+		// Other spec types: we don't handle them as IV providers for now,
+		// but they are "provided" so we don't auto-generate.
+		*ivProvided = true
+	}
 }
 
 func cipherUpdate(params []any) any {
