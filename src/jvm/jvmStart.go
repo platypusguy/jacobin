@@ -201,14 +201,6 @@ func JVMrun() int {
 	mainClass := stringPool.GetStringPointer(mainClassNameIndex)
 	clName := *mainClass
 
-	// Instantiate the class so that any static initializers are run.
-	_, instantiateError :=
-		globals.GetGlobalRef().FuncInstantiateClass(clName, frames.CreateFrameStack())
-	if instantiateError != nil {
-		errMsg := "RunJavaThread: Error instantiating: " + clName + ".main()"
-		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
-	}
-
 	methName := "main"
 	methType := "([Ljava/lang/String;)V"
 	runnable := javaLang.NewRunnable(
@@ -222,9 +214,15 @@ func JVMrun() int {
 		trace.Trace(fmt.Sprintf("Starting execution with: %s.%s%s", clName, methName, methType))
 	}
 
+	// Instantiate the class so that any static initializers are run.
+	_, instantiateError :=
+		globals.GetGlobalRef().FuncInstantiateClass(clName, frames.CreateFrameStack())
+	if instantiateError != nil {
+		errMsg := "RunJavaThread: Error instantiating: " + clName + ".main()"
+		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
+	}
+
 	// Run the main thread. Note: the thread is registered in java/lang/Thread.start()
-	// args := []any{t}
-	// globals.GetGlobalRef().FuncInvokeGFunction("java/lang/Thread.start()V", args)
 	args := []any{t, clName, methName, methType}
 	globals.GetGlobalRef().FuncRunThread(args)
 	return shutdown.Exit(shutdown.OK)
