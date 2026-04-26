@@ -63,7 +63,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	}
 
 	// Frame pointer provided?
-	if f == nil {
+	if f == nil || f.Thread < 1 {
 		MinimalAbort(which, msg) // this calls exit()
 		return NotCaught         // only occurs in tests
 	}
