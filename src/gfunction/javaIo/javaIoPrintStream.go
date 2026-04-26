@@ -37,6 +37,13 @@ import (
 */
 
 func Load_Io_PrintStream() {
+
+	ghelpers.MethodSignatures["java/io/PrintStream.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"] =
+		ghelpers.GMeth{ // PrintStream.format(String, Object[]) is an old-fashioned printf
+			ParamSlots: 2,
+			GFunction:  Printf,
+		}
+
 	ghelpers.MethodSignatures["java/io/PrintStream.println()V"] = // println void
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -252,7 +259,6 @@ func Load_Io_PrintStream() {
 			ParamSlots: 2,
 			GFunction:  Printf,
 		}
-
 }
 
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline (V = void)
