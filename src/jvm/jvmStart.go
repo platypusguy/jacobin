@@ -215,8 +215,9 @@ func JVMrun() int {
 	}
 
 	// Instantiate the class so that any static initializers are run.
+	fs := frames.CreateFrameStack()
 	_, instantiateError :=
-		globals.GetGlobalRef().FuncInstantiateClass(clName, frames.CreateFrameStack())
+		globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
 	if instantiateError != nil {
 		errMsg := "RunJavaThread: Error instantiating: " + clName + ".main()"
 		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
