@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-6 by the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -38,123 +38,52 @@ import (
 
 func Load_Io_PrintStream() {
 
+	ghelpers.MethodSignatures["java/io/PrintStream.append(C)Ljava/io/PrintStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.append(Ljava/lang/CharSequence;)Ljava/io/PrintStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.append(Ljava/lang/CharSequence;II)Ljava/io/PrintStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.checkError()Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.close()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.flush()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/io/PrintStream.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"] =
 		ghelpers.GMeth{ // PrintStream.format(String, Object[]) is an old-fashioned printf
 			ParamSlots: 2,
 			GFunction:  Printf,
 		}
 
-	ghelpers.MethodSignatures["java/io/PrintStream.println()V"] = // println void
+	ghelpers.MethodSignatures["java/io/PrintStream.format(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"] =
 		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  PrintlnV,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.println(Ljava/lang/String;)V"] = // println string
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnString,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.println(B)V"] = // println byte
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnBIS,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.println(C)V"] = // println char
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnChar,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.println(I)V"] = // println int
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnBIS,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.println(S)V"] = // println short
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnBIS,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.println(Z)V"] = // println boolean
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnBoolean,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.println(J)V"] = // println long
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnLong,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println(D)V"] = // println double
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnDouble,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println(F)V"] = // println float
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnFloat,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println(Ljava/lang/Object;)V"] = // println object
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnObject,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println([B)V"] = // println byte array
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnObject,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println([C)V"] = // println char array
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnObject,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println([D)V"] = // println double array
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnObject,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println([F)V"] = // println float array
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnObject,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println([I)V"] = // println int array
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnObject,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println([J)V"] = // println long array
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnObject,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println([S)V"] = // println int array
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnObject,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.println([Z)V"] = // println boolean array
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintlnObject,
-		}
-
-	ghelpers.MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintString,
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/io/PrintStream.print(B)V"] = // print byte
@@ -162,30 +91,11 @@ func Load_Io_PrintStream() {
 			ParamSlots: 1,
 			GFunction:  PrintBIS,
 		}
+
 	ghelpers.MethodSignatures["java/io/PrintStream.print(C)V"] = // print char
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  PrintChar,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.print(I)V"] = // print int
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintBIS,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.print(S)V"] = // print short
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintBIS,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.print(Z)V"] = // print boolean
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintBoolean,
-		}
-	ghelpers.MethodSignatures["java/io/PrintStream.print(J)V"] = // print long
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  PrintLong,
 		}
 
 	ghelpers.MethodSignatures["java/io/PrintStream.print(D)V"] = // print double
@@ -200,10 +110,40 @@ func Load_Io_PrintStream() {
 			GFunction:  PrintFloat,
 		}
 
+	ghelpers.MethodSignatures["java/io/PrintStream.print(I)V"] = // print int
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintBIS,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.print(J)V"] = // print long
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintLong,
+		}
+
 	ghelpers.MethodSignatures["java/io/PrintStream.print(Ljava/lang/Object;)V"] = // print object
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  PrintObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintString,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.print(S)V"] = // print short
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintBIS,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.print(Z)V"] = // print boolean
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintBoolean,
 		}
 
 	ghelpers.MethodSignatures["java/io/PrintStream.print([B)V"] = // print byte array
@@ -258,6 +198,144 @@ func Load_Io_PrintStream() {
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  Printf,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.printf(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println()V"] = // println void
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  PrintlnV,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(B)V"] = // println byte
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnBIS,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(C)V"] = // println char
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnChar,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(D)V"] = // println double
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnDouble,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(F)V"] = // println float
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnFloat,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(I)V"] = // println int
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnBIS,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(J)V"] = // println long
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnLong,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(Ljava/lang/Object;)V"] = // println object
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(Ljava/lang/String;)V"] = // println string
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnString,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(S)V"] = // println short
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnBIS,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println(Z)V"] = // println boolean
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnBoolean,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println([B)V"] = // println byte array
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println([C)V"] = // println char array
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println([D)V"] = // println double array
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println([F)V"] = // println float array
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println([I)V"] = // println int array
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println([J)V"] = // println long array
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println([S)V"] = // println int array
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.println([Z)V"] = // println boolean array
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.write(I)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.write([B)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.write([BII)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
 		}
 }
 
