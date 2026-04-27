@@ -408,9 +408,14 @@ func getClassObj(descriptor string, fr *frames.Frame) (*object.Object, error) {
 	result := globals.GetGlobalRef().FuncInvokeGFunction(gfuncName, params)
 
 	// TODO: check for errBlk and handle exceptions like ClassNotFoundException.
+	obj, ok := result.(*object.Object)
+	if ok {
+		return obj, nil
+	}
 	if result == nil {
-		return nil, fmt.Errorf("getClassObj: Class.forName failed for '%s'", forNameArg)
+		return nil, fmt.Errorf("getClassObj: Class.forName failed for '%s', nil object returned", forNameArg)
 	}
 
-	return result.(*object.Object), nil
+	// TODO: result holds a *ghelpers.GErrBlk but I cannot handle it because that would cause a Go compiler cycle !!
+	return nil, fmt.Errorf("getClassObj: TODO! Class.forName failed for '%s', unexpected result type: %T", forNameArg, result)
 }
