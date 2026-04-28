@@ -329,7 +329,7 @@ func Load_Io_PrintStream() {
 	ghelpers.MethodSignatures["java/io/PrintStream.write([B)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  printstreamWriteFromByteArray,
 		}
 
 	ghelpers.MethodSignatures["java/io/PrintStream.write([BII)V"] =
@@ -337,6 +337,25 @@ func Load_Io_PrintStream() {
 			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
 		}
+}
+
+// java/io/PrintStream.write([B)V
+func printstreamWriteFromByteArray(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("java/io/PrintStream.write([B)V: Expected io.Writer, observed %T", params[0])
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	byteArrayObj, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("java/io/PrintStream.write([B)V: Expected *object.Object, observed %T", params[1])
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	str := object.GoStringFromStringObject(byteArrayObj)
+	fmt.Fprintln(writer, str)
+	return nil
 }
 
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline (V = void)
