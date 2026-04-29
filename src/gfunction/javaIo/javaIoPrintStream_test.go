@@ -462,3 +462,32 @@ func TestPrintStreamPrintStringNull(t *testing.T) {
 		t.Errorf("PrintlnString(null) = %q; want 'null\\n'", got)
 	}
 }
+
+func TestPrintStreamWriteFromByteArray(t *testing.T) {
+	buf := new(bytes.Buffer)
+
+	// Case 1: Success
+	buf.Reset()
+	str := "Hello World"
+	strObj := makeStringObject(str)
+	ret := printstreamWriteFromByteArray([]interface{}{buf, strObj})
+	if ret != nil {
+		t.Errorf("printstreamWriteFromByteArray returned error: %v", ret)
+	}
+	want := str + "\n"
+	if got := buf.String(); got != want {
+		t.Errorf("printstreamWriteFromByteArray output = %q; want %q", got, want)
+	}
+
+	// Case 2: Invalid writer
+	ret = printstreamWriteFromByteArray([]interface{}{"not-a-writer", strObj})
+	if _, ok := ret.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("printstreamWriteFromByteArray with invalid writer did not return GErrBlk, got %T", ret)
+	}
+
+	// Case 3: Invalid byteArrayObj
+	ret = printstreamWriteFromByteArray([]interface{}{buf, "not-an-object"})
+	if _, ok := ret.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("printstreamWriteFromByteArray with invalid object did not return GErrBlk, got %T", ret)
+	}
+}
