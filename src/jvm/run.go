@@ -163,10 +163,26 @@ func RunJavaThread(args []any) {
 		trace.Trace(traceInfo)
 	}
 
+	// If run() is synchronized, lock the Thread object.
+	if f.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
+		if err := t.ObjLock(int32(tID)); err != nil {
+			errMsg := fmt.Sprintf("RunJavaThread: ObjLock failed on thread: %d", tID)
+			exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
+		}
+	}
+
 	// Execute the thread's frame set.
 	for fs.Len() > 0 {
 		interpret(fs)
 		runtime.Gosched()
+	}
+
+	// If run() is synchronized, unlock the Thread object.
+	if f.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
+		if err := t.ObjUnlock(int32(tID)); err != nil {
+			errMsg := fmt.Sprintf("RunJavaThread: ObjLock failed on thread: %d", tID)
+			exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
+		}
 	}
 
 	// The End.
