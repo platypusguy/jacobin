@@ -117,7 +117,14 @@ func inputStreamReadIntoByteArray(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
-	byteArray := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+	byteArray, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+	if !ok {
+		if object.IsNull(byteArray) {
+			errMsg := "java.lang.io.inputStream.read() called with null array"
+			return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
+		}
+	}
+
 	if len(byteArray) == 0 {
 		return int64(0)
 	}
