@@ -474,9 +474,8 @@ func TestPrintStreamWriteFromByteArray(t *testing.T) {
 	if ret != nil {
 		t.Errorf("printstreamWriteFromByteArray returned error: %v", ret)
 	}
-	want := str + "\n"
-	if got := buf.String(); got != want {
-		t.Errorf("printstreamWriteFromByteArray output = %q; want %q", got, want)
+	if got := buf.String(); got != str {
+		t.Errorf("printstreamWriteFromByteArray output = %q; want %q", got, str)
 	}
 
 	// Case 2: Invalid writer
