@@ -213,18 +213,23 @@ func securityProviderGetService(params []any) any {
 
 	services := this.FieldTable["services"].Fvalue.(map[string]*object.Object)
 	key := typeStr + "/" + algStr
-	if svc, ok := services[key]; ok {
-		return svc
+
+	// Get service from services map.
+	svc, ok := services[key]
+	if !ok {
+		// Try upshifting the algorithm name.
+		algUpShifted := strings.ToUpper(algStr)
+		key := typeStr + "/" + algUpShifted
+		svc, ok = services[key]
+		if !ok {
+			// Both as-is and upshifted failed.
+			return ghelpers.GetGErrBlk(excNames.NoSuchAlgorithmException,
+				fmt.Sprintf("securityProviderGetService: unsupported type/algorithm %s/%s", typeStr, algStr))
+		}
 	}
 
-	//if secSvcTypeMap, ok := SecurityProviderServices[typeStr]; ok {
-	//	if svcInit, ok2 := secSvcTypeMap[algStr]; ok2 {
-	//		return svcInit()
-	//	}
-	//}
-
-	return ghelpers.GetGErrBlk(excNames.NoSuchAlgorithmException,
-		fmt.Sprintf("securityProviderGetService: unsupported type/algorithm %s/%s", typeStr, algStr))
+	// Success.
+	return svc
 }
 
 func securityProviderPutService(params []any) any {

@@ -335,26 +335,57 @@ func Load_Io_PrintStream() {
 	ghelpers.MethodSignatures["java/io/PrintStream.write([BII)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  printstreamWriteFromByteArray,
 		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.writeBytes([B)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  printstreamWriteFromByteArray,
+		}
+
 }
 
 // java/io/PrintStream.write([B)V
+// java/io/PrintStream.write([BII)V
 func printstreamWriteFromByteArray(params []interface{}) interface{} {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
-		errMsg := fmt.Sprintf("java/io/PrintStream.write([B)V: Expected io.Writer, observed %T", params[0])
+		errMsg := fmt.Sprintf("java/io/PrintStream.write: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	byteArrayObj, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("java/io/PrintStream.write([B)V: Expected *object.Object, observed %T", params[1])
+		errMsg := fmt.Sprintf("java/io/PrintStream.write: Expected *object.Object, observed %T", params[1])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	str := object.GoStringFromStringObject(byteArrayObj)
-	fmt.Fprintln(writer, str)
+	jba := object.JavaByteArrayFromStringObject(byteArrayObj)
+	if jba == nil {
+		// If it's not a string object, it might be a raw byte array object.
+		// Let's check the field "value" directly.
+		byteArrayObj.ThMutex.RLock()
+		fld, ok := byteArrayObj.FieldTable["value"]
+		byteArrayObj.ThMutex.RUnlock()
+		if ok {
+			if val, ok := fld.Fvalue.([]types.JavaByte); ok {
+				jba = val
+			}
+		}
+	}
+
+	if len(params) == 4 {
+		off := int(params[2].(int64))
+		length := int(params[3].(int64))
+		if off < 0 || length < 0 || off+length > len(jba) {
+			return ghelpers.GetGErrBlk(excNames.ArrayIndexOutOfBoundsException, "PrintStream.write: index out of bounds")
+		}
+		jba = jba[off : off+length]
+	}
+
+	str := object.GoStringFromJavaByteArray(jba)
+	fmt.Fprint(writer, str)
 	return nil
 }
 
