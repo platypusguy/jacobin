@@ -102,18 +102,6 @@ func Load_Traps() {
 			GFunction:  TrapClass,
 		}
 
-	MethodSignatures["java/util/zip/CheckedInputStream.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  TrapClass,
-		}
-
-	MethodSignatures["java/util/zip/CheckedInputStream.<init>(Ljava/io/InputStream;Ljava/util/zip/Checksum;)V"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  TrapClass,
-		}
-
 }
 
 // TrapClass is a generic Trap for classes

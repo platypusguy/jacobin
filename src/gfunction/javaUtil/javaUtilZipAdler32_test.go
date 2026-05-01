@@ -72,14 +72,14 @@ func TestAdler32_Update_Subrange_UsesEndIndex(t *testing.T) {
 	globals.InitStringPool()
 
 	data := []byte("abcdef")
-	// We'll update only "bcd" (indices 1..3) by passing offset=1, toIndex=4
+	// We'll update only "bcd" (indices 1..3) by passing offset=1, length=3
 	sub := data[1:4]
 
 	a := newAdler32Obj()
 	_ = adlerInit([]interface{}{a})
 
 	arr := makeZipByteArray(data)
-	_ = adlerUpdateFromArray([]interface{}{a, arr, int64(1), int64(4)})
+	_ = adlerUpdateFromArray([]interface{}{a, arr, int64(1), int64(3)})
 	got := uint32(adlerGetValue([]interface{}{a}).(int64))
 
 	// Compute expected using the implementation helper starting from initial 1

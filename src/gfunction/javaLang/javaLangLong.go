@@ -17,6 +17,7 @@ import (
 	"jacobin/src/types"
 	"math/bits"
 	"strconv"
+	"strings"
 )
 
 func Load_Lang_Long() {
@@ -33,6 +34,12 @@ func Load_Lang_Long() {
 			GFunction:  longBitCount,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Long.byteValue()B"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  longByteValue,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Long.compare(JJ)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
@@ -45,10 +52,22 @@ func Load_Lang_Long() {
 			GFunction:  longCompareUnsigned,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Long.compareTo(Ljava/lang/Long;)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  longCompareTo,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Long.compress(JJ)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  longCompress,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.decode(Ljava/lang/String;)Ljava/lang/Long;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  longDecode,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Long.divideUnsigned(JJ)J"] =
@@ -63,10 +82,22 @@ func Load_Lang_Long() {
 			GFunction:  longDoubleValue,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Long.equals(Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  longEquals,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Long.expand(JJ)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  longExpand,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.floatValue()F"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  longFloatValue,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Long.highestOneBit(J)J"] =
@@ -75,10 +106,34 @@ func Load_Lang_Long() {
 			GFunction:  longHighestOneBit,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Long.hashCode()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  longHashCode,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.hashCode(J)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  longHashCodeStatic,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.intValue()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  longIntValue,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Long.lowestOneBit(J)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  longLowestOneBit,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.longValue()J"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  longLongValue,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Long.max(JJ)J"] =
@@ -105,10 +160,40 @@ func Load_Lang_Long() {
 			GFunction:  longNumberOfTrailingZeros,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Long.parseLong(Ljava/lang/CharSequence;III)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  longParseLongCharSequence,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Long.parseLong(Ljava/lang/String;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  longParseLong,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.parseLong(Ljava/lang/String;I)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  longParseLongRadix,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.parseUnsignedLong(Ljava/lang/CharSequence;III)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  longParseUnsignedLongCharSequence,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.parseUnsignedLong(Ljava/lang/String;)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  longParseUnsignedLong,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.parseUnsignedLong(Ljava/lang/String;I)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  longParseUnsignedLong,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Long.remainderUnsigned(JJ)J"] =
@@ -147,6 +232,12 @@ func Load_Lang_Long() {
 			GFunction:  longSignum,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Long.shortValue()S"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  longShortValue,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Long.sum(JJ)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
@@ -177,6 +268,12 @@ func Load_Lang_Long() {
 			GFunction:  longToString,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Long.toString(JI)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  longToStringRadix,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Long.toUnsignedString(J)Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
@@ -187,6 +284,18 @@ func Load_Lang_Long() {
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  longToUnsignedStringRadix,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.valueOf(Ljava/lang/String;)Ljava/lang/Long;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  longValueOfString,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.valueOf(Ljava/lang/String;I)Ljava/lang/Long;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  longValueOfString,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Long.valueOf(J)Ljava/lang/Long;"] =
@@ -252,10 +361,44 @@ func longClinit(_ []interface{}) interface{} {
 
 // "java/lang/Long.doubleValue()D"
 func longDoubleValue(params []interface{}) interface{} {
-	var jj int64
 	parmObj := params[0].(*object.Object)
-	jj = parmObj.FieldTable["value"].Fvalue.(int64)
+	jj := parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(jj)
+}
+
+// "java/lang/Long.floatValue()F"
+func longFloatValue(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	jj := parmObj.FieldTable["value"].Fvalue.(int64)
+	return float32(jj)
+}
+
+// "java/lang/Long.byteValue()B"
+func longByteValue(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	jj := parmObj.FieldTable["value"].Fvalue.(int64)
+	return int64(int8(jj))
+}
+
+// "java/lang/Long.shortValue()S"
+func longShortValue(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	jj := parmObj.FieldTable["value"].Fvalue.(int64)
+	return int64(int16(jj))
+}
+
+// "java/lang/Long.intValue()I"
+func longIntValue(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	jj := parmObj.FieldTable["value"].Fvalue.(int64)
+	return int64(int32(jj))
+}
+
+// "java/lang/Long.longValue()J"
+func longLongValue(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	jj := parmObj.FieldTable["value"].Fvalue.(int64)
+	return jj
 }
 
 // "java/lang/Long.parseLong(Ljava/lang/String;)J"
@@ -264,10 +407,82 @@ func longParseLong(params []interface{}) interface{} {
 	str := object.GoStringFromStringObject(obj)
 	jj, err := strconv.ParseInt(str, 10, 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("longParseLong: strconv.ParseInt(%s,10,64), failed, reason: %s", str, err.Error())
+		errMsg := fmt.Sprintf("longParseLong: strconv.ParseInt(%s,10,64) failed, reason: %s", str, err.Error())
 		return ghelpers.GetGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 	return jj
+}
+
+// "java/lang/Long.parseLong(Ljava/lang/String;I)J"
+func longParseLongRadix(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	str := object.GoStringFromStringObject(obj)
+	radix := int(params[1].(int64))
+	jj, err := strconv.ParseInt(str, radix, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("longParseLongRadix: strconv.ParseInt(%s,%d,64) failed, reason: %s", str, radix, err.Error())
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+	return jj
+}
+
+// "java/lang/Long.parseLong(Ljava/lang/CharSequence;III)J"
+func longParseLongCharSequence(params []interface{}) interface{} {
+	csObj := params[0].(*object.Object)
+	begin := params[1].(int64)
+	end := params[2].(int64)
+	radix := int(params[3].(int64))
+
+	str := object.GoStringFromStringObject(csObj)
+	if begin < 0 || end > int64(len(str)) || begin > end {
+		return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, "longParseLongCharSequence: bounds out of range")
+	}
+
+	subStr := str[begin:end]
+	jj, err := strconv.ParseInt(subStr, radix, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("longParseLongCharSequence: strconv.ParseInt(%s,%d,64) failed, reason: %s", subStr, radix, err.Error())
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+	return jj
+}
+
+// "java/lang/Long.parseUnsignedLong(Ljava/lang/String;)J"
+// "java/lang/Long.parseUnsignedLong(Ljava/lang/String;I)J"
+func longParseUnsignedLong(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	str := object.GoStringFromStringObject(obj)
+	radix := 10
+	if len(params) == 2 {
+		radix = int(params[1].(int64))
+	}
+	jj, err := strconv.ParseUint(str, radix, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("longParseUnsignedLong: strconv.ParseUint(%s,%d,64) failed, reason: %s", str, radix, err.Error())
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+	return int64(jj)
+}
+
+// "java/lang/Long.parseUnsignedLong(Ljava/lang/CharSequence;III)J"
+func longParseUnsignedLongCharSequence(params []interface{}) interface{} {
+	csObj := params[0].(*object.Object)
+	begin := params[1].(int64)
+	end := params[2].(int64)
+	radix := int(params[3].(int64))
+
+	str := object.GoStringFromStringObject(csObj)
+	if begin < 0 || end > int64(len(str)) || begin > end {
+		return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, "longParseUnsignedLongCharSequence: bounds out of range")
+	}
+
+	subStr := str[begin:end]
+	jj, err := strconv.ParseUint(subStr, radix, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("longParseUnsignedLongCharSequence: strconv.ParseUint(%s,%d,64) failed, reason: %s", subStr, radix, err.Error())
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+	return int64(jj)
 }
 
 // "java/lang/Long.rotateLeft(JI)J"
@@ -290,6 +505,23 @@ func longRotateRight(params []interface{}) interface{} {
 func longValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
 	return object.MakePrimitiveObject("java/lang/Long", types.Long, int64Value)
+}
+
+// "java/lang/Long.valueOf(Ljava/lang/String;)Ljava/lang/Long;"
+// "java/lang/Long.valueOf(Ljava/lang/String;I)Ljava/lang/Long;"
+func longValueOfString(params []interface{}) interface{} {
+	strObj := params[0].(*object.Object)
+	str := object.GoStringFromStringObject(strObj)
+	radix := 10
+	if len(params) == 2 {
+		radix = int(params[1].(int64))
+	}
+	jj, err := strconv.ParseInt(str, radix, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("longValueOfString: strconv.ParseInt(%s,%d,64) failed, reason: %s", str, radix, err.Error())
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+	return object.MakePrimitiveObject("java/lang/Long", types.Long, jj)
 }
 
 // "java/lang/Long.toHexString(J)Ljava/lang/String;"
@@ -322,7 +554,19 @@ func longToBinaryString(params []interface{}) interface{} {
 // "java/lang/Long.toString(J)Ljava/lang/String;"
 func longToString(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
-	str := fmt.Sprintf("%d", int64Value)
+	str := strconv.FormatInt(int64Value, 10)
+	obj := object.StringObjectFromGoString(str)
+	return obj
+}
+
+// "java/lang/Long.toString(JI)Ljava/lang/String;"
+func longToStringRadix(params []interface{}) interface{} {
+	int64Value := params[0].(int64)
+	radix := int(params[1].(int64))
+	if int64(radix) < ghelpers.MinRadix || int64(radix) > ghelpers.MaxRadix {
+		radix = 10
+	}
+	str := strconv.FormatInt(int64Value, radix)
 	obj := object.StringObjectFromGoString(str)
 	return obj
 }
@@ -565,4 +809,103 @@ func longExpand(params []interface{}) interface{} {
 	}
 
 	return int64(result)
+}
+
+// "java/lang/Long.decode(Ljava/lang/String;)Ljava/lang/Long;"
+func longDecode(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	strArg := object.GoStringFromStringObject(parmObj)
+	if len(strArg) < 1 {
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, "longDecode: String length is zero")
+	}
+
+	wbase := 10
+	if strings.HasPrefix(strArg, "-") || strings.HasPrefix(strArg, "+") {
+		// Handle sign if necessary, but strconv.ParseInt does this.
+		// We just need to find where the prefix starts after the sign.
+	}
+
+	tempStr := strArg
+	negative := false
+	if strings.HasPrefix(tempStr, "-") {
+		negative = true
+		tempStr = tempStr[1:]
+	} else if strings.HasPrefix(tempStr, "+") {
+		tempStr = tempStr[1:]
+	}
+
+	if strings.HasPrefix(tempStr, "#") {
+		wbase = 16
+		tempStr = tempStr[1:]
+	} else if strings.HasPrefix(tempStr, "0x") || strings.HasPrefix(tempStr, "0X") {
+		wbase = 16
+		tempStr = tempStr[2:]
+	} else if strings.HasPrefix(tempStr, "0") && len(tempStr) > 1 {
+		wbase = 8
+		tempStr = tempStr[1:]
+	}
+
+	if negative {
+		tempStr = "-" + tempStr
+	}
+
+	jj, err := strconv.ParseInt(tempStr, wbase, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("longDecode: strconv.ParseInt(%s,%d,64) failed, reason: %s", strArg, wbase, err.Error())
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+
+	return object.MakePrimitiveObject("java/lang/Long", types.Long, jj)
+}
+
+// longCompareTo compares two Long objects.
+func longCompareTo(params []interface{}) interface{} {
+	thisObj := params[0].(*object.Object)
+	otherObj := params[1].(*object.Object)
+
+	thisVal := thisObj.FieldTable["value"].Fvalue.(int64)
+	otherVal := otherObj.FieldTable["value"].Fvalue.(int64)
+
+	switch {
+	case thisVal < otherVal:
+		return int64(-1)
+	case thisVal > otherVal:
+		return int64(1)
+	default:
+		return int64(0)
+	}
+}
+
+// longEquals checks if a Long object is equal to another object.
+func longEquals(params []interface{}) interface{} {
+	longObj := params[0].(*object.Object)
+	otherObj, ok := params[1].(*object.Object)
+	if !ok {
+		return types.JavaBoolFalse
+	}
+
+	if object.GoStringFromStringPoolIndex(otherObj.KlassName) != "java/lang/Long" {
+		return types.JavaBoolFalse
+	}
+
+	longValue := longObj.FieldTable["value"].Fvalue.(int64)
+	otherValue := otherObj.FieldTable["value"].Fvalue.(int64)
+
+	if longValue == otherValue {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// longHashCode returns the hash code for this Long.
+func longHashCode(params []interface{}) interface{} {
+	longObj := params[0].(*object.Object)
+	val := longObj.FieldTable["value"].Fvalue.(int64)
+	return longHashCodeStatic([]interface{}{val})
+}
+
+// longHashCodeStatic returns the hash code for the specified long value.
+func longHashCodeStatic(params []interface{}) interface{} {
+	val := params[0].(int64)
+	return int64(int32(val ^ (int64(uint64(val) >> 32))))
 }

@@ -93,7 +93,7 @@ func adlerUpdateFromArray(params []interface{}) interface{} {
 	bbWhole := objBB.FieldTable["value"].Fvalue.([]types.JavaByte)
 	offset := params[2].(int64)
 	length := params[3].(int64)
-	bbSubset := bbWhole[offset:length]
+	bbSubset := bbWhole[offset : offset+length]
 
 	// Get current Adler32 value.
 	fld := obj.FieldTable["value"]

@@ -115,7 +115,7 @@ func TestInitFileInputStreamString_Success(t *testing.T) {
 	fisObj := newFileInputStreamObject()
 	params := []interface{}{fisObj, strObj}
 
-	res := initFileInputStreamString(params)
+	res := InitFileInputStreamString(params)
 	if res != nil {
 		t.Fatalf("Expected nil, got error: %v", res)
 	}
@@ -148,7 +148,7 @@ func TestInitFileInputStreamString_FileNotFound(t *testing.T) {
 	strObj := object.StringObjectFromGoString(badPath)
 	params := []interface{}{fisObj, strObj}
 
-	res := initFileInputStreamString(params)
+	res := InitFileInputStreamString(params)
 	errObj, ok := res.(*ghelpers.GErrBlk)
 	if !ok {
 		t.Fatalf("Expected *ghelpers.GErrBlk error, got %T", res)

@@ -146,6 +146,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_Base64()
 	javaUtil.Load_Util_Concurrent_Atomic_AtomicInteger()
 	javaUtil.Load_Util_Concurrent_Atomic_Atomic_Long()
+	javaUtil.Load_Util_Concurrent_CyclicBarrier()
 	javaUtil.Load_Util_Date()
 	javaUtil.Load_Util_Iterator()
 	javaUtil.Load_Util_List()
@@ -164,6 +165,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_TimeZone()
 	javaUtil.Load_Util_Vector()
 	javaUtil.Load_Util_Zip_Adler32()
+	javaUtil.Load_Util_Zip_CheckedInputStream()
 	javaUtil.Load_Util_Zip_Crc32_Crc32c()
 
 	// javax.*
