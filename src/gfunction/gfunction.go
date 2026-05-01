@@ -165,6 +165,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_TimeZone()
 	javaUtil.Load_Util_Vector()
 	javaUtil.Load_Util_Zip_Adler32()
+	javaUtil.Load_Util_Zip_CheckedInputStream()
 	javaUtil.Load_Util_Zip_Crc32_Crc32c()
 
 	// javax.*

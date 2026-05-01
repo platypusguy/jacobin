@@ -2876,9 +2876,27 @@ func invokeVirtualGfunction(fr *frames.Frame,
 		params = append(params, pop(fr))
 	}
 
-	// now get the objectRef (the object whose method we're invoking) or a *os.File (stream I/O)
+	// now get the objectRef (the object whose method we're invoking)
 	popped := pop(fr)
 	params = append(params, popped)
+
+	// DYNAMIC DISPATCH for G-functions:
+	// Check if the object's actual class has an override for this G-function.
+	if objRef, ok := popped.(*object.Object); ok {
+		objClassName := *(stringPool.GetStringPointer(objRef.KlassName))
+		if objClassName != className {
+			// Try to find a more specific G-function registration.
+			specificFQN := objClassName + "." + methodName + methodType
+			if specificGmeth, ok := ghelpers.MethodSignatures[specificFQN]; ok {
+				// We found a more specific G-function. Use it instead.
+				mtEntry = classloader.MTentry{
+					Meth:  specificGmeth,
+					MType: 'G',
+				}
+				className = objClassName
+			}
+		}
+	}
 
 	if globals.TraceInst {
 		infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)

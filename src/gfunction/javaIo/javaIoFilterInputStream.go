@@ -8,11 +8,9 @@ package javaIo
 
 import (
 	"fmt"
-	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
-	"jacobin/src/types"
-	"os"
+	"jacobin/src/stringPool"
 )
 
 func Load_Io_FilterInputStream() {
@@ -23,122 +21,149 @@ func Load_Io_FilterInputStream() {
 			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	ghelpers.MethodSignatures["java/io/FilterInputStream.<init>(Ljava.io.InputStream;)V"] =
+	ghelpers.MethodSignatures["java/io/FilterInputStream.<init>(Ljava/io/InputStream;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  initFilterInputStreamFile,
-		}
-
-	ghelpers.MethodSignatures["java/io/FilterInputStream.<init>(Ljava.lang.String;)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  initFilterInputStreamString,
+			GFunction:  initFilterInputStream,
 		}
 
 	ghelpers.MethodSignatures["java/io/FilterInputStream.available()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  fisAvailable,
+			GFunction:  filterInputStreamAvailable,
 		}
 
 	ghelpers.MethodSignatures["java/io/FilterInputStream.close()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  fisClose,
+			GFunction:  filterInputStreamClose,
 		}
 
 	ghelpers.MethodSignatures["java/io/FilterInputStream.mark(I)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  filterInputStreamMark,
 		}
 
 	ghelpers.MethodSignatures["java/io/FilterInputStream.markSupported()Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  bufferedReaderMarkSupported,
+			GFunction:  filterInputStreamMarkSupported,
 		}
 
 	ghelpers.MethodSignatures["java/io/FilterInputStream.read()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  fisReadOne,
+			GFunction:  filterInputStreamRead,
 		}
 
 	ghelpers.MethodSignatures["java/io/FilterInputStream.read([B)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  fisReadByteArray,
+			GFunction:  filterInputStreamReadByteArray,
 		}
 
 	ghelpers.MethodSignatures["java/io/FilterInputStream.read([BII)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  fisReadByteArrayOffset,
+			GFunction:  filterInputStreamReadByteArrayOffset,
 		}
 
 	ghelpers.MethodSignatures["java/io/FilterInputStream.reset()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  filterInputStreamReset,
 		}
 
 	ghelpers.MethodSignatures["java/io/FilterInputStream.skip(J)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  fisSkip,
+			GFunction:  filterInputStreamSkip,
 		}
 
 }
 
-// "java/io/FilterInputStream.<init>(Ljava/io/File;])V"
-func initFilterInputStreamFile(params []interface{}) interface{} {
-
-	// Get file path field from the File argument.
-	fld, ok := params[1].(*object.Object).FieldTable[ghelpers.FilePath]
-	if !ok {
-		errMsg := "initFilterInputStreamFile: File object argument lacks a ghelpers.FilePath field"
-		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
-	}
-
-	// Get the file path.
-	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
-
-	// Open the file for read-only, yielding a file handle.
-	osFile, err := os.Open(pathStr)
-	if err != nil {
-		errMsg := fmt.Sprintf("os.Open(%s) failed, reason: %s", pathStr, err.Error())
-		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
-	}
-
-	// Copy the file path field into the FilterInputStream object.
-	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
-
-	// Copy the file handle into the FilterInputStream object.
-	fld = object.Field{Ftype: ghelpers.FileHandle, Fvalue: osFile}
-	params[0].(*object.Object).FieldTable[ghelpers.FileHandle] = fld
-
+func initFilterInputStream(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	in := params[1].(*object.Object)
+	self.FieldTable["in"] = object.Field{Ftype: "Ljava/io/InputStream;", Fvalue: in}
 	return nil
 }
 
-// "java/io/FilterInputStream.<init>(Ljava/lang/String;])V"
-func initFilterInputStreamString(params []interface{}) interface{} {
+func filterInputStreamAvailable(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	in := self.FieldTable["in"].Fvalue.(*object.Object)
+	inClassName := stringPool.GetStringPointer(in.KlassName)
+	method := fmt.Sprintf("%s.available()I", *inClassName)
+	return ghelpers.Invoke(method, []interface{}{in})
+}
 
-	// Using the argument path string, open the file for read-only.
-	pathStr := object.GoStringFromStringObject(params[1].(*object.Object))
-	osFile, err := os.Open(pathStr)
-	if err != nil {
-		errMsg := fmt.Sprintf("initFilterInputStreamString: os.Open(%s) failed, reason: %s", pathStr, err.Error())
-		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
-	}
+func filterInputStreamClose(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	in := self.FieldTable["in"].Fvalue.(*object.Object)
+	inClassName := stringPool.GetStringPointer(in.KlassName)
+	method := fmt.Sprintf("%s.close()V", *inClassName)
+	return ghelpers.Invoke(method, []interface{}{in})
+}
 
-	// Copy the file path field into the FilterInputStream object.
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(pathStr)}
-	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
+func filterInputStreamMark(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	readlimit := params[1].(int64)
+	in := self.FieldTable["in"].Fvalue.(*object.Object)
+	inClassName := stringPool.GetStringPointer(in.KlassName)
+	method := fmt.Sprintf("%s.mark(I)V", *inClassName)
+	return ghelpers.Invoke(method, []interface{}{in, readlimit})
+}
 
-	// Copy the file handle into the FilterInputStream object.
-	fld = object.Field{Ftype: ghelpers.FileHandle, Fvalue: osFile}
-	params[0].(*object.Object).FieldTable[ghelpers.FileHandle] = fld
+func filterInputStreamMarkSupported(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	in := self.FieldTable["in"].Fvalue.(*object.Object)
+	inClassName := stringPool.GetStringPointer(in.KlassName)
+	method := fmt.Sprintf("%s.markSupported()Z", *inClassName)
+	return ghelpers.Invoke(method, []interface{}{in})
+}
 
-	return nil
+func filterInputStreamRead(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	in := self.FieldTable["in"].Fvalue.(*object.Object)
+	inClassName := stringPool.GetStringPointer(in.KlassName)
+	method := fmt.Sprintf("%s.read()I", *inClassName)
+	return ghelpers.Invoke(method, []interface{}{in})
+}
+
+func filterInputStreamReadByteArray(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	buf := params[1].(*object.Object)
+	in := self.FieldTable["in"].Fvalue.(*object.Object)
+	inClassName := stringPool.GetStringPointer(in.KlassName)
+	method := fmt.Sprintf("%s.read([B)I", *inClassName)
+	return ghelpers.Invoke(method, []interface{}{in, buf})
+}
+
+func filterInputStreamReadByteArrayOffset(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	buf := params[1].(*object.Object)
+	off := params[2].(int64)
+	lenVal := params[3].(int64)
+	in := self.FieldTable["in"].Fvalue.(*object.Object)
+	inClassName := stringPool.GetStringPointer(in.KlassName)
+	method := fmt.Sprintf("%s.read([BII)I", *inClassName)
+	return ghelpers.Invoke(method, []interface{}{in, buf, off, lenVal})
+}
+
+func filterInputStreamReset(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	in := self.FieldTable["in"].Fvalue.(*object.Object)
+	inClassName := stringPool.GetStringPointer(in.KlassName)
+	method := fmt.Sprintf("%s.reset()V", *inClassName)
+	return ghelpers.Invoke(method, []interface{}{in})
+}
+
+func filterInputStreamSkip(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	n := params[1].(int64)
+	in := self.FieldTable["in"].Fvalue.(*object.Object)
+	inClassName := stringPool.GetStringPointer(in.KlassName)
+	method := fmt.Sprintf("%s.skip(J)J", *inClassName)
+	return ghelpers.Invoke(method, []interface{}{in, n})
 }

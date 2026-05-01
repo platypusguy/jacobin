@@ -36,25 +36,25 @@ func Load_Util_Zip_Crc32_Crc32c() {
 	ghelpers.MethodSignatures["java/util/zip/CRC32.<init>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  crc32InitIEEE,
+			GFunction:  Crc32InitIEEE,
 		}
 
 	ghelpers.MethodSignatures["java/util/zip/CRC32C.<init>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  crc32InitCastagnoli,
+			GFunction:  Crc32InitCastagnoli,
 		}
 
 	ghelpers.MethodSignatures["java/util/zip/CRC32.getValue()J"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  crc32GetValue,
+			GFunction:  Crc32GetValue,
 		}
 
 	ghelpers.MethodSignatures["java/util/zip/CRC32C.getValue()J"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  crc32GetValue,
+			GFunction:  Crc32GetValue,
 		}
 
 	ghelpers.MethodSignatures["java/util/zip/CRC32.reset()V"] =
@@ -108,7 +108,7 @@ func Load_Util_Zip_Crc32_Crc32c() {
 }
 
 // Instantiate an CRC32 object using an IEEE polynomial.
-func crc32InitIEEE(params []interface{}) interface{} {
+func Crc32InitIEEE(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	fld := object.Field{Ftype: types.Long, Fvalue: int64(0)}
 	obj.FieldTable["value"] = fld
@@ -119,7 +119,7 @@ func crc32InitIEEE(params []interface{}) interface{} {
 }
 
 // Instantiate an CRC32C object using a Castagnoli polynomial.
-func crc32InitCastagnoli(params []interface{}) interface{} {
+func Crc32InitCastagnoli(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	fld := object.Field{Ftype: types.Long, Fvalue: int64(0)}
 	obj.FieldTable["value"] = fld
@@ -130,7 +130,7 @@ func crc32InitCastagnoli(params []interface{}) interface{} {
 }
 
 // Get the current CRC32 value.
-func crc32GetValue(params []interface{}) interface{} {
+func Crc32GetValue(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	value := obj.FieldTable["value"].Fvalue.(int64)
 	return value
@@ -155,7 +155,7 @@ func crc32UpdateFromArray(params []interface{}) interface{} {
 	bbWhole := objBB.FieldTable["value"].Fvalue.([]types.JavaByte)
 	offset := params[2].(int64)
 	length := params[3].(int64)
-	bbSubset := bbWhole[offset:length]
+	bbSubset := bbWhole[offset : offset+length]
 
 	// Get current CRC32 value.
 	fldValue := obj.FieldTable["value"]

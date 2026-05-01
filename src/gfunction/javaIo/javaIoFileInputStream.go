@@ -33,7 +33,7 @@ func Load_Io_FileInputStream() {
 	ghelpers.MethodSignatures["java/io/FileInputStream.<init>(Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  initFileInputStreamString,
+			GFunction:  InitFileInputStreamString,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileInputStream.available()I"] =
@@ -155,7 +155,7 @@ func initFileInputStreamFile(params []interface{}) interface{} {
 }
 
 // "java/io/FileInputStream.<init>(Ljava/lang/String;])V"
-func initFileInputStreamString(params []interface{}) interface{} {
+func InitFileInputStreamString(params []interface{}) interface{} {
 
 	// Using the argument path string, open the file for read-only.
 	pathStr := object.GoStringFromStringObject(params[1].(*object.Object))
