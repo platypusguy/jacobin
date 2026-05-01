@@ -1241,3 +1241,52 @@ func TestString_GetBytes_Empty(t *testing.T) {
 		t.Fatalf("expected empty byte array, got len=%d", len(gotBytes))
 	}
 }
+
+func TestString_GetBytes_UTF8(t *testing.T) {
+	globals.InitStringPool()
+	in := "Hello, world!"
+	strObj := object.StringObjectFromGoString(in)
+	charsetObj := object.StringObjectFromGoString("UTF-8")
+	out := getBytesFromString([]interface{}{strObj, charsetObj})
+	arrObj, ok := out.(*object.Object)
+	if !ok {
+		t.Fatalf("getBytesFromString did not return object, got %T", out)
+	}
+	gotBytes := bytesFromByteArrayObject(arrObj)
+	if string(gotBytes) != in {
+		t.Fatalf("byte content mismatch: got %q want %q", string(gotBytes), in)
+	}
+}
+
+func TestString_GetBytes_CaseInsensitive(t *testing.T) {
+	globals.InitStringPool()
+	in := "Hello, world!"
+	strObj := object.StringObjectFromGoString(in)
+	charsetObj := object.StringObjectFromGoString("utf-8")
+	out := getBytesFromString([]interface{}{strObj, charsetObj})
+	arrObj, ok := out.(*object.Object)
+	if !ok {
+		t.Fatalf("getBytesFromString did not return object, got %T", out)
+	}
+	gotBytes := bytesFromByteArrayObject(arrObj)
+	if string(gotBytes) != in {
+		t.Fatalf("byte content mismatch: got %q want %q", string(gotBytes), in)
+	}
+}
+
+func TestString_GetBytes_UnsupportedEncoding(t *testing.T) {
+	globals.InitStringPool()
+	strObj := object.StringObjectFromGoString("Hello")
+	charsetObj := object.StringObjectFromGoString("UTF-16")
+	out := getBytesFromString([]interface{}{strObj, charsetObj})
+	errBlk, ok := out.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected GErrBlk, got %T", out)
+	}
+	if errBlk.ExceptionType != excNames.UnsupportedEncodingException {
+		t.Fatalf("expected ExceptionType %d, got %d", excNames.UnsupportedEncodingException, errBlk.ExceptionType)
+	}
+	if !strings.Contains(errBlk.ErrMsg, "UTF-16") {
+		t.Fatalf("error message mismatch: %s", errBlk.ErrMsg)
+	}
+}

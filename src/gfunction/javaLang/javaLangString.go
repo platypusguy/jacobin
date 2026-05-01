@@ -340,7 +340,7 @@ func Load_Lang_String() {
 	ghelpers.MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  getBytesFromString,
 		}
 
 	// Not in API: getBytes([BIIBI)V
@@ -1118,6 +1118,14 @@ func sprintf(params []interface{}) interface{} {
 func getBytesFromString(params []interface{}) interface{} {
 	// params[0] = reference string with byte array to be returned
 	bytes := object.JavaByteArrayFromStringObject(params[0].(*object.Object))
+	if len(params) > 1 {
+		obj := params[1].(*object.Object)
+		charsetName := object.GoStringFromStringObject(obj)
+		if strings.ToUpper(charsetName) != "UTF-8" {
+			errMsg := fmt.Sprintf("getBytesFromString: expected UTF-8, observed: %s", charsetName)
+			return ghelpers.GetGErrBlk(excNames.UnsupportedEncodingException, errMsg)
+		}
+	}
 	return object.MakePrimitiveObject("[B", types.ByteArray, bytes)
 }
 
