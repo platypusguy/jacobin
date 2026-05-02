@@ -9,25 +9,16 @@ package object
 import (
 	"jacobin/src/stringPool"
 	"jacobin/src/types"
-	"strings"
 	"unicode"
 	"unsafe"
 )
 
 func GoStringFromJavaByteArray(jbarr []types.JavaByte) string {
-	var sb strings.Builder
-	for _, b := range jbarr {
-		sb.WriteByte(byte(b))
-	}
-	return sb.String()
+	return string(GoByteArrayFromJavaByteArray(jbarr))
 }
 
 func JavaByteArrayFromGoString(str string) []types.JavaByte {
-	jbarr := make([]types.JavaByte, len(str))
-	for i, b := range str {
-		jbarr[i] = types.JavaByte(b)
-	}
-	return jbarr
+	return JavaByteArrayFromGoByteArray([]byte(str))
 }
 
 func JavaByteArrayFromGoByteArray(gbarr []byte) []types.JavaByte {
