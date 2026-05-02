@@ -238,3 +238,22 @@ func TestStringBuilder_AppendMultiByte(t *testing.T) {
 		t.Errorf("expected 3 bytes for €, got %d", len(gotBytes))
 	}
 }
+
+func TestStringBuilder_CharAt_Negative(t *testing.T) {
+	globals.InitStringPool()
+	sbObj := object.MakeEmptyObject()
+	// Create a StringBuilder with a byte that has the sign bit set (0x80 = 128)
+	sbObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{types.JavaByte(-128)}}
+	sbObj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: int64(16)}
+	sbObj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: int64(1)}
+
+	res := stringBuilderCharAt([]any{sbObj, int64(0)})
+	charVal, ok := res.(int64)
+	if !ok {
+		t.Fatalf("expected int64, got %T", res)
+	}
+
+	if charVal != 128 {
+		t.Errorf("expected char value 128, got %d", charVal)
+	}
+}

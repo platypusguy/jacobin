@@ -591,7 +591,7 @@ func stringBuilderCharAt(params []any) any {
 		errMsg := fmt.Sprintf("stringBuilderCharAt: Index value (%d) exceeds the byte array size (%d)", ix, len(bytes))
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	return int64(bytes[ix])
+	return int64(uint8(bytes[ix]))
 }
 
 // Removes the characters in a substring of the StringBuilder object. The substring begins at the specified start
