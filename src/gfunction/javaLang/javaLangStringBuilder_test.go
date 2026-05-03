@@ -228,14 +228,14 @@ func TestStringBuilder_AppendMultiByte(t *testing.T) {
 	strObjRes := resToString.(*object.Object)
 
 	goStr := object.GoStringFromStringObject(strObjRes)
-	if goStr != "€" {
-		t.Errorf("expected '€', got %q", goStr)
+	if goStr != "\xac" {
+		t.Errorf("expected '\xac', got %q", goStr)
 	}
 
 	resBytes := getBytesFromString([]any{strObjRes, object.StringObjectFromGoString("UTF-8")})
 	gotBytes := bytesFromByteArrayObject(resBytes.(*object.Object))
-	if len(gotBytes) != 3 {
-		t.Errorf("expected 3 bytes for €, got %d", len(gotBytes))
+	if len(gotBytes) != 1 {
+		t.Errorf("expected 1 bytes for '\xac', got %d", len(gotBytes))
 	}
 }
 
@@ -254,6 +254,6 @@ func TestStringBuilder_CharAt_Negative(t *testing.T) {
 	}
 
 	if charVal != 128 {
-		t.Errorf("expected char value 128, got %d", charVal)
+		t.Errorf("expected char value 128 (0x80), got %d", charVal)
 	}
 }

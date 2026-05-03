@@ -564,8 +564,8 @@ func stringBuilderAppendChar(params []any) any {
 	var parmArray []types.JavaByte
 	switch params[1].(type) {
 	case int64: // char
-		r := rune(params[1].(int64) & 0xFFFF)
-		parmArray = object.JavaByteArrayFromGoString(string(r))
+		utf8Byte := byte(params[1].(int64))
+		parmArray = []types.JavaByte{types.JavaByte(utf8Byte)}
 	default:
 		errMsg := fmt.Sprintf("stringBuilderAppendChar: Parameter type (%T) is illegal", params[1])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -591,7 +591,7 @@ func stringBuilderCharAt(params []any) any {
 		errMsg := fmt.Sprintf("stringBuilderCharAt: Index value (%d) exceeds the byte array size (%d)", ix, len(bytes))
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	return int64(uint8(bytes[ix]))
+	return int64(uint16(uint8(bytes[ix]))) // uint8() prevents int8 sign-extension before widening to uint16
 }
 
 // Removes the characters in a substring of the StringBuilder object. The substring begins at the specified start
