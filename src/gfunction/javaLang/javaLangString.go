@@ -883,7 +883,8 @@ func newStringFromChars(params []interface{}) interface{} {
 
 	var bytes []types.JavaByte
 	for _, ii := range ints {
-		bytes = append(bytes, types.JavaByte(ii&0xFF))
+		r := rune(ii & 0xFFFF)
+		bytes = append(bytes, object.JavaByteArrayFromGoString(string(r))...)
 	}
 	object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	return nil
@@ -926,11 +927,11 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 	iarray = iarray[ssStart : ssStart+ssLen]
 	var bytes []types.JavaByte
 	for _, ii := range iarray {
-		bytes = append(bytes, types.JavaByte(ii&0xFF))
+		r := rune(ii & 0xFFFF)
+		bytes = append(bytes, object.JavaByteArrayFromGoString(string(r))...)
 	}
 	obj := object.StringObjectFromJavaByteArray(bytes)
 	return obj
-
 }
 
 // New String (consisting of JavaBytes) from String, StringBuilder, or StringBuffer.
@@ -1464,8 +1465,8 @@ func valueOfBoolean(params []interface{}) interface{} {
 func valueOfChar(params []interface{}) interface{} {
 	// params[0]: input char
 	value := params[0].(int64)
-	str := fmt.Sprintf("%c", value)
-	obj := object.StringObjectFromGoString(str)
+	r := rune(value & 0xFFFF)
+	obj := object.StringObjectFromGoString(string(r))
 	return obj
 }
 
@@ -1474,11 +1475,12 @@ func valueOfCharArray(params []interface{}) interface{} {
 	// params[0]: input char array
 	propObj := params[0].(*object.Object)
 	intArray := propObj.FieldTable["value"].Fvalue.([]int64)
-	var str string
+	var bytes []types.JavaByte
 	for _, ch := range intArray {
-		str += fmt.Sprintf("%c", ch)
+		r := rune(ch & 0xFFFF)
+		bytes = append(bytes, object.JavaByteArrayFromGoString(string(r))...)
 	}
-	obj := object.StringObjectFromGoString(str)
+	obj := object.StringObjectFromJavaByteArray(bytes)
 	return obj
 }
 
@@ -1505,9 +1507,12 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	}
 
 	// Compute substring.
-	str := wholeString[ssOffset : ssOffset+ssCount]
-
-	obj := object.StringObjectFromGoString(str)
+	var bytes []types.JavaByte
+	for _, ch := range intArray[ssOffset : ssOffset+ssCount] {
+		r := rune(ch & 0xFFFF)
+		bytes = append(bytes, object.JavaByteArrayFromGoString(string(r))...)
+	}
+	obj := object.StringObjectFromJavaByteArray(bytes)
 	return obj
 }
 

@@ -4245,7 +4245,9 @@ func ldc(fr *frames.Frame, width int) int {
 	case classloader.IS_STRUCT_ADDR:
 		push(fr, CPe.AddrVal)
 	case classloader.IS_STRING_ADDR: // returns a string object whose "value" field is a byte array
-		stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
+		// Watch out for the special 0xC0 0x80 sequence of bytes.
+		mutf8 := decodeModifiedUTF8([]byte(*CPe.StringVal))
+		stringAddr := object.StringObjectFromGoString(string(mutf8))
 		push(fr, stringAddr)
 	case classloader.IS_CLASS_REF:
 		// Loading a class reference via LDC is always a push of a reference to

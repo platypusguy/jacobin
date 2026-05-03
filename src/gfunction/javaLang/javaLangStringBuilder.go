@@ -561,11 +561,11 @@ func stringBuilderAppendChar(params []any) any {
 	objBase := params[0].(*object.Object)
 	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
 
-	var parmArray = make([]types.JavaByte, 1)
+	var parmArray []types.JavaByte
 	switch params[1].(type) {
 	case int64: // char
-		bb := types.JavaByte(params[1].(int64))
-		parmArray[0] = bb
+		utf8Byte := byte(params[1].(int64))
+		parmArray = []types.JavaByte{types.JavaByte(utf8Byte)}
 	default:
 		errMsg := fmt.Sprintf("stringBuilderAppendChar: Parameter type (%T) is illegal", params[1])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -591,7 +591,7 @@ func stringBuilderCharAt(params []any) any {
 		errMsg := fmt.Sprintf("stringBuilderCharAt: Index value (%d) exceeds the byte array size (%d)", ix, len(bytes))
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	return int64(bytes[ix])
+	return int64(uint16(uint8(bytes[ix]))) // uint8() prevents int8 sign-extension before widening to uint16
 }
 
 // Removes the characters in a substring of the StringBuilder object. The substring begins at the specified start
@@ -784,10 +784,11 @@ func stringBuilderInsertChar(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
-	var bb types.JavaByte
+	var parmArray []types.JavaByte
 	switch params[2].(type) {
 	case int64: // char
-		bb = types.JavaByte(params[2].(int64))
+		r := rune(params[2].(int64) & 0xFFFF)
+		parmArray = object.JavaByteArrayFromGoString(string(r))
 	default:
 		errMsg := fmt.Sprintf("stringBuilderInsertChar: Parameter type (%T) is illegal", params[1])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -799,7 +800,7 @@ func stringBuilderInsertChar(params []any) any {
 	if ix > 0 {
 		copy(newArray, byteArray[0:ix])
 	}
-	newArray = append(newArray, bb)
+	newArray = append(newArray, parmArray...)
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
 
@@ -931,9 +932,7 @@ func stringBuilderSetLength(params []any) any {
 func stringBuilderToString(params []any) any {
 	objBase := params[0].(*object.Object)
 	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
-	goStr := object.GoStringFromJavaByteArray(byteArray)
-	objOut := object.StringObjectFromGoString(goStr)
-	return objOut
+	return object.StringObjectFromJavaByteArray(byteArray)
 }
 
 // Return the StringBuilder object capacity.

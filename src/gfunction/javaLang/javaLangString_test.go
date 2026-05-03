@@ -1290,3 +1290,33 @@ func TestString_GetBytes_UnsupportedEncoding(t *testing.T) {
 		t.Fatalf("error message mismatch: %s", errBlk.ErrMsg)
 	}
 }
+
+func TestString_GetBytes_NullByte(t *testing.T) {
+	globals.InitStringPool()
+	// Test a string containing a null byte: "" + "\000"
+	in := "\x00"
+	strObj := object.StringObjectFromGoString(in)
+	out := getBytesFromString([]interface{}{strObj})
+	arrObj, ok := out.(*object.Object)
+	if !ok {
+		t.Fatalf("getBytesFromString did not return object, got %T", out)
+	}
+	gotBytes := bytesFromByteArrayObject(arrObj)
+	if len(gotBytes) != 1 {
+		t.Fatalf("expected byte array of length 1, got %d", len(gotBytes))
+	}
+	if gotBytes[0] != 0 {
+		t.Fatalf("expected byte 0x00, got 0x%02x", gotBytes[0])
+	}
+}
+
+func TestString_JavaByteArrayFromGoString_MultiByte(t *testing.T) {
+	in := "€" // 3 bytes in UTF-8: 0xE2 0x82 0xAC
+	jba := object.JavaByteArrayFromGoString(in)
+	if len(jba) != 3 {
+		t.Fatalf("expected length 3, got %d", len(jba))
+	}
+	if byte(jba[0]) != 0xE2 || byte(jba[1]) != 0x82 || byte(jba[2]) != 0xAC {
+		t.Fatalf("expected E2 82 AC, got %02X %02X %02X", byte(jba[0]), byte(jba[1]), byte(jba[2]))
+	}
+}

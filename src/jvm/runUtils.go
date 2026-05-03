@@ -1025,3 +1025,24 @@ func TraceObject(f *frames.Frame, opStr string, obj *object.Object) {
 		trace.Trace(traceInfo)
 	}
 }
+
+/*
+In Java, the byte sequence 0xC0 0x80 is famously used to represent the null character (\u0000) within Modified UTF-8.
+
+While standard UTF-8 encodes \u0000 as a single byte (0x00), Java’s modified version uses this two-byte "overlong"
+sequence for specific practical and technical reasons.
+*/
+func decodeModifiedUTF8(baIn []byte) []byte {
+	var baOut []byte
+	for i := 0; i < len(baIn); {
+		// Modified UTF-8 null: 0xC0 0x80 → 0x00
+		if baIn[i] == 0xC0 && i+1 < len(baIn) && baIn[i+1] == 0x80 {
+			baOut = append(baOut, 0x00)
+			i += 2
+		} else {
+			baOut = append(baOut, baIn[i])
+			i++
+		}
+	}
+	return baOut
+}
