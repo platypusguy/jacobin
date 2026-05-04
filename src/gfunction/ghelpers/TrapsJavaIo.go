@@ -20,12 +20,6 @@ func Load_Traps_Java_Io() {
 			GFunction:  TrapClass,
 		}
 
-	MethodSignatures["java/io/ByteArrayOutputStream.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  TrapClass,
-		}
-
 	MethodSignatures["java/io/CharArrayReader.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,

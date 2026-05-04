@@ -397,3 +397,46 @@ func TestFisClose_NoFileHandle(t *testing.T) {
 		t.Errorf("Expected IOException, got %v", errObj.ExceptionType)
 	}
 }
+
+func TestFisTransferTo_Success(t *testing.T) {
+	content := []byte("transfer to test content")
+	path, cleanup := makeTempFile(t, content)
+	defer cleanup()
+
+	fisObj := newFileInputStreamObject()
+	fisObj.FieldTable[ghelpers.FileHandle] = object.Field{
+		Ftype:  ghelpers.FileHandle,
+		Fvalue: mustOpenFile(t, path),
+	}
+	defer fisObj.FieldTable[ghelpers.FileHandle].Fvalue.(*os.File).Close()
+
+	// Load ByteArrayOutputStream to register its gfunctions
+	Load_Io_ByteArrayOutputStream()
+
+	// Create ByteArrayOutputStream object
+	baosObj := &object.Object{
+		KlassName:  object.StringPoolIndexFromGoString("java/io/ByteArrayOutputStream"),
+		FieldTable: make(map[string]object.Field),
+	}
+	// Initialize it
+	ByteArrayOutputStreamInit([]interface{}{baosObj})
+
+	// Perform transferTo
+	params := []interface{}{fisObj, baosObj}
+	res := fisTransferTo(params)
+
+	transferred, ok := res.(int64)
+	if !ok {
+		t.Fatalf("Expected int64, got %T: %v", res, res)
+	}
+	if transferred != int64(len(content)) {
+		t.Errorf("Expected %d bytes transferred, got %d", len(content), transferred)
+	}
+
+	// Verify content in baos
+	resString := ByteArrayOutputStreamToString([]interface{}{baosObj})
+	gotString := object.GoStringFromStringObject(resString.(*object.Object))
+	if gotString != string(content) {
+		t.Errorf("Content mismatch: got %q want %q", gotString, string(content))
+	}
+}
