@@ -12,6 +12,7 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
+	"jacobin/src/stringPool"
 	"jacobin/src/types"
 	"os"
 )
@@ -70,6 +71,12 @@ func Load_Io_FileInputStream() {
 		ghelpers.GMeth{
 			ParamSlots: 3,
 			GFunction:  fisReadByteArrayOffset,
+		}
+
+	ghelpers.MethodSignatures["java/io/FileInputStream.transferTo(Ljava/io/OutputStream;)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  fisTransferTo,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileInputStream.skip(J)J"] =
@@ -323,6 +330,67 @@ func fisReadByteArrayOffset(params []interface{}) interface{} {
 
 	// Return the number of bytes.
 	return int64(nbytes)
+}
+
+// java/io/FileInputStream.transferTo(Ljava/io/OutputStream;)J
+func fisTransferTo(params []interface{}) interface{} {
+	if object.IsNull(params[1]) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "transferTo: out is null")
+	}
+
+	self := params[0].(*object.Object)
+	out := params[1].(*object.Object)
+
+	fld, ok := self.FieldTable[ghelpers.FileHandle]
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IOException, "transferTo: Stream closed")
+	}
+	osFile, ok := fld.Fvalue.(*os.File)
+	if !ok || osFile == nil {
+		return ghelpers.GetGErrBlk(excNames.IOException, "transferTo: Stream closed")
+	}
+
+	// Try to find a write([BII)V method for the output stream
+	outClassName := *(stringPool.GetStringPointer(out.KlassName))
+	specificFQN := outClassName + ".write([BII)V"
+	var writeFunc func([]interface{}) interface{}
+
+	if specificGmeth, ok := ghelpers.MethodSignatures[specificFQN]; ok {
+		writeFunc = specificGmeth.GFunction
+	} else {
+		// Fallback to base OutputStream.write([BII)V if it's a gfunction
+		if baseGmeth, ok := ghelpers.MethodSignatures["java/io/OutputStream.write([BII)V"]; ok {
+			writeFunc = baseGmeth.GFunction
+		}
+	}
+
+	if writeFunc == nil {
+		// If no gfunction found, we can't easily call it from here without a frame
+		return ghelpers.GetGErrBlk(excNames.IOException, "transferTo: No suitable write method found for OutputStream")
+	}
+
+	var transferred int64
+	buf := make([]byte, 8192)
+	for {
+		n, err := osFile.Read(buf)
+		if n > 0 {
+			jba := object.JavaByteArrayFromGoByteArray(buf[:n])
+			res := writeFunc([]interface{}{out, object.MakeArrayFromRawArray(jba), int64(0), int64(n)})
+			if res != nil {
+				// If it returns something, it might be an error block
+				return res
+			}
+			transferred += int64(n)
+		}
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("transferTo: %v", err))
+		}
+	}
+
+	return transferred
 }
 
 // "java/io/FileInputStream.skip(J)J"
