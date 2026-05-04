@@ -2423,6 +2423,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
 		}
+		return RESUME_HERE
 	}
 
 	/* JACOBIN-824: Temporarily commenting out the following lines

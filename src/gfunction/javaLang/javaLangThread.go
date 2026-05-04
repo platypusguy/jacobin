@@ -356,11 +356,13 @@ func threadInitFromPackageConstructor(params []interface{}) any {
 	// Delegate: threadCreateWithRunnableAndName expects [runnable, name]
 	threadInitWithRunnableAndName([]interface{}{th, runnable, name})
 	idField := object.Field{Ftype: types.Int, Fvalue: threadNumberingNext(nil).(int64)}
+	th.ThMutex.Lock()
 	th.FieldTable["ID"] = idField
 
 	tg := object.Field{ // default thread group is the main thread group
 		Ftype: types.Ref, Fvalue: threadGroup}
 	th.FieldTable["threadgroup"] = tg
+	th.ThMutex.Unlock()
 	return nil
 }
 
@@ -404,7 +406,9 @@ func ThreadInitWithName(params []interface{}) any {
 		errMsg := "ThreadInitWithName: Expected name parameter to be a String"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	t.ThMutex.Lock()
 	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
+	t.ThMutex.Unlock()
 
 	return nil
 }
@@ -424,12 +428,15 @@ func threadInitWithRunnable(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	runClassName := object.GoStringFromStringPoolIndex(runnable.KlassName)
+
 	ret := setUpRunnable(runnable, runClassName)
 	if ret != nil {
 		return ret
 	}
 
+	t.ThMutex.Lock()
 	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
+	t.ThMutex.Unlock()
 
 	return nil
 }
@@ -467,12 +474,13 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
+	t.ThMutex.Lock()
 	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
-
 	t.FieldTable["name"] = object.Field{
 		Ftype:  types.ByteArray,
 		Fvalue: name}
+	t.ThMutex.Unlock()
 
 	return nil
 }
@@ -509,8 +517,10 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
+	t.ThMutex.Lock()
 	t.FieldTable["threadgroup"] = object.Field{Ftype: types.Ref, Fvalue: threadGroup}
 	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
+	t.ThMutex.Unlock()
 
 	return nil
 }
@@ -528,7 +538,7 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a Thread object"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	populateThreadObject(t)
+	populateThreadObject(t) // uses mutex
 
 	threadGroup, ok := params[1].(*object.Object)
 	if !ok {
@@ -546,11 +556,12 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 		return ret
 	}
 
+	t.ThMutex.Lock()
 	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["threadgroup"] = object.Field{
 		Ftype: types.Ref, Fvalue: threadGroup}
-
+	t.ThMutex.Unlock()
 	return nil
 }
 
@@ -590,12 +601,15 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 		errMsg := "threadInitWithThreadGroupRunnableAndName: Expected parameter to be a String"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+
+	t.ThMutex.Lock()
 	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["threadgroup"] = object.Field{
 		Ftype: types.Ref, Fvalue: threadGroup}
 	t.FieldTable["name"] = object.Field{
 		Ftype: types.ByteArray, Fvalue: name}
+	t.ThMutex.Unlock()
 
 	return nil
 }

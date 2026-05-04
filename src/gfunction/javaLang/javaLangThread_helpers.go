@@ -166,7 +166,9 @@ func waitForTermination(waitingThread, targetThread *object.Object, maxTime int6
 	}
 
 	start := time.Now().UnixMilli()
+	waitingThread.ThMutex.RLock()
 	thID := int32(waitingThread.FieldTable["ID"].Fvalue.(int64))
+	waitingThread.ThMutex.RUnlock()
 
 	for {
 		// Get current target thread state.
@@ -233,7 +235,7 @@ func threadNumbering(_ []any) any { // initialize thread numbering
 func threadNumberingNext(_ []any) any {
 	threadNumberingMutex.Lock()
 	threadNumber += 1
-	//trace.Trace(fmt.Sprintf("threadNumberingNext: thread numbering incremented to %d", threadNumber))
+	// trace.Trace(fmt.Sprintf("threadNumberingNext: thread numbering incremented to %d", threadNumber))
 	threadNumberingMutex.Unlock()
 	return threadNumber
 }

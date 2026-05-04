@@ -39,13 +39,13 @@ import (
     even though it uses more RAM.
 */
 
-//const ( // the ArrayTypes
+// const ( // the ArrayTypes
 //	ERROR = 0
 //	FLOAT = 1
 //	INT   = 2
 //	BYTE  = 3
 //	REF   = 4 // arrays of object references
-//)
+// )
 
 // the primitive types as specified in the
 // JVM instructions for arrays
@@ -65,7 +65,7 @@ const (
 // converts one the of the JDK values indicating the primitive
 // used in the elements of an array into one of the values used
 // by Jacobin in array creation. Returns zero on error.
-//func JdkArrayTypeToJacobinType(jdkType int) int {
+// func JdkArrayTypeToJacobinType(jdkType int) int {
 //	switch jdkType {
 //	case T_BOOLEAN, T_BYTE:
 //		return BYTE
@@ -79,7 +79,7 @@ const (
 //	default: // this would indicate an error
 //		return 0
 //	}
-//}
+// }
 
 // identifies the type of entry that the array is made up of
 // i.e., primitives or specific references. Note if the array is a
@@ -248,7 +248,9 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 
 // ArrayLength returns the length of the underlying array in field "value".
 func ArrayLength(arrayRef *Object) int64 {
+	arrayRef.ThMutex.RLock()
 	fld := arrayRef.FieldTable["value"]
+	arrayRef.ThMutex.RUnlock()
 	arrayType := fld.Ftype
 
 	switch arrayType {
