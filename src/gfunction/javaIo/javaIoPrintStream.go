@@ -71,7 +71,7 @@ func Load_Io_PrintStream() {
 	ghelpers.MethodSignatures["java/io/PrintStream.flush()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  PrintFlush,
 		}
 
 	ghelpers.MethodSignatures["java/io/PrintStream.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"] =
@@ -344,6 +344,19 @@ func Load_Io_PrintStream() {
 			GFunction:  printstreamWriteFromByteArray,
 		}
 
+}
+
+// "java/io/PrintStream.flush()V"
+func PrintFlush(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintChar: Expected io.Writer, observed %T", params[0])
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	if f, ok := writer.(interface{ Flush() error }); ok {
+		_ = f.Flush()
+	}
+	return nil
 }
 
 // java/io/PrintStream.write([B)V
