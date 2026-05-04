@@ -83,6 +83,7 @@ type Globals struct {
 
 	// ---- list of addresses of arrays, see jvm/arrays.go for info ----
 	ArrayAddressList *list.List
+	ArrayAddressLock sync.RWMutex
 
 	// ----- Byte cache for java.base.jmod
 	JmodBaseBytes []byte

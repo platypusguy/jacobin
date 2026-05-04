@@ -3363,7 +3363,9 @@ func doNewarray(fr *frames.Frame, _ int64) int {
 
 	arrayPtr := object.Make1DimArray(uint8(arrayType), size)
 	g := globals.GetGlobalRef()
+	g.ArrayAddressLock.Lock()
 	g.ArrayAddressList.PushFront(arrayPtr)
+	g.ArrayAddressLock.Unlock()
 	push(fr, arrayPtr)
 	return 2 // 1 for the array type + 1 for next byte
 }
@@ -3393,7 +3395,9 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 
 	arrayPtr := object.Make1DimRefArray(refTypeName, size)
 	g := globals.GetGlobalRef()
+	g.ArrayAddressLock.Lock()
 	g.ArrayAddressList.PushFront(arrayPtr)
+	g.ArrayAddressLock.Unlock()
 	push(fr, arrayPtr)
 	return 3 // 2 for RefTypeSlot + 1 for next bytecode
 }
