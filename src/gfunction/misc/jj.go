@@ -68,6 +68,12 @@ func Load_jj() {
 			ParamSlots: 0,
 			GFunction:  jjGetProgramName,
 		}
+
+	ghelpers.MethodSignatures["jj._panic()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  jjPanic,
+		}
 }
 
 func jjStringifyScalar(ftype string, fvalue any) *object.Object {
@@ -375,4 +381,12 @@ func jjGetProgramName([]interface{}) interface{} {
 	glob := globals.GetGlobalRef()
 	str := glob.JacobinName
 	return object.StringObjectFromGoString(str)
+}
+
+func jjPanic([]interface{}) interface{} {
+	trace.Warning("jjPanic: Will cause a Go runtime divide by zero panic")
+	var zero = 0
+	zero = 1 / zero
+	errMsg := "jjPanic: What??? No splash???"
+	return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 }
