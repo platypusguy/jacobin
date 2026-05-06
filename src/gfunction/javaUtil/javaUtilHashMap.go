@@ -46,6 +46,12 @@ func Load_Util_Hash_Map() {
 			GFunction:  hashmapInit,
 		}
 
+	ghelpers.MethodSignatures["java/util/HashMap.<init>(Ljava/util/Map;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/util/HashMap.clear()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -64,7 +70,7 @@ func Load_Util_Hash_Map() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-	ghelpers.MethodSignatures["java/util/HashMap.computeIfAbsent(Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;"] =
+	ghelpers.MethodSignatures["java/util/HashMap.computeIfAbsent(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
@@ -88,9 +94,21 @@ func Load_Util_Hash_Map() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/util/HashMap.equals(Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/util/HashMap.entrySet()Ljava/util/Set;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/HashMap.forEach(Ljava/util/function/BiConsumer;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
@@ -98,6 +116,18 @@ func Load_Util_Hash_Map() {
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  hashmapGet,
+		}
+
+	ghelpers.MethodSignatures["java/util/HashMap.getOrDefault(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  hashmapGetOrDefault,
+		}
+
+	ghelpers.MethodSignatures["java/util/HashMap.hashCode()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/HashMap.isEmpty()Z"] =
@@ -112,7 +142,7 @@ func Load_Util_Hash_Map() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-	ghelpers.MethodSignatures["java/util/HashMap.merge(Ljava/lang/Object;Ljava/lang/Object;Ljava/util/function/BiFunction;)V"] =
+	ghelpers.MethodSignatures["java/util/HashMap.merge(Ljava/lang/Object;Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
@@ -136,10 +166,40 @@ func Load_Util_Hash_Map() {
 			GFunction:  hashmapPutAll,
 		}
 
+	ghelpers.MethodSignatures["java/util/HashMap.putIfAbsent(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/util/HashMap.remove(Ljava/lang/Object;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  hashmapRemove,
+		}
+
+	ghelpers.MethodSignatures["java/util/HashMap.remove(Ljava/lang/Object;Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/HashMap.replace(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/HashMap.replace(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/HashMap.replaceAll(Ljava/util/function/BiFunction;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/HashMap.size()I"] =
@@ -280,6 +340,47 @@ func hashmapGet(params []interface{}) interface{} {
 	value, exists := hm[key]
 	if !exists {
 		return object.Null
+	}
+
+	return value
+}
+
+// Get a hash map entry. If it is not present, return the default value.
+func hashmapGetOrDefault(params []interface{}) interface{} {
+	if len(params) < 3 {
+		errMsg := "hashmapGetOrDefault: Requires 3 parameters: HashMap, key, and default value"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	this, ok := params[0].(*object.Object)
+	if !ok || this == nil {
+		errMsg := "hashmapGetOrDefault: The first parameter is not an object"
+		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
+	}
+
+	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
+		errMsg := "hashmapGetOrDefault: The object is not a HashMap"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Extract the key.
+	key, ok := _getKey(params[1])
+	if !ok {
+		return key
+	}
+
+	// Get the current hash map.
+	fld := this.FieldTable[fieldNameMap]
+	hm, ok := fld.Fvalue.(types.DefHashMap)
+	if !ok {
+		errMsg := "hashmapGetOrDefault: The HashMap is not present"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Retrieve the field associated with the key
+	value, exists := hm[key]
+	if !exists {
+		return params[2]
 	}
 
 	return value
