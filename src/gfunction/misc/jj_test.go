@@ -9,6 +9,7 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -522,9 +523,27 @@ func TestJjTraceInst(t *testing.T) {
 
 func TestJjSubProcess_Success(t *testing.T) {
 	trace.Init()
+
+	// "echo" is a cmd.exe built-in on Windows, requiring the shell to invoke it.
+	// On POSIX, we can call echo directly as a subprocess.
+	var cmdLine []*object.Object
+	if runtime.GOOS == "windows" {
+		cmdLine = []*object.Object{
+			object.StringObjectFromGoString("cmd.exe"),
+			object.StringObjectFromGoString("/C"),
+			object.StringObjectFromGoString("echo"),
+			object.StringObjectFromGoString("hello"),
+		}
+	} else {
+		cmdLine = []*object.Object{
+			object.StringObjectFromGoString("echo"),
+			object.StringObjectFromGoString("hello"),
+		}
+	}
+
 	subpObj := &object.Object{
 		FieldTable: map[string]object.Field{
-			"commandLine": {Fvalue: []*object.Object{object.StringObjectFromGoString("echo"), object.StringObjectFromGoString("hello")}},
+			"commandLine": {Fvalue: cmdLine},
 			"classpath":   {Fvalue: []*object.Object{}},
 			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
 			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
@@ -568,9 +587,27 @@ func TestJjSubProcess_Failure(t *testing.T) {
 
 func TestJjSubProcess_ExitError(t *testing.T) {
 	trace.Init()
+
+	// Use a command that is guaranteed to fail with a non-zero exit code
+	// on each platform. "ls" is POSIX-only; on Windows we use "dir" via cmd.exe.
+	var cmdLine []*object.Object
+	if runtime.GOOS == "windows" {
+		cmdLine = []*object.Object{
+			object.StringObjectFromGoString("cmd.exe"),
+			object.StringObjectFromGoString("/C"),
+			object.StringObjectFromGoString("dir"),
+			object.StringObjectFromGoString("C:\\nonexistentdirectory"),
+		}
+	} else {
+		cmdLine = []*object.Object{
+			object.StringObjectFromGoString("ls"),
+			object.StringObjectFromGoString("/nonexistentdirectory"),
+		}
+	}
+
 	subpObj := &object.Object{
 		FieldTable: map[string]object.Field{
-			"commandLine": {Fvalue: []*object.Object{object.StringObjectFromGoString("ls"), object.StringObjectFromGoString("/nonexistentdirectory")}},
+			"commandLine": {Fvalue: cmdLine},
 			"classpath":   {Fvalue: []*object.Object{}},
 			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
 			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
@@ -579,7 +616,6 @@ func TestJjSubProcess_ExitError(t *testing.T) {
 	params := []interface{}{subpObj}
 	exitCode := jjSubProcess(params)
 
-	// ls /nonexistentdirectory usually exits with 2
 	if exitCode == 0 {
 		t.Errorf("Expected non-zero exit code, got %v", exitCode)
 	}
@@ -587,9 +623,25 @@ func TestJjSubProcess_ExitError(t *testing.T) {
 
 func TestJjSubProcess_Classpath(t *testing.T) {
 	trace.Init()
+
+	// "env" prints the environment on POSIX.
+	// On Windows, "cmd.exe /C set" is the equivalent — it also outputs KEY=VALUE lines.
+	var cmdLine []*object.Object
+	if runtime.GOOS == "windows" {
+		cmdLine = []*object.Object{
+			object.StringObjectFromGoString("cmd.exe"),
+			object.StringObjectFromGoString("/C"),
+			object.StringObjectFromGoString("set"),
+		}
+	} else {
+		cmdLine = []*object.Object{
+			object.StringObjectFromGoString("env"),
+		}
+	}
+
 	subpObj := &object.Object{
 		FieldTable: map[string]object.Field{
-			"commandLine": {Fvalue: []*object.Object{object.StringObjectFromGoString("env")}},
+			"commandLine": {Fvalue: cmdLine},
 			"classpath":   {Fvalue: []*object.Object{object.StringObjectFromGoString("test_cp")}},
 			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
 			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
