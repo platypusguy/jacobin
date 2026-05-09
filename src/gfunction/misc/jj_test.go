@@ -2,6 +2,7 @@ package misc
 
 import (
 	"io"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
@@ -321,24 +322,12 @@ func TestJjDumpObject_InvalidObject(t *testing.T) {
 	objTitle := object.StringObjectFromGoString("Test Object")
 	params := []interface{}{nil, objTitle, int64(2)}
 
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic for invalid object")
-		}
-	}()
-
 	_ = jjDumpObject(params)
 }
 
 func TestJjDumpObject_InvalidTitle(t *testing.T) {
 	obj := &object.Object{}
 	params := []interface{}{obj, nil, int64(2)}
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic for invalid title")
-		}
-	}()
 
 	_ = jjDumpObject(params)
 }
@@ -348,11 +337,269 @@ func TestJjDumpObject_InvalidIndent(t *testing.T) {
 	objTitle := object.StringObjectFromGoString("Test Object")
 	params := []interface{}{obj, objTitle, nil}
 
+	_ = jjDumpObject(params)
+}
+
+func TestJjStringifyScalar_ByteTypes(t *testing.T) {
+	// types.JavaByte
+	res1 := object.GoStringFromStringObject(jjStringifyScalar(types.Byte, types.JavaByte(0x12)))
+	if res1 != "0x12" {
+		t.Errorf("Expected 0x12, got %s", res1)
+	}
+	// int64
+	res2 := object.GoStringFromStringObject(jjStringifyScalar(types.Byte, int64(0x34)))
+	if res2 != "0x34" {
+		t.Errorf("Expected 0x34, got %s", res2)
+	}
+	// default
+	res3 := object.GoStringFromStringObject(jjStringifyScalar(types.Byte, "not-a-byte"))
+	if res3 != "not-a-byte" {
+		t.Errorf("Expected not-a-byte, got %s", res3)
+	}
+}
+
+func TestJjStringifyScalar_JavaString(t *testing.T) {
+	strObj := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+	}
+	result := jjStringifyScalar(types.Ref, strObj)
+	if result != strObj {
+		t.Errorf("Expected same object to be returned for Java String")
+	}
+}
+
+func TestJjStringifyScalar_ByteArrayNull(t *testing.T) {
+	result := jjStringifyScalar(types.ByteArray, object.Null)
+	expected := types.NullString
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected %s, got %s", expected, object.GoStringFromStringObject(result))
+	}
+}
+
+func TestJjGetStaticString_Errors(t *testing.T) {
+	// No params
+	res1 := jjGetStaticString([]interface{}{})
+	if !strings.Contains(object.GoStringFromStringObject(res1.(*object.Object)), "No class object") {
+		t.Errorf("Expected 'No class object', got %v", res1)
+	}
+
+	// Nil class param
+	res2 := jjGetStaticString([]interface{}{nil})
+	if !strings.Contains(object.GoStringFromStringObject(res2.(*object.Object)), "No class object") {
+		t.Errorf("Expected 'No class object', got %v", res2)
+	}
+
+	// Invalid class object
+	res3 := jjGetStaticString([]interface{}{&object.Object{KlassName: types.InvalidStringIndex}})
+	if !strings.Contains(object.GoStringFromStringObject(res3.(*object.Object)), "Invalid class object") {
+		t.Errorf("Expected 'Invalid class object', got %v", res3)
+	}
+
+	// Nil field param
+	classObj := object.StringObjectFromGoString("TestClass")
+	res4 := jjGetStaticString([]interface{}{classObj, nil})
+	if !strings.Contains(object.GoStringFromStringObject(res4.(*object.Object)), "Invalid field is missing or nil") {
+		t.Errorf("Expected 'Invalid field is missing or nil', got %v", res4)
+	}
+
+	// Invalid field object
+	res5 := jjGetStaticString([]interface{}{classObj, &object.Object{KlassName: types.InvalidStringIndex}})
+	if !strings.Contains(object.GoStringFromStringObject(res5.(*object.Object)), "Invalid field object") {
+		t.Errorf("Expected 'Invalid field object', got %v", res5)
+	}
+
+	// Query failure
+	fieldObj := object.StringObjectFromGoString("NonExistentField")
+	res6 := jjGetStaticString([]interface{}{classObj, fieldObj})
+	if !strings.Contains(object.GoStringFromStringObject(res6.(*object.Object)), "failed") {
+		t.Errorf("Expected query failure error, got %v", res6)
+	}
+}
+
+func TestJjGetFieldString_Errors(t *testing.T) {
+	thisObj := &object.Object{FieldTable: make(map[string]object.Field)}
+
+	// Nil field param
+	res1 := jjGetFieldString([]interface{}{thisObj, nil})
+	if !strings.Contains(object.GoStringFromStringObject(res1.(*object.Object)), "Invalid field is missing or nil") {
+		t.Errorf("Expected 'Invalid field is missing or nil', got %v", res1)
+	}
+
+	// Invalid field object
+	res2 := jjGetFieldString([]interface{}{thisObj, &object.Object{KlassName: types.InvalidStringIndex}})
+	if !strings.Contains(object.GoStringFromStringObject(res2.(*object.Object)), "Invalid field object") {
+		t.Errorf("Expected 'Invalid field object', got %v", res2)
+	}
+}
+
+func TestJjDumpStatics_Errors(t *testing.T) {
+	// Nil from object
+	res1 := jjDumpStatics([]interface{}{nil})
+	if !strings.Contains(object.GoStringFromStringObject(res1.(*object.Object)), "Missing from object") {
+		t.Errorf("Expected 'Missing from object', got %v", object.GoStringFromStringObject(res1.(*object.Object)))
+	}
+
+	// Invalid from object
+	res2 := jjDumpStatics([]interface{}{&object.Object{KlassName: types.InvalidStringIndex}})
+	if !strings.Contains(object.GoStringFromStringObject(res2.(*object.Object)), "Invalid from object") {
+		t.Errorf("Expected 'Invalid from object', got %v", object.GoStringFromStringObject(res2.(*object.Object)))
+	}
+}
+
+func TestJjSubProcess_InvalidArgs(t *testing.T) {
+	// Missing subprocess object
+	res1 := jjSubProcess([]interface{}{nil})
+	if _, ok := res1.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk, got %T", res1)
+	}
+
+	// Missing commandLine field
+	subpObj := &object.Object{
+		FieldTable: map[string]object.Field{
+			"classpath": {Fvalue: []*object.Object{}},
+		},
+	}
+	res2 := jjSubProcess([]interface{}{subpObj})
+	if _, ok := res2.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk, got %T", res2)
+	}
+
+	// Empty commandLine field
+	subpObj.FieldTable["commandLine"] = object.Field{Fvalue: []*object.Object{}}
+	res3 := jjSubProcess([]interface{}{subpObj})
+	if _, ok := res3.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk, got %T", res3)
+	}
+}
+
+func TestJjGetProgramName(t *testing.T) {
+	globals.InitGlobals("test")
+	glob := globals.GetGlobalRef()
+	glob.JacobinName = "JacobinTest"
+	result := jjGetProgramName(nil)
+	expected := "JacobinTest"
+	if object.GoStringFromStringObject(result.(*object.Object)) != expected {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjPanic(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Errorf("Expected panic for invalid indent")
+			t.Errorf("The code did not panic")
 		}
 	}()
+	jjPanic(nil)
+}
 
-	_ = jjDumpObject(params)
+func TestJjTraceVerbose(t *testing.T) {
+	globals.TraceVerbose = false
+	params := []interface{}{types.JavaBoolTrue}
+	jjTraceVerbose(params)
+	if !globals.TraceVerbose {
+		t.Errorf("Expected TraceVerbose to be true")
+	}
+	params[0] = types.JavaBoolFalse
+	jjTraceVerbose(params)
+	if globals.TraceVerbose {
+		t.Errorf("Expected TraceVerbose to be false")
+	}
+}
+
+func TestJjTraceInst(t *testing.T) {
+	globals.TraceInst = false
+	params := []interface{}{types.JavaBoolTrue}
+	jjTraceInst(params)
+	if !globals.TraceInst {
+		t.Errorf("Expected TraceInst to be true")
+	}
+	params[0] = types.JavaBoolFalse
+	jjTraceInst(params)
+	if globals.TraceInst {
+		t.Errorf("Expected TraceInst to be false")
+	}
+}
+
+func TestJjSubProcess_Success(t *testing.T) {
+	trace.Init()
+	subpObj := &object.Object{
+		FieldTable: map[string]object.Field{
+			"commandLine": {Fvalue: []*object.Object{object.StringObjectFromGoString("echo"), object.StringObjectFromGoString("hello")}},
+			"classpath":   {Fvalue: []*object.Object{}},
+			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+		},
+	}
+	params := []interface{}{subpObj}
+	exitCode := jjSubProcess(params)
+
+	if exitCode != int64(0) {
+		t.Errorf("Expected exit code 0, got %v", exitCode)
+	}
+
+	stdout := object.GoStringFromStringObject(object.StringObjectFromJavaByteArray(subpObj.FieldTable["stdout"].Fvalue.([]types.JavaByte)))
+	if !strings.Contains(stdout, "hello") {
+		t.Errorf("Expected stdout to contain 'hello', got '%s'", stdout)
+	}
+}
+
+func TestJjSubProcess_Failure(t *testing.T) {
+	trace.Init()
+	subpObj := &object.Object{
+		FieldTable: map[string]object.Field{
+			"commandLine": {Fvalue: []*object.Object{object.StringObjectFromGoString("nonexistentcommand")}},
+			"classpath":   {Fvalue: []*object.Object{}},
+			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+		},
+	}
+	params := []interface{}{subpObj}
+	exitCode := jjSubProcess(params)
+
+	if exitCode != int64(-1) {
+		t.Errorf("Expected exit code -1, got %v", exitCode)
+	}
+
+	stderr := object.GoStringFromStringObject(object.StringObjectFromJavaByteArray(subpObj.FieldTable["stderr"].Fvalue.([]types.JavaByte)))
+	if !strings.Contains(stderr, "jjSubProcess: Process nonexistentcommand failed") {
+		t.Errorf("Expected stderr to contain error message, got '%s'", stderr)
+	}
+}
+
+func TestJjSubProcess_ExitError(t *testing.T) {
+	trace.Init()
+	subpObj := &object.Object{
+		FieldTable: map[string]object.Field{
+			"commandLine": {Fvalue: []*object.Object{object.StringObjectFromGoString("ls"), object.StringObjectFromGoString("/nonexistentdirectory")}},
+			"classpath":   {Fvalue: []*object.Object{}},
+			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+		},
+	}
+	params := []interface{}{subpObj}
+	exitCode := jjSubProcess(params)
+
+	// ls /nonexistentdirectory usually exits with 2
+	if exitCode == 0 {
+		t.Errorf("Expected non-zero exit code, got %v", exitCode)
+	}
+}
+
+func TestJjSubProcess_Classpath(t *testing.T) {
+	trace.Init()
+	subpObj := &object.Object{
+		FieldTable: map[string]object.Field{
+			"commandLine": {Fvalue: []*object.Object{object.StringObjectFromGoString("env")}},
+			"classpath":   {Fvalue: []*object.Object{object.StringObjectFromGoString("test_cp")}},
+			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+		},
+	}
+	params := []interface{}{subpObj}
+	_ = jjSubProcess(params)
+
+	stdout := object.GoStringFromStringObject(object.StringObjectFromJavaByteArray(subpObj.FieldTable["stdout"].Fvalue.([]types.JavaByte)))
+	if !strings.Contains(stdout, "CLASSPATH=test_cp") {
+		t.Errorf("Expected stdout to contain 'CLASSPATH=test_cp', got '%s'", stdout)
+	}
 }

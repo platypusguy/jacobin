@@ -712,19 +712,11 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 		if ret == ERROR_OCCURRED {
 			errMsg := fmt.Sprintf("Check of %s instruction: Invalid bytecode or argument at location %d",
 				BytecodeNames[opcode], PC)
-			status := globals.GetGlobalRef().FuncThrowException(excNames.ClassFormatError, errMsg)
-			if status != true { // will only happen in test
-				globals.InitGlobals("test")
-				return errors.New(errMsg)
-			}
+			return errors.New(errMsg)
 		} else {
 			if ret+PC > len(code) {
 				errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
-				status := globals.GetGlobalRef().FuncThrowException(excNames.ClassFormatError, errMsg)
-				if status != true { // will only happen in test
-					globals.InitGlobals("test")
-					return errors.New(errMsg)
-				}
+				return errors.New(errMsg)
 			}
 			PrevPC = PC
 			PC += ret

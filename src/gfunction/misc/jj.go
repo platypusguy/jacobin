@@ -74,6 +74,18 @@ func Load_jj() {
 			ParamSlots: 0,
 			GFunction:  jjPanic,
 		}
+
+	ghelpers.MethodSignatures["jj._traceInst(Z)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  jjTraceInst,
+		}
+
+	ghelpers.MethodSignatures["jj._traceVerbose(Z)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  jjTraceVerbose,
+		}
 }
 
 func jjStringifyScalar(ftype string, fvalue any) *object.Object {
@@ -229,14 +241,36 @@ func jjGetFieldString(params []interface{}) interface{} {
 }
 
 func jjDumpStatics(params []interface{}) interface{} {
-	fromObj := params[0].(*object.Object)
-	if fromObj == nil || fromObj.KlassName == types.InvalidStringIndex {
+	if len(params) < 1 || params[0] == nil {
+		errMsg := "jjDumpStatics: Missing from object"
+		return object.StringObjectFromGoString(errMsg)
+	}
+	fromObj, ok := params[0].(*object.Object)
+	if !ok || fromObj == nil || fromObj.KlassName == types.InvalidStringIndex {
 		errMsg := fmt.Sprintf("jjDumpStatics: Invalid from object: %T", params[0])
 		return object.StringObjectFromGoString(errMsg)
 	}
 	from := object.ObjectFieldToString(fromObj, "value")
-	selection := params[1].(int64)
-	classNameObj := params[2].(*object.Object)
+
+	if len(params) < 2 || params[1] == nil {
+		errMsg := "jjDumpStatics: Missing selection"
+		return object.StringObjectFromGoString(errMsg)
+	}
+	selection, ok := params[1].(int64)
+	if !ok {
+		errMsg := "jjDumpStatics: Invalid selection"
+		return object.StringObjectFromGoString(errMsg)
+	}
+
+	if len(params) < 3 || params[2] == nil {
+		errMsg := "jjDumpStatics: Missing className object"
+		return object.StringObjectFromGoString(errMsg)
+	}
+	classNameObj, ok := params[2].(*object.Object)
+	if !ok || classNameObj == nil || classNameObj.KlassName == types.InvalidStringIndex {
+		errMsg := fmt.Sprintf("jjDumpStatics: Invalid className object: %T", params[2])
+		return object.StringObjectFromGoString(errMsg)
+	}
 	className := object.ObjectFieldToString(classNameObj, "value")
 
 	statics.DumpStatics(from, selection, className)
@@ -244,10 +278,37 @@ func jjDumpStatics(params []interface{}) interface{} {
 }
 
 func jjDumpObject(params []interface{}) interface{} {
-	this := params[0].(*object.Object)
-	objTitle := params[1].(*object.Object)
+	if len(params) < 1 || params[0] == nil {
+		trace.Error("jjDumpObject: Missing object")
+		return nil
+	}
+	this, ok := params[0].(*object.Object)
+	if !ok || this == nil {
+		trace.Error("jjDumpObject: Invalid object")
+		return nil
+	}
+
+	if len(params) < 2 || params[1] == nil {
+		trace.Error("jjDumpObject: Missing title")
+		return nil
+	}
+	objTitle, ok := params[1].(*object.Object)
+	if !ok || objTitle == nil {
+		trace.Error("jjDumpObject: Invalid title")
+		return nil
+	}
 	title := object.ObjectFieldToString(objTitle, "value")
-	indent := params[2].(int64)
+
+	if len(params) < 3 || params[2] == nil {
+		trace.Error("jjDumpObject: Missing indent")
+		return nil
+	}
+	indent, ok := params[2].(int64)
+	if !ok {
+		trace.Error("jjDumpObject: Invalid indent")
+		return nil
+	}
+
 	this.DumpObject(title, int(indent))
 	return nil
 }
@@ -277,11 +338,25 @@ func jjSubProcess(params []interface{}) interface{} {
 	}
 
 	// Replace the CLASSPATH environment variable if the classpath field is non-empty.
-	cpArray, ok := subpObj.FieldTable["classpath"].Fvalue.([]*object.Object)
+	var cpArray []*object.Object
+	if cpField, ok := subpObj.FieldTable["classpath"]; ok {
+		cpArray, _ = cpField.Fvalue.([]*object.Object)
+	}
+
+	// Build command line.
+	objArray, ok := subpObj.FieldTable["commandLine"].Fvalue.([]*object.Object)
 	if !ok {
-		errMsg := "jjSubProcess: Missing/Misformatted subprocess classpath field"
+		errMsg := "jjSubProcess: Missing/Misformatted subprocess commandLine field"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	strArray := object.GoStringArrayFromStringObjectArray(objArray)
+	if len(strArray) == 0 {
+		errMsg := "jjSubProcess: Nil subprocess commandLine field"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	cmd = exec.Command(strArray[0], strArray[1:]...)
+
 	if len(cpArray) > 0 {
 		cpStrArray := object.GoStringArrayFromStringObjectArray(cpArray)
 
@@ -304,23 +379,6 @@ func jjSubProcess(params []interface{}) interface{} {
 
 		// Update subprocess environment with new classpath.
 		cmd.Env = newEnv
-	}
-
-	// Build command line.
-	objArray, ok := subpObj.FieldTable["commandLine"].Fvalue.([]*object.Object)
-	if !ok {
-		errMsg := "jjSubProcess: Missing/Misformatted subprocess commandLine field"
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	strArray := object.GoStringArrayFromStringObjectArray(objArray)
-	switch len(strArray) {
-	case 0:
-		errMsg := "jjSubProcess: Nil subprocess commandLine field"
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
-	case 1:
-		cmd = exec.Command(strArray[0])
-	default:
-		cmd = exec.Command(strArray[0], strArray[1:]...)
 	}
 
 	// Buffers to capture stdout and stderr
@@ -389,4 +447,28 @@ func jjPanic([]interface{}) interface{} {
 	zero = 1 / zero
 	errMsg := "jjPanic: What??? No splash???"
 	return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+}
+
+func jjTraceInst(params []interface{}) interface{} {
+	flag := params[0].(types.JavaBool)
+	if flag == types.JavaBoolTrue {
+		globals.TraceInst = true
+		trace.Trace("jjTraceInst: begin")
+	} else {
+		globals.TraceInst = false
+		trace.Trace("jjTraceInst: end")
+	}
+	return nil
+}
+
+func jjTraceVerbose(params []interface{}) interface{} {
+	flag := params[0].(types.JavaBool)
+	if flag == types.JavaBoolTrue {
+		globals.TraceVerbose = true
+		trace.Trace("jjTraceVerbose: begin")
+	} else {
+		globals.TraceVerbose = false
+		trace.Trace("jjTraceVerbose: end")
+	}
+	return nil
 }

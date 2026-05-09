@@ -225,3 +225,33 @@ func TestHashMap_ErrorPaths(t *testing.T) {
 		}
 	}
 }
+
+func TestHashMap_GetOrDefault(t *testing.T) {
+	globals.InitStringPool()
+
+	hm := newHashMapObj()
+	hmInit(t, hm)
+
+	k := strKey("key")
+	v := object.StringObjectFromGoString("value")
+	d := object.StringObjectFromGoString("default")
+
+	// 1. Key not present, returns default
+	res := hashmapGetOrDefault([]interface{}{hm, k, d})
+	if res != d {
+		t.Fatalf("expected default value, got %v", res)
+	}
+
+	// 2. Key present, returns value
+	_ = hashmapPut([]interface{}{hm, k, v})
+	res = hashmapGetOrDefault([]interface{}{hm, k, d})
+	if res != v {
+		t.Fatalf("expected stored value, got %v", res)
+	}
+
+	// 3. Error: missing parameters
+	err := hashmapGetOrDefault([]interface{}{hm, k})
+	if geb, ok := err.(*ghelpers.GErrBlk); !ok || geb.ExceptionType != excNames.IllegalArgumentException {
+		t.Fatalf("expected IllegalArgumentException for missing params")
+	}
+}
