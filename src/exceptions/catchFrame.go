@@ -78,8 +78,6 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 			firstTimeThrough = false
 			// Set the current frame = next frame.
 			fr = fr.Next()
-			// Delete current frame.
-			_ = frames.PopFrame(fs)
 		}
 	}
 	return excFrame, excPC
