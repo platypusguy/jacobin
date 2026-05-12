@@ -21,6 +21,7 @@ import (
 	"jacobin/src/frames"
 	"jacobin/src/gfunction"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/opcodes"
@@ -310,7 +311,20 @@ func interpret(fs *list.List) {
 			glob := globals.GetGlobalRef()
 			glob.ErrorGoStack = stack
 			exceptions.ShowPanicCause(r)
-			exceptions.ShowFrameStack(fs)
+
+			// Create a dummy exception object and then load it with
+			// the JVM frame stack entries. Then print those out.
+			exceptionCPname := util.ConvertClassFilenameToInternalFormat(
+				excNames.JVMexceptionNames[excNames.InternalException])
+			throwable, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
+			thro := throwable.(*object.Object)
+			params := []interface{}{fs, thro}
+			_ = javaLang.ThrowableInitNull(params)
+			stackTrace := thro.FieldTable["stackTrace"].Fvalue.(*object.Object)
+			traceEntries := stackTrace.FieldTable["value"].Fvalue.([]*object.Object)
+			exceptions.ShowJVMstackTrace(traceEntries, glob)
+
+			// exceptions.ShowFrameStack(fs)
 			exceptions.ShowGoStackTrace(nil)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}

@@ -229,9 +229,9 @@ func TestThrowableInitNull_SetsFieldsAndStack(t *testing.T) {
 	globPtr.FuncInstantiateClass = InstantiateFillIn
 
 	// Call constructor
-	ret := throwableInitNull([]interface{}{jvmStack, th})
+	ret := ThrowableInitNull([]interface{}{jvmStack, th})
 	if ret != nil {
-		t.Errorf("throwableInitNull returned non-nil: %v", ret)
+		t.Errorf("ThrowableInitNull returned non-nil: %v", ret)
 	}
 
 	// Validate fields

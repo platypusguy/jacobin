@@ -182,6 +182,22 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	stackTrace := throwObj.FieldTable["stackTrace"].Fvalue.(*object.Object)
 	traceEntries := stackTrace.FieldTable["value"].Fvalue.([]*object.Object)
 
+	ShowJVMstackTrace(traceEntries, glob)
+
+	if !glob.StrictJDK {
+		// the next statement disables showing the line that identifies
+		// the cause of a golang panic, because if we got here, there
+		// was no panic, rather just an uncaught exception. So we show
+		// the golang stack without implying there was a panic.
+		glob.PanicCauseShown = true
+		ShowGoStackTrace("")
+	}
+
+	_ = shutdown.Exit(shutdown.JVM_EXCEPTION) // in test mode, this call returns
+	return NotCaught                          // only applies to tests
+}
+
+func ShowJVMstackTrace(traceEntries []*object.Object, glob *globals.Globals) {
 	// now print out the JVM stack
 	for _, traceEntry := range traceEntries {
 		// HotSpot uses a slightly different format for method names:
@@ -203,27 +219,16 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 				traceEntry.FieldTable["methodName"].Fvalue.(string),
 				traceEntry.FieldTable["fileName"].Fvalue.(string))
 		} else {
-			traceInfo = fmt.Sprintf("  at %s.%s(%s:%s)",
+			traceInfo = fmt.Sprintf("  at %s.%s(%s:%s) PC: %s",
 				// otherwise, print the method name and source file + line number
 				declaringClass,
 				traceEntry.FieldTable["methodName"].Fvalue.(string),
 				traceEntry.FieldTable["fileName"].Fvalue.(string),
-				traceEntry.FieldTable["sourceLine"].Fvalue.(string))
+				traceEntry.FieldTable["sourceLine"].Fvalue.(string),
+				traceEntry.FieldTable["PC"].Fvalue.(string))
 		}
 		trace.AsIs(traceInfo)
 	}
-
-	if !glob.StrictJDK {
-		// the next statement disables showing the line that identifies
-		// the cause of a golang panic, because if we got here, there
-		// was no panic, rather just an uncaught exception. So we show
-		// the golang stack without implying there was a panic.
-		glob.PanicCauseShown = true
-		ShowGoStackTrace("")
-	}
-
-	_ = shutdown.Exit(shutdown.JVM_EXCEPTION) // in test mode, this call returns
-	return NotCaught                          // only applies to tests
 }
 
 // MinimalAbort is the exception thrown when the frame info is not available,

@@ -31,7 +31,7 @@ func Load_Lang_Throwable() {
 	ghelpers.MethodSignatures["java/lang/Throwable.<init>()V"] =
 		ghelpers.GMeth{
 			ParamSlots:   0,
-			GFunction:    throwableInitNull,
+			GFunction:    ThrowableInitNull,
 			NeedsContext: true,
 		}
 
@@ -186,7 +186,7 @@ func throwableClinit([]interface{}) interface{} {
 }
 
 // java/lang/Throwable.<init>()V
-func throwableInitNull(params []interface{}) interface{} {
+func ThrowableInitNull(params []interface{}) interface{} {
 	// params when NeedsContext=true: [frameStack, this]
 	// when not provided (tests), allow [this]
 	var frameStack *list.List
@@ -197,7 +197,7 @@ func throwableInitNull(params []interface{}) interface{} {
 	} else if len(params) == 1 {
 		thisObj = params[0].(*object.Object)
 	} else {
-		errMsg := fmt.Sprintf("throwableInitNull: expected 1 or 2 params, got %d", len(params))
+		errMsg := fmt.Sprintf("ThrowableInitNull: expected 1 or 2 params, got %d", len(params))
 		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return errors.New(errMsg)

@@ -302,6 +302,7 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame, isFirstFrame b
 
 	addField("declaringClass", frame.ClName)
 	addField("methodName", frame.MethName)
+	addField("PC", fmt.Sprintf("%d", frame.PC))
 
 	methClass := classloader.MethAreaFetch(frame.ClName)
 	if methClass == nil {
