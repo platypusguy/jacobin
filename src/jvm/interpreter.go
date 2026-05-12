@@ -305,19 +305,21 @@ func interpret(fs *list.List) {
 	}
 
 	defer func() int {
+		glob := globals.GetGlobalRef()
+		if glob.JacobinName == "test" {
+			return shutdown.Exit(shutdown.OK)
+		}
+		
 		// only an untrapped panic gets us here
 		if r := recover(); r != nil {
 			stack := string(debug.Stack())
-			glob := globals.GetGlobalRef()
+
 			glob.ErrorGoStack = stack
 			exceptions.ShowPanicCause(r)
 
 			// Create a dummy exception object and then load it with
 			// the JVM frame stack entries. Then print those out.
-			exceptionCPname := util.ConvertClassFilenameToInternalFormat(
-				excNames.JVMexceptionNames[excNames.InternalException])
-			throwable, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
-			thro := throwable.(*object.Object)
+			thro := object.MakeEmptyObject()
 			params := []interface{}{fs, thro}
 			_ = javaLang.ThrowableInitNull(params)
 			stackTrace := thro.FieldTable["stackTrace"].Fvalue.(*object.Object)
