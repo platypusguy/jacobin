@@ -20,7 +20,7 @@ import (
 
 func Test_Files_Exists_And_NotExists(t *testing.T) {
 	// Ensure string pool and related globals are initialized for object/string creation
-	globals.InitStringPool()
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	f := filepath.Join(dir, "a.txt")
 	if err := os.WriteFile(f, []byte("x"), 0o644); err != nil {
@@ -45,6 +45,7 @@ func Test_Files_Exists_And_NotExists(t *testing.T) {
 }
 
 func Test_Files_IsDirectory_IsRegularFile(t *testing.T) {
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	dpath := newPath(dir)
 	f := filepath.Join(dir, "b.bin")
@@ -68,6 +69,7 @@ func Test_Files_IsDirectory_IsRegularFile(t *testing.T) {
 }
 
 func Test_Files_Size(t *testing.T) {
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	f := filepath.Join(dir, "c.txt")
 	data := []byte("hello")
@@ -86,6 +88,7 @@ func Test_Files_Size(t *testing.T) {
 }
 
 func Test_Files_CreateFile_Directory_Delete_DeleteIfExists(t *testing.T) {
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	f := newPath(filepath.Join(dir, "d.txt"))
 	res := filesCreateFile([]interface{}{f, object.Null})
@@ -126,6 +129,7 @@ func Test_Files_CreateFile_Directory_Delete_DeleteIfExists(t *testing.T) {
 }
 
 func Test_Files_Copy_And_Move(t *testing.T) {
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	s := filepath.Join(dir, "src.txt")
 	if err := os.WriteFile(s, []byte("abc"), 0o644); err != nil {
@@ -163,6 +167,7 @@ func Test_Files_Copy_And_Move(t *testing.T) {
 }
 
 func Test_Files_NewInputStream_NewOutputStream(t *testing.T) {
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	// InputStream error path (no file)
 	bad := filesNewInputStream([]interface{}{newPath(filepath.Join(dir, "nope")), object.Null})
@@ -196,6 +201,7 @@ func Test_Files_NewInputStream_NewOutputStream(t *testing.T) {
 }
 
 func Test_Files_ReadAllBytes_WriteBytes(t *testing.T) {
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	f := filepath.Join(dir, "rw.bin")
 	jb := object.JavaByteArrayFromGoByteArray([]byte{9, 8, 7})
@@ -203,11 +209,8 @@ func Test_Files_ReadAllBytes_WriteBytes(t *testing.T) {
 	if _, ok := wr.(*object.Object); !ok {
 		t.Fatalf("write should return Path")
 	}
-	rd := filesReadAllBytes([]interface{}{newPath(f)})
-	arr, ok := rd.([]types.JavaByte)
-	if !ok {
-		t.Fatalf("readAllBytes did not return byte[]: %T", rd)
-	}
+	rd := filesReadAllBytes([]interface{}{newPath(f)}).(*object.Object)
+	arr := rd.FieldTable["value"].Fvalue.([]types.JavaByte)
 	gb := object.GoByteArrayFromJavaByteArray(arr)
 	if len(gb) != 3 || gb[0] != 9 || gb[1] != 8 || gb[2] != 7 {
 		t.Fatalf("bytes mismatch: %v", gb)
@@ -221,6 +224,7 @@ func Test_Files_ReadAllBytes_WriteBytes(t *testing.T) {
 }
 
 func Test_Files_ReadString_WriteString_ReadAllLines(t *testing.T) {
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	f := filepath.Join(dir, "rw.txt")
 	s := object.StringObjectFromGoString("line1\nline2")
@@ -245,6 +249,7 @@ func Test_Files_ReadString_WriteString_ReadAllLines(t *testing.T) {
 }
 
 func Test_Files_IsSameFile_And_Temps(t *testing.T) {
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	f := filepath.Join(dir, "x.txt")
 	if err := os.WriteFile(f, []byte("x"), 0o644); err != nil {
@@ -273,6 +278,7 @@ func Test_Files_IsSameFile_And_Temps(t *testing.T) {
 }
 
 func Test_Files_Symlink_Paths(t *testing.T) {
+	globals.InitGlobals("test")
 	dir := t.TempDir()
 	tgt := filepath.Join(dir, "t.txt")
 	if err := os.WriteFile(tgt, []byte("z"), 0o644); err != nil {
