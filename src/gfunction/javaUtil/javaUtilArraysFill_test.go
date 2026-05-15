@@ -66,3 +66,17 @@ func TestFill_Boolean(t *testing.T) {
 		}
 	}
 }
+
+func TestFill_Byte(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arrObj := object.Make1DimArray(object.T_BYTE, 5)
+	arr := arrObj.FieldTable["value"].Fvalue.([]types.JavaByte)
+
+	// Test fill([BIIB)V
+	utilArraysFill([]interface{}{arrObj, int64(1), int64(4), int64(7)})
+	if arr[0] != 0 || arr[1] != 7 || arr[2] != 7 || arr[3] != 7 || arr[4] != 0 {
+		t.Errorf("Byte range fill failed: %v", arr)
+	}
+}

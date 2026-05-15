@@ -81,6 +81,18 @@ func Load_Util_Zip_Crc32_Crc32c() {
 			GFunction:  crc32UpdateFromArray,
 		}
 
+	ghelpers.MethodSignatures["java/util/zip/CRC32.update([B)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  crc32UpdateFromArray,
+		}
+
+	ghelpers.MethodSignatures["java/util/zip/CRC32C.update([B)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  crc32UpdateFromArray,
+		}
+
 	ghelpers.MethodSignatures["java/util/zip/CRC32.update(I)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
@@ -149,12 +161,18 @@ func crc32Reset(params []interface{}) interface{} {
 
 // Update the current CRC32 value from an array of bytes.
 func crc32UpdateFromArray(params []interface{}) interface{} {
+	var offset, length int64
 	// Collect parameters.
 	obj := params[0].(*object.Object)
 	objBB := params[1].(*object.Object)
 	bbWhole := objBB.FieldTable["value"].Fvalue.([]types.JavaByte)
-	offset := params[2].(int64)
-	length := params[3].(int64)
+	if len(params) > 2 {
+		offset = params[2].(int64)
+		length = params[3].(int64)
+	} else {
+		offset = 0
+		length = int64(len(bbWhole))
+	}
 	bbSubset := bbWhole[offset : offset+length]
 
 	// Get current CRC32 value.
