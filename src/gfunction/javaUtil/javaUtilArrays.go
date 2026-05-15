@@ -113,7 +113,7 @@ func Load_Util_Arrays() {
 
 	// fill
 	ghelpers.MethodSignatures["java/util/Arrays.fill([BB)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([BBII)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([BIIB)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
 	ghelpers.MethodSignatures["java/util/Arrays.fill([CC)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
 	ghelpers.MethodSignatures["java/util/Arrays.fill([CIIC)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
 	ghelpers.MethodSignatures["java/util/Arrays.fill([DD)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}

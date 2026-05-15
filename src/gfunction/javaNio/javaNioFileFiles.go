@@ -18,11 +18,6 @@ import (
 	"jacobin/src/types"
 )
 
-// Load_Nio_File_Files registers implementations for java.nio.file.Files public methods (Java 21).
-// Policy agreed with user:
-// - Implement core filesystem ops.
-// - Stream-returning and complex attribute-view methods remain trapped.
-// - Where platform limitations apply, return UnsupportedOperationException.
 func Load_Nio_File_Files() {
 
 	// <clinit>
@@ -422,7 +417,7 @@ func filesReadAllBytes(params []interface{}) interface{} {
 	if err != nil {
 		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.readAllBytes: %s", err.Error()))
 	}
-	return object.JavaByteArrayFromGoByteArray(data)
+	return object.MakeArrayFromRawArray(object.JavaByteArrayFromGoByteArray(data))
 }
 
 func filesWriteBytes(params []interface{}) interface{} {
