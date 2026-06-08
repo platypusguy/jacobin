@@ -647,7 +647,7 @@ func locateInterfaceMeth(
 
 	// === Phase 2: Find the concrete implementation of the method
 	// check whether the class or its superclasses directly implement the method
-	mtEntry, _ = classloader.FetchMethodAndCP(
+	mtEntry, err = classloader.FetchMethodAndCP(
 		objRefClassName, interfaceMethodName, interfaceMethodType)
 	if err == nil && mtEntry.Meth != nil {
 		// found concrete implementation in the class

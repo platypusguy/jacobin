@@ -90,7 +90,7 @@ func Load_Util_Hash_Set() {
 	ghelpers.MethodSignatures["java/util/HashSet.iterator()Ljava/util/Iterator;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  setIterator,
 		}
 
 	ghelpers.MethodSignatures["java/util/HashSet.newHashSet(I)Ljava/util/HashSet;"] =

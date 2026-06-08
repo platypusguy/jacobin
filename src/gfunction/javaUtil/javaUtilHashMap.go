@@ -17,6 +17,7 @@ import (
 )
 
 var classNameHashMap = "java/util/HashMap"
+var classNameHashSet = "java/util/HashSet"
 var hashmapMutex = sync.RWMutex{}
 var fieldNameMap = "map"
 
@@ -103,7 +104,7 @@ func Load_Util_Hash_Map() {
 	ghelpers.MethodSignatures["java/util/HashMap.entrySet()Ljava/util/Set;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  mapEntrySet,
 		}
 
 	ghelpers.MethodSignatures["java/util/HashMap.forEach(Ljava/util/function/BiConsumer;)V"] =
@@ -139,7 +140,7 @@ func Load_Util_Hash_Map() {
 	ghelpers.MethodSignatures["java/util/HashMap.keySet()Ljava/util/Set;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  mapKeySet,
 		}
 
 	ghelpers.MethodSignatures["java/util/HashMap.merge(Ljava/lang/Object;Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;"] =

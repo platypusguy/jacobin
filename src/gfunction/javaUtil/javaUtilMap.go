@@ -6,6 +6,8 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/stringPool"
+	"jacobin/src/types"
+	"strconv"
 )
 
 func Load_Util_Map() {
@@ -55,7 +57,79 @@ func Load_Util_Map() {
 	ghelpers.MethodSignatures["java/util/Map.entrySet()Ljava/util/Set;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
+			GFunction:  mapEntrySet,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map$Entry.comparingByKey()Ljava/util/Comparator;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map$Entry.comparingByKey(Ljava/util/Comparator;)Ljava/util/Comparator;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map$Entry.comparingByValue()Ljava/util/Comparator;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map$Entry.comparingByValue(Ljava/util/Comparator;)Ljava/util/Comparator;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map$Entry.equals(Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map$Entry.getKey()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  mapEntryGetKey,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map$Entry.getValue()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  mapEntryGetValue,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map$Entry.hashCode()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map$Entry.setValue(Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  mapEntrySetValue,
+		}
+
+	ghelpers.MethodSignatures["java/util/AbstractMap$SimpleImmutableEntry.getKey()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  mapEntryGetKey,
+		}
+
+	ghelpers.MethodSignatures["java/util/AbstractMap$SimpleImmutableEntry.getValue()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  mapEntryGetValue,
+		}
+
+	ghelpers.MethodSignatures["java/util/AbstractMap$SimpleImmutableEntry.setValue(Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  mapEntrySetValue,
 		}
 
 	ghelpers.MethodSignatures["java/util/Map.equals(Ljava/lang/Object;)Z"] =
@@ -97,7 +171,7 @@ func Load_Util_Map() {
 	ghelpers.MethodSignatures["java/util/Map.keySet()Ljava/util/Set;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  mapKeySet,
 		}
 
 	ghelpers.MethodSignatures["java/util/Map.merge(Ljava/lang/Object;Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;"] =
@@ -342,4 +416,162 @@ func mapPutIfAbsent(params []interface{}) interface{} {
 		return mapPut(params)
 	}
 	return v
+}
+
+func mapEntrySet(params []interface{}) interface{} {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapEntrySet: missing 'this' parameter")
+	}
+	this, ok := params[0].(*object.Object)
+	if !ok || this == nil {
+		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapEntrySet: 'this' is not an object")
+	}
+
+	// Get the current hash map.
+	this.ThMutex.RLock()
+	fld, ok := this.FieldTable[fieldNameMap]
+	this.ThMutex.RUnlock()
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapEntrySet: 'this' does not have a 'map' field")
+	}
+	hm, ok := fld.Fvalue.(types.DefHashMap)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapEntrySet: 'map' field is not a HashMap")
+	}
+
+	// Create a new HashSet (which is a HashMap object in Jacobin)
+	entrySet := object.MakeEmptyObjectWithClassName(&classNameHashSet)
+	if ret := hashmapInit([]any{entrySet}); ret != nil {
+		return ret
+	}
+
+	// Iterate over the source map
+	for k, v := range hm {
+		// Represent each entry as a SimpleImmutableEntry
+		entryObj := object.MakeEmptyObjectWithClassName(new("java/util/AbstractMap$SimpleImmutableEntry"))
+		entryObj.ThMutex.Lock()
+		entryObj.FieldTable["key"] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: k}
+		entryObj.FieldTable["value"] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: v}
+		entryObj.ThMutex.Unlock()
+
+		// Add entry to entrySet (which is a HashSet, so it needs hashed key)
+		// We use the object's hash code (from its address) to avoid JSON marshal issues with unsafe.Pointer
+		keyString := "java/util/AbstractMap$SimpleImmutableEntry:" + strconv.FormatUint(uint64(entryObj.Mark.Hash), 10)
+		keyObj := object.StringObjectFromGoString(keyString)
+
+		hashmapPut([]any{entrySet, keyObj, entryObj})
+	}
+
+	return entrySet
+}
+
+func mapEntryGetKey(params []interface{}) interface{} {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapEntryGetKey: missing 'this' parameter")
+	}
+	this, ok := params[0].(*object.Object)
+	if !ok || this == nil {
+		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapEntryGetKey: 'this' is not an object")
+	}
+	this.ThMutex.RLock()
+	defer this.ThMutex.RUnlock()
+	fld, ok := this.FieldTable["key"]
+	if !ok {
+		return object.Null
+	}
+	return fld.Fvalue
+}
+
+func mapEntryGetValue(params []interface{}) interface{} {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapEntryGetValue: missing 'this' parameter")
+	}
+	this, ok := params[0].(*object.Object)
+	if !ok || this == nil {
+		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapEntryGetValue: 'this' is not an object")
+	}
+	this.ThMutex.RLock()
+	defer this.ThMutex.RUnlock()
+	fld, ok := this.FieldTable["value"]
+	if !ok {
+		return object.Null
+	}
+	return fld.Fvalue
+}
+
+func mapEntrySetValue(params []interface{}) interface{} {
+	if len(params) < 2 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapEntrySetValue: missing parameters")
+	}
+	this, ok := params[0].(*object.Object)
+	if !ok || this == nil {
+		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapEntrySetValue: 'this' is not an object")
+	}
+
+	this.ThMutex.Lock()
+	defer this.ThMutex.Unlock()
+
+	oldFld, ok := this.FieldTable["value"]
+	var oldValue interface{} = object.Null
+	if ok {
+		oldValue = oldFld.Fvalue
+	}
+
+	this.FieldTable["value"] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: params[1]}
+	return oldValue
+}
+
+func mapKeySet(params []interface{}) interface{} {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapKeySet: missing 'this' parameter")
+	}
+	this, ok := params[0].(*object.Object)
+	if !ok || this == nil {
+		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapKeySet: 'this' is not an object")
+	}
+
+	// Get the current hash map.
+	this.ThMutex.RLock()
+	fld, ok := this.FieldTable[fieldNameMap]
+	this.ThMutex.RUnlock()
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapKeySet: 'this' does not have a 'map' field")
+	}
+	hm, ok := fld.Fvalue.(types.DefHashMap)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapKeySet: 'map' field is not a HashMap")
+	}
+
+	// Create a new HashSet (which is a HashMap object in Jacobin)
+	keySet := object.MakeEmptyObjectWithClassName(&classNameHashSet)
+	if ret := hashmapInit([]any{keySet}); ret != nil {
+		return ret
+	}
+
+	// Iterate over the source map
+	for k := range hm {
+		// Add key to keySet (which is a HashSet)
+		var keyObj *object.Object
+		switch v := k.(type) {
+		case string:
+			keyObj = object.StringObjectFromGoString(v)
+		case int64:
+			keyObj = object.MakePrimitiveObject("java/lang/Integer", types.Int, v)
+		case float64:
+			keyObj = object.MakePrimitiveObject("java/lang/Double", types.Double, v)
+		case *object.Object:
+			keyObj = v
+		default:
+			// Fallback for other types if any
+			keyObj = object.MakeOneFieldObject("java/lang/Object", "value", "Ljava/lang/Object;", v)
+		}
+
+		if ret := hashsetAdd([]any{keySet, keyObj}); ret != nil {
+			if _, ok := ret.(*ghelpers.GErrBlk); ok {
+				return ret
+			}
+		}
+	}
+
+	return keySet
 }
