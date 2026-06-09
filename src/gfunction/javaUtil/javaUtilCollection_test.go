@@ -57,6 +57,9 @@ func TestCollection_Invoke(t *testing.T) {
 	// Use setOf to create a collection (which is also a Set)
 	e1 := object.StringObjectFromGoString("one")
 	res := setOf([]interface{}{e1})
+	if geb, ok := res.(*ghelpers.GErrBlk); ok {
+		t.Fatalf("setOf failed: %v", geb.ErrMsg)
+	}
 	collObj := res.(*object.Object)
 
 	// Test size()

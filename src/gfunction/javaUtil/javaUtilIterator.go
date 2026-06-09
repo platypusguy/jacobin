@@ -54,6 +54,7 @@ const (
 	iteratorLastReturnedIndexField = "lastReturnedIndex" // for ArrayList
 	iteratorNextNodeField          = "nextNode"          // for LinkedList
 	iteratorLastReturnedNodeField  = "lastReturnedNode"  // for LinkedList
+	iteratorMapKeysField           = "mapKeys"           // for HashMap/HashSet
 )
 
 func iteratorHasNext(params []interface{}) interface{} {
@@ -88,6 +89,15 @@ func iteratorHasNext(params []interface{}) interface{} {
 	case "java/util/LinkedList":
 		nextNode := self.FieldTable[iteratorNextNodeField].Fvalue
 		if nextNode != nil && nextNode != (*list.Element)(nil) {
+			return types.JavaBoolTrue
+		}
+	case "java/util/HashMap", "java/util/HashSet":
+		mapKeys, ok := self.FieldTable[iteratorMapKeysField].Fvalue.([]interface{})
+		if !ok {
+			return types.JavaBoolFalse
+		}
+		index := self.FieldTable[iteratorIndexField].Fvalue.(int64)
+		if index < int64(len(mapKeys)) {
 			return types.JavaBoolTrue
 		}
 	default:
@@ -140,6 +150,37 @@ func iteratorNext(params []interface{}) interface{} {
 		self.FieldTable[iteratorNextNodeField] = object.Field{Ftype: types.NonArrayObject, Fvalue: nextNode.Next()}
 		self.FieldTable[iteratorLastReturnedNodeField] = object.Field{Ftype: types.NonArrayObject, Fvalue: nextNode}
 		return val
+
+	case "java/util/HashMap", "java/util/HashSet":
+		mapKeys, ok := self.FieldTable[iteratorMapKeysField].Fvalue.([]interface{})
+		if !ok {
+			return ghelpers.GetGErrBlk(excNames.NoSuchElementException, "iteratorNext: No more elements")
+		}
+		index := self.FieldTable[iteratorIndexField].Fvalue.(int64)
+		if index >= int64(len(mapKeys)) {
+			return ghelpers.GetGErrBlk(excNames.NoSuchElementException, "iteratorNext: No more elements")
+		}
+		key := mapKeys[index]
+		self.FieldTable[iteratorIndexField] = object.Field{Ftype: types.Int, Fvalue: index + 1}
+
+		fld := colObj.FieldTable["map"]
+		hm := fld.Fvalue.(types.DefHashMap)
+		val := hm[key]
+
+		// For HashSet, the value in the map is the original object.
+		if className == "java/util/HashSet" {
+			return val
+		}
+
+		// For HashMap.iterator() (if used), we return the key.
+		// Note: Key in mapKeys for HashMap is the Go-level key (string or object)
+		if keyObj, ok := key.(*object.Object); ok {
+			return keyObj
+		}
+		if s, ok := key.(string); ok {
+			return object.StringObjectFromGoString(s)
+		}
+		return key
 	}
 
 	return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("iteratorNext: Unsupported collection type %s", className))
@@ -206,6 +247,9 @@ func iteratorRemove(params []interface{}) interface{} {
 		llst.Remove(lastNode)
 		self.FieldTable[iteratorLastReturnedNodeField] = object.Field{Ftype: types.NonArrayObject, Fvalue: nil}
 
+	case "java/util/HashMap", "java/util/HashSet":
+		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "iteratorRemove: Not supported for maps")
+
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("iteratorRemove: Unsupported collection type %s", className))
 	}
@@ -230,6 +274,16 @@ func NewIterator(collection *object.Object) *object.Object {
 			o.FieldTable[iteratorNextNodeField] = object.Field{Ftype: types.NonArrayObject, Fvalue: l.Front()}
 		} else {
 			o.FieldTable[iteratorNextNodeField] = object.Field{Ftype: types.NonArrayObject, Fvalue: nil}
+		}
+	case "java/util/HashMap", "java/util/HashSet":
+		o.FieldTable[iteratorIndexField] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
+		fld := collection.FieldTable["map"]
+		if hm, ok := fld.Fvalue.(types.DefHashMap); ok {
+			keys := make([]interface{}, 0, len(hm))
+			for k := range hm {
+				keys = append(keys, k)
+			}
+			o.FieldTable[iteratorMapKeysField] = object.Field{Ftype: types.RefArray, Fvalue: keys}
 		}
 	}
 	return o

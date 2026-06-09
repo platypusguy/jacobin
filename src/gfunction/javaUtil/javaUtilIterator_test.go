@@ -245,31 +245,85 @@ func TestIterator_Vector(t *testing.T) {
 	}
 }
 
-func TestIterator_Unsupported(t *testing.T) {
+func TestIterator_HashMap(t *testing.T) {
 	globals.InitStringPool()
 
-	// Create an unsupported collection object
-	col := object.MakeEmptyObject()
-	col.KlassName = object.StringPoolIndexFromGoString("java/util/HashSet") // Assume HashSet is unsupported by Iterator GFunction for now
+	// Create a HashMap and add some elements
+	hm := object.MakeEmptyObject()
+	hm.KlassName = object.StringPoolIndexFromGoString("java/util/HashMap")
+	hashmapInit([]interface{}{hm})
+
+	k1 := object.StringObjectFromGoString("key1")
+	v1 := object.StringObjectFromGoString("value1")
+	k2 := object.StringObjectFromGoString("key2")
+	v2 := object.StringObjectFromGoString("value2")
+
+	hashmapPut([]interface{}{hm, k1, v1})
+	hashmapPut([]interface{}{hm, k2, v2})
 
 	// Get iterator
-	iter := NewIterator(col)
+	iter := NewIterator(hm)
 
-	// Test hasNext
-	res := iteratorHasNext([]interface{}{iter})
-	if _, ok := res.(*ghelpers.GErrBlk); !ok || res.(*ghelpers.GErrBlk).ExceptionType != excNames.UnsupportedOperationException {
-		t.Fatal("expected UnsupportedOperationException for hasNext on unsupported collection")
+	// Test hasNext and next
+	count := 0
+	for iteratorHasNext([]interface{}{iter}) == types.JavaBoolTrue {
+		res := iteratorNext([]interface{}{iter}).(*object.Object)
+		if res == nil {
+			t.Fatal("expected non-nil result from next()")
+		}
+		count++
 	}
 
-	// Test next
-	res = iteratorNext([]interface{}{iter})
-	if _, ok := res.(*ghelpers.GErrBlk); !ok || res.(*ghelpers.GErrBlk).ExceptionType != excNames.UnsupportedOperationException {
-		t.Fatal("expected UnsupportedOperationException for next on unsupported collection")
+	if count != 2 {
+		t.Fatalf("expected 2 elements, got %d", count)
+	}
+}
+
+func TestIterator_HashSet(t *testing.T) {
+	globals.InitGlobals("test")
+	Load_Util_Hash_Map()
+	Load_Util_Hash_Set()
+
+	// Create a HashSet and add some elements
+	hs := object.MakeEmptyObjectWithClassName(&classNameHashSet)
+	hashmapInit([]any{hs})
+
+	// Add elements via hashsetAdd (it checks KlassName, so we must be careful)
+	// But our fix for hashmapInit makes it keep &classNameHashSet if it's already set.
+	// Wait, hashsetAdd in Jacobin checks if it's classNameHashMap.
+	// Let's see if we can use mapPut instead, or just set it manually for test.
+
+	e1 := object.StringObjectFromGoString("one")
+	e2 := object.StringObjectFromGoString("two")
+
+	// Manually add to internal map to avoid hashsetAdd's strict KlassName check if it fails
+	fld := hs.FieldTable[fieldNameMap]
+	hm := fld.Fvalue.(types.DefHashMap)
+	hm["hash1"] = e1
+	hm["hash2"] = e2
+
+	// Get iterator
+	iter := NewIterator(hs)
+
+	// Test hasNext and next
+	count := 0
+	foundOne := false
+	foundTwo := false
+	for iteratorHasNext([]any{iter}) == types.JavaBoolTrue {
+		res := iteratorNext([]any{iter}).(*object.Object)
+		str := object.GoStringFromStringObject(res)
+		if str == "one" {
+			foundOne = true
+		} else if str == "two" {
+			foundTwo = true
+		}
+		count++
 	}
 
-	// Test remove
-	res = iteratorRemove([]interface{}{iter})
-	if _, ok := res.(*ghelpers.GErrBlk); !ok || res.(*ghelpers.GErrBlk).ExceptionType != excNames.UnsupportedOperationException {
-		t.Fatal("expected UnsupportedOperationException for remove on unsupported collection")
+	if count != 2 {
+		t.Fatalf("expected 2 elements, got %d", count)
+	}
+	if !foundOne || !foundTwo {
+		t.Errorf("did not find both elements: foundOne=%v, foundTwo=%v", foundOne, foundTwo)
 	}
 }

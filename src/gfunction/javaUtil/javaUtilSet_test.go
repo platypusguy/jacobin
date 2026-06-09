@@ -24,8 +24,8 @@ func TestSet_Of(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected *object.Object, got %T", res)
 	}
-	if className := object.GoStringFromStringPoolIndex(setObj.KlassName); className != classNameHashMap {
-		t.Errorf("expected className %s, got %s", classNameHashMap, className)
+	if className := object.GoStringFromStringPoolIndex(setObj.KlassName); className != classNameHashSet {
+		t.Errorf("expected className %s, got %s", classNameHashSet, className)
 	}
 
 	sizeRes := hashmapSize([]interface{}{setObj})

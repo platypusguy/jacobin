@@ -250,7 +250,11 @@ func mapClear(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapClear: 'this' is not an object")
 	}
 
-	className := *stringPool.GetStringPointer(this.KlassName)
+	klassNamePtr := stringPool.GetStringPointer(this.KlassName)
+	if klassNamePtr == nil {
+		return ghelpers.GetGErrBlk(excNames.InternalError, fmt.Sprintf("mapIsEmpty: KlassName %d not in string pool (pool size %d)", this.KlassName, stringPool.GetStringPoolSize()))
+	}
+	className := *klassNamePtr
 	switch className {
 	case "java/util/HashMap":
 		return hashmapInit(params)
@@ -268,7 +272,11 @@ func mapGet(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapGet: 'this' is not an object")
 	}
 
-	className := *stringPool.GetStringPointer(this.KlassName)
+	klassNamePtr := stringPool.GetStringPointer(this.KlassName)
+	if klassNamePtr == nil {
+		return ghelpers.GetGErrBlk(excNames.InternalError, fmt.Sprintf("mapIsEmpty: KlassName %d not in string pool (pool size %d)", this.KlassName, stringPool.GetStringPoolSize()))
+	}
+	className := *klassNamePtr
 	switch className {
 	case "java/util/HashMap":
 		return hashmapGet(params)
@@ -302,7 +310,11 @@ func mapContainsKey(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapContainsKey: 'this' is not an object")
 	}
 
-	className := *stringPool.GetStringPointer(this.KlassName)
+	klassNamePtr := stringPool.GetStringPointer(this.KlassName)
+	if klassNamePtr == nil {
+		return ghelpers.GetGErrBlk(excNames.InternalError, fmt.Sprintf("mapIsEmpty: KlassName %d not in string pool (pool size %d)", this.KlassName, stringPool.GetStringPoolSize()))
+	}
+	className := *klassNamePtr
 	switch className {
 	case "java/util/HashMap":
 		return hashmapContainsKey(params)
@@ -320,7 +332,11 @@ func mapIsEmpty(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapIsEmpty: 'this' is not an object")
 	}
 
-	className := *stringPool.GetStringPointer(this.KlassName)
+	klassNamePtr := stringPool.GetStringPointer(this.KlassName)
+	if klassNamePtr == nil {
+		return ghelpers.GetGErrBlk(excNames.InternalError, fmt.Sprintf("mapIsEmpty: KlassName %d not in string pool (pool size %d)", this.KlassName, stringPool.GetStringPoolSize()))
+	}
+	className := *klassNamePtr
 	switch className {
 	case "java/util/HashMap":
 		return hashmapIsEmpty(params)
@@ -338,7 +354,11 @@ func mapPut(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapPut: 'this' is not an object")
 	}
 
-	className := *stringPool.GetStringPointer(this.KlassName)
+	klassNamePtr := stringPool.GetStringPointer(this.KlassName)
+	if klassNamePtr == nil {
+		return ghelpers.GetGErrBlk(excNames.InternalError, fmt.Sprintf("mapIsEmpty: KlassName %d not in string pool (pool size %d)", this.KlassName, stringPool.GetStringPoolSize()))
+	}
+	className := *klassNamePtr
 	switch className {
 	case "java/util/HashMap":
 		return hashmapPut(params)
@@ -356,7 +376,11 @@ func mapRemove(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapRemove: 'this' is not an object")
 	}
 
-	className := *stringPool.GetStringPointer(this.KlassName)
+	klassNamePtr := stringPool.GetStringPointer(this.KlassName)
+	if klassNamePtr == nil {
+		return ghelpers.GetGErrBlk(excNames.InternalError, fmt.Sprintf("mapIsEmpty: KlassName %d not in string pool (pool size %d)", this.KlassName, stringPool.GetStringPoolSize()))
+	}
+	className := *klassNamePtr
 	switch className {
 	case "java/util/HashMap":
 		return hashmapRemove(params)
@@ -374,7 +398,11 @@ func mapSize(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapSize: 'this' is not an object")
 	}
 
-	className := *stringPool.GetStringPointer(this.KlassName)
+	klassNamePtr := stringPool.GetStringPointer(this.KlassName)
+	if klassNamePtr == nil {
+		return ghelpers.GetGErrBlk(excNames.InternalError, fmt.Sprintf("mapIsEmpty: KlassName %d not in string pool (pool size %d)", this.KlassName, stringPool.GetStringPoolSize()))
+	}
+	className := *klassNamePtr
 	switch className {
 	case "java/util/HashMap":
 		return hashmapSize(params)
@@ -392,7 +420,11 @@ func mapPutAll(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, "mapPutAll: 'this' is not an object")
 	}
 
-	className := *stringPool.GetStringPointer(this.KlassName)
+	klassNamePtr := stringPool.GetStringPointer(this.KlassName)
+	if klassNamePtr == nil {
+		return ghelpers.GetGErrBlk(excNames.InternalError, fmt.Sprintf("mapIsEmpty: KlassName %d not in string pool (pool size %d)", this.KlassName, stringPool.GetStringPoolSize()))
+	}
+	className := *klassNamePtr
 	switch className {
 	case "java/util/HashMap":
 		return hashmapPutAll(params)
