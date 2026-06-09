@@ -316,6 +316,63 @@ func isClassAaSublclassOfB(classA uint32, classB uint32) bool {
 	return false
 }
 
+func isInterfaceImplementedByClass(classNameIndex uint32, targetInterfaceName string) bool {
+	if classNameIndex == types.InvalidStringIndex {
+		return false
+	}
+	className := *stringPool.GetStringPointer(classNameIndex)
+	k := classloader.MethAreaFetch(className)
+	if k == nil {
+		return false
+	}
+
+	// Check interfaces of this class
+	for _, interfaceStringPoolIndex := range k.Data.Interfaces {
+		interfaceName := *stringPool.GetStringPointer(uint32(interfaceStringPoolIndex))
+		if interfaceName == targetInterfaceName {
+			return true
+		}
+		// Recursively check superinterfaces
+		if isInterfaceImplementedByInterface(interfaceName, targetInterfaceName) {
+			return true
+		}
+	}
+
+	// Check superclasses
+	if k.Data.SuperclassIndex != types.InvalidStringIndex && k.Data.SuperclassIndex != types.StringPoolObjectIndex {
+		if isInterfaceImplementedByClass(k.Data.SuperclassIndex, targetInterfaceName) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isInterfaceImplementedByInterface(srcInterfaceName string, targetInterfaceName string) bool {
+	if srcInterfaceName == targetInterfaceName {
+		return true
+	}
+	k := classloader.MethAreaFetch(srcInterfaceName)
+	if k == nil {
+		_ = classloader.LoadClassFromNameOnly(srcInterfaceName)
+		k = classloader.MethAreaFetch(srcInterfaceName)
+		if k == nil {
+			return false
+		}
+	}
+
+	for _, interfaceStringPoolIndex := range k.Data.Interfaces {
+		interfaceName := *stringPool.GetStringPointer(uint32(interfaceStringPoolIndex))
+		if interfaceName == targetInterfaceName {
+			return true
+		}
+		if isInterfaceImplementedByInterface(interfaceName, targetInterfaceName) {
+			return true
+		}
+	}
+	return false
+}
+
 // accepts a stringpool index to the classname and returns an array of names of superclasses.
 // These names are returned in the form of stringPool indexes, that is, uint32 values.
 func getSuperclasses(classNameIndex uint32) []uint32 {
@@ -380,6 +437,8 @@ func checkcastNonArrayObject(srcObj *object.Object, targetClassName string) bool
 	if classPtr == classloader.MethAreaFetch(*(stringPool.GetStringPointer(srcObj.KlassName))) {
 		return true
 	} else if isClassAaSublclassOfB(srcObj.KlassName, stringPool.GetStringIndex(&targetClassName)) {
+		return true
+	} else if isInterfaceImplementedByClass(srcObj.KlassName, targetClassName) {
 		return true
 	} else {
 		// Casting from a java/lang/Object containing a Java byte array to a java/lang/String?
