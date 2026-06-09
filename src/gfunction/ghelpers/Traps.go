@@ -102,6 +102,24 @@ func Load_Traps() {
 			GFunction:  TrapClass,
 		}
 
+	MethodSignatures["java/util/concurrent/Executors.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  TrapClass,
+		}
+
+	MethodSignatures["java/util/concurrent/Executors.newCachedThreadPool()Ljava/util/concurrent/ExecutorService;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  TrapFunction,
+		}
+
+	MethodSignatures["java/util/concurrent/Executors.newCachedThreadPool(Ljava/util/concurrent/ThreadFactory;)Ljava/util/concurrent/ExecutorService;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  TrapFunction,
+		}
+
 }
 
 // TrapClass is a generic Trap for classes

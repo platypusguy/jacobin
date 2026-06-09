@@ -90,7 +90,7 @@ func Load_Util_Hash_Set() {
 	ghelpers.MethodSignatures["java/util/HashSet.iterator()Ljava/util/Iterator;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  setIterator,
 		}
 
 	ghelpers.MethodSignatures["java/util/HashSet.newHashSet(I)Ljava/util/HashSet;"] =
@@ -156,9 +156,10 @@ func hashsetAdd(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	// It must be a HashMap object.
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashsetAdd: HashSet parameter is not a HashMap object"
+	// It must be a HashSet or HashMap object.
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashSet && actualKlassName != classNameHashMap {
+		errMsg := fmt.Sprintf("hashsetAdd: expected %s or %s, got %s", classNameHashSet, classNameHashMap, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -220,9 +221,10 @@ func hashsetRemove(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	// It must be a HashMap object.
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashsetRemove: HashSet parameter is not a HashMap object"
+	// It must be a HashSet or HashMap object.
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashSet && actualKlassName != classNameHashMap {
+		errMsg := fmt.Sprintf("hashsetRemove: expected %s or %s, got %s", classNameHashSet, classNameHashMap, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -273,9 +275,10 @@ func hashsetContains(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	// It must be a HashMap object.
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashsetContains: HashSet parameter is not a HashMap object"
+	// It must be a HashSet or HashMap object.
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashSet && actualKlassName != classNameHashMap {
+		errMsg := fmt.Sprintf("hashsetContains: expected %s or %s, got %s", classNameHashSet, classNameHashMap, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -331,9 +334,10 @@ func hashsetToArray(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	// It must be a HashMap object.
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashsetToArray: HashSet parameter is not a HashMap object"
+	// It must be a HashSet or HashMap object.
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashSet && actualKlassName != classNameHashMap {
+		errMsg := fmt.Sprintf("hashsetToArray: expected %s or %s, got %s", classNameHashSet, classNameHashMap, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 

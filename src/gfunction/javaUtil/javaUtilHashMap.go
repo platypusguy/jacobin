@@ -17,6 +17,7 @@ import (
 )
 
 var classNameHashMap = "java/util/HashMap"
+var classNameHashSet = "java/util/HashSet"
 var hashmapMutex = sync.RWMutex{}
 var fieldNameMap = "map"
 
@@ -103,7 +104,7 @@ func Load_Util_Hash_Map() {
 	ghelpers.MethodSignatures["java/util/HashMap.entrySet()Ljava/util/Set;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  mapEntrySet,
 		}
 
 	ghelpers.MethodSignatures["java/util/HashMap.forEach(Ljava/util/function/BiConsumer;)V"] =
@@ -136,10 +137,16 @@ func Load_Util_Hash_Map() {
 			GFunction:  hashmapIsEmpty,
 		}
 
+	ghelpers.MethodSignatures["java/util/HashMap.iterator()Ljava/util/Iterator;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  setIterator,
+		}
+
 	ghelpers.MethodSignatures["java/util/HashMap.keySet()Ljava/util/Set;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  mapKeySet,
 		}
 
 	ghelpers.MethodSignatures["java/util/HashMap.merge(Ljava/lang/Object;Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;"] =
@@ -222,7 +229,9 @@ func hashmapInit(params []interface{}) interface{} {
 	defer hashmapMutex.Unlock()
 	nilMap := make(types.DefHashMap)
 	obj := params[0].(*object.Object)
-	obj.KlassName = object.StringPoolIndexFromGoString(classNameHashMap)
+	if obj.KlassName == 0 || obj.KlassName == types.InvalidStringIndex {
+		obj.KlassName = object.StringPoolIndexFromGoString(classNameHashMap)
+	}
 	fld := obj.FieldTable[fieldNameMap]
 	fld.Ftype = types.HashMap
 	fld.Fvalue = nilMap
@@ -267,8 +276,9 @@ func hashmapPut(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashmapPut: HashMap parameter is not a HashMap"
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashMap && actualKlassName != classNameHashSet {
+		errMsg := fmt.Sprintf("hashmapPut: expected %s or %s, got %s", classNameHashMap, classNameHashSet, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -317,8 +327,9 @@ func hashmapGet(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashmapGet: The object is not a HashMap"
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashMap && actualKlassName != classNameHashSet {
+		errMsg := fmt.Sprintf("hashmapGet: expected %s or %s, got %s", classNameHashMap, classNameHashSet, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -358,8 +369,9 @@ func hashmapGetOrDefault(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashmapGetOrDefault: The object is not a HashMap"
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashMap && actualKlassName != classNameHashSet {
+		errMsg := fmt.Sprintf("hashmapGetOrDefault: expected %s or %s, got %s", classNameHashMap, classNameHashSet, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -402,8 +414,9 @@ func hashmapRemove(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashmapRemove: The object is not a HashMap"
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashMap && actualKlassName != classNameHashSet {
+		errMsg := fmt.Sprintf("hashmapRemove: expected %s or %s, got %s", classNameHashMap, classNameHashSet, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -443,8 +456,9 @@ func hashmapSize(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashmapSize: The object is not a HashMap"
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashMap && actualKlassName != classNameHashSet {
+		errMsg := fmt.Sprintf("hashmapSize: expected %s or %s, got %s", classNameHashMap, classNameHashSet, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -489,8 +503,9 @@ func hashmapPutAll(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashmapPutAll: The object is not a HashMap"
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashMap && actualKlassName != classNameHashSet {
+		errMsg := fmt.Sprintf("hashmapPutAll: expected %s or %s, got %s", classNameHashMap, classNameHashSet, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -541,8 +556,9 @@ func hashmapContainsKey(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashmapContainsKey: The object is not a HashMap"
+	actualKlassName := *stringPool.GetStringPointer(this.KlassName)
+	if actualKlassName != classNameHashMap && actualKlassName != classNameHashSet {
+		errMsg := fmt.Sprintf("hashmapContainsKey: expected %s or %s, got %s", classNameHashMap, classNameHashSet, actualKlassName)
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
