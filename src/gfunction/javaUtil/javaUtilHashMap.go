@@ -137,6 +137,12 @@ func Load_Util_Hash_Map() {
 			GFunction:  hashmapIsEmpty,
 		}
 
+	ghelpers.MethodSignatures["java/util/HashMap.iterator()Ljava/util/Iterator;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  setIterator,
+		}
+
 	ghelpers.MethodSignatures["java/util/HashMap.keySet()Ljava/util/Set;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
