@@ -99,7 +99,12 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaMath.Load_Math_Rounding_Mode()
 
 	// java/nio/*
+	javaNio.Load_Nio_File_Attribute_BasicFileAttributes()
+	javaNio.Load_Nio_File_Attribute_FileTime()
 	javaNio.Load_Nio_File_Files()
+	javaNio.Load_Nio_File_FileVisitResult()
+	javaNio.Load_Nio_File_FileVisitor()
+	javaNio.Load_Nio_File_SimpleFileVisitor()
 	javaNio.Load_Nio_File_Path()
 	javaNio.Load_Nio_File_Paths()
 

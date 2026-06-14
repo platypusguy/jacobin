@@ -243,6 +243,7 @@ func InitGlobalFunctionPointers() {
 	globalPtr.FuncInvokeGFunction = ghelpers.Invoke
 	globalPtr.FuncMinimalAbort = exceptions.MinimalAbort
 	globalPtr.FuncRunThread = RunJavaThread
+	globalPtr.FuncRunJavaFromG = RunJavaFromG
 	globalPtr.FuncThrowException = exceptions.ThrowExNil
 	globalPtr.FuncFillInStackTrace = javaLang.FillInStackTrace
 }

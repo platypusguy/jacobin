@@ -87,11 +87,17 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	var fs *list.List
 	glob.ThreadLock.RLock()
-	th, ok := glob.Threads[f.Thread].(*object.Object)
+	rawTh, ok := glob.Threads[f.Thread]
 	glob.ThreadLock.RUnlock()
 	if !ok {
-		errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d, FQN: %s",
+		errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found, thread index: %d, FQN: %s",
 			f.Thread, frames.FormatFQN(f))
+		MinimalAbort(excNames.InternalException, errMsg)
+	}
+	th, ok := rawTh.(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("[ThrowEx] glob.Threads entry corrupted (expected *object.Object, got %T), thread index: %d, FQN: %s",
+			rawTh, f.Thread, frames.FormatFQN(f))
 		MinimalAbort(excNames.InternalException, errMsg)
 	}
 	fs = th.FieldTable["framestack"].Fvalue.(*list.List)
