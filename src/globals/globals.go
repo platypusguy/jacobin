@@ -113,6 +113,7 @@ type Globals struct {
 	FuncInvokeGFunction  func(string, []any) any
 	FuncMinimalAbort     func(int, string)
 	FuncRunThread        func([]any)
+	FuncRunJavaFromG     func(*list.List, string, string, string, ...any)
 	FuncThrowException   func(int, string) bool
 	FuncFillInStackTrace func([]any) any
 }
@@ -163,6 +164,7 @@ func InitGlobals(progName string) Globals {
 		FuncInvokeGFunction:  fakeInvokeGFunction,
 		FuncMinimalAbort:     fakeMinimalAbort,
 		FuncRunThread:        fakeRunThread,
+		FuncRunJavaFromG:     fakeRunJavaFromG,
 		FuncThrowException:   fakeThrowEx,
 		GoStackShown:         false,
 		JacobinBuildData:     nil,
@@ -377,9 +379,15 @@ func fakeMinimalAbort(whichEx int, msg string) {
 	fmt.Fprintf(os.Stderr, "%s", errMsg)
 }
 
-// Fake RunThread() in run.go
+// Fake RunThread() in jvm/run.go
 func fakeRunThread(_ []interface{}) {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized RunThread pointer func\n")
+	fmt.Fprintf(os.Stderr, "%s", errMsg)
+}
+
+// Fake RunRunJavaFromG() in jvm/runJavaFromG.go
+func fakeRunJavaFromG(_ *list.List, _, _, _ string, a_ ...any) {
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized RunJavaFromG pointer func\n")
 	fmt.Fprintf(os.Stderr, "%s", errMsg)
 }
 

@@ -7,14 +7,19 @@
 package javaNio
 
 import (
+	"container/list"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 
+	"jacobin/src/classloader"
 	"jacobin/src/excNames"
+	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
 	"jacobin/src/object"
+	"jacobin/src/stringPool"
 	"jacobin/src/types"
 )
 
@@ -138,13 +143,13 @@ func Load_Nio_File_Files() {
 
 	// walk / walkFileTree
 	ghelpers.MethodSignatures["java/nio/file/Files.walk(Ljava/nio/file/Path;[Ljava/nio/file/FileVisitOption;)Ljava/util/stream/Stream;"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: filesWalk}
 	ghelpers.MethodSignatures["java/nio/file/Files.walk(Ljava/nio/file/Path;I[Ljava/nio/file/FileVisitOption;)Ljava/util/stream/Stream;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 3, GFunction: filesWalk}
 	ghelpers.MethodSignatures["java/nio/file/Files.walkFileTree(Ljava/nio/file/Path;Ljava/util/Set;ILjava/nio/file/FileVisitor;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 4, GFunction: filesWalkFileTree, NeedsContext: true}
 	ghelpers.MethodSignatures["java/nio/file/Files.walkFileTree(Ljava/nio/file/Path;Ljava/nio/file/FileVisitor;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: filesWalkFileTree, NeedsContext: true}
 
 	// write / writeString
 	ghelpers.MethodSignatures["java/nio/file/Files.write(Ljava/nio/file/Path;[B[Ljava/nio/file/OpenOption;)Ljava/nio/file/Path;"] =
@@ -156,12 +161,14 @@ func Load_Nio_File_Files() {
 // --- Helpers ---
 func pathToGoString(p interface{}) (string, *ghelpers.GErrBlk) {
 	if p == nil || p == object.Null {
-		return "", ghelpers.GetGErrBlk(excNames.NullPointerException, "Path is null")
+		return "", ghelpers.GetGErrBlk(excNames.NullPointerException,
+			"Path is null")
 	}
 	obj := p.(*object.Object)
 	sval, ok := obj.FieldTable["value"].Fvalue.(*object.Object)
 	if !ok || sval == nil {
-		return "", ghelpers.GetGErrBlk(excNames.IOException, "Path.value missing")
+		return "", ghelpers.GetGErrBlk(excNames.IOException,
+			"Path.value missing")
 	}
 	return object.GoStringFromStringObject(sval), nil
 }
@@ -275,7 +282,8 @@ func filesSize(params []interface{}) interface{} {
 	}
 	fi, err := os.Stat(p)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.size: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.size: %s", err.Error()))
 	}
 	return int64(fi.Size())
 }
@@ -287,7 +295,8 @@ func filesCreateFile(params []interface{}) interface{} {
 	}
 	f, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0o666)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.createFile: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.createFile: %s", err.Error()))
 	}
 	_ = f.Close()
 	return newPath(p)
@@ -299,7 +308,8 @@ func filesCreateDirectory(params []interface{}) interface{} {
 		return gerr
 	}
 	if err := os.Mkdir(p, 0o777); err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.createDirectory: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.createDirectory: %s", err.Error()))
 	}
 	return newPath(p)
 }
@@ -310,7 +320,8 @@ func filesCreateDirectories(params []interface{}) interface{} {
 		return gerr
 	}
 	if err := os.MkdirAll(p, 0o777); err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.createDirectories: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.createDirectories: %s", err.Error()))
 	}
 	return newPath(p)
 }
@@ -321,7 +332,8 @@ func filesDelete(params []interface{}) interface{} {
 		return gerr
 	}
 	if err := os.Remove(p); err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.delete: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.delete: %s", err.Error()))
 	}
 	return nil
 }
@@ -338,7 +350,8 @@ func filesDeleteIfExists(params []interface{}) interface{} {
 	if os.IsNotExist(err) {
 		return types.JavaBoolFalse
 	}
-	return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.deleteIfExists: %s", err.Error()))
+	return ghelpers.GetGErrBlk(excNames.IOException,
+		fmt.Sprintf("Files.deleteIfExists: %s", err.Error()))
 }
 
 func filesCopyPath(params []interface{}) interface{} {
@@ -353,17 +366,21 @@ func filesCopyPath(params []interface{}) interface{} {
 	// Only support file-to-file regular copy for now.
 	sfi, err := os.Stat(src)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.copy: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.copy: %s", err.Error()))
 	}
 	if sfi.IsDir() {
-		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "Files.copy: directory copy not supported")
+		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException,
+			"Files.copy: directory copy not supported")
 	}
 	data, err := os.ReadFile(src)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.copy: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.copy: %s", err.Error()))
 	}
 	if err := os.WriteFile(dst, data, 0o666); err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.copy: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.copy: %s", err.Error()))
 	}
 	return newPath(dst)
 }
@@ -378,7 +395,8 @@ func filesMove(params []interface{}) interface{} {
 		return g2
 	}
 	if err := os.Rename(src, dst); err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.move: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.move: %s", err.Error()))
 	}
 	return newPath(dst)
 }
@@ -390,7 +408,8 @@ func filesNewInputStream(params []interface{}) interface{} {
 	}
 	fh, err := os.Open(p)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.newInputStream: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.newInputStream: %s", err.Error()))
 	}
 	return newFileInputStreamObj(p, fh)
 }
@@ -403,7 +422,8 @@ func filesNewOutputStream(params []interface{}) interface{} {
 	// Simplified: create/truncate
 	fh, err := os.OpenFile(p, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o666)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.newOutputStream: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.newOutputStream: %s", err.Error()))
 	}
 	return newFileOutputStreamObj(p, fh)
 }
@@ -415,7 +435,8 @@ func filesReadAllBytes(params []interface{}) interface{} {
 	}
 	data, err := os.ReadFile(p)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.readAllBytes: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.readAllBytes: %s", err.Error()))
 	}
 	return object.MakeArrayFromRawArray(object.JavaByteArrayFromGoByteArray(data))
 }
@@ -428,11 +449,13 @@ func filesWriteBytes(params []interface{}) interface{} {
 	// params[1] is a Java byte[] wrapped in object.Object? In this codebase, a Java byte[] is passed directly as []types.JavaByte
 	jb, ok := params[1].([]types.JavaByte)
 	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IOException, "Files.write: expected byte[] argument")
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			"Files.write: expected byte[] argument")
 	}
 	data := object.GoByteArrayFromJavaByteArray(jb)
 	if err := os.WriteFile(p, data, 0o666); err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.write: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.write: %s", err.Error()))
 	}
 	return newPath(p)
 }
@@ -444,7 +467,8 @@ func filesReadString(params []interface{}) interface{} {
 	}
 	data, err := os.ReadFile(p)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.readString: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.readString: %s", err.Error()))
 	}
 	return object.StringObjectFromGoString(string(data))
 }
@@ -458,7 +482,8 @@ func filesWriteString(params []interface{}) interface{} {
 	sObj := params[1].(*object.Object)
 	text := object.GoStringFromStringObject(sObj)
 	if err := os.WriteFile(p, []byte(text), 0o666); err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.writeString: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.writeString: %s", err.Error()))
 	}
 	return newPath(p)
 }
@@ -512,7 +537,8 @@ func filesReadSymbolicLink(params []interface{}) interface{} {
 	}
 	target, err := os.Readlink(p)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.readSymbolicLink: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.readSymbolicLink: %s", err.Error()))
 	}
 	return newPath(target)
 }
@@ -527,7 +553,8 @@ func filesCreateSymbolicLink(params []interface{}) interface{} {
 		return g2
 	}
 	if err := os.Symlink(target, link); err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.createSymbolicLink: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.createSymbolicLink: %s", err.Error()))
 	}
 	return newPath(link)
 }
@@ -542,7 +569,8 @@ func filesCreateLink(params []interface{}) interface{} {
 		return g2
 	}
 	if err := os.Link(existing, link); err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.createLink: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.createLink: %s", err.Error()))
 	}
 	return newPath(link)
 }
@@ -557,7 +585,8 @@ func filesCreateTempFileInDir(params []interface{}) interface{} {
 	pattern := prefix + "*" + suffix
 	f, err := os.CreateTemp(dir, pattern)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.createTempFile: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.createTempFile: %s", err.Error()))
 	}
 	_ = f.Close()
 	return newPath(f.Name())
@@ -569,7 +598,8 @@ func filesCreateTempFile(params []interface{}) interface{} {
 	pattern := prefix + "*" + suffix
 	f, err := os.CreateTemp("", pattern)
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.createTempFile: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.createTempFile: %s", err.Error()))
 	}
 	_ = f.Close()
 	return newPath(f.Name())
@@ -583,7 +613,8 @@ func filesCreateTempDirectoryInDir(params []interface{}) interface{} {
 	prefix := object.GoStringFromStringObject(params[1].(*object.Object))
 	path, err := os.MkdirTemp(dir, prefix+"*")
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.createTempDirectory: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.createTempDirectory: %s", err.Error()))
 	}
 	return newPath(path)
 }
@@ -592,7 +623,239 @@ func filesCreateTempDirectory(params []interface{}) interface{} {
 	prefix := object.GoStringFromStringObject(params[0].(*object.Object))
 	path, err := os.MkdirTemp("", prefix+"*")
 	if err != nil {
-		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("Files.createTempDirectory: %s", err.Error()))
+		return ghelpers.GetGErrBlk(excNames.IOException,
+			fmt.Sprintf("Files.createTempDirectory: %s", err.Error()))
 	}
 	return newPath(path)
+}
+
+func filesWalk([]interface{}) interface{} {
+	return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException,
+		"Files.walk is not yet supported (requires java.util.stream.Stream)")
+}
+
+func invokeVisitor(fs *list.List, visitor *object.Object, methodName, methodType string, params []interface{}) interface{} {
+	className := "java/nio/file/FileVisitor"
+	fullSignature := className + "." + methodName + methodType
+
+	// Try dynamic dispatch if visitor is a real object
+	if visitor != nil && !object.IsNull(visitor) {
+		objClassName := *(stringPool.GetStringPointer(visitor.KlassName))
+		// Search up the class hierarchy for an implementation (G-function or Java)
+		currClass := objClassName
+		for currClass != "" {
+			specificFQN := currClass + "." + methodName + methodType
+
+			// 1. Check if it's a registered G-function
+			if gm, ok := ghelpers.MethodSignatures[specificFQN]; ok {
+				if gm.NeedsContext {
+					params = append([]interface{}{fs}, params...)
+				}
+				return ghelpers.Invoke(specificFQN, params)
+			}
+
+			// 2. Check if it's a Java method in the current class
+			mtEntry := classloader.GetMtableEntry(specificFQN)
+			if mtEntry.Meth == nil {
+				// Try fetching it (might need to load class or look closer)
+				mtEntry, _ = classloader.FetchMethodAndCP(currClass, methodName, methodType)
+			}
+
+			if mtEntry.Meth != nil {
+				if mtEntry.MType == 'G' {
+					gm := mtEntry.Meth.(ghelpers.GMeth)
+					if gm.NeedsContext {
+						params = append([]interface{}{fs}, params...)
+					}
+					return gm.GFunction(params)
+				}
+				if mtEntry.MType == 'J' {
+					// It's a Java method.
+					// Call the Java method from G-function using RunJavaFromG
+					globals.GetGlobalRef().FuncRunJavaFromG(fs, currClass, methodName, methodType, params...)
+
+					// Retrieve the return value from the top frame's operand stack.
+					// After RunJavaFromG returns, the frame it created has been popped,
+					// and the return value was pushed to the operand stack of the frame below it.
+					fr := fs.Front().Value.(*frames.Frame)
+					if fr.TOS >= 0 {
+						res := fr.OpStack[fr.TOS]
+						fr.TOS--
+						return res
+					}
+					return nil
+				}
+			}
+
+			// Get superclass
+			klass := classloader.MethAreaFetch(currClass)
+			if klass == nil || klass.Data.SuperclassIndex == types.InvalidStringIndex {
+				break
+			}
+			currClass = *stringPool.GetStringPointer(uint32(klass.Data.SuperclassIndex))
+		}
+	}
+
+	// Fallback to default FileVisitor G-function if found
+	if gm, ok := ghelpers.MethodSignatures[fullSignature]; ok {
+		if gm.NeedsContext {
+			params = append([]interface{}{fs}, params...)
+		}
+		return ghelpers.Invoke(fullSignature, params)
+	}
+
+	return ghelpers.GetGErrBlk(excNames.NoSuchMethodException, "invokeVisitor: method not found: "+fullSignature)
+}
+
+func filesWalkFileTree(params []interface{}) interface{} {
+	var fsStack *list.List
+	var realParams []interface{}
+
+	// If NeedsContext is true, the frame stack (*list.List) is prepended to the parameter list
+	// because RunGfunction reverses the parameters after appending the frame stack.
+	if len(params) > 0 {
+		if l, ok := params[0].(*list.List); ok {
+			fsStack = l
+			realParams = params[1:]
+		} else {
+			realParams = params
+		}
+	} else {
+		realParams = params
+	}
+
+	if len(realParams) < 2 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Files.walkFileTree: missing arguments")
+	}
+
+	startPathObj := realParams[0].(*object.Object)
+	startStr, gerr := pathToGoString(startPathObj)
+	if gerr != nil {
+		return gerr
+	}
+
+	var visitor *object.Object
+	maxDepth := int64(2147483647) // Integer.MAX_VALUE
+
+	if len(realParams) == 2 {
+		// walkFileTree(Path start, FileVisitor visitor)
+		visitor = realParams[1].(*object.Object)
+	} else if len(realParams) == 4 {
+		// walkFileTree(Path start, Set options, int maxDepth, FileVisitor visitor)
+		maxDepth = realParams[2].(int64)
+		visitor = realParams[3].(*object.Object)
+	} else {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Files.walkFileTree: unexpected number of arguments")
+	}
+
+	if visitor == nil || object.IsNull(visitor) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Files.walkFileTree: visitor is null")
+	}
+
+	// We need to keep track of the root depth to respect maxDepth
+	rootDepth := len(getPathParts(startStr))
+	if !filepath.IsAbs(startStr) {
+		// Best effort for relative paths
+		absStart, _ := filepath.Abs(startStr)
+		rootDepth = len(getPathParts(absStart))
+	}
+
+	err := filepath.WalkDir(startStr, func(path string, d fs.DirEntry, err error) error {
+		currentDepth := len(getPathParts(path))
+		if !filepath.IsAbs(path) {
+			absPath, _ := filepath.Abs(path)
+			currentDepth = len(getPathParts(absPath))
+		}
+
+		if int64(currentDepth-rootDepth) > maxDepth {
+			if d != nil && d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		javaPath := newPath(path)
+		var result interface{}
+
+		// Get file attributes
+		var attrs *object.Object
+		if d != nil {
+			info, _ := d.Info()
+			if info != nil {
+				attrs = newBasicFileAttributes(info)
+			}
+		}
+		if attrs == nil {
+			attrs = object.Null
+		}
+
+		if err != nil {
+			// visitFileFailed(Path, IOException)
+			result = invokeVisitor(fsStack,
+				visitor, "visitFileFailed",
+				"(Ljava/lang/Object;Ljava/io/IOException;)Ljava/nio/file/FileVisitResult;",
+				[]interface{}{visitor, javaPath, ghelpers.GetGErrBlk(excNames.IOException, err.Error())})
+		} else if d.IsDir() {
+			// preVisitDirectory(Path, BasicFileAttributes)
+			result = invokeVisitor(fsStack,
+				visitor, "preVisitDirectory",
+				"(Ljava/lang/Object;Ljava/nio/file/attribute/BasicFileAttributes;)Ljava/nio/file/FileVisitResult;",
+				[]interface{}{visitor, javaPath, attrs})
+		} else {
+			// visitFile(Path, BasicFileAttributes)
+			result = invokeVisitor(fsStack, visitor, "visitFile", "(Ljava/lang/Object;Ljava/nio/file/attribute/BasicFileAttributes;)Ljava/nio/file/FileVisitResult;",
+				[]interface{}{visitor, javaPath, attrs})
+		}
+
+		if gerr, ok := result.(*ghelpers.GErrBlk); ok {
+			return fmt.Errorf("java exception: %s", gerr.ErrMsg)
+		}
+
+		// Handle FileVisitResult
+		var name string
+		if resObj, ok := result.(*object.Object); ok && !object.IsNull(resObj) {
+			// Check enum constant name
+			if nameField, ok := resObj.FieldTable["name"]; ok {
+				if nameStrObj, ok := nameField.Fvalue.(*object.Object); ok {
+					name = object.GoStringFromStringObject(nameStrObj)
+					switch name {
+					case "TERMINATE":
+						return filepath.SkipAll
+					case "SKIP_SUBTREE":
+						return filepath.SkipDir
+					case "SKIP_SIBLINGS":
+						// Go's WalkDir doesn't have a direct SKIP_SIBLINGS, but we can approximate
+						return nil
+					case "CONTINUE":
+						// continue
+					}
+				}
+			}
+		}
+
+		// postVisitDirectory
+		if d != nil && d.IsDir() && name != "SKIP_SUBTREE" {
+			// Note: filepath.WalkDir doesn't naturally support post-visit in the same callback,
+			// but for a single directory entry that is a directory, we've already done preVisit.
+			// True walkFileTree calls postVisit after ALL entries in the directory are visited.
+			// This implementation is still simplified.
+			_ = invokeVisitor(fsStack,
+				visitor,
+				"postVisitDirectory",
+				"(Ljava/lang/Object;Ljava/io/IOException;)Ljava/nio/file/FileVisitResult;",
+				[]interface{}{visitor, javaPath, object.Null})
+		}
+
+		return nil
+	})
+
+	// postVisitDirectory(Path, IOException) - simplified: called only if no walk error so far or if we want to be thorough.
+	// filepath.WalkDir doesn't have a post-visit hook in the same way, but we can implement it by wrapping the traversal.
+	// However, for a first implementation, this might be sufficient.
+
+	if err != nil {
+		return ghelpers.GetGErrBlk(excNames.IOException, err.Error())
+	}
+
+	return startPathObj
 }

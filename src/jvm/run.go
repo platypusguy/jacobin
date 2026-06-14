@@ -124,17 +124,6 @@ func RunJavaThread(args []any) {
 		}
 	}
 
-	// JACOBIN-824:
-	// cl := classloader.MethAreaFetch(clName) // JACOBIN-824
-	// // if cl == nil {
-	// // 	errMsg := fmt.Sprintf("RunJavaThread: Could not load class %s", clName)
-	// // 	exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, nil)
-	// // 	return
-	// // }
-	// if cl != nil {
-	// 	f.Locals[0] = cl.Data
-	// }
-
 	// Add the initial frame and the frame stack to the thread's field table.
 	t.ThMutex.Lock()
 	t.FieldTable["frame"] = object.Field{Ftype: types.Ref, Fvalue: f}

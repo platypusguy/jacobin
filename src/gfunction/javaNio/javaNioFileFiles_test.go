@@ -11,7 +11,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"jacobin/src/classloader"
 	"jacobin/src/excNames"
+	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -307,5 +309,94 @@ func Test_Files_Symlink_Paths(t *testing.T) {
 	rl := filesReadSymbolicLink([]interface{}{newPath(link)})
 	if _, ok := rl.(*object.Object); !ok {
 		t.Fatalf("readSymbolicLink should return Path")
+	}
+}
+
+func Test_Files_Walk_And_WalkFileTree(t *testing.T) {
+	globals.InitGlobals("test")
+	classloader.InitMethodArea()
+	dir := t.TempDir()
+	p := newPath(dir)
+
+	// Walk should return UnsupportedOperationException
+	res := filesWalk([]interface{}{p, object.Null})
+	if geb, ok := res.(*ghelpers.GErrBlk); !ok || geb.ExceptionType != excNames.UnsupportedOperationException {
+		t.Fatalf("expected UnsupportedOperationException for walk, got %T %+v", res, res)
+	}
+
+	// WalkFileTree with null visitor should return NullPointerException
+	res2 := filesWalkFileTree([]interface{}{p, object.Null})
+	if geb, ok := res2.(*ghelpers.GErrBlk); !ok || geb.ExceptionType != excNames.NullPointerException {
+		t.Fatalf("expected NullPointerException for walkFileTree with null visitor, got %T %+v", res2, res2)
+	}
+
+	// WalkFileTree with too few arguments should return IllegalArgumentException
+	res3 := filesWalkFileTree([]interface{}{p})
+	if geb, ok := res3.(*ghelpers.GErrBlk); !ok || geb.ExceptionType != excNames.IllegalArgumentException {
+		t.Fatalf("expected IllegalArgumentException for walkFileTree with 1 arg, got %T %+v", res3, res3)
+	}
+
+	Load_Nio_File_FileVisitResult()
+	fs := frames.CreateFrameStack()
+	res4 := fvResultValues(nil)
+	arr, ok := res4.(*object.Object)
+	if !ok || arr == nil {
+		t.Fatalf("fvResultValues should return array object")
+	}
+	vals := arr.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(vals) != 4 {
+		t.Fatalf("expected 4 FileVisitResult values, got %d", len(vals))
+	}
+	if object.GoStringFromStringObject(vals[0].FieldTable["name"].Fvalue.(*object.Object)) != "CONTINUE" {
+		t.Fatalf("expected CONTINUE at index 0")
+	}
+
+	// Test FileVisitor default G-functions
+	Load_Nio_File_FileVisitor()
+	res5 := ghelpers.Invoke("java/nio/file/FileVisitor.preVisitDirectory(Ljava/lang/Object;Ljava/nio/file/attribute/BasicFileAttributes;)Ljava/nio/file/FileVisitResult;", []interface{}{fs, object.Null, object.Null, object.Null})
+	if res5 != vals[0] {
+		t.Fatalf("FileVisitor.preVisitDirectory should return CONTINUE by default")
+	}
+
+	// Test SimpleFileVisitor
+	Load_Nio_File_SimpleFileVisitor()
+	res6 := ghelpers.Invoke("java/nio/file/SimpleFileVisitor.visitFile(Ljava/lang/Object;Ljava/nio/file/attribute/BasicFileAttributes;)Ljava/nio/file/FileVisitResult;", []interface{}{fs, object.Null, object.Null, object.Null})
+	if res6 != vals[0] {
+		t.Fatalf("SimpleFileVisitor.visitFile should return CONTINUE")
+	}
+
+	// Test BasicFileAttributes
+	Load_Nio_File_Attribute_BasicFileAttributes()
+	info, _ := os.Stat(dir)
+	attrs := newBasicFileAttributes(info)
+	res7 := bfaIsDirectory([]interface{}{attrs})
+	if res7.(int64) != 1 {
+		t.Fatalf("expected isDirectory to be true for temp dir")
+	}
+
+	// Test Dynamic Dispatch in WalkFileTree
+	// Create a dummy visitor subclass
+	visitorClassName := "org/jacobin/test/MyVisitor"
+	visitorObj := object.MakeEmptyObjectWithClassName(&visitorClassName)
+
+	// Create some files to visit
+	f1 := filepath.Join(dir, "f1.txt")
+	os.WriteFile(f1, []byte("f1"), 0o644)
+
+	visited := false
+	// Register a specific G-function for MyVisitor
+	ghelpers.MethodSignatures[visitorClassName+".visitFile(Ljava/lang/Object;Ljava/nio/file/attribute/BasicFileAttributes;)Ljava/nio/file/FileVisitResult;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction: func(params []interface{}) interface{} {
+				visited = true
+				return vals[0] // CONTINUE
+			},
+			NeedsContext: true,
+		}
+
+	filesWalkFileTree([]interface{}{fs, p, visitorObj})
+	if !visited {
+		t.Fatalf("dynamic dispatch failed: MyVisitor.visitFile was not called")
 	}
 }
