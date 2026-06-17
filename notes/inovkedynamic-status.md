@@ -65,11 +65,12 @@ When the JVM executes `invokedynamic` for the first time (or if the call site be
         2. `String` — the name from the NameAndType.
         3. `MethodType` — the method descriptor from the NameAndType.
         4. Any static bootstrap arguments from the `BootstrapMethods` entry.
+      5. 
     - The BSM is user-provided except for lambdas (For lambdas, this is where `LambdaMetafactory.metafactory` runs, dynamically generating a new class that implements the functional interface.) It runs the Java code to decide the target.
-
-- *BSM returns a `java.lang.inovke.CallSite` object* (or throws a `BootstrapMethodError` exception, causing linking failure).
+    - This is a standard Java method call. The BSM can now execute any Java code it needs to determine what method should ultimately be called. For lambdas, this is where `LambdaMetafactory.metafactory` runs, dynamically generating a new class that implements the functional interface.
+- BSM returns a `java.lang.inovke.CallSite` object (or throws a `BootstrapMethodError` exception, causing linking failure).
     - Common implementations: `ConstantCallSite` (immutable target), `MutableCallSite` (changeable target), `VolatileCallSite`.
-    - The `CallSite` object contains a crucial piece of information: its target MethodHandle. This handle points to the actual code that should be executed for this invokedynamic instruction from now on.
+    - The `CallSite` object contains a crucial piece of information: its target MethodHandle. This handle points to the actual code that should be executed for this `invokedynamic` instruction from now on.
 
 - *Bind ("link") the call site*: The JVM associates the returned `CallSite` (and its target `MethodHandle`) with this specific `invokedynamic` instruction. This binding is typically stored in a per-call-site data structure in the JVM's internal state (e.g., in HotSpot, involving call site objects and possibly JIT optimizations).
 
