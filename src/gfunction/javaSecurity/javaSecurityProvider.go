@@ -54,6 +54,9 @@ func Load_Security_Provider() {
 	ghelpers.MethodSignatures["java/security/Provider.getService(Ljava/lang/String;Ljava/lang/String;)Ljava/security/Provider$Service;"] =
 		ghelpers.GMeth{ParamSlots: 2, GFunction: securityProviderGetService}
 
+	ghelpers.MethodSignatures["java/security/Provider.getServices()Ljava/util/Set;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+
 	ghelpers.MethodSignatures["java/security/Provider.getVersion()D"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapDeprecated}
 

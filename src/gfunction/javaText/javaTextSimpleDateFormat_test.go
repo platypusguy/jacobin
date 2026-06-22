@@ -30,7 +30,7 @@ func TestSimpleDateFormat_MethodRegistration(t *testing.T) {
 
 	// Clear and load just the SDF methods to ghelpers.MethodSignatures map for this test context.
 	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
-	Load_Math_SimpleDateFormat()
+	Load_Text_SimpleDateFormat()
 
 	// Verify a few critical registrations and their ParamSlots.
 	tests := []struct {

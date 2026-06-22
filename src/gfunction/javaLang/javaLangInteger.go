@@ -203,6 +203,12 @@ func Load_Lang_Integer() {
 			GFunction:  integerParseIntRadix,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/String;III)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  integerParseIntCharSequence,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Integer.parseUnsignedInt(Ljava/lang/CharSequence;III)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
@@ -219,6 +225,12 @@ func Load_Lang_Integer() {
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  integerParseUnsignedInt,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Integer.parseUnsignedInt(Ljava/lang/String;III)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  integerParseUnsignedIntCharSequence,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Integer.remainderUnsigned(II)I"] =

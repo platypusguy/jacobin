@@ -55,6 +55,9 @@ func Load_Security_Provider_Service() {
 	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".newInstance(Ljava/lang/Object[])Ljava/lang/Object;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
+	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".supportsParameter(Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+
 	ghelpers.MethodSignatures[types.ClassNameSecurityProviderService+".toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: securityProvSvcToString}
 }

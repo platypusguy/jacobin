@@ -280,6 +280,20 @@ func Load_Lang_Character() {
 			ParamSlots: 1,
 			GFunction:  characterValueOf,
 		}
+
+	// Emoji methods (added in Java 21)
+	ghelpers.MethodSignatures["java/lang/Character.isEmoji(I)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Character.isEmojiPresentation(I)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Character.isEmojiModifier(I)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Character.isEmojiModifierBase(I)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Character.isEmojiComponent(I)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Character.isExtendedPictographic(I)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 }
 
 // characterClinit initializes the static fields of java.lang.Character.

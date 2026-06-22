@@ -239,6 +239,67 @@ func Load_Util_Map() {
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
+
+	// Java 21 methods from SequencedMap
+	ghelpers.MethodSignatures["java/util/Map.firstEntry()Ljava/util/Map$Entry;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.lastEntry()Ljava/util/Map$Entry;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.pollFirstEntry()Ljava/util/Map$Entry;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.pollLastEntry()Ljava/util/Map$Entry;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.putFirst(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.putLast(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.reversed()Ljava/util/SequencedMap;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.sequencedEntrySet()Ljava/util/SequencedSet;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.sequencedKeySet()Ljava/util/SequencedSet;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.sequencedValues()Ljava/util/SequencedCollection;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }
 
 func mapClear(params []interface{}) interface{} {

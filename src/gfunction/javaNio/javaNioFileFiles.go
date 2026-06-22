@@ -103,6 +103,10 @@ func Load_Nio_File_Files() {
 	ghelpers.MethodSignatures["java/nio/file/Files.lines(Ljava/nio/file/Path;Ljava/nio/charset/Charset;)Ljava/util/stream/Stream;"] =
 		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 
+	// mismatch
+	ghelpers.MethodSignatures["java/nio/file/Files.mismatch(Ljava/nio/file/Path;Ljava/nio/file/Path;)J"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
 	// list
 	ghelpers.MethodSignatures["java/nio/file/Files.list(Ljava/nio/file/Path;)Ljava/util/stream/Stream;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
@@ -130,8 +134,12 @@ func Load_Nio_File_Files() {
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filesReadAllBytes}
 	ghelpers.MethodSignatures["java/nio/file/Files.readAllLines(Ljava/nio/file/Path;)Ljava/util/List;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filesReadAllLines}
+	ghelpers.MethodSignatures["java/nio/file/Files.readAllLines(Ljava/nio/file/Path;Ljava/nio/charset/Charset;)Ljava/util/List;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 	ghelpers.MethodSignatures["java/nio/file/Files.readString(Ljava/nio/file/Path;)Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filesReadString}
+	ghelpers.MethodSignatures["java/nio/file/Files.readString(Ljava/nio/file/Path;Ljava/nio/charset/Charset;)Ljava/lang/String;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 
 	// readSymbolicLink
 	ghelpers.MethodSignatures["java/nio/file/Files.readSymbolicLink(Ljava/nio/file/Path;)Ljava/nio/file/Path;"] =
@@ -156,6 +164,8 @@ func Load_Nio_File_Files() {
 		ghelpers.GMeth{ParamSlots: 3, GFunction: filesWriteBytes}
 	ghelpers.MethodSignatures["java/nio/file/Files.writeString(Ljava/nio/file/Path;Ljava/lang/CharSequence;[Ljava/nio/file/OpenOption;)Ljava/nio/file/Path;"] =
 		ghelpers.GMeth{ParamSlots: 3, GFunction: filesWriteString}
+	ghelpers.MethodSignatures["java/nio/file/Files.writeString(Ljava/nio/file/Path;Ljava/lang/CharSequence;Ljava/nio/charset/Charset;[Ljava/nio/file/OpenOption;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
 }
 
 // --- Helpers ---

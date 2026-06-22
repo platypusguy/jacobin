@@ -153,6 +153,7 @@ func Load_Lang_Class() {
 	addTrap("java/lang/Class.getProtectionDomain()Ljava/security/ProtectionDomain;", 0)
 	addTrap("java/lang/Class.getRecordComponents()[Ljava/lang/reflect/RecordComponent;", 0)
 	addTrap("java/lang/Class.isNestmateOf(Ljava/lang/Class;)Z", 1)
+	addTrap("java/lang/Class.accessFlags()Ljava/util/Set;", 0)
 }
 
 // === Implemented methods (alphabetically ordered) ===

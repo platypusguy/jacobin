@@ -125,4 +125,10 @@ func Load_Lang_Process_Builder() {
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
+
+	ghelpers.MethodSignatures["java/lang/ProcessBuilder.startPipeline(Ljava/util/List;)Ljava/util/List;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }

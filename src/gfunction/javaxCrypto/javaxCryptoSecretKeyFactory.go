@@ -60,6 +60,12 @@ func Load_Crypto_SecretKeyFactory() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["javax/crypto/SecretKeyFactory.getProvider()Ljava/security/Provider;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["javax/crypto/SecretKeyFactory.translateKey(Ljavax/crypto/SecretKey;)Ljavax/crypto/SecretKey;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,

@@ -127,6 +127,13 @@ func Load_Lang_Math() {
 	ghelpers.MethodSignatures["java/lang/Math.ulp(D)D"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ulpFloat64}
 	ghelpers.MethodSignatures["java/lang/Math.ulp(F)F"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ulpFloat64}
 
+	ghelpers.MethodSignatures["java/lang/Math.divideExact(II)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Math.divideExact(JJ)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Math.clamp(DDD)D"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Math.clamp(FFF)F"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Math.clamp(JJJ)J"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/lang/Math.clamp(III)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+
 	ghelpers.MethodSignatures["java/lang/StrictMath.abs(D)D"] = ghelpers.GMeth{ParamSlots: 1, GFunction: absFloat64}
 	ghelpers.MethodSignatures["java/lang/StrictMath.abs(F)F"] = ghelpers.GMeth{ParamSlots: 1, GFunction: absFloat64}
 	ghelpers.MethodSignatures["java/lang/StrictMath.abs(I)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: absInt64}

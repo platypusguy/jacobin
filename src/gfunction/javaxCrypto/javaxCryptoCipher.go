@@ -249,6 +249,12 @@ func Load_Crypto_Cipher() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["javax/crypto/Cipher.toString()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["javax/crypto/Cipher.wrap(Ljava/security/Key;)[B"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,

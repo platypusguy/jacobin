@@ -8,7 +8,6 @@ package javaIo
 
 import (
 	"fmt"
-	"golang.org/x/term"
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
@@ -18,6 +17,8 @@ import (
 	"jacobin/src/types"
 	"os"
 	"syscall"
+
+	"golang.org/x/term"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -37,6 +38,21 @@ func Load_Io_Console() {
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
+	ghelpers.MethodSignatures["java/io/Console.print(Ljava/lang/Object;)Ljava/io/Console;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+	ghelpers.MethodSignatures["java/io/Console.println(Ljava/lang/Object;)Ljava/io/Console;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+	ghelpers.MethodSignatures["java/io/Console.readln(Ljava/lang/String;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
 
 	// Flush java/lang/System.in/out/err.
 	ghelpers.MethodSignatures["java/io/Console.flush()V"] =
@@ -51,12 +67,22 @@ func Load_Io_Console() {
 			ParamSlots: 2, // the format string, the parameters (if any)
 			GFunction:  consolePrintf,
 		}
+	ghelpers.MethodSignatures["java/io/Console.format(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/Console;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
 
 	// Console Printf.
 	ghelpers.MethodSignatures["java/io/Console.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/Console;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2, // the format string, the parameters (if any)
 			GFunction:  consolePrintf,
+		}
+	ghelpers.MethodSignatures["java/io/Console.printf(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/Console;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	// Retrieves the unique Reader object associated with this console.
@@ -79,6 +105,11 @@ func Load_Io_Console() {
 			ParamSlots: 2,
 			GFunction:  consolePrintfReadLine,
 		}
+	ghelpers.MethodSignatures["java/io/Console.readLine(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
 
 	// Reads a password or passphrase from the console with echoing disabled.
 	ghelpers.MethodSignatures["java/io/Console.readPassword()[C"] =
@@ -92,6 +123,11 @@ func Load_Io_Console() {
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  consolePrintfReadPassword,
+		}
+	ghelpers.MethodSignatures["java/io/Console.readPassword(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)[C"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	// Retrieves the unique PrintWriter object associated with this console.

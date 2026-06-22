@@ -696,6 +696,17 @@ func Load_Lang_String() {
 		}
 
 	// TODO: What should we do with this? <R> R transform(Function<? super String,? extends R> f)
+	ghelpers.MethodSignatures["java/lang/String.transform(Ljava/util/function/Function;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/String.resolveConstantDesc(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
 
 	// TODO: Return a string whose value is the base string with escape sequences translated as if in a string literal.
 	ghelpers.MethodSignatures["java/lang/String.translateEscapes()Ljava/lang/String;"] =

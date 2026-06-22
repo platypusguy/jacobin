@@ -83,6 +83,12 @@ func Load_Sun_Security_Jca_ProviderList() {
 	ghelpers.MethodSignatures["sun/security/jca/ProviderList.toArray()[Ljava/security/Provider;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
+	ghelpers.MethodSignatures["sun/security/jca/ProviderList.insertAt(Lsun/security/jca/ProviderList;Ljava/security/Provider;I)Lsun/security/jca/ProviderList;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+
+	ghelpers.MethodSignatures["sun/security/jca/ProviderList.remove(Lsun/security/jca/ProviderList;Ljava/lang/String;)Lsun/security/jca/ProviderList;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
 	ghelpers.MethodSignatures["sun/security/jca/ProviderList.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
