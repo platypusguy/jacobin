@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func Load_Math_SimpleDateFormat() {
+func Load_Text_SimpleDateFormat() {
 
 	ghelpers.MethodSignatures["java/text/SimpleDateFormat.<clinit>()V"] =
 		ghelpers.GMeth{

@@ -124,6 +124,48 @@ func Load_Util_List() {
 
 	ghelpers.MethodSignatures["java/util/List.sort(Ljava/util/Comparator;)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
+	// Java 21 methods from SequencedCollection
+	ghelpers.MethodSignatures["java/util/List.addFirst(Ljava/lang/Object;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/List.addLast(Ljava/lang/Object;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/List.getFirst()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/List.getLast()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/List.removeFirst()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/List.removeLast()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/List.reversed()Ljava/util/List;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }
 
 func listIterator(params []interface{}) interface{} {

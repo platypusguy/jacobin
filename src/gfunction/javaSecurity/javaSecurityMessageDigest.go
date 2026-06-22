@@ -105,6 +105,9 @@ func Load_Security_MessageDigest() {
 
 	ghelpers.MethodSignatures["java/security/MessageDigest.update(Ljava/nio/ByteBuffer;)V"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+
+	ghelpers.MethodSignatures["java/security/MessageDigest.digest([BII)I"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: msgdigDigestBytesII}
 }
 
 // ===================== Helper Functions =====================

@@ -65,7 +65,13 @@ func Load_KeyPairGenerator() {
 	ghelpers.MethodSignatures["java/security/KeyPairGenerator.getInstance(Ljava/lang/String;Ljava/lang/String;)Ljava/security/KeyPairGenerator;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  keypairgeneratorGetInstance,
+		}
+
+	ghelpers.MethodSignatures["java/security/KeyPairGenerator.getInstance(Ljava/lang/String;Ljava/security/Provider;)Ljava/security/KeyPairGenerator;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  keypairgeneratorGetInstance,
 		}
 
 	// ---------------------------------------------------------

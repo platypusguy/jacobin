@@ -50,13 +50,13 @@ func Load_Security_Signature() {
 	ghelpers.MethodSignatures["java/security/Signature.getInstance(Ljava/lang/String;Ljava/lang/String;)Ljava/security/Signature;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  signatureGetInstance,
 		}
 
 	ghelpers.MethodSignatures["java/security/Signature.getInstance(Ljava/lang/String;Ljava/security/Provider;)Ljava/security/Signature;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  signatureGetInstance,
 		}
 
 	// Instance methods
@@ -118,6 +118,12 @@ func Load_Security_Signature() {
 		ghelpers.GMeth{
 			ParamSlots: 3,
 			GFunction:  signatureUpdateBytesRange,
+		}
+
+	ghelpers.MethodSignatures["java/security/Signature.update(Ljava/nio/ByteBuffer;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/security/Signature.verify([B)Z"] =

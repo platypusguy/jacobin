@@ -26,6 +26,12 @@ func Load_Nio_File_Paths() {
 
 	ghelpers.MethodSignatures["java/nio/file/Paths.get(Ljava/net/URI;)Ljava/nio/file/Path;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+
+	// of
+	ghelpers.MethodSignatures["java/nio/file/Paths.of(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: pathsGet}
+	ghelpers.MethodSignatures["java/nio/file/Paths.of(Ljava/net/URI;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 }
 
 func pathsGet(params []interface{}) interface{} {

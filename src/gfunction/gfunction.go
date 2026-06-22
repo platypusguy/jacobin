@@ -35,6 +35,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// so any methods we implement replace trapped entries.
 	ghelpers.Load_Traps()
 	ghelpers.Load_Traps_Java_Io()
+	ghelpers.Load_Traps_Javax_Crypto()
 	ghelpers.Load_Traps_Java_Nio()
 	ghelpers.Load_Traps_Java_Security()
 
@@ -109,8 +110,13 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaNio.Load_Nio_File_Paths()
 
 	// java/text/*
-	javaText.Load_Math_SimpleDateFormat()
+	javaText.Load_Text_ChoiceFormat()
 	javaText.Load_Text_DateFormat()
+	javaText.Load_Text_DecimalFormat()
+	javaText.Load_Text_ListFormat()
+	javaText.Load_Text_NumberFormat()
+	javaText.Load_Text_MessageFormat()
+	javaText.Load_Text_SimpleDateFormat()
 
 	// java/security/*
 	javaSecurity.Load_ECFieldAndPoint()
@@ -137,8 +143,11 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// javax/crypto/*
 	javaxCrypto.Load_Crypto_Cipher()
+	javaxCrypto.Load_Crypto_ExemptionMechanism()
 	javaxCrypto.Load_Crypto_Interfaces_DH_Keys()
+	javaxCrypto.Load_Crypto_KEM()
 	javaxCrypto.Load_Crypto_KeyAgreement()
+	javaxCrypto.Load_Crypto_Mac()
 	javaxCrypto.Load_Crypto_SecretKeyFactory()
 	javaxCrypto.Load_Crypto_Spec_DHParameterSpec()
 	javaxCrypto.Load_Crypto_Spec_GCMParameterSpec()
@@ -160,6 +169,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_List()
 	javaUtil.Load_Util_ListIterator()
 	javaUtil.Load_Util_Set()
+	javaUtil.Load_Util_SequencedCollection()
+	javaUtil.Load_Util_SequencedMap()
+	javaUtil.Load_Util_SequencedSet()
 	javaUtil.Load_Util_Hash_Map()
 	javaUtil.Load_Util_Hash_Set()
 	javaUtil.Load_Util_HexFormat()
@@ -184,9 +196,16 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	misc.Load_Jdk_Internal_Misc_Unsafe()
 	misc.Load_Jdk_Internal_Misc_ScopedMemoryAccess()
 
+	// sun.misc.*
+	misc.Load_Sun_Misc_Unsafe()
+
 	// Sun
+	sunSecurity.Load_Sun_Security_Action_GetBooleanAction()
+	sunSecurity.Load_Sun_Security_Action_GetIntegerAction()
+	sunSecurity.Load_Sun_Security_Action_GetLongAction()
 	sunSecurity.Load_Sun_Security_Action_GetPropertyAction()
 	sunSecurity.Load_Sun_Security_Jca_ProviderList()
+	sunSecurity.Load_Sun_Security_Jca_Providers()
 
 	// Load functions that invoke ghelpers.ClinitGeneric() and do nothing else.
 	Load_Other_Methods()

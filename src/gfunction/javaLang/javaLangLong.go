@@ -178,6 +178,12 @@ func Load_Lang_Long() {
 			GFunction:  longParseLongRadix,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Long.parseLong(Ljava/lang/String;III)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  longParseLongCharSequence,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Long.parseUnsignedLong(Ljava/lang/CharSequence;III)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
@@ -194,6 +200,12 @@ func Load_Lang_Long() {
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  longParseUnsignedLong,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.parseUnsignedLong(Ljava/lang/String;III)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  longParseUnsignedLongCharSequence,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Long.remainderUnsigned(JJ)J"] =

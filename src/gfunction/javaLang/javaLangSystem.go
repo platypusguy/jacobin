@@ -101,13 +101,13 @@ func Load_Lang_System() {
 			GFunction:  systemGetenv,
 		}
 
-	ghelpers.MethodSignatures["java/lang/System.getLogger(Ljava/lang/String;)Ljava/lang/System/Logger;"] =
+	ghelpers.MethodSignatures["java/lang/System.getLogger(Ljava/lang/String;)Ljava/lang/System$Logger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-	ghelpers.MethodSignatures["java/lang/System.getLogger(Ljava/lang/String;Ljava/util/ResourceBundle;)Ljava/lang/System/Logger;"] =
+	ghelpers.MethodSignatures["java/lang/System.getLogger(Ljava/lang/String;Ljava/util/ResourceBundle;)Ljava/lang/System$Logger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
@@ -138,6 +138,24 @@ func Load_Lang_System() {
 		}
 
 	ghelpers.MethodSignatures["java/lang/System.identityHashCode(Ljava/lang/Object;)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/System.setIn(Ljava/io/InputStream;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/System.setOut(Ljava/io/PrintStream;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/System.setErr(Ljava/io/PrintStream;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
@@ -189,24 +207,6 @@ func Load_Lang_System() {
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapDeprecated,
-		}
-
-	ghelpers.MethodSignatures["java/lang/System.setErr(Ljava/io/PrintStream;)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
-		}
-
-	ghelpers.MethodSignatures["java/lang/System.setIn(Ljava/io/InputStream;)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
-		}
-
-	ghelpers.MethodSignatures["java/lang/System.setOut(Ljava/io/PrintStream;)V"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/lang/System.setProperties(Ljava/util/Properties;)V"] =

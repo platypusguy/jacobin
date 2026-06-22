@@ -72,6 +72,12 @@ func Load_Lang_Thread() {
 	ghelpers.MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V"] =
 		ghelpers.GMeth{ParamSlots: 3, GFunction: threadInitWithThreadGroupRunnableAndName}
 
+	ghelpers.MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;J)V"] =
+		ghelpers.GMeth{ParamSlots: 4, GFunction: threadInitWithThreadGroupRunnableAndName}
+
+	ghelpers.MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;JZ)V"] =
+		ghelpers.GMeth{ParamSlots: 5, GFunction: threadInitWithThreadGroupRunnableAndName}
+
 	args := "(Ljava/lang/ThreadGroup;" +
 		"Ljava/lang/String;" +
 		"I" +
@@ -115,6 +121,9 @@ func Load_Lang_Thread() {
 		ghelpers.GMeth{ParamSlots: 1, GFunction: threadEnumerate}
 
 	ghelpers.MethodSignatures["java/lang/Thread.exit()V"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+
+	ghelpers.MethodSignatures["java/lang/Thread.getAllStackTraces()Ljava/util/Map;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["java/lang/Thread.getContextClassLoader()Ljava/lang/ClassLoader;"] =
@@ -189,6 +198,12 @@ func Load_Lang_Thread() {
 	ghelpers.MethodSignatures["java/lang/Thread.join(Ljava/time/Duration;)Z"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
+	ghelpers.MethodSignatures["java/lang/Thread.ofPlatform()Ljava/lang/Thread$Builder$OfPlatform;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+
+	ghelpers.MethodSignatures["java/lang/Thread.ofVirtual()Ljava/lang/Thread$Builder$OfVirtual;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+
 	ghelpers.MethodSignatures["java/lang/Thread.onSpinWait()V"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: threadYield}
 
@@ -225,11 +240,20 @@ func Load_Lang_Thread() {
 	ghelpers.MethodSignatures["java/lang/Thread.sleep(J)V"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: threadSleep}
 
+	ghelpers.MethodSignatures["java/lang/Thread.sleep(JI)V"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: threadSleep}
+
+	ghelpers.MethodSignatures["java/lang/Thread.sleep(Ljava/time/Duration;)V"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+
 	ghelpers.MethodSignatures["java/lang/Thread.sleepNanos(J)V"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["java/lang/Thread.start()V"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: threadStart}
+
+	ghelpers.MethodSignatures["java/lang/Thread.startVirtualThread(Ljava/lang/Runnable;)Ljava/lang/Thread;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["java/lang/Thread.stop()V"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapDeprecated}
@@ -567,9 +591,9 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 
 // java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V
 func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
-	if len(params) != 4 {
+	if len(params) < 4 {
 		errMsg := fmt.Sprintf("threadInitWithThreadGroupRunnableAndName: "+
-			"Expected 3 parameters plus thread object, got %d parameters",
+			"Expected at least 3 parameters plus thread object, got %d parameters",
 			len(params))
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}

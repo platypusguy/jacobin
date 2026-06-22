@@ -156,6 +156,12 @@ func Load_Security_SecureRandom() {
 			GFunction:  secureRandomNextBytes,
 		}
 
+	ghelpers.MethodSignatures["java/security/SecureRandom.nextBytes([BII)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/security/SecureRandom.nextDouble()D"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

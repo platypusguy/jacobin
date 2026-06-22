@@ -94,6 +94,12 @@ func Load_Crypto_KeyAgreement() {
 			ParamSlots: 1,
 			GFunction:  keyagreementInit,
 		}
+
+	ghelpers.MethodSignatures["javax/crypto/KeyAgreement.init(Ljava/security/Key;Ljava/security/SecureRandom;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  keyagreementInit,
+		}
 }
 
 func genSecretDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {

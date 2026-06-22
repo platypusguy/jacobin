@@ -139,4 +139,47 @@ func Load_Util_Collection() {
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
 		}
+
+	// Java 21 methods from SequencedCollection
+	ghelpers.MethodSignatures["java/util/Collection.addFirst(Ljava/lang/Object;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Collection.addLast(Ljava/lang/Object;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Collection.getFirst()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Collection.getLast()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Collection.removeFirst()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Collection.removeLast()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Collection.reversed()Ljava/util/SequencedCollection;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }

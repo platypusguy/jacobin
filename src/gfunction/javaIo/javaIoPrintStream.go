@@ -56,6 +56,12 @@ func Load_Io_PrintStream() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/io/PrintStream.charset()Ljava/nio/charset/Charset;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/io/PrintStream.checkError()Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

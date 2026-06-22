@@ -112,6 +112,12 @@ func Load_Util_Objects() {
 			GFunction:  objectsRequireNonNull,
 		}
 
+	ghelpers.MethodSignatures["java/util/Objects.requireNonNull(Ljava/lang/Object;Ljava/util/function/Supplier;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/util/Objects.requireNonNullElse(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,

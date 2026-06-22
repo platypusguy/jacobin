@@ -38,4 +38,130 @@ func Load_Jdk_Internal_Misc_ScopedMemoryAccess() {
 			GFunction:  ghelpers.JustReturn,
 		}
 
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.copyMemory(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JLjava/lang/Object;JJ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 7,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.copySwapMemory(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JLjava/lang/Object;JJJ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 8,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.setMemory(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JJB)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 6,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.getBoolean(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;J)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.putBoolean(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JZ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.getByte(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;J)B"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.putByte(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JB)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.getChar(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JZ)C"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.putChar(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JCZ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 5,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.getShort(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JZ)S"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.putShort(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JSZ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 5,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.getInt(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JZ)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.putInt(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JIZ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 5,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.getLong(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JZ)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.putLong(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JJZ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 5,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.getFloat(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JZ)F"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.putFloat(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JFZ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 5,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.getDouble(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JZ)D"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.putDouble(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JDZ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 5,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.getReference(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;J)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.putReference(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JLjava/lang/Object;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 }

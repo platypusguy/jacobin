@@ -101,6 +101,42 @@ func Load_Lang_Process() {
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
+
+	ghelpers.MethodSignatures["java/lang/Process.inputReader()Ljava/io/BufferedReader;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Process.inputReader(Ljava/nio/charset/Charset;)Ljava/io/BufferedReader;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Process.outputWriter()Ljava/io/BufferedWriter;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Process.outputWriter(Ljava/nio/charset/Charset;)Ljava/io/BufferedWriter;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Process.errorReader()Ljava/io/BufferedReader;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Process.errorReader(Ljava/nio/charset/Charset;)Ljava/io/BufferedReader;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }
 
 func getPidFromProcessObject(obj *object.Object) (int, *ghelpers.GErrBlk) {

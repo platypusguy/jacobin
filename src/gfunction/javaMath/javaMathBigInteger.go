@@ -263,6 +263,12 @@ func Load_Math_Big_Integer() {
 			GFunction:  bigIntegerMultiply,
 		}
 
+	ghelpers.MethodSignatures["java/math/BigInteger.parallelMultiply(Ljava/math/BigInteger;)Ljava/math/BigInteger;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  bigIntegerMultiply,
+		}
+
 	ghelpers.MethodSignatures["java/math/BigInteger.negate()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
