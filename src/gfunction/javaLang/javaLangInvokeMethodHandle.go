@@ -18,6 +18,10 @@ import (
 func Load_Lang_Invoke_MethodHandle() {
 	ghelpers.MethodSignatures["java/lang/invoke/MethodHandle.type()Ljava/lang/invoke/MethodType;"] =
 		ghelpers.GMeth{ParamSlots: 0, NeedsContext: true, GFunction: mhType}
+
+	// not called by a public API, used internally only
+	ghelpers.MethodSignatures["java/lang/invoke/MethodHandle.initMHobject()Ljava/lang/invoke/MethodHandle;"] =
+		ghelpers.GMeth{ParamSlots: 5, GFunction: createMethodHandleObject}
 }
 
 // Internal representation of java.lang.invoke.MethodHandle
@@ -28,6 +32,7 @@ func Load_Lang_Invoke_MethodHandle() {
 // 	RefDescriptor string              // Method/field descriptor
 // 	DirectMethod  *classloader.Method // For direct method invocations
 // 	IsVarArgs     bool
+//  $target       *MTentry            // an internal-only field
 // }
 
 // Method handle reference kinds (JVM spec §5.4.3.5)
@@ -63,13 +68,39 @@ func createRawMethodHandleObject() *object.Object {
 	mhClassName := "java/lang/invoke/MethodHandle"
 	mho := object.MakeEmptyObjectWithClassName(&mhClassName)
 
-	mho.FieldTable["Kind"] = object.Field{Ftype: types.U16, Fvalue: 0}
-	mho.FieldTable["RefClass"] = object.Field{Ftype: types.GolangString, Fvalue: ""}
-	mho.FieldTable["RefName"] = object.Field{Ftype: types.GolangString, Fvalue: ""}
-	mho.FieldTable["RefDescriptor"] = object.Field{Ftype: types.GolangString, Fvalue: ""}
+	mho.FieldTable["Kind"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
+	mho.FieldTable["RefClass"] = object.Field{Ftype: types.Ref, Fvalue: nil}      // java string object
+	mho.FieldTable["RefName"] = object.Field{Ftype: types.Ref, Fvalue: nil}       // java string object
+	mho.FieldTable["RefDescriptor"] = object.Field{Ftype: types.Ref, Fvalue: nil} // java.lang.invoke.MethodType object
 	mho.FieldTable["DirectMethod"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 	mho.FieldTable["IsVarArgs"] = object.Field{Ftype: types.Bool, Fvalue: false}
 	mho.FieldTable["type"] = object.Field{Ftype: types.Ref, Fvalue: nil}
+	mho.FieldTable["$target"] = object.Field{Ftype: types.Ref, Fvalue: nil} // the MTentry to execute
+	return mho
+}
+
+// func createMethodHandleObject(classObj, methName, methType *object.Object,
+//
+//	refKind int64, callerClass *object.Object) *object.Object {
+func createMethodHandleObject(params []interface{}) interface{} {
+	if params == nil {
+		errMsg := fmt.Sprintf("mhType(): Invalid params array passed in")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	if len(params) != 5 {
+		errMsg := fmt.Sprintf("mhType(): Expected 1 parameter, got %d", len(params))
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	mho := createRawMethodHandleObject()
+	mho.FieldTable["Kind"] = object.Field{Ftype: types.Int, Fvalue: params[0]}
+	mho.FieldTable["RefClass"] = object.Field{Ftype: types.Ref, Fvalue: params[1]}
+	mho.FieldTable["RefName"] = object.Field{Ftype: types.Ref, Fvalue: params[2]}
+	mho.FieldTable["RefDescriptor"] = object.Field{Ftype: types.Ref, Fvalue: params[3]}
+	mho.FieldTable["DirectMethod"] = object.Field{Ftype: types.Ref, Fvalue: nil}
+	mho.FieldTable["IsVarArgs"] = object.Field{Ftype: types.Bool, Fvalue: false}
+	mho.FieldTable["type"] = object.Field{Ftype: types.Ref, Fvalue: params[4]}
 	return mho
 }
 

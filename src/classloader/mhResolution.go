@@ -278,8 +278,9 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	methodNameObj := object.StringObjectFromGoString(methodName)
 
 	// 6. Invoke an internal gfunction to create the MethodHandle.
-	// This is a hypothetical internal API for the VM to create method handles
+	// This is an internal API for the VM to create method handles
 	// without going through the full MethodHandles.Lookup security checks.
+
 	params := []interface{}{
 		defClassObj,
 		methodNameObj,
@@ -288,14 +289,17 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 		callerClassObj,
 	}
 
-	gfuncName := "jacobin/internal/VM.resolveMethodHandle(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;ILjava/lang/Class;)Ljava/lang/invoke/MethodHandle;"
+	gfuncName := "java/lang/invoke/MethodHandle.initMHobject()Ljava/lang/invoke/MethodHandle;"
 	result := globals.GetGlobalRef().FuncInvokeGFunction(gfuncName, params)
 
-	if result == nil { // TODO: Or check for error block
-		return nil, fmt.Errorf("resolveMethodHandleEntry: gfunction call to create MethodHandle failed for method %s.%s%s", className, methodName, methodSig)
+	switch result.(type) {
+	case *object.Object:
+		return result.(*object.Object), nil
+	default:
+		return nil, fmt.Errorf(
+			"resolveMethodHandleEntry: gfunction to create MethodHandle failed for method %s.%s(%s)",
+			className, methodName, methodSig)
 	}
-
-	return result.(*object.Object), nil
 }
 
 // ResolveMethodType resolves a MethodType constant pool entry.
