@@ -24,6 +24,7 @@ const Long = "J"
 const Ref = "L"
 const Rune = "R"
 const Short = "S"
+const U16 = "U" // uint16
 
 const Array = "["
 const BoolArray = "[Z"
