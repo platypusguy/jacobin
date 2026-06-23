@@ -186,7 +186,7 @@ func GetPrimitiveClass(descriptor string) *object.Object {
 
 // resolveMethodHandleEntry resolves a method invocation handle (kinds 5-9)
 func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial bool, fr *frames.Frame, refKind uint8) (*object.Object, error) {
-	// 1. Resolve the method reference
+	// 1A. Resolve the method reference, first step: identify the class and method
 	// refIndex points to MethodRef (10) or InterfaceMethodRef (11)
 	if refIndex < 1 || refIndex >= len(cp.CpIndex) {
 		return nil, fmt.Errorf("resolveMethodHandleEntry: invalid method ref index %d", refIndex)
@@ -209,6 +209,51 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	if globals.TraceClass {
 		trace.Trace(fmt.Sprintf("resolveMethodHandleEntry: Class=%s, Method=%s, Sig=%s, Static=%v",
 			className, methodName, methodSig, isStatic))
+	}
+
+	// 1B. Find the method and verify that it is correct format
+	mtEntry, err := FetchMethodAndCP(className, methodName, methodSig)
+	if err != nil || mtEntry.Meth == nil {
+		return nil, fmt.Errorf("NoSuchMethodError: in resolveMethodHandleEntry() %s",
+			className+methodName+methodSig)
+	}
+
+	// Perform verification checks based on the reference kind (JVMS 5.4.3.5)
+	jmethod, isJMethod := mtEntry.Meth.(JmEntry) // isJMethod is false in the case of a gfunction
+	isMethodStatic := false
+	if isJMethod {
+		isMethodStatic = (jmethod.AccessFlags & ACC_STATIC) != 0
+	}
+	// For Go-native g-functions, we assume the static/instance nature is correctly handled
+	// by the invocation type, so we only perform this check for Java methods.
+
+	switch refKind {
+	case 6: // REF_invokeStatic
+		if !isMethodStatic && isJMethod {
+			return nil, fmt.Errorf("IncompatibleClassChangeError: Expected static method but found instance method: %s",
+				className+methodName+methodSig)
+		}
+	case 5, 9: // REF_invokeVirtual, REF_invokeInterface
+		if isMethodStatic && isJMethod {
+			return nil, fmt.Errorf("IncompatibleClassChangeError: Expected instance method but found static method: %s",
+				className+methodName+methodSig)
+		}
+	case 7, 8: // REF_invokeSpecial, REF_newInvokeSpecial
+		if isMethodStatic && isJMethod {
+			return nil, fmt.Errorf("IncompatibleClassChangeError: Expected instance method but found static method: %s",
+				className+methodName+methodSig)
+		}
+	}
+
+	// Further checks on special names
+	if methodName == "<init>" {
+		if refKind != 8 { // REF_newInvokeSpecial
+			return nil, fmt.Errorf("NoSuchMethodError: Method handle must use REF_newInvokeSpecial for constructor %s",
+				className+methodName+methodSig)
+		}
+	} else if methodName == "<clinit>" {
+		return nil, fmt.Errorf("NoSuchMethodError: Cannot create method handle for class initializer %s",
+			className+methodName+methodSig)
 	}
 
 	// 2. Get java.lang.Class object for the defining class.
