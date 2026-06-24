@@ -205,6 +205,9 @@ func fill(self *object.Object) interface{} {
 
 func BufferedInputStreamRead(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
+	if _, err := getBufIfOpen(self); err != nil {
+		return err
+	}
 
 	pos := self.FieldTable["pos"].Fvalue.(int64)
 	count := self.FieldTable["count"].Fvalue.(int64)
@@ -233,6 +236,9 @@ func BufferedInputStreamRead(params []interface{}) interface{} {
 
 func BufferedInputStreamReadRange(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
+	if _, err := getBufIfOpen(self); err != nil {
+		return err
+	}
 	if object.IsNull(params[1]) {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "b is null")
 	}
@@ -319,6 +325,9 @@ func BufferedInputStreamAvailable(params []interface{}) interface{} {
 
 func BufferedInputStreamSkip(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
+	if _, err := getBufIfOpen(self); err != nil {
+		return err
+	}
 	n := params[1].(int64)
 	if n <= 0 {
 		return int64(0)

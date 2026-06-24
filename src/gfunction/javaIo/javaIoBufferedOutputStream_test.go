@@ -120,6 +120,50 @@ func TestBufferedOutputStream_WriteRange(t *testing.T) {
 	}
 }
 
+func TestBufferedOutputStream_Close(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	Load_Io_FileOutputStream()
+	Load_Io_FilterOutputStream()
+	Load_Io_BufferedOutputStream()
+
+	tmpDir := os.TempDir()
+	filePath := filepath.Join(tmpDir, "bostream_close_test.bin")
+	defer os.Remove(filePath)
+
+	under := makeOutputStreamObjForFileBuffered(t, filePath)
+	self := object.MakeEmptyObject()
+
+	if res := BufferedOutputStreamInit([]interface{}{self, under, int64(10)}); res != nil {
+		t.Fatalf("Init failed: %v", res)
+	}
+
+	// Write something to buffer
+	if res := BufferedOutputStreamWriteInt([]interface{}{self, int64('X')}); res != nil {
+		t.Fatalf("WriteInt failed: %v", res)
+	}
+
+	// Close should flush and then close underlying
+	if res := BufferedOutputStreamClose([]interface{}{self}); res != nil {
+		t.Fatalf("Close failed: %v", res)
+	}
+
+	// Verify it was flushed
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("ReadFile failed: %v", err)
+	}
+	if string(data) != "X" {
+		t.Fatalf("Expected 'X', got %q", string(data))
+	}
+
+	// Verify underlying file is closed by trying to write to it again (should fail)
+	f := under.FieldTable[ghelpers.FileHandle].Fvalue.(*os.File)
+	if _, err := f.Write([]byte("test")); err == nil {
+		t.Fatalf("Expected error when writing to closed file, got nil")
+	}
+}
+
 func makeOutputStreamObjForFileBuffered(t *testing.T, filePath string) *object.Object {
 	f, err := os.Create(filePath)
 	if err != nil {

@@ -55,6 +55,12 @@ func Load_Io_BufferedOutputStream() {
 			ParamSlots: 0,
 			GFunction:  BufferedOutputStreamFlush,
 		}
+
+	ghelpers.MethodSignatures["java/io/BufferedOutputStream.close()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  BufferedOutputStreamClose,
+		}
 }
 
 func BufferedOutputStreamInit(params []interface{}) interface{} {
@@ -173,6 +179,27 @@ func BufferedOutputStreamFlush(params []interface{}) interface{} {
 	if _, ok := ghelpers.MethodSignatures[method]; !ok {
 		// Fallback to FilterOutputStream.flush() which is often inherited
 		method = "java/io/FilterOutputStream.flush()V"
+	}
+
+	return ghelpers.Invoke(method, []interface{}{out})
+}
+
+func BufferedOutputStreamClose(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+
+	// 1. Flush the buffer
+	if res := BufferedOutputStreamFlush(params); res != nil {
+		return res
+	}
+
+	// 2. Close the underlying stream
+	out := self.FieldTable["out"].Fvalue.(*object.Object)
+	outClassName := stringPool.GetStringPointer(out.KlassName)
+	method := fmt.Sprintf("%s.close()V", *outClassName)
+
+	if _, ok := ghelpers.MethodSignatures[method]; !ok {
+		// Fallback to FilterOutputStream.close() which is often inherited
+		method = "java/io/FilterOutputStream.close()V"
 	}
 
 	return ghelpers.Invoke(method, []interface{}{out})

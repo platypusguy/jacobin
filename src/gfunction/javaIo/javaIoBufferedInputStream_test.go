@@ -8,6 +8,8 @@ package javaIo
 
 import (
 	"container/list"
+	"jacobin/src/excNames"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/stringPool"
@@ -78,6 +80,68 @@ func TestBufferedInputStream_Basic(t *testing.T) {
 	count = bis.FieldTable["count"].Fvalue.(int64)
 	if count != 3 {
 		t.Errorf("Expected count 3, got %d", count)
+	}
+}
+
+func TestBufferedInputStream_Closed(t *testing.T) {
+	setupBufferedInputStreamTest()
+
+	data := []types.JavaByte{1, 2, 3, 4, 5}
+	bufObj := object.MakeEmptyObject()
+	bufObj.FieldTable["value"] = object.Field{Ftype: "[B", Fvalue: data}
+
+	bais := object.MakeEmptyObject()
+	nameBAIS := "java/io/ByteArrayInputStream"
+	bais.KlassName = stringPool.GetStringIndex(&nameBAIS)
+	ByteArrayInputStreamInit([]interface{}{bais, bufObj})
+
+	bis := object.MakeEmptyObject()
+	nameBIS := "java/io/BufferedInputStream"
+	bis.KlassName = stringPool.GetStringIndex(&nameBIS)
+	BufferedInputStreamInit([]interface{}{bis, bais, int64(10)})
+
+	// Read one byte to fill buffer
+	BufferedInputStreamRead([]interface{}{bis})
+
+	// Close the stream
+	BufferedInputStreamClose([]interface{}{bis})
+
+	// Attempt to read - should fail with IOException
+	res := BufferedInputStreamRead([]interface{}{bis})
+	if err, ok := res.(*ghelpers.GErrBlk); ok {
+		if err.ExceptionType != excNames.IOException {
+			t.Errorf("Expected IOException, got exception type %d", err.ExceptionType)
+		}
+	} else {
+		t.Errorf("Expected GErrBlk (IOException) when reading closed stream, got %v", res)
+	}
+
+	// Attempt range read - should fail
+	res = BufferedInputStreamReadRange([]interface{}{bis, bufObj, int64(0), int64(1)})
+	if err, ok := res.(*ghelpers.GErrBlk); ok {
+		if err.ExceptionType != excNames.IOException {
+			t.Errorf("Expected IOException, got exception type %d", err.ExceptionType)
+		}
+	} else {
+		t.Errorf("Expected GErrBlk (IOException) when reading range from closed stream, got %v", res)
+	}
+
+	// Attempt skip - should fail
+	res = BufferedInputStreamSkip([]interface{}{bis, int64(1)})
+	if _, ok := res.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk when skipping on closed stream, got %v", res)
+	}
+
+	// Attempt available - should fail
+	res = BufferedInputStreamAvailable([]interface{}{bis})
+	if _, ok := res.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk when calling available on closed stream, got %v", res)
+	}
+
+	// Attempt reset - should fail
+	res = BufferedInputStreamReset([]interface{}{bis})
+	if _, ok := res.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk when calling reset on closed stream, got %v", res)
 	}
 }
 
