@@ -257,3 +257,81 @@ func TestStringBuilder_CharAt_Negative(t *testing.T) {
 		t.Errorf("expected char value 128 (0x80), got %d", charVal)
 	}
 }
+
+func TestStringBuilder_CharSequence(t *testing.T) {
+	globals.InitStringPool()
+
+	// 1. <init>(CharSequence)
+	sObj := object.StringObjectFromGoString("Hello")
+	sbClassName := "java/lang/StringBuilder"
+	sbObj := object.MakeEmptyObjectWithClassName(&sbClassName)
+	stringBuilderInitCharSequence([]any{sbObj, sObj})
+
+	if sbObj.FieldTable["count"].Fvalue.(int64) != 5 {
+		t.Errorf("expected count 5, got %v", sbObj.FieldTable["count"].Fvalue)
+	}
+
+	// 2. append(CharSequence)
+	sObj2 := object.StringObjectFromGoString(" World")
+	stringBuilderAppend([]any{sbObj, sObj2})
+	if sbObj.FieldTable["count"].Fvalue.(int64) != 11 {
+		t.Errorf("expected count 11, got %v", sbObj.FieldTable["count"].Fvalue)
+	}
+	resStr := stringBuilderToString([]any{sbObj}).(*object.Object)
+	if object.GoStringFromStringObject(resStr) != "Hello World" {
+		t.Errorf("expected \"Hello World\", got %q", object.GoStringFromStringObject(resStr))
+	}
+
+	// 3. append(CharSequence, start, end)
+	sObj3 := object.StringObjectFromGoString("!!! extra")
+	stringBuilderAppendCharSequenceRange([]any{sbObj, sObj3, int64(0), int64(3)})
+	resStr = stringBuilderToString([]any{sbObj}).(*object.Object)
+	if object.GoStringFromStringObject(resStr) != "Hello World!!!" {
+		t.Errorf("expected \"Hello World!!!\", got %q", object.GoStringFromStringObject(resStr))
+	}
+
+	// 4. insert(offset, CharSequence)
+	sObj4 := object.StringObjectFromGoString("Dear ")
+	stringBuilderInsert([]any{sbObj, int64(6), sObj4})
+	resStr = stringBuilderToString([]any{sbObj}).(*object.Object)
+	if object.GoStringFromStringObject(resStr) != "Hello Dear World!!!" {
+		t.Errorf("expected \"Hello Dear World!!!\", got %q", object.GoStringFromStringObject(resStr))
+	}
+
+	// 5. insert(offset, CharSequence, start, end)
+	sObj5 := object.StringObjectFromGoString("my friend ")
+	stringBuilderInsertCharSequenceRange([]any{sbObj, int64(11), sObj5, int64(0), int64(10)})
+	resStr = stringBuilderToString([]any{sbObj}).(*object.Object)
+	if object.GoStringFromStringObject(resStr) != "Hello Dear my friend World!!!" {
+		t.Errorf("expected \"Hello Dear my friend World!!!\", got %q", object.GoStringFromStringObject(resStr))
+	}
+
+	// 6. subSequence(start, end)
+	resSub := stringBuilderSubSequence([]any{sbObj, int64(6), int64(10)})
+	subStrObj := resSub.(*object.Object)
+	if object.GoStringFromStringObject(subStrObj) != "Dear" {
+		t.Errorf("expected \"Dear\", got %q", object.GoStringFromStringObject(subStrObj))
+	}
+}
+
+func TestStringBuffer_CharSequence(t *testing.T) {
+	globals.InitStringPool()
+
+	// 1. <init>(CharSequence)
+	sObj := object.StringObjectFromGoString("Hello")
+	sbClassName := "java/lang/StringBuffer"
+	sbObj := object.MakeEmptyObjectWithClassName(&sbClassName)
+	stringBuilderInitCharSequence([]any{sbObj, sObj})
+
+	if sbObj.FieldTable["count"].Fvalue.(int64) != 5 {
+		t.Errorf("expected count 5, got %v", sbObj.FieldTable["count"].Fvalue)
+	}
+
+	// 2. append(CharSequence)
+	sObj2 := object.StringObjectFromGoString(" World")
+	stringBuilderAppend([]any{sbObj, sObj2})
+	resStr := stringBuilderToString([]any{sbObj}).(*object.Object)
+	if object.GoStringFromStringObject(resStr) != "Hello World" {
+		t.Errorf("expected \"Hello World\", got %q", object.GoStringFromStringObject(resStr))
+	}
+}

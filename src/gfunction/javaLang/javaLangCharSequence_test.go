@@ -1,6 +1,7 @@
 package javaLang
 
 import (
+	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -26,6 +27,9 @@ func TestLoad_Lang_CharSequence_RegistersMethods(t *testing.T) {
 		{"java/lang/CharSequence.charAt(I)C", 1, charSequenceCharAt},
 		{"java/lang/CharSequence.subSequence(II)Ljava/lang/CharSequence;", 2, charSequenceSubSequence},
 		{"java/lang/CharSequence.toString()Ljava/lang/String;", 0, charSequenceToString},
+		{"java/lang/CharSequence.isEmpty()Z", 0, charSequenceIsEmpty},
+		{"java/lang/CharSequence.chars()Ljava/util/stream/IntStream;", 0, ghelpers.TrapFunction},
+		{"java/lang/CharSequence.codePoints()Ljava/util/stream/IntStream;", 0, ghelpers.TrapFunction},
 	}
 
 	for _, c := range checks {
@@ -74,6 +78,24 @@ func TestCharSequence_StringImplementation(t *testing.T) {
 	res = charSequenceToString([]interface{}{sObj})
 	if res.(*object.Object) != sObj {
 		t.Errorf("expected same object for toString on String")
+	}
+
+	// isEmpty()
+	res = charSequenceIsEmpty([]interface{}{sObj})
+	if res.(int64) != 0 {
+		t.Errorf("expected isEmpty false for non-empty string, got %v", res)
+	}
+
+	emptySObj := object.StringObjectFromGoString("")
+	res = charSequenceIsEmpty([]interface{}{emptySObj})
+	if res.(int64) != 1 {
+		t.Errorf("expected isEmpty true for empty string, got %v", res)
+	}
+
+	// Trap tests
+	res = ghelpers.TrapFunction([]interface{}{sObj})
+	if err, ok := res.(*ghelpers.GErrBlk); !ok || err.ExceptionType != excNames.UnsupportedOperationException {
+		t.Errorf("expected UnsupportedOperationException for TrapFunction, got %v", res)
 	}
 }
 

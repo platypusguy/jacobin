@@ -44,6 +44,24 @@ func Load_Lang_CharSequence() {
 			ParamSlots: 0,
 			GFunction:  charSequenceToString,
 		}
+
+	ghelpers.MethodSignatures["java/lang/CharSequence.isEmpty()Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  charSequenceIsEmpty,
+		}
+
+	ghelpers.MethodSignatures["java/lang/CharSequence.chars()Ljava/util/stream/IntStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/CharSequence.codePoints()Ljava/util/stream/IntStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }
 
 // charSequenceLength returns the length of the CharSequence.
@@ -91,7 +109,14 @@ func charSequenceCharAt(params []interface{}) interface{} {
 		fld, ok := obj.FieldTable["value"]
 		if ok {
 			byteArray := fld.Fvalue.([]types.JavaByte)
-			if index < 0 || index >= int64(len(byteArray)) {
+			countFld, ok := obj.FieldTable["count"]
+			var count int64
+			if ok {
+				count = countFld.Fvalue.(int64)
+			} else {
+				count = int64(len(byteArray))
+			}
+			if index < 0 || index >= count {
 				return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, "charSequenceCharAt: index out of bounds")
 			}
 			return int64(byteArray[index])
@@ -119,6 +144,23 @@ func charSequenceSubSequence(params []interface{}) interface{} {
 		return object.StringObjectFromGoString(subStr)
 	}
 
+	className := object.GoStringFromStringPoolIndex(obj.KlassName)
+	if className == "java/lang/StringBuilder" || className == "java/lang/StringBuffer" {
+		countFld, ok := obj.FieldTable["count"]
+		if ok {
+			count := countFld.Fvalue.(int64)
+			if start < 0 || end > count || start > end {
+				return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, "charSequenceSubSequence: bounds out of range")
+			}
+			fld, ok := obj.FieldTable["value"]
+			if ok {
+				byteArray := fld.Fvalue.([]types.JavaByte)
+				subArray := byteArray[start:end]
+				return object.StringObjectFromJavaByteArray(subArray)
+			}
+		}
+	}
+
 	return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "charSequenceSubSequence: unknown implementation")
 }
 
@@ -130,6 +172,20 @@ func charSequenceToString(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	if object.IsStringObject(obj) {
 		return obj
+	}
+
+	className := object.GoStringFromStringPoolIndex(obj.KlassName)
+	if className == "java/lang/StringBuilder" || className == "java/lang/StringBuffer" {
+		fld, ok := obj.FieldTable["value"]
+		if ok {
+			byteArray := fld.Fvalue.([]types.JavaByte)
+			countFld, ok := obj.FieldTable["count"]
+			if ok {
+				count := countFld.Fvalue.(int64)
+				return object.StringObjectFromJavaByteArray(byteArray[:count])
+			}
+			return object.StringObjectFromJavaByteArray(byteArray)
+		}
 	}
 
 	return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "charSequenceToString: unknown implementation")
@@ -153,4 +209,19 @@ func charSequenceCompare(params []interface{}) interface{} {
 		return int64(1)
 	}
 	return int64(0)
+}
+
+// charSequenceIsEmpty returns true if this sequence is empty.
+func charSequenceIsEmpty(params []interface{}) interface{} {
+	if params[0] == nil {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceIsEmpty: self is nil")
+	}
+	res := charSequenceLength(params)
+	if length, ok := res.(int64); ok {
+		if length == 0 {
+			return int64(1)
+		}
+		return int64(0)
+	}
+	return res
 }
