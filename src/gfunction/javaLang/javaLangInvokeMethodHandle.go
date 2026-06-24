@@ -79,9 +79,9 @@ func createRawMethodHandleObject() *object.Object {
 	return mho
 }
 
-// func createMethodHandleObject(classObj, methName, methType *object.Object,
-//
-//	refKind int64, callerClass *object.Object) *object.Object {
+// func createMethodHandleObject accepts
+// for a method: classObj, methName, methType *object.Object, refKind int64, callerClass *object.Object)
+// for a field: classObj, fieldName, fieldType *object.Object, refKind int64, callerClass *object.Object)
 func createMethodHandleObject(params []interface{}) interface{} {
 	if params == nil {
 		errMsg := fmt.Sprintf("mhType(): Invalid params array passed in")

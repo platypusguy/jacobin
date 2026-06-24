@@ -99,19 +99,38 @@ func resolveFieldHandle(cp *CPool, refIndex int, isStatic bool, isSetter bool, f
 
 	// 2. Get java.lang.Class object for the defining class.
 	// getClassObj expects a descriptor, and className is an internal name (e.g. "java/lang/Object").
-	defClassObj, err := getClassObj("L"+className+";", fr)
+	defClassObj, err := getClassObj("L" + className + ";")
 	if err != nil {
 		return nil, fmt.Errorf("resolveFieldHandle: could not get Class object for %s: %w", className, err)
 	}
 
-	// 3. Get java.lang.Class object for the field's type. fieldType is already a descriptor.
-	fieldTypeObj, err := getClassObj(fieldType, fr)
-	if err != nil {
-		return nil, fmt.Errorf("resolveFieldHandle: could not get Class object for field type %s: %w", fieldType, err)
+	// 3A. Get java.lang.Class object for the field's type. fieldType is already a descriptor.
+	fieldTypeObj, err := getClassObj(fieldType)
+	if err != nil { // in case the class has not been loaded, try to load it
+		err = LoadClassFromNameOnly(className)
+		if err != nil {
+			return nil, fmt.Errorf("resolveFieldHandle: could not get Class object %s for field type %s",
+				className, fieldType)
+		} else { // check once again now that we know the class is loaded
+			fieldTypeObj, err = getClassObj(fieldType)
+			if err != nil {
+				return nil, fmt.Errorf("resolveFieldHandle: could not get Class object %s for field type %s",
+					className, fieldType)
+			}
+		}
+	}
+
+	// 3B. Validate the field type
+	if isStatic {
+		value := statics.GetStaticValue(className, fieldName)
+		if _, ok := value.(error); ok {
+			return nil, fmt.Errorf("resolveFieldHandle could not find a static field: %s",
+				className+fieldName)
+		}
 	}
 
 	// 4. Get java.lang.Class object for the caller class (for access checks).
-	callerClassObj, err := getClassObj("L"+fr.ClName+";", fr)
+	callerClassObj, err := getClassObj("L" + fr.ClName + ";")
 	if err != nil {
 		return nil, fmt.Errorf("resolveFieldHandle: could not get Class object for caller %s: %w", fr.ClName, err)
 	}
@@ -135,9 +154,12 @@ func resolveFieldHandle(cp *CPool, refIndex int, isStatic bool, isSetter bool, f
 	gfuncName := "jacobin/internal/VM.resolveFieldHandle(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;ILjava/lang/Class;)Ljava/lang/invoke/MethodHandle;"
 	result := globals.GetGlobalRef().FuncInvokeGFunction(gfuncName, params)
 
-	if result == nil { // TODO: Or check for error block
-		return nil, fmt.Errorf("resolveFieldHandle: gfunction call to create MethodHandle failed for field %s.%s", className, fieldName)
-	}
+	// if result == nil {
+	// 	return nil, fmt.Errorf("resolveFieldHandle: gfunction call to create MethodHandle failed for field %s.%s", className, fieldName)
+	// }
+	// if errBlk, ok := result.(*ghelpers.GErrBlk); ok {
+	// 	return nil, fmt.Errorf("resolveFieldHandle: gfunction error: %s", errBlk.ErrMsg)
+	// }
 
 	return result.(*object.Object), nil
 }
@@ -258,7 +280,7 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	}
 
 	// 2. Get java.lang.Class object for the defining class.
-	defClassObj, err := getClassObj("L"+className+";", fr)
+	defClassObj, err := getClassObj("L" + className + ";")
 	if err != nil {
 		return nil, fmt.Errorf("resolveMethodHandleEntry: could not get Class object for %s: %w", className, err)
 	}
@@ -270,7 +292,7 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	}
 
 	// 4. Get java.lang.Class object for the caller class (for access checks).
-	callerClassObj, err := getClassObj("L"+fr.ClName+";", fr)
+	callerClassObj, err := getClassObj("L" + fr.ClName + ";")
 	if err != nil {
 		return nil, fmt.Errorf("resolveMethodHandleEntry: could not get Class object for caller %s: %w", fr.ClName, err)
 	}
@@ -421,7 +443,7 @@ func getMethodTypeObject(descriptor string, fr *frames.Frame) (*object.Object, e
 // getClassObj gets a java.lang.Class object for a given class name or descriptor.
 // It handles primitive types, array types, and object types by calling the equivalent
 // of Class.forName() via a gfunction.
-func getClassObj(descriptor string, fr *frames.Frame) (*object.Object, error) {
+func getClassObj(descriptor string) (*object.Object, error) {
 	// Check for primitive types (single-character descriptors). The VM pre-loads
 	// Class objects for primitive types (e.g., Integer.TYPE).
 	if len(descriptor) == 1 {
