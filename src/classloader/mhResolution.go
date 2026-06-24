@@ -13,6 +13,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/statics"
 	"jacobin/src/trace"
+	"jacobin/src/types"
 	"strings"
 )
 
@@ -292,14 +293,22 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	gfuncName := "java/lang/invoke/MethodHandle.initMHobject()Ljava/lang/invoke/MethodHandle;"
 	result := globals.GetGlobalRef().FuncInvokeGFunction(gfuncName, params)
 
+	var mho *object.Object // method handle object
 	switch result.(type) {
 	case *object.Object:
-		return result.(*object.Object), nil
+		mho = result.(*object.Object)
 	default:
 		return nil, fmt.Errorf(
 			"resolveMethodHandleEntry: gfunction to create MethodHandle failed for method %s.%s(%s)",
 			className, methodName, methodSig)
 	}
+
+	// 7. Inject the golang Execution Payload
+	// The '$target' field will hold the internal VM representation of the method,
+	// allowing the interpreter to execute this handle.
+	mho.FieldTable["$target"] =
+		object.Field{Ftype: types.RawGoPointer, Fvalue: mtEntry}
+	return mho, nil
 }
 
 // ResolveMethodType resolves a MethodType constant pool entry.
