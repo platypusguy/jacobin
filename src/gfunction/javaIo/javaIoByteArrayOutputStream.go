@@ -39,6 +39,12 @@ func Load_Io_ByteArrayOutputStream() {
 			GFunction:  ghelpers.JustReturn,
 		}
 
+	ghelpers.MethodSignatures["java/io/ByteArrayOutputStream.flush()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.JustReturn,
+		}
+
 	ghelpers.MethodSignatures["java/io/ByteArrayOutputStream.reset()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

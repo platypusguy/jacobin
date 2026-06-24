@@ -742,13 +742,13 @@ func bitsetToByteArray(params []interface{}) interface{} {
 		}
 	}
 	if lastWord == -1 {
-		return make([]byte, 0)
+		return make([]types.JavaByte, 0)
 	}
 
 	nbytes := lastWord*8 + (64-bits.LeadingZeros64(bitsData[lastWord])+7)/8
-	res := make([]byte, nbytes)
+	res := make([]types.JavaByte, nbytes)
 	for i := range nbytes {
-		res[i] = byte(bitsData[i/8] >> (8 * (i % 8)))
+		res[i] = types.JavaByte(bitsData[i/8] >> (8 * (i % 8)))
 	}
 	return res
 }
@@ -775,22 +775,36 @@ func bitsetToLongArray(params []interface{}) interface{} {
 }
 
 func bitsetValueOfBytes(params []interface{}) interface{} {
-	bytes, ok := params[0].([]byte)
-	if !ok {
+	var bytes []types.JavaByte
+	if obj, ok := params[0].(*object.Object); ok {
+		if fld, ok := obj.FieldTable["value"]; ok {
+			if b, ok := fld.Fvalue.([]types.JavaByte); ok {
+				bytes = b
+			} else if b, ok := fld.Fvalue.([]byte); ok {
+				bytes = make([]types.JavaByte, len(b))
+				for i, v := range b {
+					bytes[i] = types.JavaByte(v)
+				}
+			}
+		}
+	} else if b, ok := params[0].([]types.JavaByte); ok {
+		bytes = b
+	} else if b, ok := params[0].([]byte); ok {
+		bytes = make([]types.JavaByte, len(b))
+		for i, v := range b {
+			bytes[i] = types.JavaByte(v)
+		}
+	}
+
+	if bytes == nil {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Invalid byte array")
 	}
+
 	nlongs := (len(bytes) + 7) / 8
 	bitsData := make([]uint64, nlongs)
 	for i, b := range bytes {
-		bitsData[i/8] |= uint64(b) << (8 * (i % 8))
+		bitsData[i/8] |= uint64(uint8(b)) << (8 * (i % 8))
 	}
-	// We need a classloader to instantiate BitSet.
-	// In GFunctions, usually params[0] is self, but for static methods it depends.
-	// valueOf([B) is static. How to get classloader?
-	// For now, use nil or try to get from somewhere if available.
-	// Actually, static methods in Jacobin often don't have self.
-	// Let's assume there is a way to get it or it's provided.
-	// Standard Jacobin practice for static factory methods?
 
 	newBitSetRaw, _ := globals.GetGlobalRef().FuncInstantiateClass("java/util/BitSet", nil)
 	newBitSet := newBitSetRaw.(*object.Object)
@@ -799,10 +813,21 @@ func bitsetValueOfBytes(params []interface{}) interface{} {
 }
 
 func bitsetValueOfLongs(params []interface{}) interface{} {
-	longs, ok := params[0].([]int64)
-	if !ok {
+	var longs []int64
+	if obj, ok := params[0].(*object.Object); ok {
+		if fld, ok := obj.FieldTable["value"]; ok {
+			if l, ok := fld.Fvalue.([]int64); ok {
+				longs = l
+			}
+		}
+	} else if l, ok := params[0].([]int64); ok {
+		longs = l
+	}
+
+	if longs == nil {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Invalid long array")
 	}
+
 	bitsData := make([]uint64, len(longs))
 	for i, l := range longs {
 		bitsData[i] = uint64(l)

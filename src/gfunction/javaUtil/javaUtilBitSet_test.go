@@ -178,7 +178,7 @@ func TestBitSet_Conversion(t *testing.T) {
 	bitsetSet([]interface{}{self, int64(0)})
 	bitsetSet([]interface{}{self, int64(10)})
 
-	bytes := bitsetToByteArray([]interface{}{self}).([]byte)
+	bytes := bitsetToByteArray([]interface{}{self}).([]types.JavaByte)
 	if len(bytes) != 2 {
 		t.Errorf("Expected 2 bytes, got %d", len(bytes))
 	}
@@ -191,5 +191,57 @@ func TestBitSet_Conversion(t *testing.T) {
 	s := bitsetToString([]interface{}{self}).(string)
 	if s != "{0, 10}" {
 		t.Errorf("Expected \"{0, 10}\", got %q", s)
+	}
+}
+
+func TestBitSet_ValueOf(t *testing.T) {
+	setupTestGlobals()
+
+	// Test valueOf(long[])
+	initialLongs := []int64{0b1011} // bits 0, 1, 3 are set. value 11.
+	longArray := object.MakeEmptyObjectWithClassName(new("long[]"))
+	longArray.FieldTable["value"] = object.Field{Ftype: types.LongArray, Fvalue: initialLongs}
+
+	resLongs := bitsetValueOfLongs([]interface{}{longArray})
+	bsLongs := resLongs.(*object.Object)
+
+	if bitsetGet([]interface{}{bsLongs, int64(0)}) != types.JavaBoolTrue ||
+		bitsetGet([]interface{}{bsLongs, int64(1)}) != types.JavaBoolTrue ||
+		bitsetGet([]interface{}{bsLongs, int64(2)}) != types.JavaBoolFalse ||
+		bitsetGet([]interface{}{bsLongs, int64(3)}) != types.JavaBoolTrue {
+		t.Errorf("valueOf(long[]) failed")
+	}
+
+	// Test valueOf(byte[])
+	initialBytes := []int8{0b1011} // bits 0, 1, 3 are set. value 11.
+	byteArray := object.MakeEmptyObjectWithClassName(new("byte[]"))
+	byteArray.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: initialBytes}
+
+	resBytes := bitsetValueOfBytes([]interface{}{byteArray})
+	bsBytes := resBytes.(*object.Object)
+
+	if bitsetGet([]interface{}{bsBytes, int64(0)}) != types.JavaBoolTrue ||
+		bitsetGet([]interface{}{bsBytes, int64(1)}) != types.JavaBoolTrue ||
+		bitsetGet([]interface{}{bsBytes, int64(2)}) != types.JavaBoolFalse ||
+		bitsetGet([]interface{}{bsBytes, int64(3)}) != types.JavaBoolTrue {
+		t.Errorf("valueOf(byte[]) failed")
+	}
+
+	// Test valueOf([J) with raw slice
+	rawLongs := []int64{0x1, 0x2}
+	resRawLongs := bitsetValueOfLongs([]interface{}{rawLongs})
+	bsRawLongs := resRawLongs.(*object.Object)
+	bitsRawLongs, _ := getBitsFromObject(bsRawLongs)
+	if len(bitsRawLongs) != 2 || bitsRawLongs[0] != 1 || bitsRawLongs[1] != 2 {
+		t.Errorf("valueOf([J) with raw slice failed: %v", bitsRawLongs)
+	}
+
+	// Test valueOf([B) with raw slice and byte[] vs uint8[]
+	rawBytes := []byte{0x1, 0x2}
+	resRawBytes := bitsetValueOfBytes([]interface{}{rawBytes})
+	bsRawBytes := resRawBytes.(*object.Object)
+	bitsRawBytes, _ := getBitsFromObject(bsRawBytes)
+	if len(bitsRawBytes) != 1 || bitsRawBytes[0] != 0x0201 {
+		t.Errorf("valueOf([B) with raw []byte failed: %x", bitsRawBytes[0])
 	}
 }

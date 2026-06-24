@@ -9,13 +9,20 @@ package javaIo
 import (
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"reflect"
 	"testing"
 )
 
+func setup() {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+}
+
 func TestByteArrayOutputStreamInit(t *testing.T) {
+	setup()
 	// Default constructor
 	obj := object.MakeEmptyObject()
 	params := []any{obj}
@@ -50,6 +57,7 @@ func TestByteArrayOutputStreamInit(t *testing.T) {
 }
 
 func TestByteArrayOutputStreamWriteInt(t *testing.T) {
+	setup()
 	obj := object.MakeEmptyObject()
 	ByteArrayOutputStreamInit([]any{obj})
 
@@ -68,6 +76,7 @@ func TestByteArrayOutputStreamWriteInt(t *testing.T) {
 }
 
 func TestByteArrayOutputStreamWriteBytes(t *testing.T) {
+	setup()
 	obj := object.MakeEmptyObject()
 	ByteArrayOutputStreamInit([]any{obj, int64(2)}) // small initial size
 
@@ -102,6 +111,7 @@ func TestByteArrayOutputStreamWriteBytes(t *testing.T) {
 }
 
 func TestByteArrayOutputStreamWriteBytesAll(t *testing.T) {
+	setup()
 	obj := object.MakeEmptyObject()
 	ByteArrayOutputStreamInit([]any{obj})
 
@@ -122,6 +132,7 @@ func TestByteArrayOutputStreamWriteBytesAll(t *testing.T) {
 }
 
 func TestByteArrayOutputStreamReset(t *testing.T) {
+	setup()
 	obj := object.MakeEmptyObject()
 	ByteArrayOutputStreamInit([]any{obj})
 	ByteArrayOutputStreamWriteInt([]any{obj, int64(1)})
@@ -135,6 +146,7 @@ func TestByteArrayOutputStreamReset(t *testing.T) {
 }
 
 func TestByteArrayOutputStreamSize(t *testing.T) {
+	setup()
 	obj := object.MakeEmptyObject()
 	ByteArrayOutputStreamInit([]any{obj})
 	ByteArrayOutputStreamWriteInt([]any{obj, int64(1)})
@@ -147,6 +159,7 @@ func TestByteArrayOutputStreamSize(t *testing.T) {
 }
 
 func TestByteArrayOutputStreamToByteArray(t *testing.T) {
+	setup()
 	obj := object.MakeEmptyObject()
 	ByteArrayOutputStreamInit([]any{obj})
 	data := []types.JavaByte{5, 10, 15}
@@ -163,6 +176,7 @@ func TestByteArrayOutputStreamToByteArray(t *testing.T) {
 }
 
 func TestByteArrayOutputStreamToString(t *testing.T) {
+	setup()
 	obj := object.MakeEmptyObject()
 	ByteArrayOutputStreamInit([]any{obj})
 	// Write "Hello"
@@ -176,5 +190,23 @@ func TestByteArrayOutputStreamToString(t *testing.T) {
 	resData := resObj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if object.GoStringFromJavaByteArray(resData) != "Hello" {
 		t.Errorf("Expected 'Hello', got %s", object.GoStringFromJavaByteArray(resData))
+	}
+}
+
+func TestByteArrayOutputStream_FlushAndClose(t *testing.T) {
+	setup()
+	obj := object.MakeEmptyObject()
+	ByteArrayOutputStreamInit([]any{obj})
+
+	// flush should just return nil
+	res := ghelpers.JustReturn([]any{obj})
+	if res != nil {
+		t.Errorf("Expected flush (JustReturn) to return nil, got %v", res)
+	}
+
+	// close should just return nil
+	res = ghelpers.JustReturn([]any{obj})
+	if res != nil {
+		t.Errorf("Expected close (JustReturn) to return nil, got %v", res)
 	}
 }

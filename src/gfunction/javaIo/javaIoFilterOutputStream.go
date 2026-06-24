@@ -100,7 +100,7 @@ func filteroutputstreamInit(params []interface{}) interface{} {
 func filteroutputstreamClose(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[ghelpers.FileHandle].Fvalue.(*os.File)
 	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IOException, "filteroutputstreamClose: missing ghelpers.FileHandle field")
+		return nil
 	}
 	if err := osFile.Close(); err != nil {
 		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("filteroutputstreamClose: Close failed: %v", err))
@@ -111,7 +111,7 @@ func filteroutputstreamClose(params []interface{}) interface{} {
 func filteroutputstreamFlush(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[ghelpers.FileHandle].Fvalue.(*os.File)
 	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IOException, "filteroutputstreamFlush: missing ghelpers.FileHandle field")
+		return nil
 	}
 	if err := osFile.Sync(); err != nil {
 		return ghelpers.GetGErrBlk(excNames.IOException, fmt.Sprintf("filteroutputstreamFlush: Sync failed: %v", err))
