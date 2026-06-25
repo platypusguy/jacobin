@@ -42,7 +42,7 @@ func Load_Lang_StringBuilder() {
 	ghelpers.MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/CharSequence;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderInitCharSequence,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/String;)V"] =
@@ -104,13 +104,13 @@ func Load_Lang_StringBuilder() {
 	ghelpers.MethodSignatures["java/lang/StringBuilder.append(Ljava/lang/CharSequence;)Ljava/lang/StringBuilder;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderAppend,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuilder.append(Ljava/lang/CharSequence;II)Ljava/lang/StringBuilder;"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderAppendCharSequenceRange,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuilder.append(Ljava/lang/Object;)Ljava/lang/StringBuilder;"] =
@@ -272,13 +272,13 @@ func Load_Lang_StringBuilder() {
 	ghelpers.MethodSignatures["java/lang/StringBuilder.insert(ILjava/lang/CharSequence;)Ljava/lang/StringBuilder;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderInsert,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuilder.insert(ILjava/lang/CharSequence;II)Ljava/lang/StringBuilder;"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderInsertCharSequenceRange,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuilder.insert(ILjava/lang/Object;)Ljava/lang/StringBuilder;"] =
@@ -349,7 +349,7 @@ func Load_Lang_StringBuilder() {
 	ghelpers.MethodSignatures["java/lang/StringBuilder.subSequence(II)Ljava/lang/CharSequence;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderSubSequence,
 		}
 
 	// Return a substring starting at the given index of the byte array.
@@ -468,35 +468,45 @@ func stringBuilderAppend(params []any) any {
 
 	// Process based primarily on the params[1] type.
 	switch params[1].(type) {
-	case *object.Object: // char array, Object, String, StringBuffer, or StringBuilder
-		fvalue := params[1].(*object.Object).FieldTable["value"].Fvalue
-		switch fvalue.(type) {
-		case []types.JavaByte: // JavaByte array, String, StringBuffer, or StringBuilder
-			parmArray = fvalue.([]types.JavaByte)
-		case []byte: // byte array
-			parmArray = object.JavaByteArrayFromGoByteArray(fvalue.([]byte))
-		case []int64: // char array, int array
-			if len(params) == 4 {
-				int64Array := fvalue.([]int64)
-				len64Array := int64(len(int64Array))
-				start := params[2].(int64)
-				length := params[3].(int64)
-				end := start + length
-				if start < 0 || start > len64Array || end <= start || end > len64Array {
-					errMsg := fmt.Sprintf("stringBuilderAppend: Invalid offset (%d) or length (%d)", start, length)
-					return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
+	case *object.Object: // char array, Object, String, StringBuffer, StringBuilder, or CharSequence
+		fvalue, ok := params[1].(*object.Object).FieldTable["value"]
+		if ok {
+			switch fv := fvalue.Fvalue.(type) {
+			case []types.JavaByte: // JavaByte array, String, StringBuffer, or StringBuilder
+				parmArray = fv
+			case []byte: // byte array
+				parmArray = object.JavaByteArrayFromGoByteArray(fv)
+			case []int64: // char array, int array
+				if len(params) == 4 {
+					int64Array := fv
+					len64Array := int64(len(int64Array))
+					start := params[2].(int64)
+					length := params[3].(int64)
+					end := start + length
+					if start < 0 || start > len64Array || end <= start || end > len64Array {
+						errMsg := fmt.Sprintf("stringBuilderAppend: Invalid offset (%d) or length (%d)", start, length)
+						return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
+					}
+					for ix := start; ix < start+length; ix++ {
+						parmArray = append(parmArray, types.JavaByte(int64Array[ix]))
+					}
+				} else { // Append the entire char array.
+					for _, elem := range fv {
+						parmArray = append(parmArray, types.JavaByte(elem))
+					}
 				}
-				for ix := start; ix < start+length; ix++ {
-					parmArray = append(parmArray, types.JavaByte(int64Array[ix]))
-				}
-			} else { // Append the entire char array.
-				for _, elem := range fvalue.([]int64) {
-					parmArray = append(parmArray, types.JavaByte(elem))
-				}
+			default:
+				str := object.StringifyAnythingGo(fv)
+				parmArray = object.JavaByteArrayFromGoString(str)
 			}
-		default:
-			str := object.StringifyAnythingGo(fvalue)
-			parmArray = object.JavaByteArrayFromGoString(str)
+		} else {
+			// It might be a generic CharSequence.
+			res := charSequenceToString([]any{params[1]})
+			if err, ok := res.(*ghelpers.GErrBlk); ok {
+				return err
+			}
+			strObj := res.(*object.Object)
+			parmArray = strObj.FieldTable["value"].Fvalue.([]types.JavaByte)
 		}
 	case int64: // int, long, short
 		str := fmt.Sprintf("%d", params[1].(int64))
@@ -662,36 +672,46 @@ func stringBuilderInsert(params []any) any {
 
 	var parmArray []types.JavaByte
 	switch params[2].(type) {
-	case *object.Object: // char array, String, StringBuffer, or StringBuilder
-		fvalue := params[2].(*object.Object).FieldTable["value"].Fvalue
-		switch fvalue.(type) {
-		case []types.JavaByte: // String, StringBuffer, or StringBuilder
-			parmArray = fvalue.([]types.JavaByte)
-		case []byte: // byte array
-			parmArray = object.JavaByteArrayFromGoByteArray(fvalue.([]byte))
-		case []int64: // char array
-			if len(params) == 5 { // subset of char array
-				int64Array := fvalue.([]int64)
-				len64Array := int64(len(int64Array))
-				start := params[3].(int64)
-				length := params[4].(int64)
-				end := start + length
-				if start < 0 || start > len64Array || end <= start || end > len64Array {
-					errMsg := fmt.Sprintf("stringBuilderInsert: Invalid offset (%d) or length (%d)", start, length)
-					return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
+	case *object.Object: // char array, String, StringBuffer, StringBuilder, or CharSequence
+		fvalue, ok := params[2].(*object.Object).FieldTable["value"]
+		if ok {
+			switch fv := fvalue.Fvalue.(type) {
+			case []types.JavaByte: // String, StringBuffer, or StringBuilder
+				parmArray = fv
+			case []byte: // byte array
+				parmArray = object.JavaByteArrayFromGoByteArray(fv)
+			case []int64: // char array
+				if len(params) == 5 { // subset of char array
+					int64Array := fv
+					len64Array := int64(len(int64Array))
+					start := params[3].(int64)
+					length := params[4].(int64)
+					end := start + length
+					if start < 0 || start > len64Array || end <= start || end > len64Array {
+						errMsg := fmt.Sprintf("stringBuilderInsert: Invalid offset (%d) or length (%d)", start, length)
+						return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
+					}
+					for ix := start; ix < start+length; ix++ {
+						parmArray = append(parmArray, types.JavaByte(int64Array[ix]))
+					}
+				} else { // Append the entire char array.
+					for _, elem := range fv {
+						parmArray = append(parmArray, types.JavaByte(elem))
+					}
 				}
-				for ix := start; ix < start+length; ix++ {
-					parmArray = append(parmArray, types.JavaByte(int64Array[ix]))
-				}
-			} else { // Append the entire char array.
-				for _, elem := range fvalue.([]int64) {
-					parmArray = append(parmArray, types.JavaByte(elem))
-				}
+			default:
+				errMsg := fmt.Sprintf("stringBuilderInsert: Object value field value type (%T) is not a byte array nor a char array",
+					params[2])
+				return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 			}
-		default:
-			errMsg := fmt.Sprintf("stringBuilderInsert: Object value field value type (%T) is not a byte array nor a char array",
-				params[1])
-			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+		} else {
+			// It might be a generic CharSequence.
+			res := charSequenceToString([]any{params[2]})
+			if err, ok := res.(*ghelpers.GErrBlk); ok {
+				return err
+			}
+			strObj := res.(*object.Object)
+			parmArray = strObj.FieldTable["value"].Fvalue.([]types.JavaByte)
 		}
 	case int64: // integer, long
 		str := fmt.Sprintf("%d", params[2].(int64))
@@ -930,6 +950,9 @@ func stringBuilderSetLength(params []any) any {
 
 // Convert the byte array of a StringBuilder object to a String object. Then, return it.
 func stringBuilderToString(params []any) any {
+	if params[0] == nil {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "stringBuilderToString: self is nil")
+	}
 	objBase := params[0].(*object.Object)
 	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
 	return object.StringObjectFromJavaByteArray(byteArray)
@@ -948,6 +971,85 @@ func stringBuilderLength(params []any) any {
 }
 
 // Expand the capacity of a StringBuilder object.
+// stringBuilderSubSequence returns a CharSequence that is a subsequence of this sequence.
+func stringBuilderSubSequence(params []any) any {
+	if params[0] == nil {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "stringBuilderSubSequence: self is nil")
+	}
+	start := params[1].(int64)
+	end := params[2].(int64)
+
+	res := stringBuilderToString([]any{params[0]})
+	if err, ok := res.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	strObj := res.(*object.Object)
+
+	return charSequenceSubSequence([]any{strObj, start, end})
+}
+
+// stringBuilderInitCharSequence initializes StringBuilder with a CharSequence object.
+func stringBuilderInitCharSequence(params []any) any {
+	obj := params[0].(*object.Object)
+	obj.FieldTable = make(map[string]object.Field)
+
+	if params[1] == nil {
+		// API says if CharSequence is null, it's a NullPointerException in some implementations,
+		// but StringBuilder(CharSequence) doesn't explicitly say so.
+		// However, String(CharSequence) does.
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "stringBuilderInitCharSequence: CharSequence is nil")
+	}
+
+	res := charSequenceToString([]any{params[1]})
+	if err, ok := res.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	strObj := res.(*object.Object)
+	byteArray := strObj.FieldTable["value"].Fvalue.([]types.JavaByte)
+
+	count := int64(len(byteArray))
+	capacity := count + 16
+	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	obj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
+	obj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: capacity}
+
+	return nil
+}
+
+// stringBuilderAppendCharSequenceRange appends a subsequence of the specified CharSequence to this sequence.
+func stringBuilderAppendCharSequenceRange(params []any) any {
+	if params[1] == nil {
+		// If s is null, then the four characters "null" are appended to this sequence.
+		// But this is only if CharSequence itself is null.
+		// Wait, the API says "If s is null, then the four characters "null" are appended".
+		params[1] = object.StringObjectFromGoString("null")
+	}
+
+	res := charSequenceSubSequence([]any{params[1], params[2], params[3]})
+	if err, ok := res.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	subStrObj := res.(*object.Object)
+
+	return stringBuilderAppend([]any{params[0], subStrObj})
+}
+
+// stringBuilderInsertCharSequenceRange inserts a subsequence of the specified CharSequence into this sequence.
+func stringBuilderInsertCharSequenceRange(params []any) any {
+	// params: [0]StringBuilder, [1]offset, [2]CharSequence, [3]start, [4]end
+	if params[2] == nil {
+		params[2] = object.StringObjectFromGoString("null")
+	}
+
+	res := charSequenceSubSequence([]any{params[2], params[3], params[4]})
+	if err, ok := res.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	subStrObj := res.(*object.Object)
+
+	return stringBuilderInsert([]any{params[0], params[1], subStrObj})
+}
+
 func expandCapacity(obj *object.Object, count int64) {
 	capField := obj.FieldTable["capacity"]
 	capacity := capField.Fvalue.(int64)

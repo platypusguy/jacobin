@@ -41,7 +41,7 @@ func Load_Lang_StringBuffer() {
 	ghelpers.MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/CharSequence;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderInitCharSequence,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/String;)V"] =
@@ -103,13 +103,13 @@ func Load_Lang_StringBuffer() {
 	ghelpers.MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/CharSequence;)Ljava/lang/StringBuffer;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderAppend,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/CharSequence;II)Ljava/lang/StringBuffer;"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderAppendCharSequenceRange,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/Object;)Ljava/lang/StringBuffer;"] =
@@ -271,13 +271,13 @@ func Load_Lang_StringBuffer() {
 	ghelpers.MethodSignatures["java/lang/StringBuffer.insert(ILjava/lang/CharSequence;)Ljava/lang/StringBuffer;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderInsert,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuffer.insert(ILjava/lang/CharSequence;II)Ljava/lang/StringBuffer;"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderInsertCharSequenceRange,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuffer.insert(ILjava/lang/Object;)Ljava/lang/StringBuffer;"] =
@@ -349,7 +349,7 @@ func Load_Lang_StringBuffer() {
 	ghelpers.MethodSignatures["java/lang/StringBuffer.subSequence(II)Ljava/lang/CharSequence;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringBuilderSubSequence,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StringBuffer.substring(I)Ljava/lang/String;"] =

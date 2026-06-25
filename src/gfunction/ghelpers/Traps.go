@@ -120,6 +120,12 @@ func Load_Traps() {
 			GFunction:  TrapFunction,
 		}
 
+	MethodSignatures["java/util/SimpleTimeZone.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  TrapClass,
+		}
+
 }
 
 // TrapClass is a generic Trap for classes

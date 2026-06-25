@@ -18,6 +18,7 @@ import (
 	"jacobin/src/gfunction/javaNio"
 	"jacobin/src/gfunction/javaSecurity"
 	"jacobin/src/gfunction/javaText"
+	"jacobin/src/gfunction/javaTime"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/gfunction/javaxCrypto"
 	"jacobin/src/gfunction/misc"
@@ -43,8 +44,11 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	misc.Load_Awt_Graphics_Environment()
 
 	// java/io/*
+	javaIo.Load_Io_BufferedInputStream()
+	javaIo.Load_Io_BufferedOutputStream()
 	javaIo.Load_Io_BufferedReader()
 	javaIo.Load_Io_BufferedWriter()
+	javaIo.Load_Io_ByteArrayInputStream()
 	javaIo.Load_Io_ByteArrayOutputStream()
 	javaIo.Load_Io_Console()
 	javaIo.Load_Io_File()
@@ -53,6 +57,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaIo.Load_Io_FileReader()
 	javaIo.Load_Io_FileWriter()
 	javaIo.Load_Io_FilterInputStream()
+	javaIo.Load_Io_FilterOutputStream()
 	javaIo.Load_Io_InputStream()
 	javaIo.Load_Io_InputStreamReader()
 	javaIo.Load_Io_OutputStreamWriter()
@@ -142,6 +147,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaSecurity.Load_Security_Spec_NamedParameterSpec()
 	javaSecurity.Load_Security_Spec_AlgorithmParameterSpec()
 
+	// java.time/*
+	javaTime.Load_Time_Traps()
+
 	// javax/crypto/*
 	javaxCrypto.Load_Crypto_Cipher()
 	javaxCrypto.Load_Crypto_ExemptionMechanism()
@@ -161,6 +169,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_ArrayList()
 	javaUtil.Load_Util_Arrays()
 	javaUtil.Load_Util_Base64()
+	javaUtil.Load_Util_BitSet()
 	javaUtil.Load_Util_Collection()
 	javaUtil.Load_Util_Concurrent_Atomic_AtomicInteger()
 	javaUtil.Load_Util_Concurrent_Atomic_Atomic_Long()
