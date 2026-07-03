@@ -38,6 +38,8 @@ const (
 	InvokeDynamic = 18
 	Module        = 19
 	Package       = 20
+	// the following entry types are for resolved CP entries (the values above + 100)
+	ResolvedMethRef = 110
 )
 
 // the constant pool, which is an array of different record types. Each entry in the table
@@ -68,6 +70,8 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 	klass.nameAndTypes = []nameAndTypeEntry{}
 	klass.stringRefs = []stringConstantEntry{}
 	klass.utf8Refs = []utf8Entry{}
+
+	klass.resolvedMeths = []MTentry{}
 
 	// the first entry in the CP is a dummy entry, so that all references are 1-based
 	klass.cpIndex[0] = cpEntry{Dummy, 0}

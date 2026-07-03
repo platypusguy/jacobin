@@ -309,7 +309,7 @@ func interpret(fs *list.List) {
 		if glob.JacobinName == "test" {
 			return shutdown.Exit(shutdown.OK)
 		}
-		
+
 		// only an untrapped panic gets us here
 		if r := recover(); r != nil {
 			stack := string(debug.Stack())
@@ -3059,6 +3059,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 	var className, methodName, methodType, fqn string
 
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
+	// we don't verify the validity of the CP slot b/c that's done in codeCheck.
 	CP := fr.CP.(*classloader.CPool)
 
 	entry := CP.CpIndex[CPslot]
