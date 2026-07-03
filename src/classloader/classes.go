@@ -36,6 +36,7 @@ type ClData struct {
 	Fields          []Field
 	MethodList      map[string]string  // maps method names including superclass methods to FQN, which is the key to GMT
 	MethodTable     map[string]*Method // the methods defined in this class
+	ResolvedMeths   []MTentry
 	Attributes      []Attr
 	SourceFile      string
 	CP              CPool
