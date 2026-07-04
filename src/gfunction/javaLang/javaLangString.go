@@ -141,11 +141,53 @@ func Load_Lang_String() {
 			GFunction:  stringIsLatin1,
 		}
 
-	// String(StringBuilder builder) -- instantiate a String from a StringBuilder.
+	// TODO: String(StringBuilder builder) -- instantiate a String from a StringBuilder.
 	ghelpers.MethodSignatures["java/lang/String.<init>(Ljava/lang/StringBuilder;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  newStringFromString,
+		}
+
+	// TODO: String(byte[] bytes, int offset, int length, String charsetName) *********** CHARSET
+	ghelpers.MethodSignatures["java/lang/String.<init>([BIILjava/lang/String;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: String(byte[] bytes, int offset, int length, Charset charset) ************** CHARSET
+	ghelpers.MethodSignatures["java/lang/String.<init>([BIILjava/nio/charset/Charset;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: String(byte[] bytes, String charsetName) *********************************** CHARSET
+	ghelpers.MethodSignatures["java/lang/String.<init>([BLjava/lang/String;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: String(byte[] bytes, Charset charset) ************************************** CHARSET
+	ghelpers.MethodSignatures["java/lang/String.<init>([BLjava/nio/charset/Charset;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: String(byte[] bytes, int hibyte, int offset, int count) *** DEPRECATED
+	ghelpers.MethodSignatures["java/lang/String.<init>([BIII)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+
+	// TODO: String(int[] codePoints, int offset, int count) ************************ CODEPOINTS
+	ghelpers.MethodSignatures["java/lang/String.<init>([III)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	// ==== METHOD FUNCTIONS (in alphabetical order by their function names) ====
@@ -604,7 +646,7 @@ func Load_Lang_String() {
 			GFunction:  stringStartsWith,
 		}
 
-	// Returns a string whose value is this string, with all leading and trailing white space removed.
+	// TODO: Returns a String whose value is this string, with all leading and trailing white space removed.
 	ghelpers.MethodSignatures["java/lang/String.strip()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -612,20 +654,20 @@ func Load_Lang_String() {
 		}
 
 	// TODO: Returns a string whose value is this string, with incidental white space removed from the beginning and end of every line.
-	ghelpers.MethodSignatures["java/lang/String.stripIndent()[Ljava/lang/String;"] =
+	ghelpers.MethodSignatures["java/lang/String.stripIndent()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-	// Returns a string whose value is the base string with all leading white space removed.
+	// TODO: Returns a string whose value is the base string with all leading white space removed.
 	ghelpers.MethodSignatures["java/lang/String.stripLeading()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  stringStripLeading,
 		}
 
-	// Returns a string whose value is the base string with all trailing white space removed.
+	// TODO: Returns a string whose value is the base string with all trailing white space removed.
 	ghelpers.MethodSignatures["java/lang/String.stripTrailing()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -695,6 +737,48 @@ func Load_Lang_String() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	// TODO: Returns the Unicode of the character at the specified index
+	ghelpers.MethodSignatures["java/lang/String.codePointAt(I)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Returns the Unicode of the character before the specified index
+	ghelpers.MethodSignatures["java/lang/String.codePointBefore(I)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Returns the number of Unicode values found in a string.
+	ghelpers.MethodSignatures["java/lang/String.codePointCount(II)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Returns a stream of code point values from this sequence.
+	ghelpers.MethodSignatures["java/lang/String.codePoints()Ljava/util/stream/IntStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Returns a stream of int zero-extending the char values from this sequence.
+	ghelpers.MethodSignatures["java/lang/String.chars()Ljava/util/stream/IntStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Returns the index within this String that is offset from the given index by codePointOffset code points.
+	ghelpers.MethodSignatures["java/lang/String.offsetByCodePoints(II)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	// TODO: What should we do with this? <R> R transform(Function<? super String,? extends R> f)
 	ghelpers.MethodSignatures["java/lang/String.transform(Ljava/util/function/Function;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
@@ -702,14 +786,78 @@ func Load_Lang_String() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	// TODO: Returns a String whose value is this string, with all leading and trailing space removed, where space is defined as any character whose codepoint is less than or equal to 'U+0020' (the space character).
+	ghelpers.MethodSignatures["java/lang/String.stripBlock()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: String(char[] value, boolean share)
+	ghelpers.MethodSignatures["java/lang/String.<init>([CZ)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: String(byte[] bytes, int hibyte, byte[] value)
+	ghelpers.MethodSignatures["java/lang/String.<init>([BI[B)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: String(AbstractStringBuilder asb, Void v)
+	ghelpers.MethodSignatures["java/lang/String.<init>(Ljava/lang/AbstractStringBuilder;Ljava/lang/Void;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Resolves this instance as a ConstantDesc, the result of which is the instance itself.
 	ghelpers.MethodSignatures["java/lang/String.resolveConstantDesc(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	// TODO: Returns an Optional containing the nominal descriptor for this instance, which is the instance itself.
+	ghelpers.MethodSignatures["java/lang/String.describeConstable()Ljava/util/Optional;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Returns a string whose value is this string, with incidental white space removed from the beginning and end of every line.
+	ghelpers.MethodSignatures["java/lang/String.stripIndent()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	// TODO: Return a string whose value is the base string with escape sequences translated as if in a string literal.
 	ghelpers.MethodSignatures["java/lang/String.translateEscapes()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Split the base string around matches of the given regular expression and returns both the strings and the matching delimiters.
+	ghelpers.MethodSignatures["java/lang/String.splitWithDelimiters(Ljava/lang/String;I)[Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Adjusts the indentation of each line of this string based on the value of n, and normalizes line termination characters.
+	ghelpers.MethodSignatures["java/lang/String.indent(I)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// TODO: Returns a stream of lines extracted from this string, separated by line terminators.
+	ghelpers.MethodSignatures["java/lang/String.lines()Ljava/util/stream/Stream;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,

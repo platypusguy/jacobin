@@ -333,41 +333,25 @@ func TestNewAastoreInvalid3(t *testing.T) {
 	}
 }
 
-// AASTORE: Test error condition: null value being inserted
-func TestNewAastoreInvalidNullValue(t *testing.T) {
+// AASTORE: Test that null value can be inserted (JACOBIN-XXXX)
+func TestNewAastoreNullValue(t *testing.T) {
 	globals.InitGlobals("test")
 	objType := types.ObjectClassName
 	o := object.Make1DimRefArray(objType, 10)
 	f := newFrame(opcodes.AASTORE)
 	push(&f, o)        // valid array
 	push(&f, int64(5)) // valid index
-	push(&f, nil)      // null value to insert - this triggers the error
-
-	trace.Init()
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
+	push(&f, nil)      // null value to insert - this should now be valid
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
 
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	errMsg := string(out[:])
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-
-	if !strings.Contains(errMsg, "Invalid (null) interface[any] on stack") {
-		t.Errorf("AASTORE: Did not get expected error msg, got: %s", errMsg)
+	// Verify that the value was stored
+	rawArrayObj := o.FieldTable["value"]
+	rawArray := rawArrayObj.Fvalue.([]*object.Object)
+	if rawArray[5] != nil {
+		t.Errorf("AASTORE: Expected nil (null) in array at index 5, got %v", rawArray[5])
 	}
 }
 

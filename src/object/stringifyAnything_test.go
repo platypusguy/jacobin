@@ -69,8 +69,8 @@ func TestStringifyAnythingGo_StringObject_MissingValue(t *testing.T) {
 	// Don't add value field
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted String object, missing \"value\" field"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -102,8 +102,8 @@ func TestStringifyAnythingGo_BooleanObject_MissingValue(t *testing.T) {
 	obj := MakeEmptyObjectWithClassName(&boolName)
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted Boolean object, missing \"value\" field"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -124,8 +124,8 @@ func TestStringifyAnythingGo_ByteObject_MissingValue(t *testing.T) {
 	obj := MakeEmptyObjectWithClassName(&byteName)
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted Byte object, missing \"value\" field"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -146,8 +146,8 @@ func TestStringifyAnythingGo_CharacterObject_MissingValue(t *testing.T) {
 	obj := MakeEmptyObjectWithClassName(&charName)
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted Character object, missing \"value\" field"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -169,8 +169,8 @@ func TestStringifyAnythingGo_DoubleObject_MissingValue(t *testing.T) {
 	obj := MakeEmptyObjectWithClassName(&doubleName)
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted Double object, missing \"value\" field"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -191,8 +191,8 @@ func TestStringifyAnythingGo_FloatObject_MissingValue(t *testing.T) {
 	obj := MakeEmptyObjectWithClassName(&floatName)
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted Float object, missing \"value\" field"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -235,8 +235,8 @@ func TestStringifyAnythingGo_IntegerObject_MissingValue(t *testing.T) {
 	obj := MakeEmptyObjectWithClassName(&intName)
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted Integer/Long/Short object, missing \"value\" field"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -270,8 +270,8 @@ func TestStringifyAnythingGo_ByteArray_MissingValue(t *testing.T) {
 	obj := MakeEmptyObjectWithClassName(&ba)
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted byte array, missing \"value\" field"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -282,8 +282,8 @@ func TestStringifyAnythingGo_ByteArray_CorruptedValue(t *testing.T) {
 	obj.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: "invalid"} // Wrong type
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted byte array \"value\" field"
-	if result != expected {
+	expected := "corrupted byte array"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -304,8 +304,8 @@ func TestStringifyAnythingGo_BoolArray_MissingValue(t *testing.T) {
 	globals.InitGlobals("test")
 	obj := MakeEmptyObjectWithClassName(&za)
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: boolean object missing \"value\" field"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -316,8 +316,8 @@ func TestStringifyAnythingGo_BoolArray_CorruptedValue(t *testing.T) {
 	obj.FieldTable["value"] = Field{Ftype: types.BoolArray, Fvalue: "invalid"}
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: corrupted boolean array \"value\" field"
-	if result != expected {
+	expected := "corrupted boolean array"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -340,8 +340,8 @@ func TestStringifyAnythingGo_DoubleArray_CorruptedValue(t *testing.T) {
 	obj.FieldTable["value"] = Field{Ftype: types.DoubleArray, Fvalue: "invalid"}
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: double array missing \"value\" field or array value corrupted"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -364,8 +364,8 @@ func TestStringifyAnythingGo_FloatArray_CorruptedValue(t *testing.T) {
 	obj.FieldTable["value"] = Field{Ftype: types.FloatArray, Fvalue: "invalid"}
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: float array missing \"value\" field or array value corrupted"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -412,8 +412,8 @@ func TestStringifyAnythingGo_IntArray_CorruptedValue(t *testing.T) {
 	obj.FieldTable["value"] = Field{Ftype: types.IntArray, Fvalue: "invalid"}
 
 	result := StringifyAnythingGo(obj)
-	expected := "StringifyAnythingGo: int/long/short array missing \"value\" field or array value corrupted"
-	if result != expected {
+	expected := "missing \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -434,7 +434,7 @@ func TestStringifyAnythingGo_DefaultObjectCase(t *testing.T) {
 }
 
 func TestStringifyAnythingGo_Field_StringClassRef(t *testing.T) {
-	javaBytes := JavaByteArrayFromGoString("test")
+	javaBytes := StringObjectFromGoString("test")
 	field := Field{Ftype: types.StringClassRef, Fvalue: javaBytes}
 
 	result := StringifyAnythingGo(field)
@@ -465,8 +465,8 @@ func TestStringifyAnythingGo_Field_Byte_CorruptedValue(t *testing.T) {
 	field := Field{Ftype: types.Byte, Fvalue: "invalid"}
 
 	result := StringifyAnythingGo(field)
-	expected := "StringifyAnythingGo Field types.Byte: corrupted byte \"value\" field"
-	if result != expected {
+	expected := "corrupted byte \"value\" field"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
 	}
 }
@@ -495,9 +495,20 @@ func TestStringifyAnythingGo_Field_ByteArray_CorruptedValue(t *testing.T) {
 	field := Field{Ftype: types.ByteArray, Fvalue: "invalid"}
 
 	result := StringifyAnythingGo(field)
-	expected := "StringifyAnythingGo Field types.ByteArray: corrupted byte array \"value\" field"
-	if result != expected {
+	expected := "corrupted byte array"
+	if !strings.Contains(result, expected) {
 		t.Errorf("Expected error message, got %s", result)
+	}
+}
+
+func TestStringifyAnythingGo_Field_StringClassRef_ByteArray(t *testing.T) {
+	globals.InitGlobals("test")
+	javaBytes := JavaByteArrayFromGoString("repro")
+	field := Field{Ftype: types.StringClassRef, Fvalue: javaBytes}
+
+	result := StringifyAnythingGo(field)
+	if result != "repro" {
+		t.Errorf("Expected 'repro', got %s", result)
 	}
 }
 

@@ -35,13 +35,13 @@ func StringifyAnythingGo(arg interface{}) string {
 		case "String":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: corrupted String object, missing \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: corrupted String object, missing \"value\" field"
 			}
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		case "Boolean":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: corrupted Boolean object, missing \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: corrupted Boolean object, missing \"value\" field"
 			}
 			if fld.Fvalue == types.JavaBoolTrue {
 				return "true"
@@ -50,43 +50,43 @@ func StringifyAnythingGo(arg interface{}) string {
 		case "Byte":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: corrupted Byte object, missing \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: corrupted Byte object, missing \"value\" field"
 			}
 			return fmt.Sprintf("0x%02x", fld.Fvalue.(int64)&0xff)
 		case "Character":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: corrupted Character object, missing \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: corrupted Character object, missing \"value\" field"
 			}
 			return fmt.Sprintf("%d", fld.Fvalue.(int64)&0xff)
 		case "Double":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: corrupted Double object, missing \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: corrupted Double object, missing \"value\" field"
 			}
 			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 64)
 		case "Float":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: corrupted Float object, missing \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: corrupted Float object, missing \"value\" field"
 			}
 			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 32)
 		case "Integer", "Long", "Short":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: corrupted Integer/Long/Short object, missing \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: corrupted Integer/Long/Short object, missing \"value\" field"
 			}
 			return strconv.FormatInt(fld.Fvalue.(int64), 10)
 		case types.ByteArray:
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: corrupted byte array, missing \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: corrupted byte array, missing \"value\" field"
 			}
 			fvalue, ok := fld.Fvalue.([]byte)
 			if !ok {
 				jb, ok := fld.Fvalue.([]types.JavaByte)
 				if !ok {
-					return "StringifyAnythingGo: corrupted byte array \"value\" field"
+					return "*** ERROR, StringifyAnythingGo: corrupted byte array \"value\" field"
 				}
 				fvalue = GoByteArrayFromJavaByteArray(jb)
 			}
@@ -95,11 +95,11 @@ func StringifyAnythingGo(arg interface{}) string {
 			strBuffer := "["
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: boolean object missing \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: boolean object missing \"value\" field"
 			}
 			boolArray, ok := fld.Fvalue.([]int64)
 			if !ok {
-				return "StringifyAnythingGo: corrupted boolean array \"value\" field"
+				return "*** ERROR, StringifyAnythingGo: corrupted boolean array \"value\" field"
 			}
 			for _, elem := range boolArray {
 				if elem > 0 {
@@ -114,7 +114,7 @@ func StringifyAnythingGo(arg interface{}) string {
 		case types.DoubleArray:
 			array, ok := obj.FieldTable["value"].Fvalue.([]float64)
 			if !ok {
-				return "StringifyAnythingGo: double array missing \"value\" field or array value corrupted"
+				return "*** ERROR, StringifyAnythingGo: double array missing \"value\" field or array value corrupted"
 			}
 			strBuffer := "["
 			for ix := 0; ix < len(array); ix++ {
@@ -124,7 +124,7 @@ func StringifyAnythingGo(arg interface{}) string {
 		case types.FloatArray:
 			array, ok := obj.FieldTable["value"].Fvalue.([]float64)
 			if !ok {
-				return "StringifyAnythingGo: float array missing \"value\" field or array value corrupted"
+				return "*** ERROR, StringifyAnythingGo: float array missing \"value\" field or array value corrupted"
 			}
 			strBuffer := "["
 			for ix := 0; ix < len(array); ix++ {
@@ -134,7 +134,7 @@ func StringifyAnythingGo(arg interface{}) string {
 		case types.IntArray, types.LongArray, types.ShortArray:
 			array, ok := obj.FieldTable["value"].Fvalue.([]int64)
 			if !ok {
-				return "StringifyAnythingGo: int/long/short array missing \"value\" field or array value corrupted"
+				return "*** ERROR, StringifyAnythingGo: int/long/short array missing \"value\" field or array value corrupted"
 			}
 			strBuffer := "["
 			for ix := 0; ix < len(array); ix++ {
@@ -160,7 +160,20 @@ func StringifyAnythingGo(arg interface{}) string {
 			if IsNull(fld.Fvalue) {
 				return types.NullString
 			}
-			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			switch fld.Fvalue.(type) {
+			case *Object:
+				obj := fld.Fvalue.(*Object)
+				fvalue := obj.FieldTable["value"].Fvalue
+				return GoStringFromJavaByteArray(fvalue.([]types.JavaByte))
+			case []types.JavaByte:
+				return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			case []byte:
+				return string(fld.Fvalue.([]byte))
+			default:
+				errMsg := fmt.Sprintf("*** ERROR, StringifyAnythingGo Field types.StringClassRef: expected Object but saw type %T",
+					fld.Fvalue)
+				return errMsg
+			}
 		case types.Byte:
 			var ba1 []byte
 			switch fld.Fvalue.(type) {
@@ -169,7 +182,7 @@ func StringifyAnythingGo(arg interface{}) string {
 			case byte:
 				ba1 = []byte{byte(fld.Fvalue.(byte))}
 			default:
-				return "StringifyAnythingGo Field types.Byte: corrupted byte \"value\" field"
+				return "*** ERROR, StringifyAnythingGo Field types.Byte: corrupted byte \"value\" field"
 			}
 			return "0x" + hex.EncodeToString(ba1)
 		case types.ByteArray:
@@ -180,7 +193,7 @@ func StringifyAnythingGo(arg interface{}) string {
 			case []byte:
 				bytes = fld.Fvalue.([]byte)
 			default:
-				return "StringifyAnythingGo Field types.ByteArray: corrupted byte array \"value\" field"
+				return "*** ERROR, StringifyAnythingGo Field types.ByteArray: corrupted byte array \"value\" field"
 			}
 			return "0x" + hex.EncodeToString(bytes)
 		case types.Bool:
@@ -204,7 +217,7 @@ func StringifyAnythingGo(arg interface{}) string {
 			case uint16:
 				strValue = strconv.FormatInt(int64(fld.Fvalue.(uint16)), 10)
 			default:
-				errMsg := fmt.Sprintf("StringifyAnythingGo  Field types.Int: unrecognized field value type, value: %T, %v", arg, arg)
+				errMsg := fmt.Sprintf("*** ERROR, StringifyAnythingGo  Field types.Int: unrecognized field value type, value: %T, %v", arg, arg)
 				return errMsg
 			}
 			return strValue
@@ -229,14 +242,14 @@ func StringifyAnythingGo(arg interface{}) string {
 				return "[]"
 			}
 		default:
-			errMsg := fmt.Sprintf("StringifyAnythingGo Field default: unrecognized argument type, value: %T, %v", arg, arg)
+			errMsg := fmt.Sprintf("*** ERROR, StringifyAnythingGo Field default: unrecognized argument type, value: %T, %v", arg, arg)
 			return errMsg
 		}
 		/* end of case Field */
 	}
 
 	// If we got here, then the argument was neither an *Object nor a Field.
-	errMsg := fmt.Sprintf("StringifyAnythingGo: neither *Object nor Field, value: %T, %v", arg, arg)
+	errMsg := fmt.Sprintf("*** ERROR, StringifyAnythingGo: neither *Object nor Field, value: %T, %v", arg, arg)
 	return errMsg
 }
 

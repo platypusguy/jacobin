@@ -966,26 +966,21 @@ func doFastore(fr *frames.Frame, _ int64) int {
 // 0x53 AASTORE store a ref in a ref array
 func doAastore(fr *frames.Frame, _ int64) int {
 	popped := pop(fr) // reference we're inserting
-	if popped == nil {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s%s, AASTORE: Invalid (null) interface[any] on stack",
-			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType)
-		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
+
+	var value *object.Object
+	if popped != nil {
+		var ok bool
+		value, ok = popped.(*object.Object) // reference we're inserting
+		if !ok {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s%s, AASTORE: Illegal argument type (%T) for inserting into a reference array",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType, popped)
+			status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
 		}
-		return RESUME_HERE // caught
-	}
-	value, ok := popped.(*object.Object) // reference we're inserting
-	if !ok {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s%s, AASTORE: Illegal argument type (%T) for inserting into a reference array",
-			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType, popped)
-		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
-		}
-		return RESUME_HERE // caught
 	}
 
 	index := pop(fr).(int64) // index into the array
@@ -1051,12 +1046,11 @@ func doBastore(fr *frames.Frame, _ int64) int {
 	index := pop(fr).(int64)
 
 	// Pop off array reference.
-	arrayRef := pop(fr)
+	arrayRefPopped := pop(fr)
 
-	switch arrayRef.(type) {
+	switch arrayRef := arrayRefPopped.(type) {
 	case *object.Object: // Arrays should be wrapped in a Jacobin object.
-		obj := arrayRef.(*object.Object)
-		if object.IsNull(obj) {
+		if object.IsNull(arrayRef) {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("in %s.%s, BASTORE: Invalid (null) reference to an array",
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
@@ -1068,9 +1062,9 @@ func doBastore(fr *frames.Frame, _ int64) int {
 		}
 
 		// Get array field.
-		obj.ThMutex.RLock()
-		fld := obj.FieldTable["value"]
-		obj.ThMutex.RUnlock()
+		arrayRef.ThMutex.RLock()
+		fld := arrayRef.FieldTable["value"]
+		arrayRef.ThMutex.RUnlock()
 
 		if fld.Ftype != types.ByteArray && fld.Ftype != types.BoolArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -1096,13 +1090,12 @@ func doBastore(fr *frames.Frame, _ int64) int {
 		rawByteArray[index] = value
 
 	case []types.JavaByte: // Raw JavaByte array: TODO: Do non-wrapped arrays still happen?
-		int8Array := arrayRef.([]types.JavaByte)
-		size = int64(len(int8Array))
+		size = int64(len(arrayRef))
 		ret := doBastore_index_vs_size(fr, index, size)
 		if ret != 0 {
 			return ret
 		}
-		int8Array[index] = value
+		arrayRef[index] = value
 		return 1
 
 	default:
