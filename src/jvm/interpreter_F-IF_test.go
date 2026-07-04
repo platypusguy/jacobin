@@ -891,42 +891,6 @@ func TestGetFieldStringClassRefJavaBytes(t *testing.T) {
 	}
 }
 
-// GETFIELD: Field type StringClassRef with *object.Object -> returns the String object as-is
-func TestGetFieldStringClassRefObject(t *testing.T) {
-	globals.InitGlobals("test")
-
-	f := newFrame(opcodes.GETFIELD)
-	f.Meth = append(f.Meth, 0x00, 0x01)
-
-	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10)
-	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0}
-	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
-	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{FldName: "value"}
-	f.CP = &CP
-
-	s := "hello"
-	strObj := object.StringObjectFromGoString(s)
-	obj := object.MakeEmptyObject()
-	obj.FieldTable["value"] = object.Field{Ftype: types.StringClassRef, Fvalue: strObj}
-	push(&f, obj)
-
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f)
-	interpret(fs)
-
-	ret := pop(&f).(*object.Object)
-	if ret != strObj {
-		t.Errorf("GETFIELD StringClassRef(*object.Object): expected same object pointer, got %p != %p", ret, strObj)
-	}
-	if object.GoStringFromStringObject(ret) != s {
-		t.Errorf("GETFIELD StringClassRef(*object.Object): expected %q, got %q", s, object.GoStringFromStringObject(ret))
-	}
-	if f.TOS != -1 {
-		t.Errorf("GETFIELD StringClassRef(*object.Object): expected empty stack, TOS=%d", f.TOS)
-	}
-}
-
 // GETFIELD: Non-string array field -> wraps into an Object with field "value"
 func TestGetFieldArrayWrap(t *testing.T) {
 	globals.InitGlobals("test")

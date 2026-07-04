@@ -2467,11 +2467,6 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			fieldValue = object.StringObjectFromByteArray(objField.Fvalue.([]byte))
 		case []types.JavaByte:
 			fieldValue = object.StringObjectFromJavaByteArray(objField.Fvalue.([]types.JavaByte))
-		case *object.Object:
-			fieldValue = objField.Fvalue
-		default:
-			// If it's something else (like nil), just pass it through
-			fieldValue = objField.Fvalue
 		}
 	} else if types.IsArray(fieldType) {
 		// if the field type is an array, other than a string, convert it to an object
@@ -2553,9 +2548,8 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 			v := value.(*object.Object)
 			v.ThMutex.RLock()
 			o, ok := v.FieldTable["value"]
-			klassName := object.GoStringFromStringPoolIndex(v.KlassName)
 			v.ThMutex.RUnlock()
-			if ok && strings.HasPrefix(o.Ftype, types.Array) && strings.HasPrefix(klassName, types.Array) {
+			if ok && strings.HasPrefix(o.Ftype, types.Array) {
 				v.ThMutex.RLock()
 				value = v.FieldTable["value"].Fvalue
 				v.ThMutex.RUnlock()

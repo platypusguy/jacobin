@@ -501,31 +501,6 @@ func TestStringifyAnythingGo_Field_ByteArray_CorruptedValue(t *testing.T) {
 	}
 }
 
-func TestStringifyAnythingGo_Field_StringClassRef_MissingValue(t *testing.T) {
-	globals.InitGlobals("test")
-	obj := MakeEmptyObject() // Missing "value" field
-	field := Field{Ftype: types.StringClassRef, Fvalue: obj}
-
-	result := StringifyAnythingGo(field)
-	if result != "" {
-		t.Errorf("Expected empty string for missing value field, got %q", result)
-	}
-}
-
-func TestStringifyAnythingGo_Field_StringClassRef_WrongValueType(t *testing.T) {
-	globals.InitGlobals("test")
-	obj := MakeEmptyObject()
-	obj.ThMutex.Lock()
-	obj.FieldTable["value"] = Field{Ftype: types.Int, Fvalue: int64(42)}
-	obj.ThMutex.Unlock()
-	field := Field{Ftype: types.StringClassRef, Fvalue: obj}
-
-	result := StringifyAnythingGo(field)
-	if !strings.Contains(result, "*** ERROR") {
-		t.Errorf("Expected ERROR message for wrong value type, got %q", result)
-	}
-}
-
 func TestStringifyAnythingGo_Field_StringClassRef_ByteArray(t *testing.T) {
 	globals.InitGlobals("test")
 	javaBytes := JavaByteArrayFromGoString("repro")

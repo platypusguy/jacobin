@@ -316,15 +316,8 @@ func TestUpdateValueFieldFromJavaBytes(t *testing.T) {
 	if !exists {
 		t.Errorf("Expected 'value' field to exist after update")
 	}
-	if field.Ftype != types.ByteArray {
-		t.Errorf("Expected field type %s, got '%s'", types.ByteArray, field.Ftype)
-	}
-	// Check for coder field
-	coder, ok := obj.FieldTable["coder"]
-	if !ok {
-		t.Errorf("Expected 'coder' field to exist")
-	} else if coder.Fvalue != types.JavaByte(0) {
-		t.Errorf("Expected coder value 0, got %v", coder.Fvalue)
+	if field.Ftype != "Ljava/lang/String;" {
+		t.Errorf("Expected field type 'Ljava/lang/String;', got '%s'", field.Ftype)
 	}
 	resultBytes := field.Fvalue.([]types.JavaByte)
 	if len(resultBytes) != 0 {
@@ -371,8 +364,8 @@ func TestUpdateValueFieldFromJavaBytes(t *testing.T) {
 	UpdateValueFieldFromJavaBytes(obj2, newBytes)
 
 	field = obj2.FieldTable["value"]
-	if field.Ftype != types.ByteArray {
-		t.Errorf("Expected field type to be overwritten to %s, got '%s'", types.ByteArray, field.Ftype)
+	if field.Ftype != "Ljava/lang/String;" {
+		t.Errorf("Expected field type to be overwritten to 'Ljava/lang/String;', got '%s'", field.Ftype)
 	}
 	resultBytes = field.Fvalue.([]types.JavaByte)
 	if len(resultBytes) != 3 {

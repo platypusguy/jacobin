@@ -44,7 +44,7 @@ func NewStringObject() *Object {
 	// enable compact strings.
 
 	value := make([]types.JavaByte, 0)
-	valueField := Field{Ftype: types.ByteArray, Fvalue: value} // empty string
+	valueField := Field{Ftype: types.StringClassRef, Fvalue: value} // empty string
 	s.FieldTable["value"] = valueField
 
 	// coder has two possible values:
@@ -69,8 +69,6 @@ func StringObjectFromGoString(str string) *Object {
 	jba := JavaByteArrayFromGoString(str)
 	newStr.ThMutex.Lock()
 	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: jba}
-	// Ensure coder is set to 0 (Latin1) - NewStringObject already does this, but good to be sure if jba might be UTF16
-	newStr.FieldTable["coder"] = Field{Ftype: types.Byte, Fvalue: types.JavaByte(0)}
 	newStr.ThMutex.Unlock()
 	return newStr
 }

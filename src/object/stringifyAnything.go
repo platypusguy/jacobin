@@ -163,26 +163,8 @@ func StringifyAnythingGo(arg interface{}) string {
 			switch fld.Fvalue.(type) {
 			case *Object:
 				obj := fld.Fvalue.(*Object)
-				if IsNull(obj) {
-					return types.NullString
-				}
-				obj.ThMutex.RLock()
-				fldValue, ok := obj.FieldTable["value"]
-				obj.ThMutex.RUnlock()
-				if !ok {
-					return ""
-				}
-				switch val := fldValue.Fvalue.(type) {
-				case []types.JavaByte:
-					return GoStringFromJavaByteArray(val)
-				case []byte:
-					return GoStringFromJavaByteArray(JavaByteArrayFromGoByteArray(val))
-				case string:
-					return val
-				default:
-					return fmt.Sprintf("*** ERROR, StringifyAnythingGo Field types.StringClassRef: expected byte array but saw type %T",
-						val)
-				}
+				fvalue := obj.FieldTable["value"].Fvalue
+				return GoStringFromJavaByteArray(fvalue.([]types.JavaByte))
 			case []types.JavaByte:
 				return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 			case []byte:
