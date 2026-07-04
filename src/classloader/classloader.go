@@ -67,7 +67,8 @@ type ParsedClass struct {
 	bootstrapCount  int // the number of bootstrap methods
 	bootstraps      []bootstrapMethod
 
-	resolvedMeths []MTentry // resolved method entries
+	resolutionMutex sync.Mutex // to synchronize access to resolvedMeths
+	resolvedMeths   []MTentry  // resolved method entries
 
 	deprecated bool
 
