@@ -160,9 +160,13 @@ func UpdateValueFieldFromJavaBytes(objPtr *Object, argBytes []types.JavaByte) {
 		}
 		return
 	}
-	fld := Field{Ftype: types.StringClassRef, Fvalue: argBytes}
+	fld := Field{Ftype: types.ByteArray, Fvalue: argBytes}
 	objPtr.ThMutex.Lock()
 	objPtr.FieldTable["value"] = fld
+	// Ensure coder is set (0 = Latin1)
+	if _, ok := objPtr.FieldTable["coder"]; !ok {
+		objPtr.FieldTable["coder"] = Field{Ftype: types.Byte, Fvalue: types.JavaByte(0)}
+	}
 	objPtr.ThMutex.Unlock()
 }
 
