@@ -179,6 +179,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_List()
 	javaUtil.Load_Util_ListIterator()
 	javaUtil.Load_Util_Set()
+	javaUtil.Load_Util_StringTokenizer()
 	javaUtil.Load_Util_SequencedCollection()
 	javaUtil.Load_Util_SequencedMap()
 	javaUtil.Load_Util_SequencedSet()
