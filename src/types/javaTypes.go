@@ -66,6 +66,7 @@ const Vector = "*VC"     // The related Fvalue is a Golang []interface{}
 const LinkedList = "*LL" // The related Fvalue is a Golang *list.List
 const Properties = "*PT" // The related Fvalue is a Golang map[interface{}]interface{}
 const Map = "MAP"        // Golang map (E.g. security services in java/Security/Provider.Service)
+const StringTokenizer = "*ST" // The related Fvalue is a Golang *stringTokenizerState
 
 // Security field types
 const ECPoint = "ECpt"
