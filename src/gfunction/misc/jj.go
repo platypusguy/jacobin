@@ -175,11 +175,10 @@ func jjGetStaticString(params []interface{}) interface{} {
 	className := object.ObjectFieldToString(classObj, "value")
 
 	// Get field name.
-	if len(params) < 0 || params[1] == nil {
+	if len(params) < 2 || params[1] == nil {
 		errMsg := fmt.Sprintf("jjGetStaticString: Invalid field is missing or nil")
 		return object.StringObjectFromGoString(errMsg)
 	}
-
 	fieldObj := params[1].(*object.Object)
 	if fieldObj == nil || fieldObj.KlassName == types.InvalidStringIndex {
 		errMsg := fmt.Sprintf("jjGetStaticString: Invalid field object: %T", params[1])
@@ -194,13 +193,10 @@ func jjGetStaticString(params []interface{}) interface{} {
 		return object.StringObjectFromGoString(errMsg)
 	}
 
-	// Handle vectors.
-	if strings.HasPrefix(sme.Type, types.Array) {
-		return jjStringifyVector(sme.Value.(*object.Object))
-	}
-
-	// Handle a scalar.
-	return jjStringifyScalar(sme.Type, sme.Value)
+	return object.StringifyAnythingJava(object.Field{
+		Ftype:  sme.Type,
+		Fvalue: sme.Value,
+	})
 }
 
 func jjGetFieldString(params []interface{}) interface{} {
@@ -209,7 +205,7 @@ func jjGetFieldString(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 
 	// Get field name.
-	if len(params) < 0 || params[1] == nil {
+	if len(params) < 2 || params[1] == nil {
 		errMsg := fmt.Sprintf("jjGetFieldString: Invalid field is missing or nil")
 		return object.StringObjectFromGoString(errMsg)
 	}
@@ -227,17 +223,8 @@ func jjGetFieldString(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("jjGetFieldString: No such field name: %s", fieldName)
 		return object.StringObjectFromGoString(errMsg)
 	}
-	if fld.Ftype == "Ljava/lang/String;" {
-		return object.StringObjectFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
-	}
 
-	// Handle vectors.
-	if strings.HasPrefix(fld.Ftype, types.Array) {
-		return jjStringifyVector(fld.Fvalue)
-	}
-
-	// Handle a scalar.
-	return jjStringifyScalar(fld.Ftype, fld.Fvalue)
+	return object.StringifyAnythingJava(fld)
 }
 
 func jjDumpStatics(params []interface{}) interface{} {
