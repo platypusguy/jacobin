@@ -1395,8 +1395,7 @@ func bigIntegerToByteArray(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	xx := obj.FieldTable["value"].Fvalue.(*big.Int)
 	bytes := xx.Bytes()
-	objOut :=
-		object.StringObjectFromJavaByteArray(object.JavaByteArrayFromGoByteArray(bytes))
+	objOut := object.MakeArrayFromRawArray(bytes)
 
 	return objOut
 }
