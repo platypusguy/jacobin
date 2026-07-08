@@ -2463,10 +2463,19 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	} else if fieldType == types.StringClassRef {
 		// if the field type is String pointer and value is a byte array, convert it to a string
 		switch objField.Fvalue.(type) {
-		case []byte:
-			fieldValue = object.StringObjectFromByteArray(objField.Fvalue.([]byte))
-		case []types.JavaByte:
+		case []types.JavaByte: // expected type of Fvalue (highest priority in switch)
 			fieldValue = object.StringObjectFromJavaByteArray(objField.Fvalue.([]types.JavaByte))
+		case []byte: // used to occur ... still does?
+			fieldValue = object.StringObjectFromByteArray(objField.Fvalue.([]byte))
+		case *object.Object: // occurs and I don't know why ... correction inserted by Junie on 20260707
+			fieldValue = objField.Fvalue
+		default: // none of the above --> exception
+			errMsg := fmt.Sprintf("GETFIELD: fieldType = types.StringClassRef; expected fieldValue to be a "+
+				"Java byte array but observed type %T\n", fieldValue)
+			status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
 		}
 	} else if types.IsArray(fieldType) {
 		// if the field type is an array, other than a string, convert it to an object
