@@ -260,17 +260,22 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		case []types.JavaByte:
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		case []byte: // this should never happen, but just in case
+			outString := string(fld.Fvalue.([]byte))
 			if globals.TraceInst || globals.TraceVerbose {
-				trace.Error(fmt.Sprintf("ObjectFieldToString: Converting unexpected byte array to string: %x",
-					string(fld.Fvalue.([]byte))))
+				errMsg := fmt.Sprintf("*** WARNING, ObjectFieldToString: Converting unexpected Go byte array to string: %s",
+					outString)
+				trace.Error(errMsg)
 			}
-			return string(fld.Fvalue.([]byte))
+			return outString
 		case *Object:
 			fvobj := fld.Fvalue.(*Object)
 			str := StringifyAnythingGo(fvobj)
 			return str
 		default:
-			errMsg := fmt.Sprintf("ObjectFieldToString: Converting unexpected fld.Fvalue.(type) to string: %T", fld.Fvalue)
+			errMsg := fmt.Sprintf("*** ERROR, ObjectFieldToString: Converting unexpected fld.Fvalue.(type) to string: %T", fld.Fvalue)
+			if globals.TraceInst || globals.TraceVerbose {
+				trace.Error(errMsg)
+			}
 			return errMsg
 		}
 
