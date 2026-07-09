@@ -11,7 +11,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"jacobin/src/types"
+	"reflect"
 	"strconv"
+	"strings"
 )
 
 // StringifyAnythingGo: Stringify anything and return a go string to caller.
@@ -30,6 +32,22 @@ func StringifyAnythingGo(arg interface{}) string {
 		if IsNull(obj) {
 			return types.NullString
 		}
+
+		className := GoStringFromStringPoolIndex(obj.KlassName)
+		if className == "[C" || className == types.CharArray {
+			if fld, ok := obj.FieldTable["value"]; ok {
+				if charArr, ok := fld.Fvalue.([]int64); ok {
+					return GoStringFromJavaCharArray(charArr)
+				}
+			}
+		}
+
+		if strings.HasPrefix(className, "[L") || strings.HasPrefix(className, "[[") {
+			if fld, ok := obj.FieldTable["value"]; ok {
+				return StringifyAnythingGo(fld)
+			}
+		}
+
 		classNameSuffix := GetClassNameSuffix(obj, true)
 		switch classNameSuffix {
 		case "String":
@@ -37,7 +55,16 @@ func StringifyAnythingGo(arg interface{}) string {
 			if !ok {
 				return "*** ERROR, StringifyAnythingGo: corrupted String object, missing \"value\" field"
 			}
-			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			switch val := fld.Fvalue.(type) {
+			case []types.JavaByte:
+				return GoStringFromJavaByteArray(val)
+			case []byte:
+				return string(val)
+			case []int64:
+				return GoStringFromJavaCharArray(val)
+			default:
+				return fmt.Sprintf("*** ERROR, StringifyAnythingGo: String/CharArray value field is %T, not byte or char array", fld.Fvalue)
+			}
 		case "Boolean":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
@@ -58,7 +85,7 @@ func StringifyAnythingGo(arg interface{}) string {
 			if !ok {
 				return "*** ERROR, StringifyAnythingGo: corrupted Character object, missing \"value\" field"
 			}
-			return fmt.Sprintf("%d", fld.Fvalue.(int64)&0xff)
+			return fmt.Sprintf("%c", fld.Fvalue.(int64))
 		case "Double":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
@@ -77,6 +104,15 @@ func StringifyAnythingGo(arg interface{}) string {
 				return "*** ERROR, StringifyAnythingGo: corrupted Integer/Long/Short object, missing \"value\" field"
 			}
 			return strconv.FormatInt(fld.Fvalue.(int64), 10)
+		case types.CharArray:
+			fld, ok := obj.FieldTable["value"]
+			if !ok {
+				return "*** ERROR, StringifyAnythingGo: char array missing \"value\" field"
+			}
+			if charArr, ok := fld.Fvalue.([]int64); ok {
+				return GoStringFromJavaCharArray(charArr)
+			}
+			return fmt.Sprintf("*** ERROR, StringifyAnythingGo: corrupted char array \"value\" field, type %T", fld.Fvalue)
 		case types.ByteArray:
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
@@ -141,8 +177,28 @@ func StringifyAnythingGo(arg interface{}) string {
 				strBuffer += strconv.FormatInt(array[ix], 10) + ", "
 			}
 			return strBuffer[:len(strBuffer)-2] + "]"
-		case types.MultiArray:
-			GoStringFromStringPoolIndex(arg.(*Object).KlassName)
+		case types.MultiArray, types.Array:
+			strBuffer := "["
+			fvalue := obj.FieldTable["value"].Fvalue
+			if innerObj, ok := fvalue.(*Object); ok {
+				if val, ok := innerObj.FieldTable["value"]; ok {
+					fvalue = val.Fvalue
+				}
+			}
+
+			anArray := reflect.ValueOf(fvalue)
+			if anArray.Kind() != reflect.Slice && anArray.Kind() != reflect.Array {
+				return fmt.Sprintf("*** ERROR, StringifyAnythingGo Field: expected array/slice but saw %T", fvalue)
+			}
+
+			for ix := 0; ix < anArray.Len(); ix++ {
+				if ix > 0 {
+					strBuffer += ", "
+				}
+				element := anArray.Index(ix).Interface()
+				strBuffer += StringifyAnythingGo(element)
+			}
+			return strBuffer + "]"
 		default:
 			// Format a small report of the class name and the FieldTable.
 			// Concoct a string buffer formatted as: class{name1=value1, name2=value2, ...}.
@@ -155,20 +211,22 @@ func StringifyAnythingGo(arg interface{}) string {
 		/* end of case for *Object */
 	case Field:
 		fld := arg.(Field)
+		switch fld.Fvalue.(type) {
+		case *Object:
+			return StringifyAnythingGo(fld.Fvalue.(*Object))
+		}
 		switch fld.Ftype {
 		case types.StringClassRef:
 			if IsNull(fld.Fvalue) {
 				return types.NullString
 			}
 			switch fld.Fvalue.(type) {
-			case *Object:
-				obj := fld.Fvalue.(*Object)
-				fvalue := obj.FieldTable["value"].Fvalue
-				return GoStringFromJavaByteArray(fvalue.([]types.JavaByte))
 			case []types.JavaByte:
 				return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 			case []byte:
 				return string(fld.Fvalue.([]byte))
+			case *Object:
+				return StringifyAnythingGo(fld.Fvalue.(*Object))
 			default:
 				errMsg := fmt.Sprintf("*** ERROR, StringifyAnythingGo Field types.StringClassRef: expected Object but saw type %T",
 					fld.Fvalue)
@@ -201,6 +259,8 @@ func StringifyAnythingGo(arg interface{}) string {
 				return "true"
 			}
 			return "false"
+		case types.Char:
+			return fmt.Sprintf("%c", fld.Fvalue.(int64))
 		case types.Int, types.Short, types.Long:
 			var strValue string
 			switch fld.Fvalue.(type) {
@@ -241,14 +301,91 @@ func StringifyAnythingGo(arg interface{}) string {
 			} else {
 				return "[]"
 			}
+		case types.MultiArray, types.Array:
+			strBuffer := "["
+			fvalue := fld.Fvalue
+			if obj, ok := fvalue.(*Object); ok {
+				if val, ok := obj.FieldTable["value"]; ok {
+					fvalue = val.Fvalue
+				}
+			}
+
+			anArray := reflect.ValueOf(fvalue)
+			if anArray.Kind() != reflect.Slice && anArray.Kind() != reflect.Array {
+				return fmt.Sprintf("*** ERROR, StringifyAnythingGo Field: expected array/slice but saw %T", fvalue)
+			}
+
+			for ix := 0; ix < anArray.Len(); ix++ {
+				if ix > 0 {
+					strBuffer += ", "
+				}
+				element := anArray.Index(ix).Interface()
+				strBuffer += StringifyAnythingGo(element)
+			}
+			return strBuffer + "]"
+		case types.IntArray, types.LongArray, types.ShortArray, types.BoolArray, types.DoubleArray, types.FloatArray:
+			return StringifyAnythingGo(&Object{
+				KlassName:  types.StringPoolStringIndex, // dummy
+				FieldTable: map[string]Field{"value": fld},
+			})
+		case types.CharArray:
+			if charArr, ok := fld.Fvalue.([]int64); ok {
+				return GoStringFromJavaCharArray(charArr)
+			}
+			return fmt.Sprintf("%v", fld.Fvalue)
+		case types.Ref:
+			if obj, ok := fld.Fvalue.(*Object); ok {
+				return StringifyAnythingGo(obj)
+			}
+			return fmt.Sprintf("%v", fld.Fvalue)
 		default:
-			errMsg := fmt.Sprintf("*** ERROR, StringifyAnythingGo Field default: unrecognized argument type, value: %T, %v", arg, arg)
-			return errMsg
+			if obj, ok := fld.Fvalue.(*Object); ok {
+				return StringifyAnythingGo(obj)
+			}
+			// If it's not an object, it might be a raw slice or primitive.
+			// Try the fallback logic.
+			res := StringifyAnythingGo(fld.Fvalue)
+			if !strings.HasPrefix(res, "*** ERROR, StringifyAnythingGo: neither *Object nor Field") {
+				return res
+			}
+			return fmt.Sprintf("%v", fld.Fvalue)
 		}
 		/* end of case Field */
 	}
 
 	// If we got here, then the argument was neither an *Object nor a Field.
+	// But it might be a primitive or something else we can handle with fmt.Sprintf.
+	val := reflect.ValueOf(arg)
+	switch val.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(val.Int(), 10)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(val.Uint(), 10)
+	case reflect.Float32, reflect.Float64:
+		return strconv.FormatFloat(val.Float(), 'g', -1, 64)
+	case reflect.Bool:
+		if val.Bool() {
+			return "true"
+		}
+		return "false"
+	case reflect.String:
+		return val.String()
+	case reflect.Slice, reflect.Array:
+		strBuffer := "["
+		for ix := 0; ix < val.Len(); ix++ {
+			if ix > 0 {
+				strBuffer += ", "
+			}
+			strBuffer += StringifyAnythingGo(val.Index(ix).Interface())
+		}
+		return strBuffer + "]"
+	case reflect.Interface, reflect.Ptr:
+		if val.IsNil() {
+			return types.NullString
+		}
+		return StringifyAnythingGo(val.Elem().Interface())
+	}
+
 	errMsg := fmt.Sprintf("*** ERROR, StringifyAnythingGo: neither *Object nor Field, value: %T, %v", arg, arg)
 	return errMsg
 }

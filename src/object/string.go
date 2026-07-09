@@ -68,7 +68,7 @@ func StringObjectFromGoString(str string) *Object {
 	newStr := NewStringObject()
 	jba := JavaByteArrayFromGoString(str)
 	newStr.ThMutex.Lock()
-	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: jba}
+	newStr.FieldTable["value"] = Field{Ftype: types.StringClassRef, Fvalue: jba}
 	newStr.ThMutex.Unlock()
 	return newStr
 }
@@ -119,9 +119,9 @@ func GoStringArrayFromStringObjectArray(objArray []*Object) []string {
 	return outArray
 }
 
-// ByteArrayFromStringObject: convenience method to extract a go byte array from a String object (Java string)
+// ByteArrayFromStringObject: convenience method to extract a Java byte array from a String object (Java string)
 func ByteArrayFromStringObject(obj *Object) []types.JavaByte {
-	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
+	if !IsNull(obj) && obj.KlassName == types.StringPoolStringIndex {
 		if obj.ThMutex != nil {
 			obj.ThMutex.RLock()
 			defer obj.ThMutex.RUnlock()
@@ -132,11 +132,12 @@ func ByteArrayFromStringObject(obj *Object) []types.JavaByte {
 	}
 }
 
-// StringObjectFromByteArray: convenience method to create a string object from a byte array
+// StringObjectFromByteArray: convenience method to create a string object from a Go byte array
 func StringObjectFromByteArray(bytes []byte) *Object {
+	jba := JavaByteArrayFromGoByteArray(bytes)
 	newStr := NewStringObject()
 	newStr.ThMutex.Lock()
-	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: bytes}
+	newStr.FieldTable["value"] = Field{Ftype: types.StringClassRef, Fvalue: jba}
 	newStr.ThMutex.Unlock()
 	return newStr
 }
@@ -256,14 +257,26 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	switch fld.Ftype {
 	case types.StringClassRef:
 		switch fld.Fvalue.(type) {
-		case []byte: // this should never happen, but just in case
-			if globals.TraceInst || globals.TraceVerbose {
-				trace.Error(fmt.Sprintf("ObjectFieldToString: Converting unexpected byte array to string: %x",
-					string(fld.Fvalue.([]byte))))
-			}
-			return string(fld.Fvalue.([]byte))
 		case []types.JavaByte:
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+		case []byte: // this should never happen, but just in case
+			outString := string(fld.Fvalue.([]byte))
+			if globals.TraceInst || globals.TraceVerbose {
+				errMsg := fmt.Sprintf("*** WARNING, ObjectFieldToString: Converting unexpected Go byte array to string: %s",
+					outString)
+				trace.Error(errMsg)
+			}
+			return outString
+		case *Object:
+			fvobj := fld.Fvalue.(*Object)
+			str := StringifyAnythingGo(fvobj)
+			return str
+		default:
+			errMsg := fmt.Sprintf("*** ERROR, ObjectFieldToString: Converting unexpected fld.Fvalue.(type) to string: %T", fld.Fvalue)
+			if globals.TraceInst || globals.TraceVerbose {
+				trace.Error(errMsg)
+			}
+			return errMsg
 		}
 
 	case types.BigInteger:

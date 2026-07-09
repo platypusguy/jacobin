@@ -31,7 +31,7 @@ func GoByteArrayFromJavaByteArray(jbarr []types.JavaByte) []byte {
 
 // JavaByteFromStringObject: convenience method to extract a Java byte array from a String object (Java string)
 func JavaByteArrayFromStringObject(obj *Object) []types.JavaByte {
-	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
+	if !IsNull(obj) && obj.KlassName == types.StringPoolStringIndex {
 		fvalue := obj.FieldTable["value"].Fvalue
 		switch fvalue.(type) {
 		case []types.JavaByte:
@@ -46,9 +46,9 @@ func JavaByteArrayFromStringObject(obj *Object) []types.JavaByte {
 }
 
 // StringObjectFromJavaByteArray: convenience method to create a string object from a JavaByte array
-func StringObjectFromJavaByteArray(bytes []types.JavaByte) *Object {
+func StringObjectFromJavaByteArray(jba []types.JavaByte) *Object {
 	newStr := NewStringObject()
-	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: bytes}
+	newStr.FieldTable["value"] = Field{Ftype: types.StringClassRef, Fvalue: jba}
 	return newStr
 }
 

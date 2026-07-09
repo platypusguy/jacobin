@@ -136,19 +136,38 @@ func TestStringifyAnythingGo_CharacterObject(t *testing.T) {
 	obj.FieldTable["value"] = Field{Ftype: types.Char, Fvalue: int64(65)}
 
 	result := StringifyAnythingGo(obj)
-	if result != "65" {
-		t.Errorf("Expected '65', got %s", result)
+	if result != "A" {
+		t.Errorf("Expected 'A', got %s", result)
 	}
 }
 
-func TestStringifyAnythingGo_CharacterObject_MissingValue(t *testing.T) {
+func TestStringifyAnythingGo_CharArrayObject(t *testing.T) {
 	globals.InitGlobals("test")
-	obj := MakeEmptyObjectWithClassName(&charName)
+	charArrayName := "[C"
+	obj := MakeEmptyObjectWithClassName(&charArrayName)
+	obj.FieldTable["value"] = Field{Ftype: types.CharArray, Fvalue: []int64{65, 66, 67}}
 
 	result := StringifyAnythingGo(obj)
-	expected := "missing \"value\" field"
-	if !strings.Contains(result, expected) {
-		t.Errorf("Expected error message, got %s", result)
+	if result != "ABC" {
+		t.Errorf("Expected 'ABC', got %s", result)
+	}
+}
+
+func TestStringifyAnythingGo_Field_Char(t *testing.T) {
+	globals.InitGlobals("test")
+	field := Field{Ftype: types.Char, Fvalue: int64(66)}
+	result := StringifyAnythingGo(field)
+	if result != "B" {
+		t.Errorf("Expected 'B', got %s", result)
+	}
+}
+
+func TestStringifyAnythingGo_Field_CharArray(t *testing.T) {
+	globals.InitGlobals("test")
+	field := Field{Ftype: types.CharArray, Fvalue: []int64{68, 69, 70}}
+	result := StringifyAnythingGo(field)
+	if result != "DEF" {
+		t.Errorf("Expected 'DEF', got %s", result)
 	}
 }
 
@@ -434,7 +453,7 @@ func TestStringifyAnythingGo_DefaultObjectCase(t *testing.T) {
 }
 
 func TestStringifyAnythingGo_Field_StringClassRef(t *testing.T) {
-	javaBytes := StringObjectFromGoString("test")
+	javaBytes := JavaByteArrayFromGoString("test")
 	field := Field{Ftype: types.StringClassRef, Fvalue: javaBytes}
 
 	result := StringifyAnythingGo(field)
@@ -657,13 +676,17 @@ func TestStringifyAnythingGo_Field_DefaultCase(t *testing.T) {
 	field := Field{Ftype: "UNKNOWN", Fvalue: "test"}
 
 	result := StringifyAnythingGo(field)
-	if !strings.Contains(result, "StringifyAnythingGo Field default: unrecognized argument type") {
-		t.Errorf("Expected error message about unrecognized argument type, got %s", result)
+	if result != "test" {
+		t.Errorf("Expected 'test', got %s", result)
 	}
 }
 
 func TestStringifyAnythingGo_UnrecognizedArgumentType(t *testing.T) {
-	result := StringifyAnythingGo("invalid string argument")
+	// Passing a complex struct that we don't handle should still trigger the error message
+	type complex struct {
+		a int
+	}
+	result := StringifyAnythingGo(complex{a: 1})
 
 	if !strings.Contains(result, "StringifyAnythingGo: neither *Object nor Field") {
 		t.Errorf("Expected error message about unrecognized argument, got %s", result)

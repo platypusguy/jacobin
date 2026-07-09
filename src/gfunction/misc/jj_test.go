@@ -6,6 +6,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
+	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
@@ -180,20 +181,23 @@ func TestJjGetStaticString_InvalidFieldObject(t *testing.T) {
 	result := jjGetStaticString(params)
 	expected := object.StringObjectFromGoString("jjGetStaticString: Invalid field is missing or nil")
 	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
+		t.Errorf("Expected %v, got %v", object.GoStringFromStringObject(expected), object.GoStringFromStringObject(result.(*object.Object)))
 	}
 }
 
 func TestJjGetStaticString_VectorType(t *testing.T) {
+	globals.InitGlobals("test")
 	classObj := object.StringObjectFromGoString("testClass")
 	fieldObj := object.StringObjectFromGoString("testField")
+	// Use [L prefix to ensure StringifyAnythingGo recognizes it as an array object
+	klassIdx := stringPool.GetStringIndex(new("[LtestClass;"))
 	statics.AddStatic("testClass.testField",
-		statics.Static{Type: types.Array, Value: &object.Object{FieldTable: map[string]object.Field{"value": {Fvalue: []int64{1, 2, 3}}}}})
+		statics.Static{Type: types.Array, Value: &object.Object{KlassName: klassIdx, FieldTable: map[string]object.Field{"value": {Fvalue: []int64{1, 2, 3}}}}})
 	params := []interface{}{classObj, fieldObj}
 	result := jjGetStaticString(params)
-	expected := object.StringObjectFromGoString("1,2,3")
+	expected := object.StringObjectFromGoString("[1, 2, 3]")
 	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
+		t.Errorf("Expected %v, got %v", object.GoStringFromStringObject(expected), object.GoStringFromStringObject(result.(*object.Object)))
 	}
 }
 
@@ -253,7 +257,7 @@ func TestJjGetFieldString_VectorField(t *testing.T) {
 	fieldObj := object.StringObjectFromGoString("vectorField")
 	params := []interface{}{thisObj, fieldObj}
 	result := jjGetFieldString(params)
-	expected := object.StringObjectFromGoString("1,2,3")
+	expected := object.StringObjectFromGoString("[1, 2, 3]")
 	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
@@ -400,7 +404,7 @@ func TestJjGetStaticString_Errors(t *testing.T) {
 	classObj := object.StringObjectFromGoString("TestClass")
 	res4 := jjGetStaticString([]interface{}{classObj, nil})
 	if !strings.Contains(object.GoStringFromStringObject(res4.(*object.Object)), "Invalid field is missing or nil") {
-		t.Errorf("Expected 'Invalid field is missing or nil', got %v", res4)
+		t.Errorf("Expected 'Invalid field is missing or nil', got %v", object.GoStringFromStringObject(res4.(*object.Object)))
 	}
 
 	// Invalid field object

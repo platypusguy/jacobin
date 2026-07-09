@@ -340,8 +340,8 @@ func TestBigInteger_ByteArray_Construct_And_ToByteArray(t *testing.T) {
 
 	// toByteArray on positive number uses magnitude bytes in current implementation
 	pos := biFromInt64(0x1234)
-	arrObj := bigIntegerToByteArray([]interface{}{pos}).(*object.Object)
-	got := asJavaBytesFromStringObject(arrObj)
+	obj := bigIntegerToByteArray([]interface{}{pos}).(*object.Object)
+	got := obj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	want := object.JavaByteArrayFromGoByteArray(big.NewInt(0x1234).Bytes())
 	if !object.JavaByteArrayEquals(got, want) {
 		t.Fatalf("toByteArray mismatch: expected %v, got %v", want, got)
