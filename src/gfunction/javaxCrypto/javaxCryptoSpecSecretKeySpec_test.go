@@ -42,7 +42,13 @@ func TestSecretKeySpecInit(t *testing.T) {
 		t.Errorf("Expected algorithm %s, got %s", algo, specAlgo)
 	}
 
-	specKey := specObj1.FieldTable["key"].Fvalue.([]byte)
+	var specKey []byte
+	switch v := specObj1.FieldTable["key"].Fvalue.(type) {
+	case []types.JavaByte:
+		specKey = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		specKey = v
+	}
 	if !bytes.Equal(specKey, key) {
 		t.Errorf("Expected key %v, got %v", key, specKey)
 	}
@@ -54,11 +60,17 @@ func TestSecretKeySpecInit(t *testing.T) {
 	params2 := []any{specObj2, keyObj, offset, length, algoObj}
 	result2 := secretKeySpecInit(params2)
 	if result2 != nil {
-		t.Errorf("Expected nil result, got %v", result2)
+		t.Fatalf("SecretKeySpecInit failed: %v", result2)
 	}
 
 	expectedSubKey := key[offset : offset+length]
-	observedSubKey := specObj2.FieldTable["key"].Fvalue.([]byte)
+	var observedSubKey []byte
+	switch v := specObj2.FieldTable["key"].Fvalue.(type) {
+	case []types.JavaByte:
+		observedSubKey = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		observedSubKey = v
+	}
 	if !bytes.Equal(observedSubKey, expectedSubKey) {
 		t.Errorf("Expected subset key %v, got %v", expectedSubKey, observedSubKey)
 	}
@@ -99,7 +111,7 @@ func TestSecretKeySpecMethods(t *testing.T) {
 	algo := "HmacSHA256"
 
 	specObj := object.MakeEmptyObjectWithClassName(&className)
-	specObj.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key}
+ specObj.FieldTable["key"] = object.Field{Ftype: types.JavaByteArray, Fvalue: key}
 	specObj.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo)}
 
 	// Test getAlgorithm()
@@ -130,7 +142,14 @@ func TestSecretKeySpecMethods(t *testing.T) {
 
 	// Verify getEncoded returns a copy
 	goBytes[0] ^= 0xFF
-	if bytes.Equal(specObj.FieldTable["key"].Fvalue.([]byte), goBytes) {
+	var keyStored []byte
+	switch v := specObj.FieldTable["key"].Fvalue.(type) {
+	case []types.JavaByte:
+		keyStored = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		keyStored = v
+	}
+	if bytes.Equal(keyStored, goBytes) {
 		t.Error("getEncoded() should return a copy, but modifying the result affected the original")
 	}
 }
@@ -145,19 +164,19 @@ func TestSecretKeySpecEqualsAndHashCode(t *testing.T) {
 	algo2 := "DES"
 
 	spec1 := object.MakeEmptyObjectWithClassName(&className)
-	spec1.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key1}
+	spec1.FieldTable["key"] = object.Field{Ftype: types.JavaByteArray, Fvalue: key1}
 	spec1.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo1)}
 
 	spec1Clone := object.MakeEmptyObjectWithClassName(&className)
-	spec1Clone.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key1}
+	spec1Clone.FieldTable["key"] = object.Field{Ftype: types.JavaByteArray, Fvalue: key1}
 	spec1Clone.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo1)}
 
 	spec2 := object.MakeEmptyObjectWithClassName(&className)
-	spec2.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key2}
+	spec2.FieldTable["key"] = object.Field{Ftype: types.JavaByteArray, Fvalue: key2}
 	spec2.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo1)}
 
 	spec3 := object.MakeEmptyObjectWithClassName(&className)
-	spec3.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key1}
+	spec3.FieldTable["key"] = object.Field{Ftype: types.JavaByteArray, Fvalue: key1}
 	spec3.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo2)}
 
 	// Test equals

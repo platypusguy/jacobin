@@ -120,8 +120,11 @@ func keyGetEncoded(params []any) any {
 		encoded, err = x509.MarshalPKIXPublicKey(k)
 	case *ecdh.PrivateKey:
 		encoded, err = x509.MarshalPKCS8PrivateKey(k)
+	case []types.JavaByte:
+		// Java byte arrays (signed)
+		encoded = object.GoByteArrayFromJavaByteArray(k)
 	case []byte:
-		// Some keys (X25519, X448) might be stored as raw bytes
+		// Go byte arrays (unsigned)
 		encoded = k
 	case *big.Int:
 		// DH keys often stored as *big.Int
@@ -134,7 +137,7 @@ func keyGetEncoded(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.GeneralSecurityException, "keyGetEncoded: encoding failed: "+err.Error())
 	}
 
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(encoded))
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(encoded))
 }
 
 func keyGetFormat(params []any) any {

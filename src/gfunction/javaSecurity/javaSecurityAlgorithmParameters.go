@@ -140,7 +140,7 @@ func AlgparamsGetEncoded(params []any) any {
 	}
 
 	jBytes := object.JavaByteArrayFromGoByteArray(encoded)
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
 }
 
 func AlgparamsGetInstance(params []any) any {
@@ -242,10 +242,10 @@ func AlgparamsInit(params []any) any {
 
 	param := params[1]
 	if paramObj, ok := param.(*object.Object); ok && !object.IsNull(paramObj) {
-		if paramObj.KlassName == object.StringPoolIndexFromGoString(types.ByteArray) {
+		if paramObj.KlassName == object.StringPoolIndexFromGoString(types.JavaByteArray) {
 			// init([B) or init([B, String)
 			encoded := object.GoByteArrayFromJavaByteArray(paramObj.FieldTable["value"].Fvalue.([]types.JavaByte))
-			self.FieldTable["encoded"] = object.Field{Ftype: types.ByteArray, Fvalue: encoded}
+			self.FieldTable["encoded"] = object.Field{Ftype: types.GoByteArray, Fvalue: encoded}
 			self.FieldTable["initialized"] = object.Field{Ftype: types.Bool, Fvalue: true}
 
 			// If we know the algorithm, we might want to create a spec from the bytes
@@ -255,7 +255,7 @@ func AlgparamsInit(params []any) any {
 				// Create IvParameterSpec
 				ivSpecClass := "javax/crypto/spec/IvParameterSpec"
 				ivSpec := object.MakeEmptyObjectWithClassName(&ivSpecClass)
-				ivSpec.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: encoded}
+				ivSpec.FieldTable["iv"] = object.Field{Ftype: types.GoByteArray, Fvalue: encoded}
 				self.FieldTable["spec"] = object.Field{Ftype: "Ljavax/crypto/spec/IvParameterSpec;", Fvalue: ivSpec}
 			}
 		} else {

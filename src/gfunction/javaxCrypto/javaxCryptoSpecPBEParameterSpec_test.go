@@ -97,7 +97,7 @@ func TestPBEParameterSpecWithSpec(t *testing.T) {
 	iv := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	ivSpecClass := "javax/crypto/spec/IvParameterSpec"
 	ivSpec := object.MakeEmptyObjectWithClassName(&ivSpecClass)
-	ivSpec.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: makeByteArrayObject(iv)}
+	ivSpec.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: makeByteArrayObject(iv)}
 
 	// 1. Test constructor with AlgorithmParameterSpec
 	specObj := object.MakeEmptyObjectWithClassName(&className)

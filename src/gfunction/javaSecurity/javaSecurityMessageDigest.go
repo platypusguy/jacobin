@@ -168,7 +168,7 @@ func appendToBuffer(this *object.Object, bytes []types.JavaByte) {
 	current := this.FieldTable["buffer"].Fvalue.([]types.JavaByte)
 	current = append(current, bytes...)
 	this.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: current,
 	}
 }
@@ -230,7 +230,7 @@ func msgdigGetInstance(params []any) any {
 
 	// Initialize empty buffer for accumulating data
 	md.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: []types.JavaByte{},
 	}
 
@@ -351,9 +351,9 @@ func msgdigDigest(params []any) any {
 	digest := h.Sum(nil)
 	javaDigest := object.JavaByteArrayFromGoByteArray(digest)
 
-	this.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{}}
+	this.FieldTable["buffer"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}}
 
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, javaDigest)
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, javaDigest)
 }
 
 func msgdigDigestBytes(params []any) any {
@@ -403,7 +403,7 @@ func msgdigDigestBytesII(params []any) any {
 
 	digestBytes := digestObj.(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	copy(buf[offset:], digestBytes)
-	bufObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: buf}
+	bufObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: buf}
 
 	return int64(len(digestBytes))
 }
@@ -411,7 +411,7 @@ func msgdigDigestBytesII(params []any) any {
 func msgdigReset(params []any) any {
 	const fname = "msgdigReset"
 	this := params[0].(*object.Object)
-	this.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{}}
+	this.FieldTable["buffer"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}}
 	return nil
 }
 
@@ -447,7 +447,7 @@ func msgdigClone(params []any) any {
 	buffer := this.FieldTable["buffer"].Fvalue.([]types.JavaByte)
 	bufferCopy := make([]types.JavaByte, len(buffer))
 	copy(bufferCopy, buffer)
-	clone.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: bufferCopy}
+	clone.FieldTable["buffer"] = object.Field{Ftype: types.JavaByteArray, Fvalue: bufferCopy}
 
 	return clone
 }

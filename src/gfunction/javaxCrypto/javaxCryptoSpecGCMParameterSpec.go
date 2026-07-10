@@ -52,14 +52,20 @@ func gcmParameterSpecGetIV(params []any) any {
 			"gcmParameterSpecGetIV: 'this' is not an object")
 	}
 
-	iv, ok := self.FieldTable["iv"].Fvalue.([]byte)
-	if !ok {
+	var iv []byte
+	switch v := self.FieldTable["iv"].Fvalue.(type) {
+	case []types.JavaByte:
+		iv = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		iv = v
+	}
+	if iv == nil {
 		return ghelpers.ReturnNull(params)
 	}
 
 	// Returns a copy of the IV
 	jBytes := object.JavaByteArrayFromGoByteArray(slices.Clone(iv))
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
 }
 
 func gcmParameterSpecGetTLen(params []any) any {
@@ -129,7 +135,7 @@ func gcmParameterSpecInit(params []any) any {
 	}
 
 	self.FieldTable["iv"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.GoByteArray,
 		Fvalue: iv,
 	}
 	self.FieldTable["tLen"] = object.Field{

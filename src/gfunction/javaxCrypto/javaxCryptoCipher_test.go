@@ -91,15 +91,15 @@ func TestCipherInitAndUpdate(t *testing.T) {
 
 	// Setup Key
 	keyBytes := []byte("1234567812345678") // 16 bytes for AES
-	keyObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(keyBytes))
+	keyObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(keyBytes))
 
 	// Setup IV
 	ivBytes := []byte("iviviviviviviviv") // 16 bytes
 	ivSpecClass := "javax/crypto/spec/IvParameterSpec"
 	ivSpecObj := object.MakeEmptyObjectWithClassName(&ivSpecClass)
 	ivSpecObj.FieldTable["iv"] = object.Field{
-		Ftype:  types.ByteArray,
-		Fvalue: object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(ivBytes)),
+		Ftype:  types.JavaByteArray,
+		Fvalue: object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(ivBytes)),
 	}
 
 	// cipherInit(opmode, key, spec)
@@ -118,10 +118,16 @@ func TestCipherInitAndUpdate(t *testing.T) {
 
 	// cipherUpdate
 	input := []byte("hello world")
-	inputObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(input))
+	inputObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(input))
 	cipherUpdate([]any{cipherObj, inputObj})
 
-	buffered := cipherObj.FieldTable["buffer"].Fvalue.([]byte)
+	var buffered []byte
+	switch v := cipherObj.FieldTable["buffer"].Fvalue.(type) {
+	case []types.JavaByte:
+		buffered = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		buffered = v
+	}
 	if !bytes.Equal(buffered, input) {
 		t.Errorf("Expected buffer %v, got %v", input, buffered)
 	}
@@ -154,7 +160,13 @@ func TestCipherInitAndUpdate(t *testing.T) {
 	}
 
 	// Buffer should be empty after doFinal
-	bufferedPost := cipherObj.FieldTable["buffer"].Fvalue.([]byte)
+	var bufferedPost []byte
+	switch v := cipherObj.FieldTable["buffer"].Fvalue.(type) {
+	case []types.JavaByte:
+		bufferedPost = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		bufferedPost = v
+	}
 	if len(bufferedPost) != 0 {
 		t.Errorf("Expected empty buffer after doFinal, got len %d", len(bufferedPost))
 	}
@@ -173,13 +185,13 @@ func TestCipherGetIV(t *testing.T) {
 	ivSpecClass := "javax/crypto/spec/IvParameterSpec"
 	ivSpecObj := object.MakeEmptyObjectWithClassName(&ivSpecClass)
 	ivSpecObj.FieldTable["iv"] = object.Field{
-		Ftype:  types.ByteArray,
-		Fvalue: object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(ivBytes)),
+		Ftype:  types.JavaByteArray,
+		Fvalue: object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(ivBytes)),
 	}
 
 	// cipherInit(opmode, key, spec)
 	keyBytes := []byte("1234567812345678")
-	keyObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(keyBytes))
+	keyObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(keyBytes))
 	cipherInit([]any{cipherObj, int64(1), keyObj, ivSpecObj})
 
 	// cipherGetIV
@@ -212,22 +224,33 @@ func TestCipherUpdateAndDoFinalWithOffset(t *testing.T) {
 	cipherObj := cipherGetInstance([]any{transObj}).(*object.Object)
 
 	keyBytes := []byte("1234567812345678")
-	keyObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(keyBytes))
+	keyObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(keyBytes))
 	cipherInit([]any{cipherObj, int64(1), keyObj})
 
 	// cipherUpdate with offset and length
 	input := []byte("0123456789ABCDEF")
-	inputObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(input))
+	inputObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(input))
 	cipherUpdate([]any{cipherObj, inputObj, int64(2), int64(4)}) // "2345"
 
-	buffered := cipherObj.FieldTable["buffer"].Fvalue.([]byte)
+	var buffered []byte
+	switch v := cipherObj.FieldTable["buffer"].Fvalue.(type) {
+	case []types.JavaByte:
+		buffered = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		buffered = v
+	}
 	if !bytes.Equal(buffered, []byte("2345")) {
 		t.Errorf("Expected buffer 2345, got %s", string(buffered))
 	}
 
 	// multiple updates
 	cipherUpdate([]any{cipherObj, inputObj, int64(6), int64(2)}) // "67"
-	buffered = cipherObj.FieldTable["buffer"].Fvalue.([]byte)
+	switch v := cipherObj.FieldTable["buffer"].Fvalue.(type) {
+	case []types.JavaByte:
+		buffered = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		buffered = v
+	}
 	if !bytes.Equal(buffered, []byte("234567")) {
 		t.Errorf("Expected buffer 234567, got %s", string(buffered))
 	}
@@ -244,7 +267,7 @@ func TestCipherUpdateAndDoFinalWithOffset(t *testing.T) {
 	ivObj := cipherObj.FieldTable["iv"].Fvalue.(*object.Object)
 	ivSpecClass := "javax/crypto/spec/IvParameterSpec"
 	ivSpecObj := object.MakeEmptyObjectWithClassName(&ivSpecClass)
-	ivSpecObj.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+	ivSpecObj.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: ivObj}
 
 	cipherInit([]any{cipherObj, int64(2), keyObj, ivSpecObj}) // DECRYPT_MODE
 	// We need the IV that was auto-generated or the one we started with.
@@ -299,7 +322,7 @@ func TestCipherGetters(t *testing.T) {
 	// Set IV and check getParameters
 	iv := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
 	ivObj := makeByteArrayObject(iv)
-	cipherObj.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+	cipherObj.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: ivObj}
 	resParams = cipherGetParameters([]any{cipherObj})
 	if object.IsNull(resParams) {
 		t.Error("Expected non-null parameters after IV is set")
@@ -373,7 +396,7 @@ func TestCipherInitVariations(t *testing.T) {
 	cipherObj := cipherGetInstance([]any{transObj}).(*object.Object)
 
 	keyBytes := []byte("1234567812345678")
-	keyObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(keyBytes))
+	keyObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(keyBytes))
 
 	// init(opmode, key)
 	cipherInit([]any{cipherObj, int64(2), keyObj}) // DECRYPT_MODE

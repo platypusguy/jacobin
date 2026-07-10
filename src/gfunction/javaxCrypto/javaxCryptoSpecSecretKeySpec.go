@@ -148,13 +148,19 @@ func secretKeySpecGetEncoded(params []any) any {
 			"secretKeySpecGetEncoded: 'this' is not an object")
 	}
 
-	keyBytes, ok := obj.FieldTable["key"].Fvalue.([]byte)
-	if !ok {
+	var keyBytes []byte
+	switch v := obj.FieldTable["key"].Fvalue.(type) {
+	case []types.JavaByte:
+		keyBytes = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		keyBytes = v
+	}
+	if keyBytes == nil {
 		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
 			"secretKeySpecGetEncoded: key field not found or invalid")
 	}
 
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray,
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray,
 		object.JavaByteArrayFromGoByteArray(slices.Clone(keyBytes)))
 }
 
@@ -187,8 +193,14 @@ func secretKeySpecHashCode(params []any) any {
 	}
 
 	algorithmObj, ok1 := obj.FieldTable["algorithm"].Fvalue.(*object.Object)
-	keyBytes, ok2 := obj.FieldTable["key"].Fvalue.([]byte)
-	if !ok1 || !ok2 {
+	var keyBytes []byte
+	switch v := obj.FieldTable["key"].Fvalue.(type) {
+	case []types.JavaByte:
+		keyBytes = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		keyBytes = v
+	}
+	if !ok1 || keyBytes == nil {
 		return ghelpers.GetGErrBlk(excNames.IllegalStateException,
 			"secretKeySpecHashCode: fields not found or invalid")
 	}
@@ -240,7 +252,12 @@ func secretKeySpecInit(params []any) any {
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
 				"secretKeySpecInit: key is not a valid byte array")
 		}
-		keyBytes = object.GoByteArrayFromJavaByteArray(keyObj.FieldTable["value"].Fvalue.([]types.JavaByte))
+		fval := keyObj.FieldTable["value"].Fvalue
+		if jBytes, ok := fval.([]types.JavaByte); ok {
+			keyBytes = object.GoByteArrayFromJavaByteArray(jBytes)
+		} else {
+			keyBytes = fval.([]byte)
+		}
 
 		algoObj, ok = params[2].(*object.Object)
 		if !ok || algoObj == nil {
@@ -256,7 +273,13 @@ func secretKeySpecInit(params []any) any {
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
 				"secretKeySpecInit: key is not a valid byte array")
 		}
-		fullKeyBytes := object.GoByteArrayFromJavaByteArray(keyObj.FieldTable["value"].Fvalue.([]types.JavaByte))
+		var fullKeyBytes []byte
+		fval := keyObj.FieldTable["value"].Fvalue
+		if jBytes, ok := fval.([]types.JavaByte); ok {
+			fullKeyBytes = object.GoByteArrayFromJavaByteArray(jBytes)
+		} else {
+			fullKeyBytes = fval.([]byte)
+		}
 
 		offset, ok := params[2].(int64)
 		if !ok {
@@ -306,11 +329,11 @@ func secretKeySpecInit(params []any) any {
 
 	// Store the key and algorithm in the object's fields
 	obj.FieldTable["key"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.GoByteArray,
 		Fvalue: slices.Clone(keyBytes),
 	}
 	obj.FieldTable["value"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.GoByteArray,
 		Fvalue: slices.Clone(keyBytes),
 	}
 	obj.FieldTable["algorithm"] = object.Field{
