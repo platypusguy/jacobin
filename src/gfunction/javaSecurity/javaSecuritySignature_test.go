@@ -75,7 +75,7 @@ func TestSignatureGFunctions_RSA(t *testing.T) {
 
 	// 4. update
 	data := []byte("hello world")
-	dataObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(data))
+	dataObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(data))
 	signatureUpdateBytes([]any{sigObj, dataObj})
 
 	// 5. sign
@@ -109,7 +109,7 @@ func TestSignatureGFunctions_RSA(t *testing.T) {
 	invalidSigBytes := make([]byte, len(signatureBytes))
 	copy(invalidSigBytes, signatureBytes)
 	invalidSigBytes[0] ^= 0xFF
-	invalidSigObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(invalidSigBytes))
+	invalidSigObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(invalidSigBytes))
 
 	signatureUpdateBytes([]any{sigObj, dataObj}) // Reset buffer by re-updating? No, buffer needs to be reset.
 	// Actually, signatureVerify doesn't reset buffer in current implementation, but it should probably if we want to re-verify.
@@ -138,7 +138,7 @@ func TestSignatureGFunctions_ECDSA(t *testing.T) {
 	signatureInitSign([]any{sigObj, privKeyObj})
 
 	data := []byte("ecdsa test")
-	dataObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(data))
+	dataObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(data))
 	signatureUpdateBytes([]any{sigObj, dataObj})
 
 	res = signatureSign([]any{sigObj})
@@ -177,7 +177,7 @@ func TestSignatureGFunctions_DSA(t *testing.T) {
 	signatureInitSign([]any{sigObj, privKeyObj})
 
 	data := []byte("dsa test")
-	dataObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(data))
+	dataObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(data))
 	signatureUpdateBytes([]any{sigObj, dataObj})
 
 	res = signatureSign([]any{sigObj})
@@ -212,7 +212,7 @@ func TestSignatureGFunctions_Ed25519(t *testing.T) {
 	signatureInitSign([]any{sigObj, privKeyObj})
 
 	data := []byte("ed25519 test")
-	dataObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(data))
+	dataObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(data))
 	signatureUpdateBytes([]any{sigObj, dataObj})
 
 	res = signatureSign([]any{sigObj})
@@ -242,7 +242,7 @@ func TestSignature_UpdateVariants(t *testing.T) {
 
 	// Update range
 	data := []byte("ZZhelloZZ")
-	dataObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(data))
+	dataObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(data))
 	signatureUpdateBytesRange([]any{sigObj, dataObj, int64(2), int64(5)})
 
 	buffer := sigObj.FieldTable["buffer"].Fvalue.([]types.JavaByte)

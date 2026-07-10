@@ -177,7 +177,7 @@ func signatureGetInstance(params []any) any {
 
 	// Initialize buffer for update() calls
 	sigObj.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: []types.JavaByte{},
 	}
 
@@ -263,7 +263,7 @@ func signatureInitSign(params []any) any {
 
 	// Reset buffer
 	sigObj.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: []types.JavaByte{},
 	}
 
@@ -336,7 +336,7 @@ func signatureInitVerify(params []any) any {
 
 	// Reset buffer
 	sigObj.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: []types.JavaByte{},
 	}
 
@@ -377,7 +377,7 @@ func signatureUpdateByte(params []any) any {
 
 	// Store updated buffer
 	sigObj.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: object.JavaByteArrayFromGoByteArray(buffer),
 	}
 
@@ -421,7 +421,7 @@ func signatureUpdateBytes(params []any) any {
 
 	// Store updated buffer
 	sigObj.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: object.JavaByteArrayFromGoByteArray(buffer),
 	}
 
@@ -489,7 +489,7 @@ func signatureUpdateBytesRange(params []any) any {
 
 	// Store updated buffer
 	sigObj.FieldTable["buffer"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: object.JavaByteArrayFromGoByteArray(buffer),
 	}
 
@@ -559,7 +559,7 @@ func signatureSign(params []any) any {
 
 	// Return signature as byte array object
 	sigJbytes := object.JavaByteArrayFromGoByteArray(signature)
-	sigArrayObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, sigJbytes)
+	sigArrayObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, sigJbytes)
 	return sigArrayObj
 }
 
@@ -630,7 +630,7 @@ func signatureSignToBuffer(params []any) any {
 	// Copy output buffer to signature.
 	copy(outbuf[offset:], signature)
 	sigJbytes = object.JavaByteArrayFromGoByteArray(signature)
-	sigArrayObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: sigJbytes}
+	sigArrayObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: sigJbytes}
 
 	// Return length of signature
 	return int64(len(signature))
@@ -756,7 +756,7 @@ func signatureVerifyRange(params []any) any {
 	sigJbytes = object.JavaByteArrayFromGoByteArray(sigRange)
 
 	// Create new signature array object
-	sigRangeObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, sigJbytes)
+	sigRangeObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, sigJbytes)
 
 	// Call regular verify with extracted range
 	return signatureVerify([]any{params[0], sigRangeObj})

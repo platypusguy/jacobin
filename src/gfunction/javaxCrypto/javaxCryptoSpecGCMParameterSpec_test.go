@@ -18,7 +18,7 @@ import (
 
 func makeByteArrayObject(b []byte) *object.Object {
 	jBytes := object.JavaByteArrayFromGoByteArray(b)
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
 }
 
 func TestGCMParameterSpec(t *testing.T) {

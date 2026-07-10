@@ -157,7 +157,7 @@ func secretKeyFactoryGenerateSecret(params []any) any {
 		if (isPBKDF2 || isPBEAES) && (len(salt) == 0 || iterations == 0 || keyLength == 0) {
 			// If salt, iterations or keyLength are missing, we can't derive the key yet.
 			// Return a SecretKey that just contains the password and needs derivation.
-			sk := object.MakePrimitiveObject(types.ClassNameSecretKey, types.ByteArray, []byte(password))
+			sk := object.MakePrimitiveObject(types.ClassNameSecretKey, types.JavaByteArray, object.JavaByteArrayFromGoByteArray([]byte(password)))
 			sk.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: algorithmObj}
 			if keyLength > 0 {
 				sk.FieldTable["inferred_key_length"] = object.Field{Ftype: types.Int, Fvalue: keyLength}
@@ -172,7 +172,7 @@ func secretKeyFactoryGenerateSecret(params []any) any {
 			if salt == nil {
 				// Salt is required for legacy PBE derivation.
 				// If not provided, we must defer derivation.
-				sk := object.MakePrimitiveObject(types.ClassNameSecretKey, types.ByteArray, []byte(password))
+				sk := object.MakePrimitiveObject(types.ClassNameSecretKey, types.JavaByteArray, object.JavaByteArrayFromGoByteArray([]byte(password)))
 				sk.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: algorithmObj}
 				return sk
 			}
@@ -300,9 +300,9 @@ func secretKeyFactoryGenerateSecret(params []any) any {
 			}
 		}
 
-		sk := object.MakePrimitiveObject(types.ClassNameSecretKey, types.ByteArray, keyPart)
+		sk := object.MakePrimitiveObject(types.ClassNameSecretKey, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(keyPart))
 		sk.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: algorithmObj}
-		sk.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: derivedKey} // Full material (Key + IV)
+		sk.FieldTable["key"] = object.Field{Ftype: types.GoByteArray, Fvalue: derivedKey} // Full material (Key + IV)
 		return sk
 	}
 

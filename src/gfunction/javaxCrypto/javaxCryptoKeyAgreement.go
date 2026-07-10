@@ -195,10 +195,22 @@ func genSecretECDH(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
 
 func genSecretX25519(privateKeyObj, publicKeyObj *object.Object) ([]byte, error) {
 	// Extract private key (32 bytes)
-	privKey := privateKeyObj.FieldTable["value"].Fvalue.([]byte)
+	var privKey []byte
+	switch v := privateKeyObj.FieldTable["value"].Fvalue.(type) {
+	case []types.JavaByte:
+		privKey = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		privKey = v
+	}
 
 	// Extract public key (32 bytes)
-	pubKey := publicKeyObj.FieldTable["value"].Fvalue.([]byte)
+	var pubKey []byte
+	switch v := publicKeyObj.FieldTable["value"].Fvalue.(type) {
+	case []types.JavaByte:
+		pubKey = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		pubKey = v
+	}
 
 	// Perform X25519 scalar multiplication
 	secret, err := curve25519.X25519(privKey, pubKey)
@@ -359,7 +371,7 @@ func keyagreementGenerateSecret(params []any) any {
 	}
 
 	// Return as byte array
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(secretBytes))
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(secretBytes))
 }
 
 func keyagreementGetAlgorithm(params []any) any {

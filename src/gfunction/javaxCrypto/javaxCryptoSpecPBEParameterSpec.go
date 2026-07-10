@@ -78,14 +78,20 @@ func pbeParameterSpecGetSalt(params []any) any {
 			"pbeParameterSpecGetSalt: 'this' is not an object")
 	}
 
-	salt, ok := self.FieldTable["salt"].Fvalue.([]byte)
-	if !ok {
+	var salt []byte
+	switch v := self.FieldTable["salt"].Fvalue.(type) {
+	case []types.JavaByte:
+		salt = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		salt = v
+	}
+	if salt == nil {
 		return ghelpers.ReturnNull(params)
 	}
 
 	// Returns a copy of the salt
 	jBytes := object.JavaByteArrayFromGoByteArray(slices.Clone(salt))
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
 }
 
 func pbeParameterSpecGetParameterSpec(params []any) any {
@@ -135,7 +141,7 @@ func pbeParameterSpecInit(params []any) any {
 	salt := object.GoByteArrayFromJavaByteArray(saltObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 
 	self.FieldTable["salt"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.GoByteArray,
 		Fvalue: slices.Clone(salt),
 	}
 	self.FieldTable["iterationCount"] = object.Field{
@@ -176,7 +182,7 @@ func pbeParameterSpecInitWithSpec(params []any) any {
 	salt := object.GoByteArrayFromJavaByteArray(saltObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 
 	self.FieldTable["salt"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.GoByteArray,
 		Fvalue: slices.Clone(salt),
 	}
 	self.FieldTable["iterationCount"] = object.Field{

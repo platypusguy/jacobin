@@ -128,5 +128,5 @@ func TestAlgorithmParametersErrors(t *testing.T) {
 // Helper (copy of what's often in crypto tests)
 func makeByteArrayObject(data []byte) *object.Object {
 	jBytes := object.JavaByteArrayFromGoByteArray(data)
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
 }

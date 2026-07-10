@@ -61,7 +61,7 @@ func TestSecretKeyFactory(t *testing.T) {
 	key := []byte("0123456789abcdef")
 	specClassName := "javax/crypto/spec/SecretKeySpec"
 	specObj := object.MakeEmptyObjectWithClassName(&specClassName)
-	specObj.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key}
+	specObj.FieldTable["key"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoByteArray(key)}
 	specObj.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: algoObj}
 
 	res = secretKeyFactoryGenerateSecret([]any{skf, specObj})
@@ -76,7 +76,7 @@ func TestSecretKeyFactory(t *testing.T) {
 	// Test generateSecret with algorithm mismatch
 	otherAlgoObj := object.StringObjectFromGoString("DES")
 	specObjMismatch := object.MakeEmptyObjectWithClassName(&specClassName)
-	specObjMismatch.FieldTable["key"] = object.Field{Ftype: types.ByteArray, Fvalue: key}
+	specObjMismatch.FieldTable["key"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoByteArray(key)}
 	specObjMismatch.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: otherAlgoObj}
 
 	res = secretKeyFactoryGenerateSecret([]any{skf, specObjMismatch})
@@ -105,7 +105,7 @@ func TestSecretKeyFactory(t *testing.T) {
 	passwordCharsObj := object.MakePrimitiveObject(types.CharArray, types.CharArray, passwordChars)
 
 	saltJavaBytes := object.JavaByteArrayFromGoByteArray(salt)
-	saltObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, saltJavaBytes)
+	saltObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, saltJavaBytes)
 
 	pbeKeySpecClassName := "javax/crypto/spec/PBEKeySpec"
 	pbeKeySpec := object.MakeEmptyObjectWithClassName(&pbeKeySpecClassName)
@@ -127,7 +127,7 @@ func TestSecretKeyFactory(t *testing.T) {
 		t.Fatalf("Expected generated key object, got %T", res)
 	}
 
-	derivedKey := genKey.FieldTable["value"].Fvalue.([]byte)
+	derivedKey := genKey.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if len(derivedKey) != int(keyLength/8) {
 		t.Errorf("Expected key length %d, got %d", keyLength/8, len(derivedKey))
 	}
@@ -157,7 +157,7 @@ func TestSecretKeyFactory(t *testing.T) {
 		t.Fatalf("Expected generated key object for %s, got %T", pbeAesAlgo, res)
 	}
 
-	derivedKey = genKey.FieldTable["value"].Fvalue.([]byte)
+	derivedKey = genKey.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if len(derivedKey) != 256/8 {
 		t.Errorf("Expected key length %d, got %d for %s", 256/8, len(derivedKey), pbeAesAlgo)
 	}
@@ -187,7 +187,7 @@ func TestSecretKeyFactory(t *testing.T) {
 		t.Fatalf("Expected generated key object for %s, got %T", pbeLegacyAlgo, res)
 	}
 
-	derivedKey = genKey.FieldTable["value"].Fvalue.([]byte)
+	derivedKey = genKey.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if len(derivedKey) != 64/8 {
 		t.Errorf("Expected key length %d, got %d for %s", 64/8, len(derivedKey), pbeLegacyAlgo)
 	}

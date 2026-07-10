@@ -28,7 +28,7 @@ func TestPBEWithMD5AndDES(t *testing.T) {
 		passwordChars[i] = int64(c)
 	}
 	passwordCharsObj := object.MakePrimitiveObject(types.CharArray, types.CharArray, passwordChars)
-	saltObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(salt))
+	saltObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(salt))
 
 	// 2. Derive Key using SecretKeyFactory
 	skfAlgo := "PBEWithMD5AndDES"
@@ -58,14 +58,14 @@ func TestPBEWithMD5AndDES(t *testing.T) {
 	// PBEParameterSpec
 	pbeParamSpecClass := "javax/crypto/spec/PBEParameterSpec"
 	pbeParamSpec := object.MakeEmptyObjectWithClassName(&pbeParamSpecClass)
-	pbeParamSpec.FieldTable["salt"] = object.Field{Ftype: types.ByteArray, Fvalue: salt}
+	pbeParamSpec.FieldTable["salt"] = object.Field{Ftype: types.JavaByteArray, Fvalue: salt}
 	pbeParamSpec.FieldTable["iterationCount"] = object.Field{Ftype: types.Int, Fvalue: iterations}
 
 	// 4. Encrypt
 	cipherInit([]any{cipherObj, int64(1), genKey, pbeParamSpec}) // ENCRYPT_MODE with PBEParameterSpec
 
 	plaintext := []byte("This is a secret message")
-	inputObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(plaintext))
+	inputObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(plaintext))
 
 	resEnc := cipherDoFinal([]any{cipherObj, inputObj})
 	if errBlk, ok := resEnc.(*ghelpers.GErrBlk); ok {
@@ -105,7 +105,7 @@ func TestPBEWithSHA1AndRC2(t *testing.T) {
 		passwordChars[i] = int64(c)
 	}
 	passwordCharsObj := object.MakePrimitiveObject(types.CharArray, types.CharArray, passwordChars)
-	saltObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(salt))
+	saltObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(salt))
 
 	// 2. Derive Key using SecretKeyFactory
 	skfAlgo := "PBEWithSHA1AndRC2_128"
@@ -135,14 +135,14 @@ func TestPBEWithSHA1AndRC2(t *testing.T) {
 	// PBEParameterSpec
 	pbeParamSpecClass := "javax/crypto/spec/PBEParameterSpec"
 	pbeParamSpec := object.MakeEmptyObjectWithClassName(&pbeParamSpecClass)
-	pbeParamSpec.FieldTable["salt"] = object.Field{Ftype: types.ByteArray, Fvalue: salt}
+	pbeParamSpec.FieldTable["salt"] = object.Field{Ftype: types.JavaByteArray, Fvalue: salt}
 	pbeParamSpec.FieldTable["iterationCount"] = object.Field{Ftype: types.Int, Fvalue: iterations}
 
 	// 4. Encrypt
 	cipherInit([]any{cipherObj, int64(1), genKey, pbeParamSpec}) // ENCRYPT_MODE
 
 	plaintext := []byte("This is a secret message")
-	inputObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(plaintext))
+	inputObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(plaintext))
 
 	resEnc := cipherDoFinal([]any{cipherObj, inputObj})
 	if errBlk, ok := resEnc.(*ghelpers.GErrBlk); ok {
@@ -182,7 +182,7 @@ func TestPBEWithSHA1AndDESede(t *testing.T) {
 		passwordChars[i] = int64(c)
 	}
 	passwordCharsObj := object.MakePrimitiveObject(types.CharArray, types.CharArray, passwordChars)
-	saltObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(salt))
+	saltObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(salt))
 
 	// 2. Derive Key using SecretKeyFactory
 	skfAlgo := "PBEWithSHA1AndDESede"
@@ -212,14 +212,14 @@ func TestPBEWithSHA1AndDESede(t *testing.T) {
 	// PBEParameterSpec
 	pbeParamSpecClass := "javax/crypto/spec/PBEParameterSpec"
 	pbeParamSpec := object.MakeEmptyObjectWithClassName(&pbeParamSpecClass)
-	pbeParamSpec.FieldTable["salt"] = object.Field{Ftype: types.ByteArray, Fvalue: salt}
+	pbeParamSpec.FieldTable["salt"] = object.Field{Ftype: types.JavaByteArray, Fvalue: salt}
 	pbeParamSpec.FieldTable["iterationCount"] = object.Field{Ftype: types.Int, Fvalue: iterations}
 
 	// 4. Encrypt
 	cipherInit([]any{cipherObj, int64(1), genKey, pbeParamSpec}) // ENCRYPT_MODE
 
 	plaintext := []byte("TripleDES PBE test message")
-	inputObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(plaintext))
+	inputObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(plaintext))
 
 	resEnc := cipherDoFinal([]any{cipherObj, inputObj})
 	if errBlk, ok := resEnc.(*ghelpers.GErrBlk); ok {
@@ -254,7 +254,7 @@ func runPBEWithHmacTest(t *testing.T, algo string) {
 		passwordChars[i] = int64(c)
 	}
 	passwordCharsObj := object.MakePrimitiveObject(types.CharArray, types.CharArray, passwordChars)
-	saltObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(salt))
+	saltObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(salt))
 
 	// 2. Derive Key using SecretKeyFactory
 	skfAlgoObj := object.StringObjectFromGoString(algo)
@@ -283,13 +283,13 @@ func runPBEWithHmacTest(t *testing.T, algo string) {
 	iv := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	ivSpecClass := "javax/crypto/spec/IvParameterSpec"
 	ivSpec := object.MakeEmptyObjectWithClassName(&ivSpecClass)
-	ivSpec.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(iv))}
+	ivSpec.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(iv))}
 
 	// 4. Encrypt
 	cipherInit([]any{cipherObj, int64(1), genKey, ivSpec}) // ENCRYPT_MODE
 
 	plaintext := []byte("AES PBE test message for " + algo)
-	inputObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(plaintext))
+	inputObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(plaintext))
 
 	resEnc := cipherDoFinal([]any{cipherObj, inputObj})
 	if errBlk, ok := resEnc.(*ghelpers.GErrBlk); ok {

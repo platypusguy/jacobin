@@ -292,9 +292,15 @@ func cipherDoFinal(params []any) any {
 		}
 	}
 
-	buffer, _ := self.FieldTable["buffer"].Fvalue.([]byte)
+	var buffer []byte
+	switch v := self.FieldTable["buffer"].Fvalue.(type) {
+	case []types.JavaByte:
+		buffer = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		buffer = v
+	}
 	fullInput := append(buffer, input...)
-	self.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: []byte{}}
+	self.FieldTable["buffer"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}}
 
 	config, ok := self.FieldTable["config"].Fvalue.(CipherTransformation)
 	if !ok {
@@ -315,7 +321,12 @@ func cipherDoFinal(params []any) any {
 	var keyBytes []byte
 
 	if kb, ok := keyObj.FieldTable["key"]; ok {
-		keyBytes, _ = kb.Fvalue.([]byte)
+		switch v := kb.Fvalue.(type) {
+		case []types.JavaByte:
+			keyBytes = object.GoByteArrayFromJavaByteArray(v)
+		case []byte:
+			keyBytes = v
+		}
 		config, ok := self.FieldTable["config"].Fvalue.(CipherTransformation)
 		if ok && strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC") {
 			// Legacy PBE keys generated via SecretKeyFactory may contain both Key and IV.
@@ -368,7 +379,7 @@ func cipherDoFinal(params []any) any {
 		case []byte:
 			iv = v
 		case *object.Object:
-			if v.KlassName == object.StringPoolIndexFromGoString(types.ByteArray) {
+			if v.KlassName == object.StringPoolIndexFromGoString(types.JavaByteArray) {
 				iv = object.GoByteArrayFromJavaByteArray(v.FieldTable["value"].Fvalue.([]types.JavaByte))
 			}
 		}
@@ -424,12 +435,12 @@ func cipherDoFinal(params []any) any {
 		}
 		jResult := object.JavaByteArrayFromGoByteArray(result)
 		copy(dest[outputOffset:], jResult)
-		outputBuf.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: dest}
+		outputBuf.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: dest}
 		return int64(len(result))
 	}
 
 	jBytes := object.JavaByteArrayFromGoByteArray(result)
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
 }
 
 func cipherGetAlgorithm(params []any) any {
@@ -519,7 +530,7 @@ func cipherGetInstance(params []any) any {
 
 	// Internal state to hold transformation info
 	cipher.FieldTable["config"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.Struct,
 		Fvalue: config,
 	}
 
@@ -541,10 +552,10 @@ func cipherGetIV(params []any) any {
 	// Ensure it's returned as a Java byte array object.
 	switch v := ivField.Fvalue.(type) {
 	case []types.JavaByte:
-		return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, v)
+		return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, v)
 	case []byte:
 		jBytes := object.JavaByteArrayFromGoByteArray(v)
-		return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+		return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
 	default:
 		// Fallback for cases where it might already be an object (unlikely here but safe)
 		return object.MakeArrayFromRawArray(v)
@@ -563,7 +574,13 @@ func cipherGetOutputSize(params []any) any {
 	}
 
 	inputLen := params[1].(int64)
-	buffer, _ := self.FieldTable["buffer"].Fvalue.([]byte)
+	var buffer []byte
+	switch v := self.FieldTable["buffer"].Fvalue.(type) {
+	case []types.JavaByte:
+		buffer = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		buffer = v
+	}
 	totalLen := inputLen + int64(len(buffer))
 
 	blockSize := cipherGetBlockSize(params).(int64)
@@ -613,9 +630,9 @@ func cipherGetParameters(params []any) any {
 	case *object.Object:
 		ivObj = v
 	case []types.JavaByte:
-		ivObj = object.MakePrimitiveObject(types.ByteArray, types.ByteArray, v)
+		ivObj = object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, v)
 	case []byte:
-		ivObj = object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(v))
+		ivObj = object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, object.JavaByteArrayFromGoByteArray(v))
 	}
 
 	if ivObj != nil {
@@ -720,12 +737,12 @@ func cipherInit(params []any) any {
 			if isLegacyPBE || isHmacPBE {
 				// For legacy PBE, a null spec might mean "use defaults/extract from key"
 				// So we DON'T set ivProvided = true yet.
-				self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
+				self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.Null}
 				ivProvided = false
 			} else {
 				// If spec is explicitly provided as null, we treat it as "provided" but empty.
 				// This prevents auto-generation.
-				self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
+				self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.Null}
 				ivProvided = true
 			}
 		}
@@ -761,14 +778,14 @@ func cipherInit(params []any) any {
 
 		ivObj, ok := self.FieldTable["iv"]
 		if !ok || object.IsNull(ivObj.Fvalue) {
-			self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
+			self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.Null}
 			ivProvided = false
 		} else if isLegacyPBE {
 			// Keep existing derived IV for legacy PBE
 			ivProvided = true
 		} else {
 			// For non-legacy PBE, we typically want a fresh IV if none provided
-			self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
+			self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.Null}
 			ivProvided = false
 		}
 	}
@@ -790,7 +807,13 @@ func cipherInit(params []any) any {
 					if ok {
 						keyObj := keyField.Fvalue.(*object.Object)
 						if kb, ok := keyObj.FieldTable["key"]; ok {
-							keyBytes := kb.Fvalue.([]byte)
+							var keyBytes []byte
+							switch v := kb.Fvalue.(type) {
+							case []types.JavaByte:
+								keyBytes = object.GoByteArrayFromJavaByteArray(v)
+							case []byte:
+								keyBytes = v
+							}
 							// Legacy PBE: Extract Key AND IV if not provided
 							var derivedIV []byte
 							if strings.Contains(config.Name, "DESede") || strings.Contains(config.Name, "TripleDES") {
@@ -813,8 +836,8 @@ func cipherInit(params []any) any {
 
 							if len(derivedIV) > 0 {
 								jBytes := object.JavaByteArrayFromGoByteArray(derivedIV)
-								ivObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
-								self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+								ivObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
+								self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: ivObj}
 								ivProvided = true
 							}
 						}
@@ -827,8 +850,8 @@ func cipherInit(params []any) any {
 						iv := make([]byte, ivLen)
 						if _, err := rand.Read(iv); err == nil {
 							jBytes := object.JavaByteArrayFromGoByteArray(iv)
-							ivObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
-							self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+							ivObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
+							self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: ivObj}
 						}
 					} else {
 						// For decryption and other modes, if IV is still not provided and it's not a legacy PBE,
@@ -837,8 +860,8 @@ func cipherInit(params []any) any {
 						if strings.Contains(config.Name, "PBEWith") {
 							iv := make([]byte, ivLen)
 							jBytes := object.JavaByteArrayFromGoByteArray(iv)
-							ivObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
-							self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: ivObj}
+							ivObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
+							self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: ivObj}
 						}
 					}
 				}
@@ -846,7 +869,7 @@ func cipherInit(params []any) any {
 		}
 	}
 
-	self.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: []byte{}}
+	self.FieldTable["buffer"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}}
 
 	return nil
 }
@@ -890,7 +913,13 @@ func handleInitSpec(self *object.Object, spec *object.Object, ivProvided *bool) 
 				// A derived key will have a "key" field in its FieldTable.
 				if _, ok := keyObj.FieldTable["key"]; !ok {
 					// Create a PBEKeySpec from the existing password and the new salt/iterations
-					passwordBytes := keyObj.FieldTable["value"].Fvalue.([]byte)
+					var passwordBytes []byte
+					switch v := keyObj.FieldTable["value"].Fvalue.(type) {
+					case []types.JavaByte:
+						passwordBytes = object.GoByteArrayFromJavaByteArray(v)
+					case []byte:
+						passwordBytes = v
+					}
 					passwordChars := make([]int64, len(passwordBytes))
 					for i, b := range passwordBytes {
 						passwordChars[i] = int64(b)
@@ -908,7 +937,7 @@ func handleInitSpec(self *object.Object, spec *object.Object, ivProvided *bool) 
 					case []byte:
 						jSalt = object.JavaByteArrayFromGoByteArray(v)
 					}
-					pbeKeySpec.FieldTable["salt"] = object.Field{Ftype: "[B", Fvalue: object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jSalt)}
+ 				pbeKeySpec.FieldTable["salt"] = object.Field{Ftype: "[B", Fvalue: object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jSalt)}
 					pbeKeySpec.FieldTable["iterationCount"] = object.Field{Ftype: types.Int, Fvalue: iterations}
 
 					keyLength := int64(0)
@@ -934,7 +963,7 @@ func handleInitSpec(self *object.Object, spec *object.Object, ivProvided *bool) 
 						// we signal that the IV is NOT provided so that cipherInit can extract it from the newly derived key.
 						// We also clear any existing salt-based IV to ensure extraction happens.
 						if strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC") {
-							self.FieldTable["iv"] = object.Field{Ftype: types.ByteArray, Fvalue: object.Null}
+   				self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.Null}
 							*ivProvided = false
 						} else if strings.Contains(config.Name, "PBEWith") {
 							// For HMAC-based PBE, we use salt as IV by default (if 16 bytes).
@@ -970,10 +999,16 @@ func cipherUpdate(params []any) any {
 		}
 	}
 
-	buffer, _ := self.FieldTable["buffer"].Fvalue.([]byte)
-	self.FieldTable["buffer"] = object.Field{Ftype: types.ByteArray, Fvalue: append(buffer, input...)}
+	var buffer []byte
+	switch v := self.FieldTable["buffer"].Fvalue.(type) {
+	case []types.JavaByte:
+		buffer = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		buffer = v
+	}
+	self.FieldTable["buffer"] = object.Field{Ftype: types.JavaByteArray, Fvalue: append(buffer, input...)}
 
 	// Return null or empty byte array for now, as we buffer everything
 	jBytes := object.JavaByteArrayFromGoByteArray([]byte{})
-	return object.MakePrimitiveObject(types.ByteArray, types.ByteArray, jBytes)
+	return object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jBytes)
 }

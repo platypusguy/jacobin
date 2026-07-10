@@ -31,7 +31,13 @@ func TestIvParameterSpec(t *testing.T) {
 		t.Errorf("Expected nil result, got %v", res1)
 	}
 
-	ivStored := spec1.FieldTable["iv"].Fvalue.([]byte)
+	var ivStored []byte
+	switch v := spec1.FieldTable["iv"].Fvalue.(type) {
+	case []types.JavaByte:
+		ivStored = object.GoByteArrayFromJavaByteArray(v)
+	case []byte:
+		ivStored = v
+	}
 	if !bytes.Equal(ivStored, iv) {
 		t.Errorf("Expected IV %v, got %v", iv, ivStored)
 	}
@@ -50,7 +56,8 @@ func TestIvParameterSpec(t *testing.T) {
 
 	// Verify getIV returns a copy
 	resIVGoBytes[0] ^= 0xFF
-	if bytes.Equal(spec1.FieldTable["iv"].Fvalue.([]byte), resIVGoBytes) {
+	ivStoredAfter := spec1.FieldTable["iv"].Fvalue.([]byte)
+	if bytes.Equal(ivStoredAfter, resIVGoBytes) {
 		t.Error("getIV() should return a copy")
 	}
 
