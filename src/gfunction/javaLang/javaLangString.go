@@ -1286,7 +1286,7 @@ func getBytesFromString(params []interface{}) interface{} {
 			return ghelpers.GetGErrBlk(excNames.UnsupportedEncodingException, errMsg)
 		}
 	}
-	return object.MakePrimitiveObject("[B", types.ByteArray, bytes)
+	return object.MakePrimitiveObject("[B", types.JavaByteArray, bytes)
 }
 
 // java/lang/String.getBytes([BIIBI)V

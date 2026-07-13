@@ -26,7 +26,7 @@ func makeTempFileFIS(t *testing.T, content []byte) (string, func()) {
 
 func newJavaFileObjPath(path string) *object.Object {
 	return &object.Object{FieldTable: map[string]object.Field{
-		ghelpers.FilePath: {Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(path)},
+		ghelpers.FilePath: {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(path)},
 	}}
 }
 
@@ -37,7 +37,7 @@ func newFilterInputStreamObj() *object.Object {
 func newJavaByteArrayObj(size int) *object.Object {
 	jb := make([]types.JavaByte, size)
 	return &object.Object{FieldTable: map[string]object.Field{
-		"value": {Ftype: types.ByteArray, Fvalue: jb},
+		"value": {Ftype: types.JavaByteArray, Fvalue: jb},
 	}}
 }
 

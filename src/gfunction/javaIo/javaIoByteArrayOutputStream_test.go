@@ -81,7 +81,7 @@ func TestByteArrayOutputStreamWriteBytes(t *testing.T) {
 	ByteArrayOutputStreamInit([]any{obj, int64(2)}) // small initial size
 
 	data := []types.JavaByte{1, 2, 3, 4, 5}
-	bObj := object.MakePrimitiveObject("[B", types.ByteArray, data)
+	bObj := object.MakePrimitiveObject("[B", types.JavaByteArray, data)
 
 	// write(b, 1, 3) -> should write [2, 3, 4]
 	ByteArrayOutputStreamWriteBytes([]any{obj, bObj, int64(1), int64(3)})
@@ -116,7 +116,7 @@ func TestByteArrayOutputStreamWriteBytesAll(t *testing.T) {
 	ByteArrayOutputStreamInit([]any{obj})
 
 	data := []types.JavaByte{10, 20, 30}
-	bObj := object.MakePrimitiveObject("[B", types.ByteArray, data)
+	bObj := object.MakePrimitiveObject("[B", types.JavaByteArray, data)
 
 	ByteArrayOutputStreamWriteBytesAll([]any{obj, bObj})
 
@@ -163,7 +163,7 @@ func TestByteArrayOutputStreamToByteArray(t *testing.T) {
 	obj := object.MakeEmptyObject()
 	ByteArrayOutputStreamInit([]any{obj})
 	data := []types.JavaByte{5, 10, 15}
-	bObj := object.MakePrimitiveObject("[B", types.ByteArray, data)
+	bObj := object.MakePrimitiveObject("[B", types.JavaByteArray, data)
 	ByteArrayOutputStreamWriteBytesAll([]any{obj, bObj})
 
 	res := ByteArrayOutputStreamToByteArray([]any{obj})

@@ -26,7 +26,7 @@ func TestInstantiateArray(t *testing.T) {
 	trace.Init()
 	classloader.InitMethodArea()
 
-	anything, err := InstantiateClass(types.ByteArray, nil)
+	anything, err := InstantiateClass(types.JavaByteArray, nil)
 	if err != nil {
 		t.Errorf("Got unexpected error from instantiating array: %s", err.Error())
 	}

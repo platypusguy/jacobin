@@ -740,9 +740,9 @@ func TestObjectFieldToStringAdditionalCases(t *testing.T) {
 		t.Errorf("Expected empty string, got '%s'", result)
 	}
 
-	// Test ByteArray with []byte
+	// Test JavaByteArray with []byte
 	obj.FieldTable["byteArrayField"] = Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: []byte{0x41, 0x42, 0x43}, // ABC
 	}
 	result = ObjectFieldToString(obj, "byteArrayField")

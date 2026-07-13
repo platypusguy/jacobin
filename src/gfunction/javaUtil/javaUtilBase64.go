@@ -249,7 +249,7 @@ func base64EncodeBsrc(params []interface{}) interface{} {
 	}
 
 	// Return the result array in an object.
-	return object.MakePrimitiveObject("[B", types.ByteArray, jba)
+	return object.MakePrimitiveObject("[B", types.JavaByteArray, jba)
 }
 
 // Base 64 encode all bytes from the specified byte array using the Base64 encoding scheme specified in params[0].
@@ -276,7 +276,7 @@ func base64EncodeBsrcBdst(params []interface{}) interface{} {
 	}
 
 	// Put the encoded array in the destination object.
-	fld.Ftype = types.ByteArray
+	fld.Ftype = types.JavaByteArray
 	fld.Fvalue = jba.([]types.JavaByte)
 	dstObject.FieldTable[fieldNameValue] = fld
 
@@ -308,7 +308,7 @@ func base64Decode(params []interface{}) interface{} {
 	}
 
 	// Return the result array in an object.
-	return object.MakePrimitiveObject("[B", types.ByteArray, jba)
+	return object.MakePrimitiveObject("[B", types.JavaByteArray, jba)
 }
 
 // Base 64 decode all bytes from the specified byte array using the Base64 encoding scheme specified in params[0].
@@ -335,7 +335,7 @@ func base64DecodeBsrcBdst(params []interface{}) interface{} {
 	}
 
 	// Put the encoded array in the destination object.
-	fld.Ftype = types.ByteArray
+	fld.Ftype = types.JavaByteArray
 	fld.Fvalue = jba.([]types.JavaByte)
 	dstObject.FieldTable[fieldNameValue] = fld
 

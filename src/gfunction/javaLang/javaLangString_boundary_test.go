@@ -427,7 +427,7 @@ func TestStringConstructor_Boundary(t *testing.T) {
 
 	// newStringFromBytes(byte[] bytes)
 	bytes := []types.JavaByte{types.JavaByte('a'), types.JavaByte('b'), types.JavaByte('c')}
-	bytesObj := object.MakePrimitiveObject("[B", types.ByteArray, bytes)
+	bytesObj := object.MakePrimitiveObject("[B", types.JavaByteArray, bytes)
 	res := newStringFromBytes([]interface{}{thisObj, bytesObj})
 	if res != nil {
 		t.Fatalf("newStringFromBytes returned error: %v", res)
@@ -438,7 +438,7 @@ func TestStringConstructor_Boundary(t *testing.T) {
 
 	// Boundary: newStringFromBytes with empty array
 	emptyBytes := []types.JavaByte{}
-	emptyBytesObj := object.MakePrimitiveObject("[B", types.ByteArray, emptyBytes)
+	emptyBytesObj := object.MakePrimitiveObject("[B", types.JavaByteArray, emptyBytes)
 	res = newStringFromBytes([]interface{}{thisObj, emptyBytesObj})
 	if object.GoStringFromStringObject(thisObj) != "" {
 		t.Errorf("newStringFromBytes(empty) expected '', got %s", object.GoStringFromStringObject(thisObj))

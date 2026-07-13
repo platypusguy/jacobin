@@ -247,7 +247,7 @@ func TestFmtHelper(t *testing.T) {
 
 	// Primitive byte array.
 	bites = []byte{'A', 'B', 'C'}
-	fld = Field{types.ByteArray, bites}
+	fld = Field{types.JavaByteArray, bites}
 	str = fmtHelper(fld, className, fieldName)
 	if str != "41 42 43" {
 		t.Errorf("TestFmtHelper: expected fmtHelper to return \"41 42 43\", got \"%v\"", str)
@@ -255,7 +255,7 @@ func TestFmtHelper(t *testing.T) {
 
 	// Primitive byte array pointer.
 	bites = []byte{'A', 'B', 'C'}
-	fld = Field{types.ByteArray, &bites}
+	fld = Field{types.JavaByteArray, &bites}
 	str = fmtHelper(fld, className, fieldName)
 	if str != "41 42 43" {
 		t.Errorf("TestFmtHelper: expected fmtHelper to return \"41 42 43\", got \"%v\"", str)
@@ -263,7 +263,7 @@ func TestFmtHelper(t *testing.T) {
 
 	// Primitive byte array, wrong format.
 	jb := []types.JavaByte{1, 2, 3}
-	fld = Field{types.ByteArray, jb}
+	fld = Field{types.JavaByteArray, jb}
 	str = fmtHelper(fld, className, fieldName)
 	if !strings.Contains(str, "but value is of type") {
 		t.Errorf("TestFmtHelper: expected fmtHelper to return \"but value is of type\", got \"%v\"", str)
@@ -271,7 +271,7 @@ func TestFmtHelper(t *testing.T) {
 
 	// Primitive byte array, length=0.
 	bites = []byte{}
-	fld = Field{types.ByteArray, bites}
+	fld = Field{types.JavaByteArray, bites}
 	str = fmtHelper(fld, className, fieldName)
 	if !strings.Contains(str, "array of zero") {
 		t.Errorf("TestFmtHelper: expected fmtHelper to return \"array of zero\", got \"%v\"", str)
@@ -433,7 +433,7 @@ func TestFmtHelperStaticByteArray(t *testing.T) {
 	globals.GetGlobalRef().FuncThrowException = _formatCycleKiller
 	globals.GetGlobalRef().FuncGetStaticValue = statics.GetStaticValue
 
-	field := Field{Ftype: types.Static + types.ByteArray, Fvalue: []byte{1, 2, 3}}
+	field := Field{Ftype: types.Static + types.JavaByteArray, Fvalue: []byte{1, 2, 3}}
 	result := fmtHelper(field, "TestClass", "testField")
 
 	// Should contain "static" in the result
@@ -446,7 +446,7 @@ func TestFmtHelperStaticByteArray(t *testing.T) {
 func TestFmtHelperByteArrayNilValue(t *testing.T) {
 	globals.InitGlobals("test")
 
-	field := Field{Ftype: types.ByteArray, Fvalue: nil}
+	field := Field{Ftype: types.JavaByteArray, Fvalue: nil}
 	result := fmtHelper(field, "TestClass", "testField")
 	expected := "<ERROR nil Fvalue>"
 	if result != expected {
@@ -459,7 +459,7 @@ func TestFmtHelperByteArrayWithEmbeddedObject(t *testing.T) {
 	globals.InitGlobals("test")
 
 	embeddedObj := MakeEmptyObject()
-	field := Field{Ftype: types.ByteArray, Fvalue: embeddedObj}
+	field := Field{Ftype: types.JavaByteArray, Fvalue: embeddedObj}
 	result := fmtHelper(field, "TestClass", "testField")
 	expected := "*** embedded object ***"
 	if result != expected {

@@ -105,7 +105,7 @@ func TestCharSequence_StringBuilderImplementation(t *testing.T) {
 	// Mocking a StringBuilder object
 	sbClassName := "java/lang/StringBuilder"
 	sbObj := object.MakeEmptyObjectWithClassName(&sbClassName)
-	sbObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{'H', 'i'}}
+	sbObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{'H', 'i'}}
 	sbObj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: int64(2)}
 
 	// length()

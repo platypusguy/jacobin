@@ -173,7 +173,7 @@ func InitFileInputStreamString(params []interface{}) interface{} {
 	}
 
 	// Copy the file path field into the FileInputStream object.
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(pathStr)}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(pathStr)}
 	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
 
 	// Copy the file handle into the FileInputStream object.
@@ -270,7 +270,7 @@ func fisReadByteArray(params []interface{}) interface{} {
 
 	// All is well - update the supplied buffer.
 	javaBytes = object.JavaByteArrayFromGoByteArray(buffer[:nbytes])
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: javaBytes}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: javaBytes}
 	params[1].(*object.Object).FieldTable["value"] = fld
 
 	// Return the number of bytes.
@@ -325,7 +325,7 @@ func fisReadByteArrayOffset(params []interface{}) interface{} {
 
 	// Update the parameter buffer.
 	javaBytes = object.JavaByteArrayFromGoByteArray(buf1)
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: javaBytes}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: javaBytes}
 	params[1].(*object.Object).FieldTable["value"] = fld
 
 	// Return the number of bytes.

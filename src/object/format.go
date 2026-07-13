@@ -111,7 +111,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 				return fmt.Sprintf("<ERROR Ftype=bool but unexpected Fvalue variable type: %T >", field.Fvalue)
 			}
 		}
-	case types.ByteArray:
+	case types.JavaByteArray:
 		// Special handling for non-String byte array.
 		var bytes []byte
 		if flagStatic {

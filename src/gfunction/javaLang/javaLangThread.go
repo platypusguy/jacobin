@@ -431,7 +431,7 @@ func ThreadInitWithName(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	t.ThMutex.Lock()
-	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
+	t.FieldTable["name"] = object.Field{Ftype: types.JavaByteArray, Fvalue: name}
 	t.ThMutex.Unlock()
 
 	return nil
@@ -502,7 +502,7 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["name"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: name}
 	t.ThMutex.Unlock()
 
@@ -543,7 +543,7 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 
 	t.ThMutex.Lock()
 	t.FieldTable["threadgroup"] = object.Field{Ftype: types.Ref, Fvalue: threadGroup}
-	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
+	t.FieldTable["name"] = object.Field{Ftype: types.JavaByteArray, Fvalue: name}
 	t.ThMutex.Unlock()
 
 	return nil
@@ -632,7 +632,7 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 	t.FieldTable["threadgroup"] = object.Field{
 		Ftype: types.Ref, Fvalue: threadGroup}
 	t.FieldTable["name"] = object.Field{
-		Ftype: types.ByteArray, Fvalue: name}
+		Ftype: types.JavaByteArray, Fvalue: name}
 	t.ThMutex.Unlock()
 
 	return nil

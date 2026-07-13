@@ -166,7 +166,7 @@ func initFileReaderString(params []interface{}) interface{} {
 	}
 
 	// Copy java/io/File path
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(pathStr)}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(pathStr)}
 	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
 
 	// Field ghelpers.FileHandle = Golang *os.File

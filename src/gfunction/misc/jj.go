@@ -122,7 +122,7 @@ func jjStringifyScalar(ftype string, fvalue any) *object.Object {
 		str = object.GoStringFromStringObject(fvalue.(*object.Object))
 	case types.Short:
 		str = fmt.Sprintf("%d", fvalue.(int64))
-	case types.Ref, types.ByteArray:
+	case types.Ref, types.JavaByteArray:
 		if object.IsNull(fvalue.(*object.Object)) {
 			str = types.NullString
 		} else {
@@ -379,8 +379,8 @@ func jjSubProcess(params []interface{}) interface{} {
 	// Collect output from pipes.
 	stdout := stdoutBuf.String()
 	stderr := stderrBuf.String()
-	subpObj.FieldTable["stdout"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(stdout)}
-	subpObj.FieldTable["stderr"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(stderr)}
+	subpObj.FieldTable["stdout"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(stdout)}
+	subpObj.FieldTable["stderr"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(stderr)}
 
 	// Handle exit code or POSIX signal.
 	exitCode := int64(0)
@@ -391,7 +391,7 @@ func jjSubProcess(params []interface{}) interface{} {
 		stderrLines := strings.Split(stderr, "\n")
 		stderr = fmt.Sprintf("jjSubProcess: Process %s failed, err: %s\nstderr: %s", cmdString, err.Error(), stderrLines[0])
 		trace.Error(stderr)
-		subpObj.FieldTable["stderr"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(stderr)}
+		subpObj.FieldTable["stderr"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(stderr)}
 
 		// Is err of type *exec.ExitError?
 		if exitErr, ok := err.(*exec.ExitError); ok {

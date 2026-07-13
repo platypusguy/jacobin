@@ -374,7 +374,7 @@ func TestJjStringifyScalar_JavaString(t *testing.T) {
 }
 
 func TestJjStringifyScalar_ByteArrayNull(t *testing.T) {
-	result := jjStringifyScalar(types.ByteArray, object.Null)
+	result := jjStringifyScalar(types.JavaByteArray, object.Null)
 	expected := types.NullString
 	if object.GoStringFromStringObject(result) != expected {
 		t.Errorf("Expected %s, got %s", expected, object.GoStringFromStringObject(result))
@@ -549,8 +549,8 @@ func TestJjSubProcess_Success(t *testing.T) {
 		FieldTable: map[string]object.Field{
 			"commandLine": {Fvalue: cmdLine},
 			"classpath":   {Fvalue: []*object.Object{}},
-			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
-			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+			"stdout":      {Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}},
+			"stderr":      {Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}},
 		},
 	}
 	params := []interface{}{subpObj}
@@ -572,8 +572,8 @@ func TestJjSubProcess_Failure(t *testing.T) {
 		FieldTable: map[string]object.Field{
 			"commandLine": {Fvalue: []*object.Object{object.StringObjectFromGoString("nonexistentcommand")}},
 			"classpath":   {Fvalue: []*object.Object{}},
-			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
-			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+			"stdout":      {Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}},
+			"stderr":      {Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}},
 		},
 	}
 	params := []interface{}{subpObj}
@@ -613,8 +613,8 @@ func TestJjSubProcess_ExitError(t *testing.T) {
 		FieldTable: map[string]object.Field{
 			"commandLine": {Fvalue: cmdLine},
 			"classpath":   {Fvalue: []*object.Object{}},
-			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
-			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+			"stdout":      {Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}},
+			"stderr":      {Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}},
 		},
 	}
 	params := []interface{}{subpObj}
@@ -647,8 +647,8 @@ func TestJjSubProcess_Classpath(t *testing.T) {
 		FieldTable: map[string]object.Field{
 			"commandLine": {Fvalue: cmdLine},
 			"classpath":   {Fvalue: []*object.Object{object.StringObjectFromGoString("test_cp")}},
-			"stdout":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
-			"stderr":      {Ftype: types.ByteArray, Fvalue: []types.JavaByte{}},
+			"stdout":      {Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}},
+			"stderr":      {Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}},
 		},
 	}
 	params := []interface{}{subpObj}

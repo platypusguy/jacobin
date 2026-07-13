@@ -55,7 +55,7 @@ func TestStringifyAnythingGo_StringObject(t *testing.T) {
 	// Create a String object with value field
 	obj := MakeEmptyObjectWithClassName(&stringName)
 	javaBytes := JavaByteArrayFromGoString("hello")
-	obj.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: javaBytes}
+	obj.FieldTable["value"] = Field{Ftype: types.JavaByteArray, Fvalue: javaBytes}
 
 	result := StringifyAnythingGo(obj)
 	if result != "hello" {
@@ -264,7 +264,7 @@ func TestStringifyAnythingGo_ByteArray(t *testing.T) {
 	globals.InitGlobals("test")
 	obj := MakeEmptyObjectWithClassName(&ba)
 	bytes := []byte{0x48, 0x65, 0x6c, 0x6c, 0x6f} // "Hello"
-	obj.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: bytes}
+	obj.FieldTable["value"] = Field{Ftype: types.JavaByteArray, Fvalue: bytes}
 
 	result := StringifyAnythingGo(obj)
 	if result != "0x48656c6c6f" {
@@ -276,7 +276,7 @@ func TestStringifyAnythingGo_ByteArray_JavaBytes(t *testing.T) {
 	globals.InitGlobals("test")
 	obj := MakeEmptyObjectWithClassName(&ba)
 	javaBytes := []types.JavaByte{0x48, 0x65, 0x6c, 0x6c, 0x6f}
-	obj.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: javaBytes}
+	obj.FieldTable["value"] = Field{Ftype: types.JavaByteArray, Fvalue: javaBytes}
 
 	result := StringifyAnythingGo(obj)
 	if result != "0x48656c6c6f" {
@@ -298,7 +298,7 @@ func TestStringifyAnythingGo_ByteArray_MissingValue(t *testing.T) {
 func TestStringifyAnythingGo_ByteArray_CorruptedValue(t *testing.T) {
 	globals.InitGlobals("test")
 	obj := MakeEmptyObjectWithClassName(&ba)
-	obj.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: "invalid"} // Wrong type
+	obj.FieldTable["value"] = Field{Ftype: types.JavaByteArray, Fvalue: "invalid"} // Wrong type
 
 	result := StringifyAnythingGo(obj)
 	expected := "corrupted byte array"
@@ -492,7 +492,7 @@ func TestStringifyAnythingGo_Field_Byte_CorruptedValue(t *testing.T) {
 
 func TestStringifyAnythingGo_Field_ByteArray_JavaBytes(t *testing.T) {
 	javaBytes := []types.JavaByte{0x48, 0x65}
-	field := Field{Ftype: types.ByteArray, Fvalue: javaBytes}
+	field := Field{Ftype: types.JavaByteArray, Fvalue: javaBytes}
 
 	result := StringifyAnythingGo(field)
 	if result != "0x4865" {
@@ -502,7 +502,7 @@ func TestStringifyAnythingGo_Field_ByteArray_JavaBytes(t *testing.T) {
 
 func TestStringifyAnythingGo_Field_ByteArray_GoBytes(t *testing.T) {
 	bytes := []byte{0x48, 0x65}
-	field := Field{Ftype: types.ByteArray, Fvalue: bytes}
+	field := Field{Ftype: types.JavaByteArray, Fvalue: bytes}
 
 	result := StringifyAnythingGo(field)
 	if result != "0x4865" {
@@ -511,7 +511,7 @@ func TestStringifyAnythingGo_Field_ByteArray_GoBytes(t *testing.T) {
 }
 
 func TestStringifyAnythingGo_Field_ByteArray_CorruptedValue(t *testing.T) {
-	field := Field{Ftype: types.ByteArray, Fvalue: "invalid"}
+	field := Field{Ftype: types.JavaByteArray, Fvalue: "invalid"}
 
 	result := StringifyAnythingGo(field)
 	expected := "corrupted byte array"

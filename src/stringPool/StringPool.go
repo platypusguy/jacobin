@@ -115,7 +115,7 @@ func GetStringPoolSize() uint32 {
 func PreloadArrayClassesToStringPool() {
 	arrayClassesToPreload := []string{
 		types.BoolArray,
-		types.ByteArray,
+		types.JavaByteArray,
 		types.DoubleArray,
 		types.FloatArray,
 		types.IntArray,

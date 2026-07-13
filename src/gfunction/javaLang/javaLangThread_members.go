@@ -428,7 +428,7 @@ func threadSetName(params []interface{}) any {
 	}
 
 	// Update the thread's name field (stored as a Java byte string)
-	th.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: nameObj}
+	th.FieldTable["name"] = object.Field{Ftype: types.JavaByteArray, Fvalue: nameObj}
 
 	return nil
 }

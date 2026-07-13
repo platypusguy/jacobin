@@ -223,7 +223,7 @@ func TestMakeOneFieldObject(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// Test with string field
-	stringObj := MakeOneFieldObject("java/lang/String", "data", types.ByteArray, "hello")
+	stringObj := MakeOneFieldObject("java/lang/String", "data", types.JavaByteArray, "hello")
 	if stringObj == nil {
 		t.Errorf("MakeOneFieldObject() should not return nil")
 	}
@@ -239,8 +239,8 @@ func TestMakeOneFieldObject(t *testing.T) {
 	if !exists {
 		t.Errorf("Expected field 'data' to exist")
 	}
-	if field.Ftype != types.ByteArray {
-		t.Errorf("Expected field type '%s', got '%s'", types.ByteArray, field.Ftype)
+	if field.Ftype != types.JavaByteArray {
+		t.Errorf("Expected field type '%s', got '%s'", types.JavaByteArray, field.Ftype)
 	}
 	if field.Fvalue.(string) != "hello" {
 		t.Errorf("Expected field value 'hello', got '%s'", field.Fvalue.(string))
@@ -296,7 +296,7 @@ func TestMakeOneFieldObject(t *testing.T) {
 	}
 
 	// Test with empty field name
-	emptyFieldObj := MakeOneFieldObject("TestClass", "", types.ByteArray, "test")
+	emptyFieldObj := MakeOneFieldObject("TestClass", "", types.JavaByteArray, "test")
 	_, exists = emptyFieldObj.FieldTable[""]
 	if !exists {
 		t.Errorf("Expected empty string field name to be valid")
@@ -385,7 +385,7 @@ func TestClearFieldTable(t *testing.T) {
 	}
 
 	// Test clearing field table with one field
-	singleFieldObj := MakeOneFieldObject("TestClass", "field1", types.ByteArray, "value1")
+	singleFieldObj := MakeOneFieldObject("TestClass", "field1", types.JavaByteArray, "value1")
 	if len(singleFieldObj.FieldTable) != 1 {
 		t.Errorf("Expected 1 field before clearing, got %d", len(singleFieldObj.FieldTable))
 	}
@@ -396,7 +396,7 @@ func TestClearFieldTable(t *testing.T) {
 
 	// Test clearing field table with multiple fields
 	multiFieldObj := MakeEmptyObject()
-	multiFieldObj.FieldTable["field1"] = Field{Ftype: types.ByteArray, Fvalue: "value1"}
+	multiFieldObj.FieldTable["field1"] = Field{Ftype: types.JavaByteArray, Fvalue: "value1"}
 	multiFieldObj.FieldTable["field2"] = Field{Ftype: types.Int, Fvalue: 42}
 	multiFieldObj.FieldTable["field3"] = Field{Ftype: types.Double, Fvalue: 3.14}
 

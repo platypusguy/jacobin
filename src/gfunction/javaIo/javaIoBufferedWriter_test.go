@@ -25,7 +25,7 @@ func makeWriterObjForFile(t *testing.T, filePath string) *object.Object {
         t.Fatalf("failed to open test file: %v", err)
     }
     return &object.Object{FieldTable: map[string]object.Field{
-        ghelpers.FilePath:   {Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
+        ghelpers.FilePath:   {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
         ghelpers.FileHandle: {Ftype: ghelpers.FileHandle, Fvalue: fh},
     }}
 }
@@ -190,7 +190,7 @@ func TestBufferedWriter_WriteCharBuffer_ValueTypeError(t *testing.T) {
 
     // "value" is wrong type (not []int64)
     bufObj := &object.Object{FieldTable: map[string]object.Field{
-        "value": {Ftype: types.ByteArray, Fvalue: []byte{1, 2, 3}},
+        "value": {Ftype: types.JavaByteArray, Fvalue: []byte{1, 2, 3}},
     }}
 
     res := bwWriteCharBuffer([]interface{}{target, bufObj, int64(0), int64(1)})

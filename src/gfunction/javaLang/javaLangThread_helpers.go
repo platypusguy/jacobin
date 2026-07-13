@@ -93,7 +93,7 @@ func populateThreadObject(t *object.Object) {
 	// the JDK defaults to "Thread-N" where N is the thread number
 	// the sole exception is the main thread, which is called "main"
 	defaultName := fmt.Sprintf("Thread-%d", idField.Fvalue)
-	nameField := object.Field{Ftype: types.ByteArray, Fvalue: object.StringObjectFromGoString(defaultName)}
+	nameField := object.Field{Ftype: types.JavaByteArray, Fvalue: object.StringObjectFromGoString(defaultName)}
 	t.FieldTable["name"] = nameField
 
 	daemonField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}
