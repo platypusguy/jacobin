@@ -293,7 +293,7 @@ func randomNextBytes(params []interface{}) interface{} {
 		object.GoByteArrayFromJavaByteArray(bobj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	r.rand.Read(bytes)
 	randBytes := object.JavaByteArrayFromGoByteArray(bytes) // convert back to Java bytes
-	bobj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: randBytes}
+	bobj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: randBytes}
 	return nil
 }
 

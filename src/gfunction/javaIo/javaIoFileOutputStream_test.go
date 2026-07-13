@@ -20,7 +20,7 @@ func TestInitFileOutputStreamFile(t *testing.T) {
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 	fileObj := &object.Object{
 		FieldTable: map[string]object.Field{
-			"FilePath": {Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
+			"FilePath": {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
 		},
 	}
 	emptyObj := object.MakeEmptyObject()
@@ -45,7 +45,7 @@ func TestInitFileOutputStreamFileBoolean(t *testing.T) {
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 	fileObj := &object.Object{
 		FieldTable: map[string]object.Field{
-			"FilePath": {Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
+			"FilePath": {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
 		},
 	}
 	emptyObj := object.MakeEmptyObject()
@@ -148,7 +148,7 @@ func TestFosWriteByteArray(t *testing.T) {
 	byteArray := []types.JavaByte{65, 66, 67}
 	byteArrayObj := &object.Object{
 		FieldTable: map[string]object.Field{
-			"value": {Ftype: types.ByteArray, Fvalue: byteArray},
+			"value": {Ftype: types.JavaByteArray, Fvalue: byteArray},
 		},
 	}
 	params := []interface{}{fileObj, byteArrayObj}
@@ -180,7 +180,7 @@ func TestFosWriteByteArrayOffset(t *testing.T) {
 	byteArray := []types.JavaByte{65, 66, 67, 68, 69}
 	byteArrayObj := &object.Object{
 		FieldTable: map[string]object.Field{
-			"value": {Ftype: types.ByteArray, Fvalue: byteArray},
+			"value": {Ftype: types.JavaByteArray, Fvalue: byteArray},
 		},
 	}
 	params := []interface{}{fileObj, byteArrayObj, int64(1), int64(3)}

@@ -82,7 +82,7 @@ func getDefaultLocale([]interface{}) interface{} {
 	langStr := os.Getenv("LANGUAGE")
 	classStr := "java/lang/Locale"
 	obj := object.MakeEmptyObjectWithClassName(&classStr)
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(langStr)}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: []byte(langStr)}
 	obj.FieldTable["value"] = fld
 	return obj
 }

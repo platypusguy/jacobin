@@ -64,7 +64,7 @@ func StringFormatter(params []interface{}) interface{} {
 				object.GoStringFromJavaByteArray(formatStringObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 		default:
 			errMsg := fmt.Sprintf("StringFormatter: In the format string object, expected Ftype=%s but observed: %s",
-				types.ByteArray, formatStringObj.FieldTable["value"].Ftype)
+				types.JavaByteArray, formatStringObj.FieldTable["value"].Ftype)
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	default:
@@ -106,7 +106,7 @@ func StringFormatter(params []interface{}) interface{} {
 		}
 		if hasValue {
 			switch fld.Ftype {
-			case types.ByteArray:
+			case types.JavaByteArray:
 				var str string
 				switch fld.Fvalue.(type) {
 				case []byte:

@@ -19,9 +19,9 @@ import (
 func NewRunnable(clName, methName, signature []types.JavaByte) *object.Object {
 	runnableClassName := "java/lang/Runnable"
 	o := object.MakeEmptyObjectWithClassName(&runnableClassName)
-	o.FieldTable["clName"] = object.Field{Ftype: types.ByteArray, Fvalue: clName}
-	o.FieldTable["methName"] = object.Field{Ftype: types.ByteArray, Fvalue: methName}
-	o.FieldTable["methType"] = object.Field{Ftype: types.ByteArray, Fvalue: signature}
+	o.FieldTable["clName"] = object.Field{Ftype: types.JavaByteArray, Fvalue: clName}
+	o.FieldTable["methName"] = object.Field{Ftype: types.JavaByteArray, Fvalue: methName}
+	o.FieldTable["methType"] = object.Field{Ftype: types.JavaByteArray, Fvalue: signature}
 	return o
 }
 
@@ -31,9 +31,9 @@ func setUpRunnable(runnable *object.Object, runClassName string) *ghelpers.GErrB
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	runnable.ThMutex.Lock()
-	runnable.FieldTable["clName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(runClassName)}
-	runnable.FieldTable["methName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString("run")}
-	runnable.FieldTable["methType"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString("()V")}
+	runnable.FieldTable["clName"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(runClassName)}
+	runnable.FieldTable["methName"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString("run")}
+	runnable.FieldTable["methType"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString("()V")}
 	runnable.ThMutex.Unlock()
 
 	return nil

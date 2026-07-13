@@ -233,28 +233,28 @@ func hexFormatClinit(params []interface{}) interface{} {
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	}
-	sDigits := statics.Static{Type: types.ByteArray, Value: DIGITS}
+	sDigits := statics.Static{Type: types.JavaByteArray, Value: DIGITS}
 	statics.AddStatic("java/util/HexFormat.DIGITS", sDigits)
 
 	UPPERCASE_DIGITS := []types.JavaByte{
 		'0', '1', '2', '3', '4', '5', '6', '7',
 		'8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
 	}
-	sUppercaseDigits := statics.Static{Type: types.ByteArray, Value: UPPERCASE_DIGITS}
+	sUppercaseDigits := statics.Static{Type: types.JavaByteArray, Value: UPPERCASE_DIGITS}
 	statics.AddStatic("java/util/HexFormat.UPPERCASE_DIGITS", sUppercaseDigits)
 
 	LOWERCASE_DIGITS := []types.JavaByte{
 		'0', '1', '2', '3', '4', '5', '6', '7',
 		'8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
 	}
-	sLowercaseDigits := statics.Static{Type: types.ByteArray, Value: LOWERCASE_DIGITS}
+	sLowercaseDigits := statics.Static{Type: types.JavaByteArray, Value: LOWERCASE_DIGITS}
 	statics.AddStatic("java/util/HexFormat.LOWERCASE_DIGITS", sLowercaseDigits)
 
 	obj := mkHexFormatObject([]types.JavaByte{}, []types.JavaByte{}, []types.JavaByte{}, LOWERCASE_DIGITS)
 	sHexFormat := statics.Static{Type: "Ljava/util/HexFormat;", Value: obj}
 	statics.AddStatic("java/util/HexFormat.HEX_FORMAT", sHexFormat)
 
-	sEmptyBytes := statics.Static{Type: types.ByteArray, Value: []types.JavaByte{}}
+	sEmptyBytes := statics.Static{Type: types.JavaByteArray, Value: []types.JavaByte{}}
 	statics.AddStatic("java/util/HexFormat.EMPTY_BYTES", sEmptyBytes)
 
 	sJavaLangAccess := statics.Static{Type: types.Int, Value: 42}
@@ -269,16 +269,16 @@ func mkHexFormatObject(delimiter, prefix, suffix, digits []types.JavaByte) *obje
 	className := "java/util/HexFormat"
 	obj := object.MakeEmptyObjectWithClassName(&className)
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: delimiter}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: delimiter}
 	obj.FieldTable["delimiter"] = fld
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: prefix}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: prefix}
 	obj.FieldTable["prefix"] = fld
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: suffix}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: suffix}
 	obj.FieldTable["suffix"] = fld
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: digits}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: digits}
 	obj.FieldTable["digits"] = fld
 
 	return obj

@@ -391,7 +391,7 @@ func stringBufferInit(params []any) any {
 	obj.FieldTable["count"] = fld
 
 	// Set the value = nil byte array.
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: make([]types.JavaByte, 0)}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: make([]types.JavaByte, 0)}
 	obj.FieldTable["value"] = fld
 
 	// Set the capacity field value.
@@ -431,7 +431,7 @@ func stringBufferInitString(params []any) any {
 	// Set the byte count.
 	count := int64(len(byteArray))
 	capacity := count + 16
-	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	obj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: byteArray}
 	obj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	obj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: capacity}
 

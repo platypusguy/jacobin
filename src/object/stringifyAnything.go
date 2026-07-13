@@ -113,7 +113,7 @@ func StringifyAnythingGo(arg interface{}) string {
 				return GoStringFromJavaCharArray(charArr)
 			}
 			return fmt.Sprintf("*** ERROR, StringifyAnythingGo: corrupted char array \"value\" field, type %T", fld.Fvalue)
-		case types.ByteArray:
+		case types.JavaByteArray:
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
 				return "*** ERROR, StringifyAnythingGo: corrupted byte array, missing \"value\" field"
@@ -243,7 +243,7 @@ func StringifyAnythingGo(arg interface{}) string {
 				return "*** ERROR, StringifyAnythingGo Field types.Byte: corrupted byte \"value\" field"
 			}
 			return "0x" + hex.EncodeToString(ba1)
-		case types.ByteArray:
+		case types.JavaByteArray:
 			var bytes []byte
 			switch fld.Fvalue.(type) {
 			case []types.JavaByte:
@@ -251,7 +251,7 @@ func StringifyAnythingGo(arg interface{}) string {
 			case []byte:
 				bytes = fld.Fvalue.([]byte)
 			default:
-				return "*** ERROR, StringifyAnythingGo Field types.ByteArray: corrupted byte array \"value\" field"
+				return "*** ERROR, StringifyAnythingGo Field types.JavaByteArray: corrupted byte array \"value\" field"
 			}
 			return "0x" + hex.EncodeToString(bytes)
 		case types.Bool:

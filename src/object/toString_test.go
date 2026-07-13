@@ -133,7 +133,7 @@ func TestObjectFieldToStringPos(t *testing.T) {
 
 	// Byte array
 	var byteAry = []byte{65, 66, 67}
-	setField(obj, fieldName, types.ByteArray, byteAry)
+	setField(obj, fieldName, types.JavaByteArray, byteAry)
 	observed = ObjectFieldToString(obj, fieldName)
 	expected = "414243"
 	if observed != expected {
@@ -142,7 +142,7 @@ func TestObjectFieldToStringPos(t *testing.T) {
 
 	// Java byte array
 	var jbAry = []types.JavaByte{65, 66, 67}
-	setField(obj, fieldName, types.ByteArray, jbAry)
+	setField(obj, fieldName, types.JavaByteArray, jbAry)
 	observed = ObjectFieldToString(obj, fieldName)
 	expected = "ABC"
 	if observed != expected {

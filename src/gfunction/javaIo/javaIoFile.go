@@ -337,19 +337,19 @@ func fileInit(params []interface{}) interface{} {
 
 	// Fill in File attributes that might get accessed by OpenJDK library member functions.
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(absPathStr)}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(absPathStr)}
 	objFile.FieldTable[ghelpers.FilePath] = fld
 
 	fld = object.Field{Ftype: types.Int, Fvalue: os.PathSeparator}
 	objFile.FieldTable["separatorChar"] = fld
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathSeparator})}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathSeparator})}
 	objFile.FieldTable["separator"] = fld
 
 	fld = object.Field{Ftype: types.Int, Fvalue: os.PathListSeparator}
 	objFile.FieldTable["pathSeparatorChar"] = fld
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathListSeparator})}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathListSeparator})}
 	objFile.FieldTable["pathSeparator"] = fld
 
 	// Set status to "checked" (=1).
@@ -454,11 +454,11 @@ func newFileObjectFromPath(pathStr string) *object.Object {
 		obj.FieldTable = make(map[string]object.Field)
 	}
 	obj.FieldTable[ghelpers.FileStatus] = object.Field{Ftype: types.Int, Fvalue: int64(1)}
-	obj.FieldTable[ghelpers.FilePath] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(pathStr)}
+	obj.FieldTable[ghelpers.FilePath] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(pathStr)}
 	obj.FieldTable["separatorChar"] = object.Field{Ftype: types.Int, Fvalue: os.PathSeparator}
-	obj.FieldTable["separator"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathSeparator})}
+	obj.FieldTable["separator"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathSeparator})}
 	obj.FieldTable["pathSeparatorChar"] = object.Field{Ftype: types.Int, Fvalue: os.PathListSeparator}
-	obj.FieldTable["pathSeparator"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathListSeparator})}
+	obj.FieldTable["pathSeparator"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathListSeparator})}
 	return obj
 }
 
@@ -790,7 +790,7 @@ func fileRenameTo(params []interface{}) interface{} {
 		return types.JavaBoolFalse
 	}
 	// Update this object's path
-	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(p2)}
+	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(p2)}
 	return types.JavaBoolTrue
 }
 

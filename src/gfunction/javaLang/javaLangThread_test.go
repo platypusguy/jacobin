@@ -498,9 +498,9 @@ func TestThreadNumbering_InitAndNext(t *testing.T) {
 func makeRunnableDescriptor(className, methodName, sig string) *object.Object {
 	o := object.MakeEmptyObject()
 	o.FieldTable = map[string]object.Field{}
-	o.FieldTable["clName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(className)}
-	o.FieldTable["methName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(methodName)}
-	o.FieldTable["signature"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(sig)}
+	o.FieldTable["clName"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(className)}
+	o.FieldTable["methName"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(methodName)}
+	o.FieldTable["signature"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(sig)}
 	return o
 }
 
@@ -647,7 +647,7 @@ func TestThreadToString_AllPaths(t *testing.T) {
 	th := ThreadCreateNoarg(nil).(*object.Object)
 	th.KlassName = types.StringPoolThreadIndex
 	th.FieldTable["ID"] = object.Field{Ftype: types.Int, Fvalue: int64(10)}
-	th.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: object.StringObjectFromGoString("Thread-10")}
+	th.FieldTable["name"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.StringObjectFromGoString("Thread-10")}
 	th.FieldTable["priority"] = object.Field{Ftype: types.Int, Fvalue: int64(5)}
 	th.FieldTable["state"] = object.Field{Ftype: types.Int, Fvalue: RUNNABLE}
 

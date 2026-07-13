@@ -71,7 +71,7 @@ func TestCheckedInputStream_Read(t *testing.T) {
 
 	// Test read(byte[], off, len)
 	buf := make([]types.JavaByte, 5)
-	bufObj := object.MakePrimitiveObject("java/util/ArrayList", types.ByteArray, buf)
+	bufObj := object.MakePrimitiveObject("java/util/ArrayList", types.JavaByteArray, buf)
 	n := javaUtil.CheckedInputStreamReadArray([]interface{}{cis, bufObj, int64(0), int64(5)})
 	if nr, ok := n.(int64); !ok || nr != 5 {
 		t.Errorf("Expected 5 bytes read, got %v", n)

@@ -117,8 +117,8 @@ func TestCopyOfPrimitive_Byte(t *testing.T) {
 	}
 
 	// Verify type preservation
-	if resObj.FieldTable["value"].Ftype != types.ByteArray {
-		t.Errorf("Expected type %s, got %s", types.ByteArray, resObj.FieldTable["value"].Ftype)
+	if resObj.FieldTable["value"].Ftype != types.JavaByteArray {
+		t.Errorf("Expected type %s, got %s", types.JavaByteArray, resObj.FieldTable["value"].Ftype)
 	}
 }
 

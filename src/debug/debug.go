@@ -94,7 +94,7 @@ func TVO(obj *object.Object) string {
 				}
 
 			case []types.JavaByte:
-				if field.Ftype == types.ByteArray || field.Ftype == types.StringClassName || field.Ftype == types.StringClassRef {
+				if field.Ftype == types.JavaByteArray || field.Ftype == types.StringClassName || field.Ftype == types.StringClassRef {
 					str := object.GoStringFromJavaByteArray(value.([]types.JavaByte))
 					sb.WriteString(fmt.Sprintf("  %s [%s]: %s\n", fieldName, field.Ftype, str))
 				} else {

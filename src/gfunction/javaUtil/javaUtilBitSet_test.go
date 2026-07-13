@@ -215,7 +215,7 @@ func TestBitSet_ValueOf(t *testing.T) {
 	// Test valueOf(byte[])
 	initialBytes := []int8{0b1011} // bits 0, 1, 3 are set. value 11.
 	byteArray := object.MakeEmptyObjectWithClassName(new("byte[]"))
-	byteArray.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: initialBytes}
+	byteArray.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: initialBytes}
 
 	resBytes := bitsetValueOfBytes([]interface{}{byteArray})
 	bsBytes := resBytes.(*object.Object)

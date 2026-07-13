@@ -167,7 +167,7 @@ const stringClassnameRuntime = "java/lang/Runtime"
 const stringFieldCurrentRuntime = "currentRuntime"
 
 func runtimeClinit([]interface{}) interface{} {
-	obj := object.MakePrimitiveObject(stringClassnameRuntime, types.ByteArray, nil)
+	obj := object.MakePrimitiveObject(stringClassnameRuntime, types.JavaByteArray, nil)
 	_ = statics.AddStatic(stringClassnameRuntime+"."+stringFieldCurrentRuntime, statics.Static{
 		Type:  types.Ref + stringClassnameRuntime,
 		Value: obj,

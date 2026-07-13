@@ -1222,8 +1222,8 @@ func TestString_GetBytes_Basic(t *testing.T) {
 	}
 	// type should be byte array and contents should match
 	ft := arrObj.FieldTable["value"].Ftype
-	if ft != types.ByteArray {
-		t.Fatalf("expected Ftype %s, got %s", types.ByteArray, ft)
+	if ft != types.JavaByteArray {
+		t.Fatalf("expected Ftype %s, got %s", types.JavaByteArray, ft)
 	}
 	gotBytes := bytesFromByteArrayObject(arrObj)
 	if string(gotBytes) != in {

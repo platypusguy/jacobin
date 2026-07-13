@@ -14,7 +14,7 @@ import (
 // helper to create a java/io/File-like object carrying ghelpers.FilePath bytes
 func makeJavaFileObj(path string) *object.Object {
 	return &object.Object{FieldTable: map[string]object.Field{
-		ghelpers.FilePath: {Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(path)},
+		ghelpers.FilePath: {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(path)},
 	}}
 }
 
@@ -88,7 +88,7 @@ func TestFileReader_Init_WithString_Success_And_Read(t *testing.T) {
 	}
 
 	// Verify ghelpers.FilePath set on target
-	if target.FieldTable[ghelpers.FilePath].Ftype != types.ByteArray {
+	if target.FieldTable[ghelpers.FilePath].Ftype != types.JavaByteArray {
 		t.Fatalf("ghelpers.FilePath field type unexpected: %v", target.FieldTable[ghelpers.FilePath].Ftype)
 	}
 

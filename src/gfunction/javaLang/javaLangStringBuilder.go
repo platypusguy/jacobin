@@ -393,7 +393,7 @@ func stringBuilderInit(params []any) any {
 	obj.FieldTable["count"] = fld
 
 	// Set the value = nil byte array.
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: make([]types.JavaByte, 0)}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: make([]types.JavaByte, 0)}
 	obj.FieldTable["value"] = fld
 
 	// Set the capacity field value.
@@ -436,7 +436,7 @@ func stringBuilderInitString(params []any) any {
 	// Set the byte count.
 	count := int64(len(byteArray))
 	capacity := count + 16
-	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	obj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: byteArray}
 	obj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	obj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: capacity}
 
@@ -524,7 +524,7 @@ func stringBuilderAppend(params []any) any {
 	// Set the byte count.
 	byteArray = append(byteArray, parmArray...)
 	count := int64(len(byteArray))
-	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: byteArray}
 	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	expandCapacity(objBase, count)
 
@@ -557,7 +557,7 @@ func stringBuilderAppendBoolean(params []any) any {
 	// Set the byte count.
 	byteArray = append(byteArray, parmArray...)
 	count := int64(len(byteArray))
-	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: byteArray}
 	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	expandCapacity(objBase, count)
 
@@ -585,7 +585,7 @@ func stringBuilderAppendChar(params []any) any {
 	// Set the byte count.
 	byteArray = append(byteArray, parmArray...)
 	count := int64(len(byteArray))
-	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: byteArray}
 	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	expandCapacity(objBase, count)
 
@@ -648,7 +648,7 @@ func stringBuilderDelete(params []any) any {
 	count := int64(len(newArray))
 
 	// Finalize output object.
-	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: newArray}
 	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	expandCapacity(objBase, count)
 
@@ -735,7 +735,7 @@ func stringBuilderInsert(params []any) any {
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
 
-	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: newArray}
 	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	expandCapacity(objBase, count)
 
@@ -782,7 +782,7 @@ func stringBuilderInsertBoolean(params []any) any {
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
 
-	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: newArray}
 	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	expandCapacity(objBase, count)
 
@@ -824,7 +824,7 @@ func stringBuilderInsertChar(params []any) any {
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
 
-	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: newArray}
 	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	expandCapacity(objBase, count)
 
@@ -877,7 +877,7 @@ func stringBuilderReplace(params []any) any {
 	newArray = append(newArray, initBytes[end:]...)
 	newlen := int64(len(newArray))
 
-	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: newArray}
 	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: newlen}
 	expandCapacity(objBase, newlen)
 
@@ -896,7 +896,7 @@ func stringBuilderReverse(params []any) any {
 		byteArray[ii], byteArray[jj] = byteArray[jj], byteArray[ii]
 	}
 
-	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: byteArray}
 	return objBase
 }
 
@@ -913,7 +913,7 @@ func stringBuilderSetCharAt(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
 	byteArray[ix] = types.JavaByte(ch)
-	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	obj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: byteArray}
 
 	return nil
 }
@@ -941,7 +941,7 @@ func stringBuilderSetLength(params []any) any {
 	} else { // truncation, newlen < oldlen
 		copy(newArray, oldArray[:newlen])
 	}
-	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	obj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: newArray}
 	obj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: newlen}
 	expandCapacity(obj, newlen)
 
@@ -1009,7 +1009,7 @@ func stringBuilderInitCharSequence(params []any) any {
 
 	count := int64(len(byteArray))
 	capacity := count + 16
-	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	obj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: byteArray}
 	obj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	obj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: capacity}
 

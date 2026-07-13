@@ -620,7 +620,7 @@ func TestNewGetField(t *testing.T) {
 	// push the string whose field[0] we'll be getting
 	str := object.NewStringObject()
 	str.FieldTable["value"] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: "hello",
 	}
 
