@@ -38,8 +38,6 @@ const (
 	InvokeDynamic = 18
 	Module        = 19
 	Package       = 20
-	// the following entry types are for resolved CP entries (the values above + 100)
-	ResolvedMeth = 110
 )
 
 // the constant pool, which is an array of different record types. Each entry in the table

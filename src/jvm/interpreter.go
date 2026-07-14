@@ -3059,7 +3059,9 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 // 0xB8 INVOKESTATIC
 func doInvokestatic(fr *frames.Frame, _ int64) int {
 	var className, methodName, methodType, fqn string
+	var mtEntry classloader.MTentry
 
+	// k := classloader.MethAreaFetch(className)                       // <<< classname not known
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// we don't verify the validity of the CP slot b/c that's done in codeCheck.
 	CP := fr.CP.(*classloader.CPool)

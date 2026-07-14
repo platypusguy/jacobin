@@ -66,11 +66,7 @@ type ParsedClass struct {
 	sourceFile      string
 	bootstrapCount  int // the number of bootstrap methods
 	bootstraps      []bootstrapMethod
-
-	resolutionMutex sync.Mutex // to synchronize access to resolvedMeths
-	resolvedMeths   []MTentry  // resolved method entries
-
-	deprecated bool
+	deprecated      bool
 
 	// ---- constant pool data items ----
 	cpCount        int       // count of constant pool entries

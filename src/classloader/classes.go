@@ -65,7 +65,7 @@ type CPool struct {
 	Utf8Refs              []string
 	Bootstraps            []BootstrapMethod           // not technically part of the CP, but convenient to store here
 	ResolvedInterfaceRefs []ResolvedInterfaceRefEntry // resolved interface references
-	ResolvedMethodRefs    []ResolvedMethodRefEntry    // resolved method references
+	ResolvedMethodRefs    []ResolvedMethodRefEntry    // resolved method references: class name, meth name, meth signature
 }
 
 type AccessFlags struct {
