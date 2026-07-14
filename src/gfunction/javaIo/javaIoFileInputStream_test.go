@@ -27,7 +27,7 @@ func makeTempFile(t *testing.T, content []byte) (string, func()) {
 }
 
 func newFileObjectWithPath(t *testing.T, path string) *object.Object {
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(path)}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(path)}
 	obj := &object.Object{
 		FieldTable: map[string]object.Field{
 			ghelpers.FilePath: fld,
@@ -46,7 +46,7 @@ func newJavaByteArrayObject(size int) *object.Object {
 	ba := make([]types.JavaByte, size)
 	return &object.Object{
 		FieldTable: map[string]object.Field{
-			"value": {Ftype: types.ByteArray, Fvalue: ba},
+			"value": {Ftype: types.JavaByteArray, Fvalue: ba},
 		},
 	}
 }

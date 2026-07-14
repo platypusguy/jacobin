@@ -19,7 +19,7 @@ func makeInputStreamObjForFile(t *testing.T, filePath string) *object.Object {
 		t.Fatalf("failed to open file for reading: %v", err)
 	}
 	return &object.Object{FieldTable: map[string]object.Field{
-		ghelpers.FilePath:   {Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
+		ghelpers.FilePath:   {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
 		ghelpers.FileHandle: {Ftype: ghelpers.FileHandle, Fvalue: fh},
 	}}
 }

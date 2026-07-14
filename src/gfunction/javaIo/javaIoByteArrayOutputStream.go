@@ -226,7 +226,7 @@ func ByteArrayOutputStreamToByteArray(params []interface{}) interface{} {
 	newBuf := make([]types.JavaByte, count)
 	copy(newBuf, buf[:count])
 
-	return object.MakePrimitiveObject("[B", types.ByteArray, newBuf)
+	return object.MakePrimitiveObject("[B", types.JavaByteArray, newBuf)
 }
 
 func ByteArrayOutputStreamToString(params []interface{}) interface{} {

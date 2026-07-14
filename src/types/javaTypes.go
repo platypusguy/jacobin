@@ -28,12 +28,11 @@ const U16 = "U" // uint16
 
 const Array = "["
 const BoolArray = "[Z"
-const ByteArray = "[B" // a Java byte array (i.e., int8). See GoByteArray for uint8.
-const CharArray = "[R" // char array is = rune array
+const CharArray = "[R"     // char array is = rune array
 const DoubleArray = "[D"
 const GoByteArray = "[GB" // array of golang bytes (i.e., uint8)
 const IntArray = "[I"
-const JavaByteArray = "[B"       // same as ByteArray above. This type is preferred due to its unambiguity
+const JavaByteArray = "[B" // Java byte array (i.e., int8). See GoByteArray for uint8.
 const JavaStringObjectRef = "JS" // type for an *object.Object that points to a java/lang/String object
 const FloatArray = "[F"
 const LongArray = "[J"

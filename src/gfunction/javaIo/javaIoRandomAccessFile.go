@@ -359,7 +359,7 @@ func rafOpen0(params []interface{}) interface{} {
 	}
 
 	// Copy the file path field into the RandomAccessFile object.
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(pathStr)}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: []byte(pathStr)}
 	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
 
 	// Copy the file handle into the RandomAccessFile object.
@@ -397,7 +397,7 @@ func rafInitString(params []interface{}) interface{} {
 	}
 
 	// Copy the file path field into the RandomAccessFile object.
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(pathStr)}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: []byte(pathStr)}
 	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
 
 	// Copy the file handle into the RandomAccessFile object.
@@ -442,7 +442,7 @@ func rafInitFile(params []interface{}) interface{} {
 	}
 
 	// Copy the file path field into the RandomAccessFile object.
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte(pathStr)}
+	fld = object.Field{Ftype: types.JavaByteArray, Fvalue: []byte(pathStr)}
 	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
 
 	// Copy the file handle into the RandomAccessFile object.
@@ -513,7 +513,7 @@ func rafReadFully(params []interface{}) interface{} {
 
 	// Update the byte array object with the read bytes.
 	javaBytes = object.JavaByteArrayFromGoByteArray(buffer)
-	arrObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: javaBytes}
+	arrObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: javaBytes}
 
 	return nil
 }

@@ -61,7 +61,7 @@ func TestFilterOutputStream_Init_Write_Flush_Close(t *testing.T) {
 	}
 	// write byte array [0x41,0x42]
 	buf := []types.JavaByte{types.JavaByte('A'), types.JavaByte('B')}
-	arr := &object.Object{FieldTable: map[string]object.Field{"value": {Ftype: types.ByteArray, Fvalue: buf}}}
+	arr := &object.Object{FieldTable: map[string]object.Field{"value": {Ftype: types.JavaByteArray, Fvalue: buf}}}
 	if res := filteroutputstreamWriteBytes([]interface{}{target, arr}); res != nil {
 		t.Fatalf("write(byte[]) error: %v", res)
 	}

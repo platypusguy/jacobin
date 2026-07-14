@@ -171,7 +171,7 @@ func initFileOutputStreamString(params []interface{}) interface{} {
 	}
 
 	// Copy the file path field into the FileOutputStream object.
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(pathStr)}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: []byte(pathStr)}
 	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
 
 	// Copy the file handle into the FileOutputStream object.
@@ -209,7 +209,7 @@ func initFileOutputStreamStringBoolean(params []interface{}) interface{} {
 	}
 
 	// Copy the file path field into the FileOutputStream object.
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(pathStr)}
+	fld := object.Field{Ftype: types.JavaByteArray, Fvalue: []byte(pathStr)}
 	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
 
 	// Copy the file handle into the FileOutputStream object.

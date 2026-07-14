@@ -194,7 +194,7 @@ func boolToJava(b bool) types.JavaBool {
 func newFileInputStreamObj(path string, fh *os.File) *object.Object {
 	className := "java/io/FileInputStream"
 	obj := object.MakeEmptyObjectWithClassName(&className)
-	obj.FieldTable[ghelpers.FilePath] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(path)}
+	obj.FieldTable[ghelpers.FilePath] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(path)}
 	obj.FieldTable[ghelpers.FileHandle] = object.Field{Ftype: ghelpers.FileHandle, Fvalue: fh}
 	return obj
 }
@@ -203,7 +203,7 @@ func newFileInputStreamObj(path string, fh *os.File) *object.Object {
 func newFileOutputStreamObj(path string, fh *os.File) *object.Object {
 	className := "java/io/FileOutputStream"
 	obj := object.MakeEmptyObjectWithClassName(&className)
-	obj.FieldTable[ghelpers.FilePath] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(path)}
+	obj.FieldTable[ghelpers.FilePath] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(path)}
 	obj.FieldTable[ghelpers.FileHandle] = object.Field{Ftype: ghelpers.FileHandle, Fvalue: fh}
 	return obj
 }

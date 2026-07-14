@@ -314,7 +314,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 	if (src != dest) || (srcPos+length <= destPos) || (destPos+length <= srcPos) {
 		// non-overlapping copy of identical items
 		switch srcType {
-		case types.ByteArray, types.BoolArray:
+		case types.JavaByteArray, types.BoolArray:
 			switch src.FieldTable["value"].Fvalue.(type) {
 			case []types.JavaByte: // byte and bool arrays
 				sArr := src.FieldTable["value"].Fvalue.([]types.JavaByte)
@@ -368,7 +368,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 		tempArray := make([]interface{}, length)
 
 		switch srcType {
-		case types.ByteArray:
+		case types.JavaByteArray:
 			switch src.FieldTable["value"].Fvalue.(type) {
 			case []types.JavaByte:
 				sArr := src.FieldTable["value"].Fvalue.([]types.JavaByte)

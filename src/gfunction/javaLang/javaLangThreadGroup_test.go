@@ -321,7 +321,7 @@ func TestThreadGroupGetName_AllPaths(t *testing.T) {
 		tgName := "java/lang/ThreadGroup"
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
 		jb := object.JavaByteArrayFromGoString("gamma")
-		obj.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: jb}
+		obj.FieldTable["name"] = object.Field{Ftype: types.JavaByteArray, Fvalue: jb}
 		res := threadGroupGetName([]any{obj}).(*object.Object)
 		if object.GoStringFromStringObject(res) != "gamma" {
 			t.Errorf("expected gamma")

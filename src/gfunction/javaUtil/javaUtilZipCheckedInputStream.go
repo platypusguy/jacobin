@@ -151,7 +151,7 @@ func CheckedInputStreamSkip(params []interface{}) interface{} {
 
 	// Create a byte array object for reading
 	javaBytes := make([]types.JavaByte, bufSize)
-	bufObj := object.MakePrimitiveObject("[B", types.ByteArray, javaBytes) // Using "[B" for byte array class name
+	bufObj := object.MakePrimitiveObject("[B", types.JavaByteArray, javaBytes) // Using "[B" for byte array class name
 
 	totalSkipped := int64(0)
 	for totalSkipped < n {

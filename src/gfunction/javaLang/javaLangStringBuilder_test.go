@@ -64,7 +64,7 @@ func TestStringBuilderInitString(t *testing.T) {
 func TestStringBuilderToString(t *testing.T) {
 	// Test case: convert to string
 	obj := object.NewStringObject()
-	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{'H', 'e', 'l', 'l', 'o'}}
+	obj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{'H', 'e', 'l', 'l', 'o'}}
 	params := []any{obj}
 	result := stringBuilderToString(params)
 	if result == nil {
@@ -100,7 +100,7 @@ func TestStringBuilderLength(t *testing.T) {
 func TestStringBuilder_AppendNullByte_ToString_GetBytes(t *testing.T) {
 	// 1. Create StringBuilder
 	sbObj := object.MakeEmptyObject()
-	sbObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{}}
+	sbObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}}
 	sbObj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: int64(16)}
 	sbObj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
 
@@ -130,7 +130,7 @@ func TestStringBuilder_AppendNullByte_ToString_GetBytes(t *testing.T) {
 
 	// 6. Test with capacity > count
 	sbObj2 := object.MakeEmptyObject()
-	sbObj2.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: make([]types.JavaByte, 0, 16)}
+	sbObj2.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: make([]types.JavaByte, 0, 16)}
 	sbObj2.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: int64(16)}
 	sbObj2.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
 
@@ -168,7 +168,7 @@ func TestString_UserReportedIssue(t *testing.T) {
 
 	// StringBuilder sb = new StringBuilder();
 	sbObj := object.MakeEmptyObject()
-	sbObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{}}
+	sbObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}}
 	sbObj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: int64(16)}
 	sbObj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
 
@@ -217,7 +217,7 @@ func TestString_UserReportedIssue(t *testing.T) {
 func TestStringBuilder_AppendMultiByte(t *testing.T) {
 	globals.InitStringPool()
 	sbObj := object.MakeEmptyObject()
-	sbObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{}}
+	sbObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}}
 	sbObj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: int64(16)}
 	sbObj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
 
@@ -243,7 +243,7 @@ func TestStringBuilder_CharAt_Negative(t *testing.T) {
 	globals.InitStringPool()
 	sbObj := object.MakeEmptyObject()
 	// Create a StringBuilder with a byte that has the sign bit set (0x80 = 128)
-	sbObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{types.JavaByte(-128)}}
+	sbObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{types.JavaByte(-128)}}
 	sbObj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: int64(16)}
 	sbObj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: int64(1)}
 

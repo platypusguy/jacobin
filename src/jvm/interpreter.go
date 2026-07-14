@@ -1066,7 +1066,7 @@ func doBastore(fr *frames.Frame, _ int64) int {
 		fld := arrayRef.FieldTable["value"]
 		arrayRef.ThMutex.RUnlock()
 
-		if fld.Ftype != types.ByteArray && fld.Ftype != types.BoolArray {
+		if fld.Ftype != types.JavaByteArray && fld.Ftype != types.BoolArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("in %s.%s, BASTORE: field type expected boolean or byte, observed=%s",
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fld.Ftype)
@@ -2495,7 +2495,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			elemType := w.Elem()
 			switch elemType.Kind() {
 			case reflect.Int8:
-				newFieldType = types.ByteArray
+				newFieldType = types.JavaByteArray
 			case reflect.Int64:
 				newFieldType = types.IntArray
 			case reflect.Float64:

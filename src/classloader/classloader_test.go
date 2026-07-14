@@ -136,7 +136,7 @@ func TestNormalizingClassReference(t *testing.T) {
 		t.Error("Unexpected normalized class reference: " + s)
 	}
 
-	s = normalizeClassReference(types.ByteArray)
+	s = normalizeClassReference(types.JavaByteArray)
 	if s != "" {
 		t.Error("Unexpected normalized class reference: " + s)
 	}
@@ -600,7 +600,7 @@ func TestCfe_ErrorFormatting(t *testing.T) {
 func TestNormalizeClassReference_Array(t *testing.T) {
 	// Test array reference normalization
 	globals.InitGlobals("test")
-	result := normalizeClassReference(types.ByteArray)
+	result := normalizeClassReference(types.JavaByteArray)
 	if result != "" {
 		t.Fatalf("expected empty string for byte array, got: %s", result)
 	}

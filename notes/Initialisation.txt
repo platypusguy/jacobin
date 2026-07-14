@@ -58,10 +58,10 @@ Initialisation Steps
 [5] classloader/methArea.go InitMethodArea, MethAreaPreload
 
     * MethArea :: sync.Map containing all the loaded classes. Key is the class name in java/lang/Object format. Initially, nil.
-    * Load all the types for primitive arrays (E.g. types.ByteArray). Each entry having a Klass structure like this:
+    * Load all the types for primitive arrays (E.g. types.JavaByteArray). Each entry having a Klass structure like this:
         - Status: 'N', // N = instantiated
 		- Loader: "bootstrap"
-		- Data.Name: type value (E.g. types.ByteArray)
+		- Data.Name: type value (E.g. types.JavaByteArray)
 		- Data.NameIndex: string pool index of the type value
 		- Data.SuperclassIndex: string pool index of "java/lang/Object"
 

@@ -135,7 +135,7 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 		of = Field{Ftype: types.BoolArray, Fvalue: barArr}
 	case T_BYTE:
 		barArr := make([]types.JavaByte, size)
-		of = Field{Ftype: types.ByteArray, Fvalue: barArr}
+		of = Field{Ftype: types.JavaByteArray, Fvalue: barArr}
 	case T_CHAR: // integer arrays
 		farArr := make([]int64, size)
 		of = Field{Ftype: types.CharArray, Fvalue: farArr}
@@ -204,7 +204,7 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 		return obj
 	case *[]types.JavaByte: // an array of bytes
 		objPtr :=
-			MakePrimitiveObject(types.ByteArray, types.ByteArray, *rawArray.(*[]types.JavaByte))
+			MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, *rawArray.(*[]types.JavaByte))
 		return objPtr
 	}
 
@@ -212,11 +212,11 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 	if arrType.Kind() == reflect.Slice {
 		switch arrType.Elem().Kind() {
 		case reflect.Int8:
-			return MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray.([]int8))
+			return MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, rawArray.([]int8))
 		case reflect.Uint8:
 			// convert array of bytes into JavaBytes
 			jba := JavaByteArrayFromGoByteArray(rawArray.([]uint8))
-			return MakePrimitiveObject(types.ByteArray, types.ByteArray, jba)
+			return MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jba)
 		case reflect.Int64:
 			return MakePrimitiveObject(types.IntArray, types.IntArray, rawArray.([]int64))
 		}
@@ -233,9 +233,9 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 
 		switch arrType.Elem().Kind() {
 		case reflect.Int8:
-			return MakePrimitiveObject(types.ByteArray, types.ByteArray, slice)
+			return MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, slice)
 		case reflect.Uint8:
-			return MakePrimitiveObject(types.ByteArray, types.ByteArray, slice)
+			return MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, slice)
 		case reflect.Int64:
 			return MakePrimitiveObject(types.IntArray, types.IntArray, slice)
 		}
@@ -254,7 +254,7 @@ func ArrayLength(arrayRef *Object) int64 {
 	arrayType := fld.Ftype
 
 	switch arrayType {
-	case types.ByteArray, types.BoolArray:
+	case types.JavaByteArray, types.BoolArray:
 		if array, ok := fld.Fvalue.([]types.JavaByte); ok {
 			return int64(len(array))
 		} else {

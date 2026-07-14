@@ -39,7 +39,7 @@ func TestUnsafe_ArrayBaseOffset_And_IndexScale(t *testing.T) {
 
 	// arrayIndexScale0: build a faux "array class" object whose value field type encodes the array kind
 	// byte[] => 1
-	arrClassB := object.MakePrimitiveObject("java/lang/Class", types.ByteArray, nil) // Ftype == "[B"
+	arrClassB := object.MakePrimitiveObject("java/lang/Class", types.JavaByteArray, nil) // Ftype == "[B"
 	if v := unsafeArrayIndexScale0([]interface{}{arrClassB}).(int64); v != 1 {
 		t.Fatalf("indexScale0 for [B expected 1, got %d", v)
 	}

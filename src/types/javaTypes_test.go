@@ -22,7 +22,7 @@ func TestTheIsFunctionsValidate(t *testing.T) {
 		t.Errorf("IsIntegral() returned false for short, should be true")
 	}
 
-	if !IsAddress(ByteArray) {
+	if !IsAddress(JavaByteArray) {
 		t.Errorf("IsAddress() returned false for byte array, should be true")
 	}
 
@@ -57,8 +57,8 @@ func TestTheIsFunctionsNegatively(t *testing.T) {
 		t.Errorf("Error: Int incorrectly is true in IsAddress()")
 	}
 
-	if IsStatic(ByteArray) {
-		t.Errorf("Error: ByteArray incorrectly is true in IsStatic()")
+	if IsStatic(JavaByteArray) {
+		t.Errorf("Error: JavaByteArray incorrectly is true in IsStatic()")
 	}
 
 	if IsError(Short) {
@@ -162,8 +162,8 @@ func TestIsArray(t *testing.T) {
 		t.Errorf("IsArray() returned false for BoolArray, should be true")
 	}
 
-	if !IsArray(ByteArray) {
-		t.Errorf("IsArray() returned false for ByteArray, should be true")
+	if !IsArray(JavaByteArray) {
+		t.Errorf("IsArray() returned false for JavaByteArray, should be true")
 	}
 
 	if !IsArray(CharArray) {

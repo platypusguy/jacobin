@@ -123,7 +123,7 @@ func TestRafInitFile(t *testing.T) {
 
 	fileObj := &object.Object{FieldTable: make(map[string]object.Field)}
 	fileObj.FieldTable[ghelpers.FilePath] = object.Field{
-		Ftype:  types.ByteArray,
+		Ftype:  types.JavaByteArray,
 		Fvalue: object.JavaByteArrayFromGoString(tmpFile.Name()),
 	}
 
@@ -232,7 +232,7 @@ func TestFisReadByteArray(t *testing.T) {
 
 	byteArray := make([]types.JavaByte, len(content))
 
-	javaByteArrayObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, byteArray)
+	javaByteArrayObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, byteArray)
 	params := []interface{}{rafObj, javaByteArrayObj}
 	ret := fisReadByteArray(params)
 
@@ -265,7 +265,7 @@ func TestFisReadByteArrayOffset(t *testing.T) {
 	rafObj.FieldTable[ghelpers.FileHandle] = object.Field{Ftype: ghelpers.FileHandle, Fvalue: tmpFile}
 
 	byteArray := make([]types.JavaByte, len(content))
-	javaByteArrayObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, byteArray)
+	javaByteArrayObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, byteArray)
 
 	offset := int64(2)
 	length := int64(5)
@@ -303,7 +303,7 @@ func TestRafReadFully(t *testing.T) {
 
 	// Case 1: Read fully successfully
 	byteArray := make([]types.JavaByte, 5)
-	javaByteArrayObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, byteArray)
+	javaByteArrayObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, byteArray)
 	params := []interface{}{rafObj, javaByteArrayObj}
 	ret := rafReadFully(params)
 
@@ -319,7 +319,7 @@ func TestRafReadFully(t *testing.T) {
 
 	// Case 2: Read fully to the end
 	byteArray2 := make([]types.JavaByte, len(content)-5)
-	javaByteArrayObj2 := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, byteArray2)
+	javaByteArrayObj2 := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, byteArray2)
 	params2 := []interface{}{rafObj, javaByteArrayObj2}
 	ret2 := rafReadFully(params2)
 
@@ -335,7 +335,7 @@ func TestRafReadFully(t *testing.T) {
 
 	// Case 3: Read fully past EOF - should return error
 	byteArray3 := make([]types.JavaByte, 1)
-	javaByteArrayObj3 := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, byteArray3)
+	javaByteArrayObj3 := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, byteArray3)
 	params3 := []interface{}{rafObj, javaByteArrayObj3}
 	ret3 := rafReadFully(params3)
 
@@ -441,7 +441,7 @@ func TestRafReadFullyOffset(t *testing.T) {
 	rafObj.FieldTable[ghelpers.FileHandle] = object.Field{Ftype: ghelpers.FileHandle, Fvalue: tmpFile}
 
 	byteArray := make([]types.JavaByte, 10)
-	javaByteArrayObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, byteArray)
+	javaByteArrayObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, byteArray)
 
 	// Read 4 bytes starting from index 2 in the array
 	params := []interface{}{rafObj, javaByteArrayObj, int64(2), int64(4)}
@@ -474,12 +474,12 @@ func TestRafWriteMethods(t *testing.T) {
 
 	// Test write([B)V
 	byteArray := []types.JavaByte{types.JavaByte('B'), types.JavaByte('C')}
-	javaByteArrayObj := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, byteArray)
+	javaByteArrayObj := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, byteArray)
 	rafWriteByteArray([]interface{}{rafObj, javaByteArrayObj})
 
 	// Test write([BII)V
 	byteArray2 := []types.JavaByte{types.JavaByte('X'), types.JavaByte('D'), types.JavaByte('E'), types.JavaByte('Y')}
-	javaByteArrayObj2 := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, byteArray2)
+	javaByteArrayObj2 := object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, byteArray2)
 	rafWriteByteArrayOffset([]interface{}{rafObj, javaByteArrayObj2, int64(1), int64(2)})
 
 	tmpFile.Sync()

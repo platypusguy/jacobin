@@ -36,8 +36,8 @@ func TestNewRunnable_PopulatesClassAndFields(t *testing.T) {
 		if !ok {
 			t.Fatalf("missing field %q", fieldName)
 		}
-		if fld.Ftype != types.ByteArray {
-			t.Fatalf("field %q type = %q; want %q", fieldName, fld.Ftype, types.ByteArray)
+		if fld.Ftype != types.JavaByteArray {
+			t.Fatalf("field %q type = %q; want %q", fieldName, fld.Ftype, types.JavaByteArray)
 		}
 		gotSlice, ok := fld.Fvalue.([]types.JavaByte)
 		if !ok {
@@ -82,8 +82,8 @@ func TestNewRunnable_AllowsEmptyAndNil(t *testing.T) {
 	// Verify type is []types.JavaByte and length is zero
 	for _, name := range []string{"clName", "methName", "methType"} {
 		fld := obj2.FieldTable[name]
-		if fld.Ftype != types.ByteArray {
-			t.Fatalf("field %q type = %q; want %q", name, fld.Ftype, types.ByteArray)
+		if fld.Ftype != types.JavaByteArray {
+			t.Fatalf("field %q type = %q; want %q", name, fld.Ftype, types.JavaByteArray)
 		}
 		gotSlice, ok := fld.Fvalue.([]types.JavaByte)
 		if !ok {

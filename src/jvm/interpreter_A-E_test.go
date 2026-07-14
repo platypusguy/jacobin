@@ -432,7 +432,7 @@ func TestAthrow_Uncaught_WithStringObjectMessageBytes(t *testing.T) {
 
 	// detailMessage = object with field "value" = []byte("hello")
 	msgObj := object.MakeEmptyObject()
-	msgObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []byte("hello")}
+	msgObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []byte("hello")}
 	ex.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassName, Fvalue: msgObj}
 
 	// stackTrace
