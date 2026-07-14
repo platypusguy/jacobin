@@ -12,6 +12,8 @@ import (
 
 func Load_Time_Traps() {
 
+	Load_Time_Duration()
+
 	ghelpers.MethodSignatures["java/time/Clock.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -19,12 +21,6 @@ func Load_Time_Traps() {
 		}
 
 	ghelpers.MethodSignatures["java/time/DayOfWeek.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapClass,
-		}
-
-	ghelpers.MethodSignatures["java/time/Duration.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapClass,

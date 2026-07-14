@@ -149,6 +149,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java.time/*
 	javaTime.Load_Time_Traps()
+	javaTime.Load_Time_Duration()
 
 	// javax/crypto/*
 	javaxCrypto.Load_Crypto_Cipher()

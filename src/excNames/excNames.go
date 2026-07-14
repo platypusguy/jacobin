@@ -35,6 +35,7 @@ const (
 	CompletionException
 	ConcurrentModificationException
 	DateTimeException
+	DateTimeParseException
 	DOMException
 	DuplicateFormatFlagsException
 	DuplicateRequestException
@@ -269,6 +270,7 @@ var JVMexceptionNamesJacobin = []string{
 	"java.util.concurrent.CompletionException",               // VERIFIED
 	"java.util.ConcurrentModificationException",              // VERIFIED
 	"java.time.DateTimeException",                            // VERIFIED
+	"java.time.format.DateTimeParseException",						  // VERIFIED
 	"org.w3c.dom.DOMException",                               // VERIFIED
 	"java.util.DuplicateFormatFlagsException",                // VERIFIED
 	"org.jacobin.request.DuplicateRequestException",          // VERIFIED
@@ -502,6 +504,7 @@ var JVMexceptionNames = []string{
 	"java.util.concurrent.CompletionException",               // VERIFIED
 	"java.util.ConcurrentModificationException",              // VERIFIED
 	"java.time.DateTimeException",                            // VERIFIED
+	"java.time.format.DateTimeParseException",						  // VERIFIED
 	"org.w3c.dom.DOMException",                               // VERIFIED
 	"java.util.DuplicateFormatFlagsException",                // VERIFIED
 	"com.sun.jdi.request.DuplicateRequestException",          // VERIFIED
