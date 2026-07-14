@@ -169,10 +169,6 @@ func TestHexHello2ValidClass(t *testing.T) {
 			t.Errorf("Error in output: expected to contain in part '-1', but saw stdout & stderr as follows:\nstdout: %s\nstderr: %s\n",
 				string(msgStdout), string(msgStderr))
 		}
-
-		//if string(msgStderr) != "" {
-		//	t.Errorf("Error in output: expected stderr to be empty, but saw:\n%s\n", string(msgStderr))
-		//}
 	}
 }
 
