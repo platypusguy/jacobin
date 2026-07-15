@@ -180,14 +180,20 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 // and returns the class name, method name, method signature, and these three combined as a
 // fully qualified name (FQN). Note that checks on the validity of the cpIndex are performed
 // in codeCheck.go.
-func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string, string) {
+func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string,
+	string, string, *MTentry) {
 	cp := *CP
-	meth := cp.ResolvedMethodRefs[cp.CpIndex[cpIndex].Slot]
-	cls := *stringPool.GetStringPointer(meth.ClassIndex)
-	mth := *stringPool.GetStringPointer(meth.NameIndex)
-	typ := *stringPool.GetStringPointer(meth.TypeIndex)
-	fqn := *stringPool.GetStringPointer(meth.FQNameIndex)
-	return cls, mth, typ, fqn
+	if cp.CpIndex[cpIndex].Type == ResolvedMeth {
+		mte := cp.ResolvedMethods[cp.CpIndex[cpIndex].Slot]
+		return "", "", "", "", &mte
+	} else {
+		meth := cp.ResolvedMethodRefs[cp.CpIndex[cpIndex].Slot]
+		cls := *stringPool.GetStringPointer(meth.ClassIndex)
+		mth := *stringPool.GetStringPointer(meth.NameIndex)
+		typ := *stringPool.GetStringPointer(meth.TypeIndex)
+		fqn := *stringPool.GetStringPointer(meth.FQNameIndex)
+		return cls, mth, typ, fqn, nil
+	}
 }
 
 func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, string) {

@@ -38,6 +38,9 @@ const (
 	InvokeDynamic = 18
 	Module        = 19
 	Package       = 20
+
+	// Jacobin-specific entries
+	ResolvedMeth = 100
 )
 
 // the constant pool, which is an array of different record types. Each entry in the table

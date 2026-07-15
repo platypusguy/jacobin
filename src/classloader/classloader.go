@@ -707,8 +707,6 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		}
 	}
 
-	kd.ResolvedMeths = []MTentry{}
-
 	// end of methods processing
 
 	_, clInitPresent := kd.MethodTable["<clinit>()V"]

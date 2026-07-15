@@ -36,7 +36,6 @@ type ClData struct {
 	Fields          []Field
 	MethodList      map[string]string  // maps method names including superclass methods to FQN, which is the key to GMT
 	MethodTable     map[string]*Method // the methods defined in this class
-	ResolvedMeths   []MTentry
 	Attributes      []Attr
 	SourceFile      string
 	CP              CPool
@@ -65,7 +64,8 @@ type CPool struct {
 	Utf8Refs              []string
 	Bootstraps            []BootstrapMethod           // not technically part of the CP, but convenient to store here
 	ResolvedInterfaceRefs []ResolvedInterfaceRefEntry // resolved interface references
-	ResolvedMethodRefs    []ResolvedMethodRefEntry    // resolved method references: class name, meth name, meth signature
+	ResolvedMethodRefs    []ResolvedMethodRefEntry    // string pool indices: class name, meth name, meth signature, FQN
+	ResolvedMethods       []MTentry
 }
 
 type AccessFlags struct {

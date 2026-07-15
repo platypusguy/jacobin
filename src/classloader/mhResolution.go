@@ -209,6 +209,10 @@ func GetPrimitiveClass(descriptor string) *object.Object {
 
 // resolveMethodHandleEntry resolves a method invocation handle (kinds 5-9)
 func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial bool, fr *frames.Frame, refKind uint8) (*object.Object, error) {
+	var err error
+	var mtEntryRef *MTentry
+	var className, methodName, methodSig string
+
 	// 1A. Resolve the method reference, first step: identify the class and method
 	// refIndex points to MethodRef (10) or InterfaceMethodRef (11)
 	if refIndex < 1 || refIndex >= len(cp.CpIndex) {
@@ -216,13 +220,11 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	}
 
 	cpEntry := cp.CpIndex[refIndex]
-	var className, methodName, methodSig string
-
-	if cpEntry.Type == MethodRef {
+	if cpEntry.Type == MethodRef || cpEntry.Type == ResolvedMeth {
 		// Use the resolved method refs if available, or look them up
 		// In Jacobin, cp.MethodRefs holds the raw indices, cp.ResolvedMethodRefs holds resolved strings
 		// We can use the helper function from cpUtils.go
-		className, methodName, methodSig, _ = GetMethInfoFromCPmethref(cp, refIndex)
+		className, methodName, methodSig, _, mtEntryRef = GetMethInfoFromCPmethref(cp, refIndex)
 	} else if cpEntry.Type == Interface {
 		className, methodName, methodSig = GetMethInfoFromCPinterfaceRef(cp, refIndex)
 	} else {
@@ -235,7 +237,13 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	}
 
 	// 1B. Find the method and verify that it is correct format
-	mtEntry, err := FetchMethodAndCP(className, methodName, methodSig)
+	var mtEntry MTentry
+	if mtEntryRef != nil {
+		mtEntry = *mtEntryRef
+	} else {
+		mtEntry, err = FetchMethodAndCP(className, methodName, methodSig)
+	}
+
 	if err != nil || mtEntry.Meth == nil {
 		return nil, fmt.Errorf("NoSuchMethodError: in resolveMethodHandleEntry() %s",
 			className+methodName+methodSig)
