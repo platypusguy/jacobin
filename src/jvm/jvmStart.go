@@ -167,7 +167,7 @@ func JVMrun() int {
 			mainClassNameIndex = stringPool.GetStringIndex(&nameDot)
 		}
 	} else {
-		trace.Error("JVMrun: No starting class from a class file nor a jar")
+		trace.Error("No starting class or jar file specified")
 		ShowUsage(os.Stdout)
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
