@@ -2622,16 +2622,21 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 
 // 0xB6 INVOKEVIRTUAL
 func doInvokeVirtual(fr *frames.Frame, _ int64) int {
+	var mtEntry classloader.MTentry
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)                                // codeCheck.go ensures that CPslot is a valid index to a methodRef
 
 	// Get the method table entry for the FQN indicated in CP.
-	className, methodName, methodType, fqn, _ :=
+	className, methodName, methodType, fqn, methEntryPtr :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	mtEntry := classloader.GetMtableEntry(className + "." + methodName + methodType)
-	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
-		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
+	if methEntryPtr != nil {
+		mtEntry = *methEntryPtr
+	} else {
+		mtEntry = classloader.GetMtableEntry(className + "." + methodName + methodType)
+		if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
+			mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
+		}
 	}
 
 	// Not found after a class-superclass search. Check the interfaces.
@@ -2665,6 +2670,14 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	}
 
 	// if we got here, we have a method to call in mtEntry.Meth
+
+	// if this is the first time calling this method, then update the CP
+	// with the resolved mtEntry information.
+	if methEntryPtr == nil {
+		CP.ResolvedMethods = append(CP.ResolvedMethods, mtEntry)
+		CP.CpIndex[CPslot] = classloader.CpEntry{
+			Type: classloader.ResolvedMeth, Slot: uint16(len(CP.ResolvedMethods) - 1)}
+	}
 
 	// if we have a native function (here, one implemented in golang, rather than Java),
 	// then follow the JVM spec and push the objectRef and the parameters to the function
