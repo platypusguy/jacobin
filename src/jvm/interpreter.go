@@ -3073,8 +3073,9 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 func doInvokestatic(fr *frames.Frame, _ int64) int {
 	var className, methodName, methodType, fqn string
 	var mtEntry classloader.MTentry
+	var mtEntryPtr *classloader.MTentry
+	var err error
 
-	// k := classloader.MethAreaFetch(className)                       // <<< classname not known
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// we don't verify the validity of the CP slot b/c that's done in codeCheck.
 	CP := fr.CP.(*classloader.CPool)
@@ -3084,36 +3085,51 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		className, methodName, methodType =
 			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
 	} else {
-		className, methodName, methodType, fqn, _ = // fqn is the fully qualified name of the method
+		className, methodName, methodType, fqn, mtEntryPtr = // fqn is the fully qualified name of the method
 			classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	}
-	mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
-	if err != nil || mtEntry.Meth == nil {
-		// TODO: search the classpath and retry
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := "INVOKESTATIC: Class method not found: " + fqn
-		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
+		if mtEntryPtr != nil {
+			mtEntry = *mtEntryPtr
+			goto processMTentry
+		} else {
+			mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
+			if err != nil || mtEntry.Meth == nil {
+				// TODO: search the classpath and retry
+				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+				errMsg := "INVOKESTATIC: Class method not found: " + fqn
+				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
+				if status != exceptions.Caught {
+					return ERROR_OCCURRED // applies only if in test
+				}
+				return RESUME_HERE // caught
+			}
+
+			// before we can run the method, we need to either instantiate the class and/or
+			// make sure that its static intializer block (if any) has been run. At this point,
+			// all we know is that the class exists and has been loaded.
+			k := classloader.MethAreaFetch(className)
+			if k.Data.ClInit == types.ClInitNotRun {
+				err = runInitializationBlock(k, nil, fr.FrameStack)
+				if err != nil {
+					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+					errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s", fqn)
+					status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
+					if status != exceptions.Caught {
+						return ERROR_OCCURRED // applies only if in test
+					}
+					return RESUME_HERE // caught
+				}
+			}
 		}
-		return RESUME_HERE // caught
 	}
 
-	// before we can run the method, we need to either instantiate the class and/or
-	// make sure that its static intializer block (if any) has been run. At this point,
-	// all we know is that the class exists and has been loaded.
-	k := classloader.MethAreaFetch(className)
-	if k.Data.ClInit == types.ClInitNotRun {
-		err = runInitializationBlock(k, nil, fr.FrameStack)
-		if err != nil {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s", fqn)
-			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
+processMTentry: // at this point, we have the mtEntry
+
+	// if this is the first time calling this method, then update the CP
+	// with the resolved mtEntry information.
+	if mtEntryPtr == nil {
+		CP.ResolvedMethods = append(CP.ResolvedMethods, mtEntry)
+		CP.CpIndex[CPslot] = classloader.CpEntry{
+			Type: classloader.ResolvedMeth, Slot: uint16(len(CP.ResolvedMethods) - 1)}
 	}
 
 	if mtEntry.MType == 'G' {
