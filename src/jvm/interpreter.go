@@ -2628,16 +2628,17 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	CP := fr.CP.(*classloader.CPool)                                // codeCheck.go ensures that CPslot is a valid index to a methodRef
 
 	// Get the method table entry for the FQN indicated in CP.
-	className, methodName, methodType, fqn, methEntryPtr :=
+	className, methodName, methodType, fqn, _ :=
+		// className, methodName, methodType, fqn, methEntryPtr :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	if methEntryPtr != nil {
-		mtEntry = *methEntryPtr
-	} else {
-		mtEntry = classloader.GetMtableEntry(className + "." + methodName + methodType)
-		if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
-			mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
-		}
+	// if methEntryPtr != nil {
+	// 	mtEntry = *methEntryPtr
+	// } else {
+	mtEntry = classloader.GetMtableEntry(className + "." + methodName + methodType)
+	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
+		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 	}
+	// }
 
 	// Not found after a class-superclass search. Check the interfaces.
 	if err != nil || mtEntry.Meth == nil { // the method is not in the superclasses, so check interfaces.
@@ -2673,11 +2674,11 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	// if this is the first time calling this method, then update the CP
 	// with the resolved mtEntry information.
-	if methEntryPtr == nil {
-		CP.ResolvedMethods = append(CP.ResolvedMethods, mtEntry)
-		CP.CpIndex[CPslot] = classloader.CpEntry{
-			Type: classloader.ResolvedMeth, Slot: uint16(len(CP.ResolvedMethods) - 1)}
-	}
+	// if methEntryPtr == nil {
+	// 	CP.ResolvedMethods = append(CP.ResolvedMethods, mtEntry)
+	// 	CP.CpIndex[CPslot] = classloader.CpEntry{
+	// 		Type: classloader.ResolvedMeth, Slot: uint16(len(CP.ResolvedMethods) - 1)}
+	// }
 
 	// if we have a native function (here, one implemented in golang, rather than Java),
 	// then follow the JVM spec and push the objectRef and the parameters to the function
@@ -3125,11 +3126,16 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 processMTentry: // at this point, we have the mtEntry
 
 	// if this is the first time calling this method, then update the CP
-	// with the resolved mtEntry information.
+	// to make the mtEntry a resolved data item.
 	if mtEntryPtr == nil {
+		if globals.TraceInst { // if tracing, save the resolved method name data
+			CP.ResolvedMethodNames = append(CP.ResolvedMethodNames,
+				CP.CpIndex[CPslot].Slot)
+		}
 		CP.ResolvedMethods = append(CP.ResolvedMethods, mtEntry)
 		CP.CpIndex[CPslot] = classloader.CpEntry{
-			Type: classloader.ResolvedMeth, Slot: uint16(len(CP.ResolvedMethods) - 1)}
+			Type: classloader.ResolvedMeth,
+			Slot: uint16(len(CP.ResolvedMethods) - 1)}
 	}
 
 	if mtEntry.MType == 'G' {
@@ -3141,6 +3147,13 @@ processMTentry: // at this point, we have the mtEntry
 		}
 
 		if globals.TraceInst {
+			if mtEntryPtr != nil { // if method is cached, find original method data when tracing
+				methDataIndex := CP.ResolvedMethodNames[CP.CpIndex[CPslot].Slot]
+				methData := CP.ResolvedMethodRefs[methDataIndex]
+				className = *stringPool.GetStringPointer(methData.ClassIndex)
+				methodName = *stringPool.GetStringPointer(methData.NameIndex)
+				methodType = *stringPool.GetStringPointer(methData.TypeIndex)
+			}
 			infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
 			trace.Trace(infoMsg)
 		}

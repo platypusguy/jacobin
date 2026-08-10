@@ -65,7 +65,8 @@ type CPool struct {
 	Bootstraps            []BootstrapMethod           // not technically part of the CP, but convenient to store here
 	ResolvedInterfaceRefs []ResolvedInterfaceRefEntry // resolved interface references
 	ResolvedMethodRefs    []ResolvedMethodRefEntry    // string pool indices: class name, meth name, meth signature, FQN
-	ResolvedMethods       []MTentry
+	ResolvedMethods       []MTentry                   // a cached version of the MTentry
+	ResolvedMethodNames   []uint16                    // index into ResolvedMethodRefs, save for trace functions
 }
 
 type AccessFlags struct {

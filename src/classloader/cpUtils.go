@@ -178,8 +178,10 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 
 // GetMethInfoFromCPmethref receives a CP entry index that points to a method or interface
 // and returns the class name, method name, method signature, and these three combined as a
-// fully qualified name (FQN). Note that checks on the validity of the cpIndex are performed
-// in codeCheck.go.
+// fully qualified name (FQN). However, if the cpIndex is a ResolvedMeth (value 100), then
+// it means the method entry has already been cached, and it returns a pointer to it instead.
+//
+// Note that checks on the validity of the cpIndex are performed in codeCheck.go.
 func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string,
 	string, string, *MTentry) {
 	cp := *CP
@@ -197,7 +199,6 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string,
 }
 
 func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, string) {
-
 	methodRef := CP.CpIndex[cpIndex].Slot
 	classIndex := CP.InterfaceRefs[methodRef].ClassIndex
 
