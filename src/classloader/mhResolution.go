@@ -220,7 +220,7 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	}
 
 	cpEntry := cp.CpIndex[refIndex]
-	if cpEntry.Type == MethodRef || cpEntry.Type == ResolvedMeth {
+	if cpEntry.Type == MethodRef || cpEntry.Type == CachedMeth {
 		// Use the resolved method refs if available, or look them up
 		// In Jacobin, cp.MethodRefs holds the raw indices, cp.ResolvedMethodRefs holds resolved strings
 		// We can use the helper function from cpUtils.go

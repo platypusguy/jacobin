@@ -2629,7 +2629,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	// Get the method table entry for the FQN indicated in CP.
 	className, methodName, methodType, fqn, _ :=
-		// className, methodName, methodType, fqn, methEntryPtr :=
+	// className, methodName, methodType, fqn, methEntryPtr :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
 	// if methEntryPtr != nil {
 	// 	mtEntry = *methEntryPtr
@@ -3074,69 +3074,81 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 func doInvokestatic(fr *frames.Frame, _ int64) int {
 	var className, methodName, methodType, fqn string
 	var mtEntry classloader.MTentry
-	var mtEntryPtr *classloader.MTentry
+	// var mtEntryPtr *classloader.MTentry
+	var shouldCacheMeth bool
+	var k *classloader.Klass
 	var err error
 
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// we don't verify the validity of the CP slot b/c that's done in codeCheck.
 	CP := fr.CP.(*classloader.CPool)
-
 	entry := CP.CpIndex[CPslot]
+
+	shouldCacheMeth = false
+	if globals.CacheMeths { // this is the optimized and default path
+		if entry.Type == classloader.CachedMeth {
+			mtEntry = CP.CachedMethods[entry.Slot]
+			goto processMTentry // don't check if ClInit has been run b/c this must be the 2nd (or later) run of this method
+		} else { // it's our first time running this method, mark the method for caching
+			shouldCacheMeth = true // and proceed with standard method lookup
+		}
+	}
+
 	if entry.Type == classloader.Interface {
 		className, methodName, methodType =
 			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
 	} else {
-		className, methodName, methodType, fqn, mtEntryPtr = // fqn is the fully qualified name of the method
+		className, methodName, methodType, fqn, _ = // fqn is the fully qualified name of the method
 			classloader.GetMethInfoFromCPmethref(CP, CPslot)
-		if mtEntryPtr != nil {
-			mtEntry = *mtEntryPtr
-			goto processMTentry
-		} else {
-			mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
-			if err != nil || mtEntry.Meth == nil {
-				// TODO: search the classpath and retry
-				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKESTATIC: Class method not found: " + fqn
-				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
-				if status != exceptions.Caught {
-					return ERROR_OCCURRED // applies only if in test
-				}
-				return RESUME_HERE // caught
-			}
+	}
 
-			// before we can run the method, we need to either instantiate the class and/or
-			// make sure that its static intializer block (if any) has been run. At this point,
-			// all we know is that the class exists and has been loaded.
-			k := classloader.MethAreaFetch(className)
-			if k.Data.ClInit == types.ClInitNotRun {
-				err = runInitializationBlock(k, nil, fr.FrameStack)
-				if err != nil {
-					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s", fqn)
-					status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
-					if status != exceptions.Caught {
-						return ERROR_OCCURRED // applies only if in test
-					}
-					return RESUME_HERE // caught
-				}
+	mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
+	if err != nil || mtEntry.Meth == nil {
+		// TODO: search the classpath and retry
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "INVOKESTATIC: Class method not found: " + fqn
+		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURRED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	// before we can run the method, we need to either instantiate the class and/or
+	// make sure that its static intializer block (if any) has been run. At this point,
+	// all we know is that the class exists and has been loaded.
+	k = classloader.MethAreaFetch(className)
+	if k.Data.ClInit == types.ClInitNotRun {
+		err = runInitializationBlock(k, nil, fr.FrameStack)
+		if err != nil {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s", fqn)
+			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
 			}
+			return RESUME_HERE // caught
 		}
 	}
+	// }
 
 processMTentry: // at this point, we have the mtEntry
 
-	// if this is the first time calling this method, then update the CP
-	// to make the mtEntry a resolved data item.
-	if mtEntryPtr == nil {
-		if globals.TraceInst { // if tracing, save the resolved method name data
-			CP.ResolvedMethodNames = append(CP.ResolvedMethodNames,
-				CP.CpIndex[CPslot].Slot)
-		}
-		CP.ResolvedMethods = append(CP.ResolvedMethods, mtEntry)
-		CP.CpIndex[CPslot] = classloader.CpEntry{
-			Type: classloader.ResolvedMeth,
-			Slot: uint16(len(CP.ResolvedMethods) - 1)}
+	// if this is the first time calling this method and we're using cached methods
+	// then cache this mtEntry
+	if globals.CacheMeths && shouldCacheMeth {
+
 	}
+	// 	if mtEntryPtr == nil {
+	// 		if globals.TraceInst { // if tracing, save the resolved method name data
+	// 			CP.ResolvedMethodNames = append(CP.ResolvedMethodNames,
+	// 				CP.CpIndex[CPslot].Slot)
+	// 		}
+	// 		CP.ResolvedMethods = append(CP.ResolvedMethods, mtEntry)
+	// 		CP.CpIndex[CPslot] = classloader.CpEntry{
+	// 			Type: classloader.ResolvedMeth,
+	// 			Slot: uint16(len(CP.ResolvedMethods) - 1)}
+	// 	}
 
 	if mtEntry.MType == 'G' {
 		gmethData := mtEntry.Meth.(ghelpers.GMeth)
@@ -3147,13 +3159,13 @@ processMTentry: // at this point, we have the mtEntry
 		}
 
 		if globals.TraceInst {
-			if mtEntryPtr != nil { // if method is cached, find original method data when tracing
-				methDataIndex := CP.ResolvedMethodNames[CP.CpIndex[CPslot].Slot]
-				methData := CP.ResolvedMethodRefs[methDataIndex]
-				className = *stringPool.GetStringPointer(methData.ClassIndex)
-				methodName = *stringPool.GetStringPointer(methData.NameIndex)
-				methodType = *stringPool.GetStringPointer(methData.TypeIndex)
-			}
+			// if mtEntryPtr != nil { // if method is cached, find original method data when tracing
+			// 	methDataIndex := CP.ResolvedMethodNames[CP.CpIndex[CPslot].Slot]
+			// 	methData := CP.ResolvedMethodRefs[methDataIndex]
+			// 	className = *stringPool.GetStringPointer(methData.ClassIndex)
+			// 	methodName = *stringPool.GetStringPointer(methData.NameIndex)
+			// 	methodType = *stringPool.GetStringPointer(methData.TypeIndex)
+			// }
 			infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
 			trace.Trace(infoMsg)
 		}
