@@ -121,7 +121,10 @@ type Globals struct {
 // ---- JJ options
 var Galt bool // gfunction alternative processing flag -- used strictly for testing
 
-// ---- trace categories
+// ---- Optimization flags
+var CacheMeths bool
+
+// ---- Trace categories
 var TraceClass bool
 var TraceCloadi bool
 var TraceCodeCheck bool
@@ -187,6 +190,9 @@ func InitGlobals(progName string) Globals {
 
 	// ----- G function alternative processing flag
 	Galt = false
+
+	// ----- Optimization flags
+	CacheMeths = true
 
 	// ----- Tracing flags
 	TraceInit = false

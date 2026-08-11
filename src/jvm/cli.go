@@ -52,15 +52,14 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	// Make the lawyers happy.
 	showCopyright(Global)
 
-	// Begin main loop.
-	// For each args element .....
-	for i := 0; i < len(args); i++ {
+	// --- Begin main loop.
+	// Options look like one of these:
+	//		-label			start of a classpath sequence or a flag
+	//		-label:value	where value can be a scalar or a list of subvalues
+	var optLabel, optValue string
+	var dashed bool
 
-		// Options look like one of these:
-		//		-label			start of a classpath sequence or a flag
-		//		-label:value	where value can be a scalar or a list of subvalues
-		var optLabel, optValue string
-		var dashed bool
+	for i := 0; i < len(args); i++ {
 		// if it's a JVM option (it begins with a hyphen),
 		// 		break the option into the optLabel and any embedded arg values, if any, into optValue
 		// else,
@@ -234,7 +233,8 @@ Jacobin-specific options:
                           * init - process initilization
                           * inst - bytecode interpreter trace
                           * verbose - inst, class, and more details of the interpreter
-    -JJ:galt              Do not use this unless you are a Jacobin developer! `
+    -JJ:galt              Do not use this unless you are a Jacobin developer! 
+	-XX:-cacheMethods     Disable method caching `
 
 	_, _ = fmt.Fprintln(outStream, userMessage)
 }

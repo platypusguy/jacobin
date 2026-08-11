@@ -108,9 +108,8 @@ func LoadOptionsTable(Global globals.Globals) {
 	strictJdk := globals.Option{true, false, 0, strictJDK}
 	Global.Options["-strictJDK"] = strictJdk
 
-	// use this as template for other switches to test new features
-	// newThread := globals.Option{true, false, 0, useOldThread}
-	// Global.Options["-732"] = newThread
+	cachedMethods := globals.Option{true, false, 0, disableCachedMethods}
+	Global.Options["-cacheMethods"] = cachedMethods
 
 	traceInstruction := globals.Option{true, false, 10, enableTrace}
 	Global.Options["-trace"] = traceInstruction
@@ -123,6 +122,9 @@ func LoadOptionsTable(Global globals.Globals) {
 
 	vversion := globals.Option{true, false, 1, versionStdoutThenExit}
 	Global.Options["--version"] = vversion
+
+	xx := globals.Option{true, false, 10, handleXXoptions} // all advanced options
+	Global.Options["-XX"] = xx
 }
 
 // ---- the functions for the supported CLI options, in alphabetic order ----
@@ -132,6 +134,12 @@ func LoadOptionsTable(Global globals.Globals) {
 func clientVM(pos int, name string, gl *globals.Globals) (int, error) {
 	gl.VmModel = "client"
 	setOptionToSeen("-client", gl)
+	return pos, nil
+}
+
+func disableCachedMethods(pos int, name string, gl *globals.Globals) (int, error) {
+	globals.CacheMeths = false
+	setOptionToSeen("-XX:-cacheMethods", gl)
 	return pos, nil
 }
 
@@ -360,6 +368,17 @@ func enableTrace(pos int, argValue string, gl *globals.Globals) (int, error) {
 		default:
 			return 0, fmt.Errorf("unknown -trace option: %s", array[i])
 		}
+	}
+	return pos, nil
+}
+
+// handleXXoptions handles all -XX options
+func handleXXoptions(pos int, argValue string, gl *globals.Globals) (int, error) {
+	switch argValue {
+	case "-cacheMethods":
+		globals.CacheMeths = false
+	default:
+		return 0, fmt.Errorf("unknown -XX option: %s", argValue)
 	}
 	return pos, nil
 }
