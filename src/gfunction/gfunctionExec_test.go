@@ -14,6 +14,7 @@ import (
 	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"testing"
 )
 
@@ -45,13 +46,17 @@ func TestRunGfunction_ParamOrderAndContext(t *testing.T) {
 			return nil
 		},
 	}
-	mt := classloader.MTentry{Meth: gm, MType: 'G'}
+	mt := classloader.MTentry{
+		Meth:    gm,
+		MType:   'G',
+		MethFQN: object.StringPoolIndexFromGoString("pkg/Clazz.method(II)V"),
+	}
 
 	// params in forward order as they would be pushed by bytecode: last arg at top
 	p := []interface{}{int64(1), int64(2)}
 	objRef := false
 
-	_ = RunGfunctionDriver(mt, fs, "pkg/Clazz", "method", "(II)V", &p, objRef, false)
+	_ = RunGfunction(mt, fs, &p, objRef, false)
 
 	if len(received) != 3 { // two args + context
 		t.Fatalf("expected 3 params passed to GFunction (2 args + context), got %d", len(received))
@@ -84,10 +89,14 @@ func TestRunGfunction_ReturnsValue_NonThreadSafe(t *testing.T) {
 			return int64(42)
 		},
 	}
-	mt := classloader.MTentry{Meth: gm, MType: 'G'}
+	mt := classloader.MTentry{
+		Meth:    gm,
+		MType:   'G',
+		MethFQN: object.StringPoolIndexFromGoString("A/B.c(Ljava/lang/String;)I"),
+	}
 
 	p := []interface{}{"x"}
-	ret := RunGfunctionDriver(mt, fs, "A/B", "c", "(Ljava/lang/String;)I", &p, false, false)
+	ret := RunGfunction(mt, fs, &p, false, false)
 
 	if v, ok := ret.(int64); !ok || v != 42 {
 		t.Fatalf("expected int64(42) return, got %v (%T)", ret, ret)
@@ -102,10 +111,14 @@ func TestRunGfunction_ReturnsError_PassesThrough(t *testing.T) {
 	gm := ghelpers.GMeth{GFunction: func([]interface{}) interface{} {
 		return errors.New("native boom")
 	}}
-	mt := classloader.MTentry{Meth: gm, MType: 'G'}
+	mt := classloader.MTentry{
+		Meth:    gm,
+		MType:   'G',
+		MethFQN: object.StringPoolIndexFromGoString("P/Q.r()V"),
+	}
 
 	var nilParams []interface{}
-	ret := RunGfunctionDriver(mt, fs, "P/Q", "r", "()V", &nilParams, false, false)
+	ret := RunGfunction(mt, fs, &nilParams, false, false)
 
 	if err, ok := ret.(error); !ok {
 		t.Fatalf("expected error return, got %T: %v", ret, ret)
@@ -124,10 +137,14 @@ func TestRunGfunction_GErrBlk_ReturnsErrorInTestMode(t *testing.T) {
 			ExceptionType: excNames.ArrayIndexOutOfBoundsException,
 			ErrMsg:        "array oob"}
 	}}
-	mt := classloader.MTentry{Meth: gm, MType: 'G'}
+	mt := classloader.MTentry{
+		Meth:    gm,
+		MType:   'G',
+		MethFQN: object.StringPoolIndexFromGoString("X/Y.z()V"),
+	}
 
 	params := []interface{}{}
-	ret := RunGfunctionDriver(mt, fs, "X/Y", "z", "()V", &params, false, false)
+	ret := RunGfunction(mt, fs, &params, false, false)
 
 	switch ret.(type) {
 	case *ghelpers.GErrBlk:

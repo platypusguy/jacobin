@@ -14,6 +14,7 @@ import (
 	"jacobin/src/frames"
 	"jacobin/src/gfunction"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
@@ -66,6 +67,10 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 		className := superClasses[i]
 		me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
 		if err == nil {
+			if me.MethFQN == 0 {
+				fqn := className + "." + "<clinit>V"
+				me.MethFQN = object.StringPoolIndexFromGoString(fqn)
+			}
 			switch me.MType {
 			case 'J': // it's a Java initializer (the most common case)
 				err = runJavaInitializer(me.Meth, k, fs)
@@ -132,7 +137,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 }
 
 func runNativeInitializer(mt classloader.MTentry, k *classloader.Klass, fs *list.List) error {
-	_ = gfunction.RunGfunctionDriver(mt, fs, k.Data.Name, "<clinit>", "()V", nil, false, false)
+	_ = gfunction.RunGfunction(mt, fs, nil, false, false)
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 	return nil
 }
