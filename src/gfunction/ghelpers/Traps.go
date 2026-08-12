@@ -126,6 +126,36 @@ func Load_Traps() {
 			GFunction:  TrapClass,
 		}
 
+	MethodSignatures["java/util/random/RandomGenerator.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  TrapClass,
+		}
+
+	MethodSignatures["java/util/random/RandomGenerator.getDefault()Ljava/util/random/RandomGenerator;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  TrapFunction,
+		}
+
+	MethodSignatures["java/util/random/RandomGenerator.of(Ljava/lang/String;)Ljava/util/random/RandomGenerator;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  TrapFunction,
+		}
+
+	MethodSignatures["java/util/random/RandomGeneratorFactory.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  TrapClass,
+		}
+
+	MethodSignatures["java/util/random/RandomGeneratorFactory.of(Ljava/lang/String;)Ljava/util/random/RandomGeneratorFactory;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  TrapFunction,
+		}
+
 }
 
 // TrapClass is a generic Trap for classes
