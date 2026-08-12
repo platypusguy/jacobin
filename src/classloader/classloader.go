@@ -564,7 +564,6 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
 	kd.Name = fullyParsedClass.className // eventually to be deleted in favor of class index
 	kd.NameIndex = fullyParsedClass.classNameIndex
-	// kd.Superclass = fullyParsedClass.superClass // eventually to be delete in favor of class index
 	kd.SuperclassIndex = fullyParsedClass.superClassIndex
 
 	kd.Module = fullyParsedClass.moduleName

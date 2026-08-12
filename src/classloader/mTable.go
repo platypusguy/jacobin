@@ -19,8 +19,7 @@ import (
 // the named Java method. In most contexts, this would be called a native method,
 // but that term is used in a different context in Java (see JNI), so avoided here.
 //
-// The second field in the value is an empty interface, which is Go's way of
-// implementing generics. Ultimately, this mechanism supports two types of entries:
+// The second field is an empty interface that can contain two types of entries:
 // one for each kind of method.
 //
 // When a function is invoked, the lookup mechanism first checks the MTable, and
@@ -28,6 +27,9 @@ import (
 // the search goes to the class and failing that to the superclass, etc. Once the
 // method is located, it's added to the MTable so that all future invocations will
 // result in fast look-ups in the MTable.
+//
+// Note: a method that is invoked more than once is  cached in the CP of the class,
+// unless the cached-method optimization has been disabled on the CLI. It's on by default.
 var MTable = make(MT)
 
 // MT is a type alias for the MTable. It's simply syntactic sugar in context.
@@ -35,8 +37,9 @@ type MT = map[string]MTentry
 
 // MTentry is described in detail in the comments to MTable
 type MTentry struct {
-	Meth  MData // the method data
-	MType byte  // method type, G = Go method, J = Java method
+	Meth    MData  // the method data
+	MType   byte   // method type, G = Go method, J = Java method
+	MethFQN uint32 // string pool index to the FQN of the method
 }
 
 // MData can be a GMeth or a JmEntry (method in Go or Java, respectively)

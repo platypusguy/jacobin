@@ -66,7 +66,6 @@ type CPool struct {
 	ResolvedInterfaceRefs []ResolvedInterfaceRefEntry // resolved interface references
 	ResolvedMethodRefs    []ResolvedMethodRefEntry    // string pool indices: class name, meth name, meth signature, FQN
 	CachedMethods         []MTentry                   // a cached version of the MTentry
-	ResolvedMethodNames   []uint16                    // index into ResolvedMethodRefs, save for trace functions
 }
 
 type AccessFlags struct {
@@ -388,6 +387,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 
 			// add the method to the MTable and return it
 			methodEntry := MTentry{Meth: jme, MType: 'J'}
+			methodEntry.MethFQN = stringPool.GetStringIndex(&methFQN)
 			AddEntry(&MTable, methFQN, methodEntry)
 			return methodEntry, nil
 
