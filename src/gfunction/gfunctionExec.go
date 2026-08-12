@@ -123,17 +123,3 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 	// return value, so return it.
 	return ret
 }
-
-// A transitional driver for G functions, which accepts three method data items
-// and puts them into the MTentry for use by RunGfunction(). Will eventually be
-// removed by direct calls to RunGfunction(). Part of JACOBIN-742
-func RunGfunctionDriver(mt classloader.MTentry, fs *list.List,
-	className, methodName, methodType string,
-	params *[]interface{}, objRef bool, tracing bool) any {
-	if mt.MethFQN == 0 {
-		methName := className + "." + methodName + methodType
-		mt.MethFQN = stringPool.GetStringIndex(&methName)
-	}
-	return RunGfunction(mt, fs, params, objRef, tracing)
-
-}

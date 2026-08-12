@@ -104,6 +104,9 @@ func UTgfunc(t *testing.T, className, methodName, methodType string, obj *object
 	if mtEntry.Meth == nil {
 		t.Fatalf("UTgfunc: classloader.MTable[%s] not found", fqn)
 	}
+	if mtEntry.MethFQN == 0 {
+		mtEntry.MethFQN = object.StringPoolIndexFromGoString(fqn)
+	}
 
 	paramCount := len(args)
 
@@ -119,7 +122,7 @@ func UTgfunc(t *testing.T, className, methodName, methodType string, obj *object
 	}
 
 	// Run the G function.
-	result := gfunction.RunGfunctionDriver(mtEntry, fs, className, methodName, methodType, &params, true, false)
+	result := gfunction.RunGfunction(mtEntry, fs, &params, true, false)
 
 	// Restore previous stderr and stdout.
 	UTrestoreConsole(t)
