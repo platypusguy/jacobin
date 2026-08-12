@@ -119,7 +119,7 @@ func UTgfunc(t *testing.T, className, methodName, methodType string, obj *object
 	}
 
 	// Run the G function.
-	result := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, false)
+	result := gfunction.RunGfunctionDriver(mtEntry, fs, className, methodName, methodType, &params, true, false)
 
 	// Restore previous stderr and stdout.
 	UTrestoreConsole(t)

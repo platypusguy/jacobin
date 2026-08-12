@@ -2629,7 +2629,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	// Get the method table entry for the FQN indicated in CP.
 	className, methodName, methodType, fqn, _ :=
-	// className, methodName, methodType, fqn, methEntryPtr :=
+		// className, methodName, methodType, fqn, methEntryPtr :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
 	// if methEntryPtr != nil {
 	// 	mtEntry = *methEntryPtr
@@ -2938,7 +2938,8 @@ func invokeVirtualGfunction(fr *frames.Frame,
 
 	// Execute the G function.
 	ret := gfunction.RunGfunction(
-		mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, globals.TraceInst)
+		// mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, globals.TraceInst)
+		mtEntry, fr.FrameStack, &params, true, globals.TraceInst)
 	if ret != nil {
 		switch ret.(type) {
 		case error: // only occurs in testing
@@ -3020,8 +3021,8 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		}
 
 		ret := gfunction.RunGfunction(
-			mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, globals.TraceInst)
-
+			// mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, globals.TraceInst)
+			mtEntry, fr.FrameStack, &params, true, globals.TraceInst)
 		if ret != nil {
 			switch ret.(type) {
 			case error:
@@ -3112,6 +3113,11 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			return ERROR_OCCURRED // applies only if in test
 		}
 		return RESUME_HERE // caught
+	} else {
+		if mtEntry.MethFQN == 0 { // true in the case of a Gfunction
+			fqn := className + "." + methodName + methodType
+			mtEntry.MethFQN = stringPool.GetStringIndex(&fqn)
+		}
 	}
 
 	// before we can run the method, we need to either instantiate the class and/or
@@ -3159,18 +3165,12 @@ processMTentry: // at this point, we have the mtEntry
 		}
 
 		if globals.TraceInst {
-			// if mtEntryPtr != nil { // if method is cached, find original method data when tracing
-			// 	methDataIndex := CP.ResolvedMethodNames[CP.CpIndex[CPslot].Slot]
-			// 	methData := CP.ResolvedMethodRefs[methDataIndex]
-			// 	className = *stringPool.GetStringPointer(methData.ClassIndex)
-			// 	methodName = *stringPool.GetStringPointer(methData.NameIndex)
-			// 	methodType = *stringPool.GetStringPointer(methData.TypeIndex)
-			// }
-			infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+			infoMsg := fmt.Sprintf("G-function: %s", *(stringPool.GetStringPointer(mtEntry.MethFQN)))
 			trace.Trace(infoMsg)
 		}
 
-		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, false, globals.TraceInst)
+		// ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, false, globals.TraceInst)
+		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, &params, false, globals.TraceInst)
 		if ret != nil {
 			switch ret.(type) {
 			case error:
@@ -3205,7 +3205,7 @@ processMTentry: // at this point, we have the mtEntry
 			className, methodName, methodType, &m, false, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKESTATIC: Error creating frame in: " + className + "." + methodName + methodType
+			errMsg := "INVOKESTATIC: Error creating frame in: " + *(stringPool.GetStringPointer(mtEntry.MethFQN))
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
 				return ERROR_OCCURRED // applies only if in test
@@ -3344,7 +3344,9 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 			trace.Trace(infoMsg)
 		}
 		ret := gfunction.RunGfunction(
-			mtEntry, fr.FrameStack, interfaceName, interfaceMethodName, interfaceMethodType, &params, true,
+			// mtEntry, fr.FrameStack, interfaceName, interfaceMethodName, interfaceMethodType, &params, true,
+			// globals.TraceVerbose)
+			mtEntry, fr.FrameStack, &params, true,
 			globals.TraceVerbose)
 		if ret != nil {
 			switch ret.(type) {

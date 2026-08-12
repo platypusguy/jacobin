@@ -51,7 +51,7 @@ func TestRunGfunction_ParamOrderAndContext(t *testing.T) {
 	p := []interface{}{int64(1), int64(2)}
 	objRef := false
 
-	_ = RunGfunction(mt, fs, "pkg/Clazz", "method", "(II)V", &p, objRef, false)
+	_ = RunGfunctionDriver(mt, fs, "pkg/Clazz", "method", "(II)V", &p, objRef, false)
 
 	if len(received) != 3 { // two args + context
 		t.Fatalf("expected 3 params passed to GFunction (2 args + context), got %d", len(received))
@@ -87,7 +87,7 @@ func TestRunGfunction_ReturnsValue_NonThreadSafe(t *testing.T) {
 	mt := classloader.MTentry{Meth: gm, MType: 'G'}
 
 	p := []interface{}{"x"}
-	ret := RunGfunction(mt, fs, "A/B", "c", "(Ljava/lang/String;)I", &p, false, false)
+	ret := RunGfunctionDriver(mt, fs, "A/B", "c", "(Ljava/lang/String;)I", &p, false, false)
 
 	if v, ok := ret.(int64); !ok || v != 42 {
 		t.Fatalf("expected int64(42) return, got %v (%T)", ret, ret)
@@ -105,7 +105,7 @@ func TestRunGfunction_ReturnsError_PassesThrough(t *testing.T) {
 	mt := classloader.MTentry{Meth: gm, MType: 'G'}
 
 	var nilParams []interface{}
-	ret := RunGfunction(mt, fs, "P/Q", "r", "()V", &nilParams, false, false)
+	ret := RunGfunctionDriver(mt, fs, "P/Q", "r", "()V", &nilParams, false, false)
 
 	if err, ok := ret.(error); !ok {
 		t.Fatalf("expected error return, got %T: %v", ret, ret)
@@ -120,12 +120,14 @@ func TestRunGfunction_GErrBlk_ReturnsErrorInTestMode(t *testing.T) {
 	fs := makeFrameStack()
 
 	gm := ghelpers.GMeth{GFunction: func([]interface{}) interface{} {
-		return &ghelpers.GErrBlk{ExceptionType: excNames.ArrayIndexOutOfBoundsException, ErrMsg: "array oob"}
+		return &ghelpers.GErrBlk{
+			ExceptionType: excNames.ArrayIndexOutOfBoundsException,
+			ErrMsg:        "array oob"}
 	}}
 	mt := classloader.MTentry{Meth: gm, MType: 'G'}
 
 	params := []interface{}{}
-	ret := RunGfunction(mt, fs, "X/Y", "z", "()V", &params, false, false)
+	ret := RunGfunctionDriver(mt, fs, "X/Y", "z", "()V", &params, false, false)
 
 	switch ret.(type) {
 	case *ghelpers.GErrBlk:
@@ -138,16 +140,6 @@ func TestRunGfunction_GErrBlk_ReturnsErrorInTestMode(t *testing.T) {
 	default:
 		t.Fatalf("Unexpected normal return (type %T): %v", ret, ret)
 	}
-
-	/*
-		if err, ok := ret.(error); !ok {
-			t.Fatalf("expected error return for ghelpers.GErrBlk in test mode, got %T: %v", ret, ret)
-		}
-		// The error message should contain our method FQN and original message
-		if !contains(err.Error(), "array oob") || !contains(err.Error(), "X/Y.z()V") {
-			t.Fatalf("error message missing expected content: %q", err.Error())
-		}*/
-
 }
 
 // contains is a tiny helper to avoid importing strings just for Contains

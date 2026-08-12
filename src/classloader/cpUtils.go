@@ -11,7 +11,6 @@ package classloader
 // here to avoid circular dependencies.
 
 import (
-	"jacobin/src/globals"
 	"jacobin/src/stringPool"
 )
 
@@ -179,26 +178,19 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 
 // GetMethInfoFromCPmethref receives a CP entry index that points to a method or interface
 // and returns the class name, method name, method signature, and these three combined as a
-// fully qualified name (FQN). However, if the cpIndex is a CachedMeth (value 100), then
-// it means the method entry has already been cached, and it returns a pointer to it instead.
+// fully qualified name (FQN).
 //
 // Note that checks on the validity of the cpIndex are performed in codeCheck.go.
 func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string,
 	string, string, *MTentry) {
 	cp := *CP
 
-	if globals.CacheMeths && cp.CpIndex[cpIndex].Type == CachedMeth {
-		// if it's a cached method, return that entry
-		mte := cp.CachedMethods[cp.CpIndex[cpIndex].Slot]
-		return "", "", "", "", &mte
-	} else {
-		meth := cp.ResolvedMethodRefs[cp.CpIndex[cpIndex].Slot]
-		cls := *stringPool.GetStringPointer(meth.ClassIndex)
-		mth := *stringPool.GetStringPointer(meth.NameIndex)
-		typ := *stringPool.GetStringPointer(meth.TypeIndex)
-		fqn := *stringPool.GetStringPointer(meth.FQNameIndex)
-		return cls, mth, typ, fqn, nil
-	}
+	meth := cp.ResolvedMethodRefs[cp.CpIndex[cpIndex].Slot]
+	cls := *stringPool.GetStringPointer(meth.ClassIndex)
+	mth := *stringPool.GetStringPointer(meth.NameIndex)
+	typ := *stringPool.GetStringPointer(meth.TypeIndex)
+	fqn := *stringPool.GetStringPointer(meth.FQNameIndex)
+	return cls, mth, typ, fqn, nil
 }
 
 func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, string) {

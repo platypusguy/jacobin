@@ -326,6 +326,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		// add the method to the MTable and return it
 		methodEntry := MTentry{Meth: jme, MType: 'J'}
 		AddEntry(&MTable, methFQN, methodEntry)
+		methodEntry.MethFQN = stringPool.GetStringIndex(&methFQN)
 		return methodEntry, nil
 	}
 

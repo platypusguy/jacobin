@@ -15,6 +15,7 @@ import (
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"slices"
 )
@@ -37,7 +38,7 @@ var CaughtGfunctionException = errors.New("caught gfunction exception")
 // gfunction returned a value.
 
 func RunGfunction(mt classloader.MTentry, fs *list.List,
-	className, methodName, methodType string,
+	// className, methodName, methodType string,
 	params *[]interface{}, objRef bool, tracing bool) any {
 
 	f := fs.Front().Value.(*frames.Frame)
@@ -58,7 +59,7 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 	}
 
 	// Form the full method name.
-	fullMethName := fmt.Sprintf("%s.%s%s", className, methodName, methodType)
+	fullMethName := *(stringPool.GetStringPointer(mt.MethFQN))
 	if tracing {
 		infoMsg := fmt.Sprintf("RunGfunction: %s, objectRef: %v, paramSlots: %d",
 			fullMethName, objRef, paramCount)
@@ -95,10 +96,12 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 			threadName = fmt.Sprintf("%d", f.Thread)
 		}
 		if f.Thread == 0 {
-			errMsg := fmt.Sprintf("in main thread initialization, %s reported by G-function: %s", errBlk.ErrMsg, fullMethName)
+			errMsg := fmt.Sprintf("in main thread initialization, %s reported by G-function: %s",
+				errBlk.ErrMsg, fullMethName)
 			exceptions.MinimalAbort(errBlk.ExceptionType, errMsg)
 		}
-		errMsg := fmt.Sprintf("in thread: %s, in thread %s, reported by G-function: %s", errBlk.ErrMsg, threadName, fullMethName)
+		errMsg := fmt.Sprintf("in thread: %s, in thread %s, reported by G-function: %s",
+			errBlk.ErrMsg, threadName, fullMethName)
 		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
 		if status != exceptions.Caught {
 			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test
@@ -119,4 +122,18 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 	// if return is not an errBlk or an error, then it's a legitimate
 	// return value, so return it.
 	return ret
+}
+
+// A transitional driver for G functions, which accepts three method data items
+// and puts them into the MTentry for use by RunGfunction(). Will eventually be
+// removed by direct calls to RunGfunction(). Part of JACOBIN-742
+func RunGfunctionDriver(mt classloader.MTentry, fs *list.List,
+	className, methodName, methodType string,
+	params *[]interface{}, objRef bool, tracing bool) any {
+	if mt.MethFQN == 0 {
+		methName := className + "." + methodName + methodType
+		mt.MethFQN = stringPool.GetStringIndex(&methName)
+	}
+	return RunGfunction(mt, fs, params, objRef, tracing)
+
 }
