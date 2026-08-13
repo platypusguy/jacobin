@@ -14,6 +14,7 @@ import (
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
+	"sync"
 )
 
 // the definition of the class as it's stored in the method area
@@ -46,8 +47,9 @@ type ClData struct {
 
 // the CP of the loaded class (see above)
 type CPool struct {
-	CpIndex        []CpEntry // the constant pool index to entries
-	ClassRefs      []uint32  // points to a string pool entry = class name
+	Mutex          sync.RWMutex // for updating the CP during program execution
+	CpIndex        []CpEntry    // the constant pool index to entries
+	ClassRefs      []uint32     // points to a string pool entry = class name
 	Doubles        []float64
 	Dynamics       []DynamicEntry
 	FieldRefs      []ResolvedFieldEntry

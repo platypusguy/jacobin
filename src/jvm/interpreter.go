@@ -3136,25 +3136,19 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 	}
-	// }
 
 processMTentry: // at this point, we have the mtEntry
 
-	// if this is the first time calling this method and we're using cached methods
+	// if this is the first time calling this method and we're using cached methods,
 	// then cache this mtEntry
 	if globals.CacheMeths && shouldCacheMeth {
-
+		CP.Mutex.Lock() // update the CP with the cached method
+		CP.CachedMethods = append(CP.CachedMethods, mtEntry)
+		CP.CpIndex[CPslot] = classloader.CpEntry{
+			Type: classloader.CachedMeth,
+			Slot: uint16(len(CP.CachedMethods) - 1)}
+		CP.Mutex.Unlock()
 	}
-	// 	if mtEntryPtr == nil {
-	// 		if globals.TraceInst { // if tracing, save the resolved method name data
-	// 			CP.ResolvedMethodNames = append(CP.ResolvedMethodNames,
-	// 				CP.CpIndex[CPslot].Slot)
-	// 		}
-	// 		CP.ResolvedMethods = append(CP.ResolvedMethods, mtEntry)
-	// 		CP.CpIndex[CPslot] = classloader.CpEntry{
-	// 			Type: classloader.ResolvedMeth,
-	// 			Slot: uint16(len(CP.ResolvedMethods) - 1)}
-	// 	}
 
 	if mtEntry.MType == 'G' {
 		gmethData := mtEntry.Meth.(ghelpers.GMeth)
@@ -3165,7 +3159,12 @@ processMTentry: // at this point, we have the mtEntry
 		}
 
 		if globals.TraceInst {
-			infoMsg := fmt.Sprintf("G-function: %s", *(stringPool.GetStringPointer(mtEntry.MethFQN)))
+			var cachedStatus = ""
+			if entry.Type == classloader.CachedMeth {
+				cachedStatus = "(cached)"
+			}
+			infoMsg := fmt.Sprintf("G-function: %s %s",
+				*(stringPool.GetStringPointer(mtEntry.MethFQN)), cachedStatus)
 			trace.Trace(infoMsg)
 		}
 
