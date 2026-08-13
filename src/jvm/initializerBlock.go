@@ -68,7 +68,7 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 		me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
 		if err == nil {
 			if me.MethFQN == 0 {
-				fqn := className + "." + "<clinit>V"
+				fqn := className + "." + "<clinit>()V"
 				me.MethFQN = object.StringPoolIndexFromGoString(fqn)
 			}
 			switch me.MType {
