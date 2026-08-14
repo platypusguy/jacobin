@@ -3144,18 +3144,20 @@ processMTentry: // at this point, we have the mtEntry
 
 	// if this is the first time calling this method and we're using cached methods,
 	// then cache this mtEntry
-	if globals.CacheMeths && shouldCacheMeth {
+	if (globals.CacheMeths && shouldCacheMeth) || !globals.CacheMeths {
 		mtEntry.MethClass = stringPool.GetStringIndex(&className)
 		mtEntry.MethName = stringPool.GetStringIndex(&methodName)
 		mtEntry.MethType = stringPool.GetStringIndex(&methodType)
 		mtEntry.MethFQN = stringPool.GetStringIndex(&fqn)
-		CP.Mutex.Lock() // update the CP with the cached method
-		CP.CachedMethods = append(CP.CachedMethods, mtEntry)
-		CP.CpIndex[CPslot] = classloader.CpEntry{
-			Type: classloader.CachedMeth,
-			Slot: uint16(len(CP.CachedMethods) - 1)}
-		CP.Mutex.Unlock()
-		shouldCacheMeth = false
+		if globals.CacheMeths && shouldCacheMeth {
+			CP.Mutex.Lock() // update the CP with the cached method
+			CP.CachedMethods = append(CP.CachedMethods, mtEntry)
+			CP.CpIndex[CPslot] = classloader.CpEntry{
+				Type: classloader.CachedMeth,
+				Slot: uint16(len(CP.CachedMethods) - 1)}
+			CP.Mutex.Unlock()
+			shouldCacheMeth = false
+		}
 	}
 
 	if mtEntry.MType == 'G' {

@@ -1067,7 +1067,7 @@ func checkInvokespecial() int {
 	}
 
 	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != MethodRef && CPentry.Type != Interface {
+	if CPentry.Type != MethodRef && CPentry.Type != Interface && CPentry.Type != CachedMeth {
 		// because this is not a ClassFormatError, we output a trace error message here
 		errMsg := fmt.Sprintf("%s:\n INVOKESPECIAL at %d: CP entry (%d) is not a method or interface reference",
 			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
@@ -1086,7 +1086,7 @@ func checkInvokestatic() int {
 	}
 
 	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != MethodRef && CPentry.Type != Interface {
+	if CPentry.Type != MethodRef && CPentry.Type != Interface && CPentry.Type != CachedMeth {
 		// because this is not a ClassFormatError, we output a trace message here
 		errMsg := fmt.Sprintf("%s:\n INVOKESTATIC at %d: CP entry (%d) is not a method or interface reference",
 			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
@@ -1105,7 +1105,7 @@ func CheckInvokevirtual() int {
 	}
 
 	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != MethodRef {
+	if CPentry.Type != MethodRef && CPentry.Type != CachedMeth {
 		// because this is not a ClassFormatError, we emit a trace message here
 		errMsg := fmt.Sprintf("%s:\n INVOKEVIRTUAL at %d: CP entry (%d) is not a method reference",
 			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
