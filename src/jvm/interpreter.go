@@ -2628,12 +2628,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	CP := fr.CP.(*classloader.CPool)                                // codeCheck.go ensures that CPslot is a valid index to a methodRef
 
 	// Get the method table entry for the FQN indicated in CP.
-	className, methodName, methodType, fqn, _ :=
-		// className, methodName, methodType, fqn, methEntryPtr :=
-		classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	// if methEntryPtr != nil {
-	// 	mtEntry = *methEntryPtr
-	// } else {
+	className, methodName, methodType, fqn := classloader.GetMethInfoFromCPmethref(CP, CPslot)
+
 	mtEntry = classloader.GetMtableEntry(className + "." + methodName + methodType)
 	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
@@ -2977,7 +2973,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		className, methodName, methodType =
 			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
 	} else {
-		className, methodName, methodType, fqn, _ = // fqn is the fully qualified name of the method
+		className, methodName, methodType, fqn = // fqn is the fully qualified name of the method
 			classloader.GetMethInfoFromCPmethref(CP, CPslot)
 	}
 
@@ -3102,7 +3098,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		className, methodName, methodType =
 			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
 	} else {
-		className, methodName, methodType, fqn, _ = // fqn is the fully qualified name of the method
+		className, methodName, methodType, fqn = // fqn is the fully qualified name of the method
 			classloader.GetMethInfoFromCPmethref(CP, CPslot)
 	}
 

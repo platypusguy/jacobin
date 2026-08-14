@@ -224,7 +224,7 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 		// Use the resolved method refs if available, or look them up
 		// In Jacobin, cp.MethodRefs holds the raw indices, cp.ResolvedMethodRefs holds resolved strings
 		// We can use the helper function from cpUtils.go
-		className, methodName, methodSig, _, mtEntryRef = GetMethInfoFromCPmethref(cp, refIndex)
+		className, methodName, methodSig, _ = GetMethInfoFromCPmethref(cp, refIndex)
 	} else if cpEntry.Type == Interface {
 		className, methodName, methodSig = GetMethInfoFromCPinterfaceRef(cp, refIndex)
 	} else {

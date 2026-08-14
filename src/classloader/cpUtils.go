@@ -182,7 +182,7 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 //
 // Note that checks on the validity of the cpIndex are performed in codeCheck.go.
 func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string,
-	string, string, *MTentry) {
+	string, string) {
 	cp := *CP
 
 	meth := cp.ResolvedMethodRefs[cp.CpIndex[cpIndex].Slot]
@@ -190,7 +190,7 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string,
 	mth := *stringPool.GetStringPointer(meth.NameIndex)
 	typ := *stringPool.GetStringPointer(meth.TypeIndex)
 	fqn := *stringPool.GetStringPointer(meth.FQNameIndex)
-	return cls, mth, typ, fqn, nil
+	return cls, mth, typ, fqn
 }
 
 func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, string) {
