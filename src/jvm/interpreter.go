@@ -3085,6 +3085,9 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 	CP := fr.CP.(*classloader.CPool)
 	entry := CP.CpIndex[CPslot]
 
+	// className, methodName, methodType, fqn, _ = // fqn is the fully qualified name of the method
+	// 	classloader.GetMethInfoFromCPmethref(CP, CPslot)
+
 	shouldCacheMeth = false
 	if globals.CacheMeths { // this is the optimized and default path
 		if entry.Type == classloader.CachedMeth {
@@ -3142,18 +3145,23 @@ processMTentry: // at this point, we have the mtEntry
 	// if this is the first time calling this method and we're using cached methods,
 	// then cache this mtEntry
 	if globals.CacheMeths && shouldCacheMeth {
+		mtEntry.MethClass = stringPool.GetStringIndex(&className)
+		mtEntry.MethName = stringPool.GetStringIndex(&methodName)
+		mtEntry.MethType = stringPool.GetStringIndex(&methodType)
+		mtEntry.MethFQN = stringPool.GetStringIndex(&fqn)
 		CP.Mutex.Lock() // update the CP with the cached method
 		CP.CachedMethods = append(CP.CachedMethods, mtEntry)
 		CP.CpIndex[CPslot] = classloader.CpEntry{
 			Type: classloader.CachedMeth,
 			Slot: uint16(len(CP.CachedMethods) - 1)}
 		CP.Mutex.Unlock()
+		shouldCacheMeth = false
 	}
 
 	if mtEntry.MType == 'G' {
 		gmethData := mtEntry.Meth.(ghelpers.GMeth)
 		paramCount := gmethData.ParamSlots
-		var params []interface{}
+		var params []any
 		for i := 0; i < paramCount; i++ {
 			params = append(params, pop(fr))
 		}
@@ -3189,6 +3197,10 @@ processMTentry: // at this point, we have the mtEntry
 		return 3
 		// any exception will already have been handled.
 	} else if mtEntry.MType == 'J' {
+		className = *stringPool.GetStringPointer(mtEntry.MethClass)
+		methodName = *stringPool.GetStringPointer(mtEntry.MethName)
+		methodType = *stringPool.GetStringPointer(mtEntry.MethType)
+
 		m := mtEntry.Meth.(classloader.JmEntry)
 		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
 			// Native code
@@ -3200,6 +3212,7 @@ processMTentry: // at this point, we have the mtEntry
 			}
 			return RESUME_HERE // caught
 		}
+
 		fram, err := createAndInitNewFrame(
 			className, methodName, methodType, &m, false, fr)
 		if err != nil {

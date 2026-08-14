@@ -37,9 +37,12 @@ type MT = map[string]MTentry
 
 // MTentry is described in detail in the comments to MTable
 type MTentry struct {
-	Meth    MData  // the method data
-	MType   byte   // method type, G = Go method, J = Java method
-	MethFQN uint32 // string pool index to the FQN of the method
+	Meth      MData  // the method data
+	MType     byte   // method type, G = Go method, J = Java method
+	MethClass uint32 // remaining fields are all string pool indices
+	MethName  uint32
+	MethType  uint32
+	MethFQN   uint32 // string pool index to the FQN of the method
 }
 
 // MData can be a GMeth or a JmEntry (method in Go or Java, respectively)
