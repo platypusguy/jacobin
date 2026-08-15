@@ -3113,9 +3113,10 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		}
 		return RESUME_HERE // caught
 	} else {
-		if mtEntry.MethFQN == 0 { // true in the case of a Gfunction
-			fqn := className + "." + methodName + methodType
-			mtEntry.MethFQN = stringPool.GetStringIndex(&fqn)
+		if mtEntry.MethClass == 0 { // true in the case of a Gfunction
+			mtEntry.MethClass = stringPool.GetStringIndex(&className)
+			mtEntry.MethName = stringPool.GetStringIndex(&methodName)
+			mtEntry.MethType = stringPool.GetStringIndex(&methodType)
 		}
 	}
 
@@ -3144,7 +3145,6 @@ processMTentry: // at this point, we have the mtEntry
 		mtEntry.MethClass = stringPool.GetStringIndex(&className)
 		mtEntry.MethName = stringPool.GetStringIndex(&methodName)
 		mtEntry.MethType = stringPool.GetStringIndex(&methodType)
-		mtEntry.MethFQN = stringPool.GetStringIndex(&fqn)
 		if globals.CacheMeths && shouldCacheMeth {
 			CP.Mutex.Lock() // update the CP with the cached method
 			CP.CachedMethods = append(CP.CachedMethods, mtEntry)
@@ -3169,8 +3169,10 @@ processMTentry: // at this point, we have the mtEntry
 			if entry.Type == classloader.CachedMeth {
 				cachedStatus = "(cached)"
 			}
-			infoMsg := fmt.Sprintf("G-function: %s %s",
-				*(stringPool.GetStringPointer(mtEntry.MethFQN)), cachedStatus)
+			infoMsg := fmt.Sprintf("G-function: %s.%s%s %s",
+				*(stringPool.GetStringPointer(mtEntry.MethClass)),
+				*(stringPool.GetStringPointer(mtEntry.MethName)),
+				*(stringPool.GetStringPointer(mtEntry.MethType)), cachedStatus)
 			trace.Trace(infoMsg)
 		}
 
@@ -3215,7 +3217,8 @@ processMTentry: // at this point, we have the mtEntry
 			className, methodName, methodType, &m, false, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKESTATIC: Error creating frame in: " + *(stringPool.GetStringPointer(mtEntry.MethFQN))
+			errMsg := "INVOKESTATIC: Error creating frame in: " +
+				className + "." + methodName + methodType
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
 				return ERROR_OCCURRED // applies only if in test

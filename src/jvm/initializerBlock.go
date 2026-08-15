@@ -67,9 +67,10 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 		className := superClasses[i]
 		me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
 		if err == nil {
-			if me.MethFQN == 0 {
-				fqn := className + "." + "<clinit>()V"
-				me.MethFQN = object.StringPoolIndexFromGoString(fqn)
+			if me.MethName == 0 {
+				me.MethClass = object.StringPoolIndexFromGoString(className)
+				me.MethName = object.StringPoolIndexFromGoString("<clinit>")
+				me.MethType = object.StringPoolIndexFromGoString("()V")
 			}
 			switch me.MType {
 			case 'J': // it's a Java initializer (the most common case)

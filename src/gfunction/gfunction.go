@@ -26,6 +26,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
+	"jacobin/src/util"
 	"strings"
 )
 
@@ -267,14 +268,17 @@ func loadlib(tbl *classloader.MT, libMeths map[string]ghelpers.GMeth) {
 			Meth:  gme,
 		}
 
-		// the FQN in the method table entry is used only for tracing
-		// so add the FQN only if tracing is enabled
+		// the FQN in the method table entry for Gfunctions is used only for tracing
+		// so add the FQN fields only if tracing is enabled
 		if globals.TraceInst {
-			tableEntry.MethFQN = stringPool.GetStringIndex(&key)
+			class, meth, params := util.ParseFQN(key)
+			tableEntry.MethClass = stringPool.GetStringIndex(&class)
+			tableEntry.MethName = stringPool.GetStringIndex(&meth)
+			tableEntry.MethType = stringPool.GetStringIndex(&params)
 		}
-
 		classloader.AddEntry(tbl, key, tableEntry)
 	}
+
 	if !ok {
 		exceptions.ThrowExNil(excNames.InternalException, "loadlib: at least one key was invalid")
 	}

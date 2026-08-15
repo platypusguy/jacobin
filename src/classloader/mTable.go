@@ -42,7 +42,7 @@ type MTentry struct {
 	MethClass uint32 // remaining fields are all string pool indices
 	MethName  uint32
 	MethType  uint32
-	MethFQN   uint32 // string pool index to the FQN of the method
+	// MethFQN   uint32 // string pool index to the FQN of the method
 }
 
 // MData can be a GMeth or a JmEntry (method in Go or Java, respectively)

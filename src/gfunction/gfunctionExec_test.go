@@ -47,9 +47,11 @@ func TestRunGfunction_ParamOrderAndContext(t *testing.T) {
 		},
 	}
 	mt := classloader.MTentry{
-		Meth:    gm,
-		MType:   'G',
-		MethFQN: object.StringPoolIndexFromGoString("pkg/Clazz.method(II)V"),
+		Meth:      gm,
+		MType:     'G',
+		MethClass: object.StringPoolIndexFromGoString("pkg/Clazz"),
+		MethName:  object.StringPoolIndexFromGoString("method"),
+		MethType:  object.StringPoolIndexFromGoString("(II)V"),
 	}
 
 	// params in forward order as they would be pushed by bytecode: last arg at top
@@ -90,9 +92,11 @@ func TestRunGfunction_ReturnsValue_NonThreadSafe(t *testing.T) {
 		},
 	}
 	mt := classloader.MTentry{
-		Meth:    gm,
-		MType:   'G',
-		MethFQN: object.StringPoolIndexFromGoString("A/B.c(Ljava/lang/String;)I"),
+		Meth:      gm,
+		MType:     'G',
+		MethClass: object.StringPoolIndexFromGoString("A/B"),
+		MethName:  object.StringPoolIndexFromGoString("c"),
+		MethType:  object.StringPoolIndexFromGoString("(Ljava/lang/String;)I"),
 	}
 
 	p := []interface{}{"x"}
@@ -112,9 +116,11 @@ func TestRunGfunction_ReturnsError_PassesThrough(t *testing.T) {
 		return errors.New("native boom")
 	}}
 	mt := classloader.MTentry{
-		Meth:    gm,
-		MType:   'G',
-		MethFQN: object.StringPoolIndexFromGoString("P/Q.r()V"),
+		Meth:      gm,
+		MType:     'G',
+		MethClass: object.StringPoolIndexFromGoString("P/Q"),
+		MethName:  object.StringPoolIndexFromGoString("r"),
+		MethType:  object.StringPoolIndexFromGoString("()V"),
 	}
 
 	var nilParams []interface{}
@@ -138,9 +144,11 @@ func TestRunGfunction_GErrBlk_ReturnsErrorInTestMode(t *testing.T) {
 			ErrMsg:        "array oob"}
 	}}
 	mt := classloader.MTentry{
-		Meth:    gm,
-		MType:   'G',
-		MethFQN: object.StringPoolIndexFromGoString("X/Y.z()V"),
+		Meth:      gm,
+		MType:     'G',
+		MethClass: object.StringPoolIndexFromGoString("X/Y"),
+		MethName:  object.StringPoolIndexFromGoString("z"),
+		MethType:  object.StringPoolIndexFromGoString("()V"),
 	}
 
 	params := []interface{}{}

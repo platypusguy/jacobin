@@ -104,8 +104,10 @@ func UTgfunc(t *testing.T, className, methodName, methodType string, obj *object
 	if mtEntry.Meth == nil {
 		t.Fatalf("UTgfunc: classloader.MTable[%s] not found", fqn)
 	}
-	if mtEntry.MethFQN == 0 {
-		mtEntry.MethFQN = object.StringPoolIndexFromGoString(fqn)
+	if mtEntry.MethClass == 0 {
+		mtEntry.MethClass = object.StringPoolIndexFromGoString(className)
+		mtEntry.MethName = object.StringPoolIndexFromGoString(methodName)
+		mtEntry.MethType = object.StringPoolIndexFromGoString(methodType)
 	}
 
 	paramCount := len(args)
@@ -129,5 +131,4 @@ func UTgfunc(t *testing.T, className, methodName, methodType string, obj *object
 
 	// Return the result to caller.
 	return result
-
 }

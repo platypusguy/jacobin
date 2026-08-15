@@ -8,6 +8,7 @@ package util
 
 import (
 	"jacobin/src/types"
+	"strings"
 )
 
 // ParseIncomingParamsFromMethTypeString takes a type string from a CP
@@ -80,4 +81,37 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 		}
 	}
 	return params
+}
+
+// ParseFQN parses a Java method's fully qualified name (FQN) into its
+// class name, method name, and method type (signature).
+// For example, "java/lang/String.valueOf(I)Ljava/lang/String;" is parsed into:
+//   - "java/lang/String"
+//   - "valueOf"
+//   - "(I)Ljava/lang/String;"
+func ParseFQN(fqn string) (className, methodName, methodType string) {
+	lastDotIndex := strings.LastIndex(fqn, ".")
+	if lastDotIndex == -1 {
+		// This indicates a malformed FQN, as a class path is expected.
+		// However, we can attempt a partial parse.
+		openParenIndex := strings.Index(fqn, "(")
+		if openParenIndex == -1 {
+			return "", fqn, "" // Assume the whole string is a method name.
+		}
+		return "", fqn[:openParenIndex], fqn[openParenIndex:]
+	}
+
+	className = fqn[:lastDotIndex]
+	methodPart := fqn[lastDotIndex+1:]
+
+	openParenIndex := strings.Index(methodPart, "(")
+	if openParenIndex == -1 {
+		// No signature found, so the entire part is the method name.
+		methodName = methodPart
+		return
+	}
+
+	methodName = methodPart[:openParenIndex]
+	methodType = methodPart[openParenIndex:]
+	return
 }

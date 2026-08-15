@@ -59,10 +59,12 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 	}
 
 	// Form the full method name.
-	fullMethName := *(stringPool.GetStringPointer(mt.MethFQN))
 	if tracing {
-		infoMsg := fmt.Sprintf("RunGfunction: %s, objectRef: %v, paramSlots: %d",
-			fullMethName, objRef, paramCount)
+		infoMsg := fmt.Sprintf("RunGfunction: %s.%s%s, objectRef: %v, paramSlots: %d",
+			*(stringPool.GetStringPointer(mt.MethClass)),
+			*(stringPool.GetStringPointer(mt.MethName)),
+			*(stringPool.GetStringPointer(mt.MethType)),
+			objRef, paramCount)
 		trace.Trace(infoMsg)
 		// TODO jvm.LogTraceStack(f)
 	}
@@ -96,12 +98,18 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 			threadName = fmt.Sprintf("%d", f.Thread)
 		}
 		if f.Thread == 0 {
-			errMsg := fmt.Sprintf("in main thread initialization, %s reported by G-function: %s",
-				errBlk.ErrMsg, fullMethName)
+			errMsg := fmt.Sprintf("in main thread initialization, %s reported by G-function: %s.%s%s",
+				errBlk.ErrMsg,
+				*(stringPool.GetStringPointer(mt.MethClass)),
+				*(stringPool.GetStringPointer(mt.MethName)),
+				*(stringPool.GetStringPointer(mt.MethType)))
 			exceptions.MinimalAbort(errBlk.ExceptionType, errMsg)
 		}
-		errMsg := fmt.Sprintf("in thread: %s, in thread %s, reported by G-function: %s",
-			errBlk.ErrMsg, threadName, fullMethName)
+		errMsg := fmt.Sprintf("in thread: %s, in thread %s, reported by G-function: %s.%s%s",
+			errBlk.ErrMsg, threadName,
+			*(stringPool.GetStringPointer(mt.MethClass)),
+			*(stringPool.GetStringPointer(mt.MethName)),
+			*(stringPool.GetStringPointer(mt.MethType)))
 		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
 		if status != exceptions.Caught {
 			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test

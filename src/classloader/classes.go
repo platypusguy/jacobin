@@ -327,8 +327,10 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 
 		// add the method to the MTable and return it
 		methodEntry := MTentry{Meth: jme, MType: 'J'}
+		methodEntry.MethClass = stringPool.GetStringIndex(&className)
+		methodEntry.MethName = stringPool.GetStringIndex(&methName)
+		methodEntry.MethType = stringPool.GetStringIndex(&methType)
 		AddEntry(&MTable, methFQN, methodEntry)
-		methodEntry.MethFQN = stringPool.GetStringIndex(&methFQN)
 		return methodEntry, nil
 	}
 
@@ -390,10 +392,11 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 
 			// add the method to the MTable and return it
 			methodEntry := MTentry{Meth: jme, MType: 'J'}
-			methodEntry.MethFQN = stringPool.GetStringIndex(&methFQN)
+			methodEntry.MethClass = stringPool.GetStringIndex(&className)
+			methodEntry.MethName = stringPool.GetStringIndex(&methName)
+			methodEntry.MethType = stringPool.GetStringIndex(&methType)
 			AddEntry(&MTable, methFQN, methodEntry)
 			return methodEntry, nil
-
 		} else {
 
 			// if we've ascended to Object and don't have the method, it ain't here (error).
