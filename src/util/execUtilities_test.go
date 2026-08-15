@@ -80,3 +80,163 @@ func TestParseIncomingParamsFromMethType_Table(t *testing.T) {
 		}
 	}
 }
+
+// TestParseFQN_Standard tests a standard FQN with class, method, and signature.
+func TestParseFQN_Standard(t *testing.T) {
+	fqn := "java/lang/String.valueOf(I)Ljava/lang/String;"
+	expectedClass := "java/lang/String"
+	expectedMethod := "valueOf"
+	expectedType := "(I)Ljava/lang/String;"
+
+	className, methodName, methodType := ParseFQN(fqn)
+
+	if className != expectedClass {
+		t.Errorf("TestParseFQN_Standard: Expected class '%s', got '%s'", expectedClass, className)
+	}
+	if methodName != expectedMethod {
+		t.Errorf("TestParseFQN_Standard: Expected method '%s', got '%s'", expectedMethod, methodName)
+	}
+	if methodType != expectedType {
+		t.Errorf("TestParseFQN_Standard: Expected type '%s', got '%s'", expectedType, methodType)
+	}
+}
+
+// TestParseFQN_Constructor tests an FQN for a constructor method.
+func TestParseFQN_Constructor(t *testing.T) {
+	fqn := "java/lang/Object.<init>()V"
+	expectedClass := "java/lang/Object"
+	expectedMethod := "<init>"
+	expectedType := "()V"
+
+	className, methodName, methodType := ParseFQN(fqn)
+
+	if className != expectedClass {
+		t.Errorf("TestParseFQN_Constructor: Expected class '%s', got '%s'", expectedClass, className)
+	}
+	if methodName != expectedMethod {
+		t.Errorf("TestParseFQN_Constructor: Expected method '%s', got '%s'", expectedMethod, methodName)
+	}
+	if methodType != expectedType {
+		t.Errorf("TestParseFQN_Constructor: Expected type '%s', got '%s'", expectedType, methodType)
+	}
+}
+
+// TestParseFQN_StaticInitializer tests an FQN for a static initializer.
+func TestParseFQN_StaticInitializer(t *testing.T) {
+	fqn := "com/example/MyClass.<clinit>()V"
+	expectedClass := "com/example/MyClass"
+	expectedMethod := "<clinit>"
+	expectedType := "()V"
+
+	className, methodName, methodType := ParseFQN(fqn)
+
+	if className != expectedClass {
+		t.Errorf("TestParseFQN_StaticInitializer: Expected class '%s', got '%s'", expectedClass, className)
+	}
+	if methodName != expectedMethod {
+		t.Errorf("TestParseFQN_StaticInitializer: Expected method '%s', got '%s'", expectedMethod, methodName)
+	}
+	if methodType != expectedType {
+		t.Errorf("TestParseFQN_StaticInitializer: Expected type '%s', got '%s'", expectedType, methodType)
+	}
+}
+
+// TestParseFQN_NoSignature tests an FQN where no method signature is present.
+func TestParseFQN_NoSignature(t *testing.T) {
+	fqn := "com/example/MyClass.myMethod"
+	expectedClass := "com/example/MyClass"
+	expectedMethod := "myMethod"
+	expectedType := ""
+
+	className, methodName, methodType := ParseFQN(fqn)
+
+	if className != expectedClass {
+		t.Errorf("TestParseFQN_NoSignature: Expected class '%s', got '%s'", expectedClass, className)
+	}
+	if methodName != expectedMethod {
+		t.Errorf("TestParseFQN_NoSignature: Expected method '%s', got '%s'", expectedMethod, methodName)
+	}
+	if methodType != expectedType {
+		t.Errorf("TestParseFQN_NoSignature: Expected type '%s', got '%s'", expectedType, methodType)
+	}
+}
+
+// TestParseFQN_NoClassWithSignature tests an FQN without a class prefix but with a signature.
+func TestParseFQN_NoClassWithSignature(t *testing.T) {
+	fqn := "main([Ljava/lang/String;)V"
+	expectedClass := ""
+	expectedMethod := "main"
+	expectedType := "([Ljava/lang/String;)V"
+
+	className, methodName, methodType := ParseFQN(fqn)
+
+	if className != expectedClass {
+		t.Errorf("TestParseFQN_NoClassWithSignature: Expected class '%s', got '%s'", expectedClass, className)
+	}
+	if methodName != expectedMethod {
+		t.Errorf("TestParseFQN_NoClassWithSignature: Expected method '%s', got '%s'", expectedMethod, methodName)
+	}
+	if methodType != expectedType {
+		t.Errorf("TestParseFQN_NoClassWithSignature: Expected type '%s', got '%s'", expectedType, methodType)
+	}
+}
+
+// TestParseFQN_NoClassNoSignature tests an FQN with neither class nor signature.
+func TestParseFQN_NoClassNoSignature(t *testing.T) {
+	fqn := "justAMethodName"
+	expectedClass := ""
+	expectedMethod := "justAMethodName"
+	expectedType := ""
+
+	className, methodName, methodType := ParseFQN(fqn)
+
+	if className != expectedClass {
+		t.Errorf("TestParseFQN_NoClassNoSignature: Expected class '%s', got '%s'", expectedClass, className)
+	}
+	if methodName != expectedMethod {
+		t.Errorf("TestParseFQN_NoClassNoSignature: Expected method '%s', got '%s'", expectedMethod, methodName)
+	}
+	if methodType != expectedType {
+		t.Errorf("TestParseFQN_NoClassNoSignature: Expected type '%s', got '%s'", expectedType, methodType)
+	}
+}
+
+// TestParseFQN_EmptyString tests an empty input string.
+func TestParseFQN_EmptyString(t *testing.T) {
+	fqn := ""
+	expectedClass := ""
+	expectedMethod := ""
+	expectedType := ""
+
+	className, methodName, methodType := ParseFQN(fqn)
+
+	if className != expectedClass {
+		t.Errorf("TestParseFQN_EmptyString: Expected class '%s', got '%s'", expectedClass, className)
+	}
+	if methodName != expectedMethod {
+		t.Errorf("TestParseFQN_EmptyString: Expected method '%s', got '%s'", expectedMethod, methodName)
+	}
+	if methodType != expectedType {
+		t.Errorf("TestParseFQN_EmptyString: Expected type '%s', got '%s'", expectedType, methodType)
+	}
+}
+
+// TestParseFQN_OnlyClass tests a string that looks like only a class name.
+func TestParseFQN_OnlyClass(t *testing.T) {
+	fqn := "java/lang/String"
+	expectedClass := "" // No dot for method, so it's treated as a method name
+	expectedMethod := "java/lang/String"
+	expectedType := ""
+
+	className, methodName, methodType := ParseFQN(fqn)
+
+	if className != expectedClass {
+		t.Errorf("TestParseFQN_OnlyClass: Expected class '%s', got '%s'", expectedClass, className)
+	}
+	if methodName != expectedMethod {
+		t.Errorf("TestParseFQN_OnlyClass: Expected method '%s', got '%s'", expectedMethod, methodName)
+	}
+	if methodType != expectedType {
+		t.Errorf("TestParseFQN_OnlyClass: Expected type '%s', got '%s'", expectedType, methodType)
+	}
+}
