@@ -2622,13 +2622,26 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 
 // 0xB6 INVOKEVIRTUAL
 func doInvokeVirtual(fr *frames.Frame, _ int64) int {
+	var className, methodName, methodType, fqn string
 	var mtEntry classloader.MTentry
+	var shouldCacheMeth bool
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)                                // codeCheck.go ensures that CPslot is a valid index to a methodRef
+	entry := CP.CpIndex[CPslot]
+
+	shouldCacheMeth = false
+	if globals.CacheMeths { // this is the optimized and default path
+		if entry.Type == classloader.CachedMeth {
+			mtEntry = CP.CachedMethods[entry.Slot]
+			goto processMTentry // don't check if ClInit has been run b/c this must be the 2nd (or later) run of this method
+		} else { // it's our first time running this method, mark the method for caching
+			shouldCacheMeth = true // and proceed with standard method lookup
+		}
+	}
 
 	// Get the method table entry for the FQN indicated in CP.
-	className, methodName, methodType, fqn := classloader.GetMethInfoFromCPmethref(CP, CPslot)
+	className, methodName, methodType, fqn = classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
 	mtEntry = classloader.GetMtableEntry(className + "." + methodName + methodType)
 	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
@@ -2668,6 +2681,10 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	// if we got here, we have a method to call in mtEntry.Meth
 
+processMTentry:
+	if shouldCacheMeth {
+
+	}
 	// if this is the first time calling this method, then update the CP
 	// with the resolved mtEntry information.
 	// if methEntryPtr == nil {
@@ -2896,7 +2913,7 @@ func invokeVirtualGfunction(fr *frames.Frame,
 	className, methodName, methodType string) int {
 
 	// Parameter array for G function.
-	var params []interface{}
+	var params []any
 
 	// Append the parameters/args off the stack to params.
 	gmethData := mtEntry.Meth.(ghelpers.GMeth)
@@ -3071,7 +3088,6 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 func doInvokestatic(fr *frames.Frame, _ int64) int {
 	var className, methodName, methodType, fqn string
 	var mtEntry classloader.MTentry
-	// var mtEntryPtr *classloader.MTentry
 	var shouldCacheMeth bool
 	var k *classloader.Klass
 	var err error
@@ -3080,9 +3096,6 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 	// we don't verify the validity of the CP slot b/c that's done in codeCheck.
 	CP := fr.CP.(*classloader.CPool)
 	entry := CP.CpIndex[CPslot]
-
-	// className, methodName, methodType, fqn, _ = // fqn is the fully qualified name of the method
-	// 	classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
 	shouldCacheMeth = false
 	if globals.CacheMeths { // this is the optimized and default path

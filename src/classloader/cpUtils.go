@@ -215,7 +215,6 @@ func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, stri
 	methSigUTF8index := CP.CpIndex[methSigCPindex].Slot
 	methSig := CP.Utf8Refs[methSigUTF8index]
 
-	// className, methName, methSig, _ := GetMethInfoFromCPmethref(CP, cpIndex)
 	return className, methName, methSig
 }
 
