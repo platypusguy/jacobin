@@ -2642,12 +2642,10 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	// Get the method table entry for the FQN indicated in CP.
 	className, methodName, methodType, fqn = classloader.GetMethInfoFromCPmethref(CP, CPslot)
-
 	mtEntry = classloader.GetMtableEntry(className + "." + methodName + methodType)
 	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 	}
-	// }
 
 	// Not found after a class-superclass search. Check the interfaces.
 	if err != nil || mtEntry.Meth == nil { // the method is not in the superclasses, so check interfaces.
@@ -2682,16 +2680,28 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	// if we got here, we have a method to call in mtEntry.Meth
 
 processMTentry:
-	if shouldCacheMeth {
-
+	// if this is the first time calling this method and we're using cached methods,
+	// then cache this mtEntry
+	if (globals.CacheMeths && shouldCacheMeth) || !globals.CacheMeths {
+		mtEntry.MethClass = stringPool.GetStringIndex(&className)
+		mtEntry.MethName = stringPool.GetStringIndex(&methodName)
+		mtEntry.MethType = stringPool.GetStringIndex(&methodType)
+		if globals.CacheMeths && shouldCacheMeth {
+			CP.Mutex.Lock() // update the CP with the cached method
+			CP.CachedMethods = append(CP.CachedMethods, mtEntry)
+			CP.CpIndex[CPslot] = classloader.CpEntry{
+				Type: classloader.CachedMeth,
+				Slot: uint16(len(CP.CachedMethods) - 1)}
+			CP.Mutex.Unlock()
+			shouldCacheMeth = false
+		}
 	}
-	// if this is the first time calling this method, then update the CP
-	// with the resolved mtEntry information.
-	// if methEntryPtr == nil {
-	// 	CP.ResolvedMethods = append(CP.ResolvedMethods, mtEntry)
-	// 	CP.CpIndex[CPslot] = classloader.CpEntry{
-	// 		Type: classloader.ResolvedMeth, Slot: uint16(len(CP.ResolvedMethods) - 1)}
-	// }
+
+	if globals.CacheMeths {
+		className = *stringPool.GetStringPointer(mtEntry.MethClass)
+		methodName = *stringPool.GetStringPointer(mtEntry.MethName)
+		methodType = *stringPool.GetStringPointer(mtEntry.MethType)
+	}
 
 	// if we have a native function (here, one implemented in golang, rather than Java),
 	// then follow the JVM spec and push the objectRef and the parameters to the function
