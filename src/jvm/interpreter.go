@@ -2634,7 +2634,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	if globals.CacheMeths { // this is the optimized and default path
 		if entry.Type == classloader.CachedMeth {
 			mtEntry = CP.CachedMethods[entry.Slot]
-			goto processMTentry // don't check if ClInit has been run b/c this must be the 2nd (or later) run of this method
+			goto processMTentry
 		} else { // it's our first time running this method, mark the method for caching
 			shouldCacheMeth = true // and proceed with standard method lookup
 		}
@@ -2703,7 +2703,7 @@ processMTentry:
 		methodType = *stringPool.GetStringPointer(mtEntry.MethType)
 	}
 
-	// if we have a native function (here, one implemented in golang, rather than Java),
+	// if we have a gFunction (that is, one implemented in golang, rather than Java),
 	// then follow the JVM spec and push the objectRef and the parameters to the function
 	// as parameters. Consult:
 	// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-6.html#jvms-6.5.invokevirtual
@@ -2716,7 +2716,7 @@ processMTentry:
 	//  - If it's a native Java function (written in C/C++), Jacobin does not support it.
 	//  - Get the reference object from the stack.
 	// 	- Try searching the reference object class and its superclass chain.
-	// 	- If the method is not found, try the reference object class interface hierarchy (JVM spec 5.4.3.4).
+	// 	- If the method is not found, try the reference object class's interface hierarchy (JVM spec 5.4.3.4).
 	if mtEntry.MType == 'J' { // it's a Java function
 		m := mtEntry.Meth.(classloader.JmEntry)
 		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
@@ -2754,7 +2754,6 @@ processMTentry:
 		// First, try superclass resolution.
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
-
 			// That did not succeed. So, try for an interface default method.
 			var ret any
 			ret, mtEntry = searchForDefaultInterfaceFunction(className, methodName, methodType)
@@ -2781,7 +2780,7 @@ processMTentry:
 		m = mtEntry.Meth.(classloader.JmEntry)
 		fqn = className + "." + methodName + methodType
 
-		// If an empty code segment, that's an error. Its probably abstract or an interface.
+		// If an empty code segment, that's an error. It's probably abstract or an interface.
 		// In this case, flag it as an AbstractMethodError.
 		if len(m.Code) == 0 {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -2807,7 +2806,7 @@ processMTentry:
 		}
 
 		fr.PC += 3                         // 2 for PC slot, move to next bytecode before exiting
-		fr.FrameStack.PushFront(nextFrame) // push the new frame
+		fr.FrameStack.PushFront(nextFrame) // push the new frame, it'll be run by the next interpreter loop
 		return 0
 	}
 	return ERROR_OCCURRED // in theory, unreachable
