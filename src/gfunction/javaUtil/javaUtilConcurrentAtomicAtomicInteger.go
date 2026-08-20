@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
-	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
 )
@@ -236,6 +235,8 @@ func atomicIntegerClinit([]interface{}) interface{} {
 	className := "java/util/concurrent/atomic/AtomicInteger"
 	obj := object.MakeEmptyObjectWithClassName(&className)
 	initialField := object.Field{Ftype: types.Int, Fvalue: int64(0)}
+	obj.ThMutex.Lock()
+	defer obj.ThMutex.Unlock()
 	obj.FieldTable["value"] = initialField
 	return nil
 }
@@ -244,6 +245,8 @@ func atomicIntegerClinit([]interface{}) interface{} {
 func atomicIntegerInitVoid(params []interface{}) interface{} {
 	initialField := object.Field{Ftype: types.Int, Fvalue: int64(0)}
 	obj := params[0].(*object.Object)
+	obj.ThMutex.Lock()
+	defer obj.ThMutex.Unlock()
 	obj.FieldTable["value"] = initialField
 	return nil
 }
@@ -253,6 +256,8 @@ func atomicIntegerInitInt(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	initialValue := params[1].(int64)
 	initialField := object.Field{Ftype: types.Int, Fvalue: initialValue}
+	obj.ThMutex.Lock()
+	defer obj.ThMutex.Unlock()
 	obj.FieldTable["value"] = initialField
 	return nil
 }
@@ -262,6 +267,8 @@ func atomicIntegerSet(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	initialValue := params[1].(int64)
 	initialField := object.Field{Ftype: types.Int, Fvalue: initialValue}
+	obj.ThMutex.Lock()
+	defer obj.ThMutex.Unlock()
 	obj.FieldTable["value"] = initialField
 	return nil
 }
@@ -269,6 +276,8 @@ func atomicIntegerSet(params []interface{}) interface{} {
 // "java/util/concurrent/atomic/AtomicInteger.get()I"
 func atomicIntegerGet(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
+	obj.ThMutex.RLock()
+	defer obj.ThMutex.RUnlock()
 	wint := obj.FieldTable["value"].Fvalue.(int64)
 	return wint
 }
@@ -278,10 +287,9 @@ func atomicIntegerGet(params []interface{}) interface{} {
 // func atomicIntegerLazySet = atomicIntegerInitInt
 
 func atomicIntegerGetAndSet(params []interface{}) interface{} {
-	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock()
-	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
+	obj.ThMutex.Lock()
+	defer obj.ThMutex.Unlock()
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	newValue := params[1].(int64)
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
@@ -290,10 +298,9 @@ func atomicIntegerGetAndSet(params []interface{}) interface{} {
 }
 
 func atomicIntegerCompareAndSet(params []interface{}) interface{} {
-	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock()
-	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
+	obj.ThMutex.Lock()
+	defer obj.ThMutex.Unlock()
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	expectedValue := params[1].(int64)
 	if oldValue != expectedValue {
@@ -350,20 +357,18 @@ func atomicIntegerAddAndGet(params []interface{}) interface{} {
 }
 
 func atomicIntegerToString(params []interface{}) interface{} {
-	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock()
-	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
+	obj.ThMutex.RLock()
+	defer obj.ThMutex.RUnlock()
 	intValue := obj.FieldTable["value"].Fvalue.(int64)
 	str := fmt.Sprintf("%d", intValue)
 	return object.StringObjectFromGoString(str)
 }
 
 func atomicIntegerToFloat(params []interface{}) interface{} {
-	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock()
-	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
+	obj.ThMutex.RLock()
+	defer obj.ThMutex.RUnlock()
 	intValue := obj.FieldTable["value"].Fvalue.(int64)
 	return float64(intValue)
 }
@@ -404,9 +409,8 @@ func fnAtomicIntegerAdd(params []interface{}, newFlag bool) interface{} {
 	}
 
 	// Set up for lock and deferred unlock.
-	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock()
-	defer global.AtomicIntegerLock.Unlock()
+	obj.ThMutex.Lock()
+	defer obj.ThMutex.Unlock()
 
 	// Retrieve the current value field from the AtomicInteger object.
 	valueField, exists := obj.FieldTable["value"]

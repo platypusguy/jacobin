@@ -393,7 +393,7 @@ func threadInitFromPackageConstructor(params []interface{}) any {
 // java/lang/Thread.<init>()V
 func threadInitNull(params []interface{}) any {
 	if len(params) != 2 {
-		errMsg := fmt.Sprintf("threadInitNull: Expected 2 parameter2, "+
+		errMsg := fmt.Sprintf("threadInitNull: Expected 2 parameters, "+
 			"(frame stack + the thread object), got %d parameters", len(params))
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}

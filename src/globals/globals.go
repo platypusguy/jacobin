@@ -98,8 +98,6 @@ type Globals struct {
 	// Random object mutex
 	RandomLock sync.Mutex
 
-	// AtomicInteger mutex
-	AtomicIntegerLock sync.Mutex
 
 	// ---- misc properties
 	FileEncoding     string // what file encoding are we using?
