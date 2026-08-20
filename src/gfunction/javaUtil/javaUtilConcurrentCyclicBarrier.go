@@ -74,6 +74,16 @@ func Load_Util_Concurrent_CyclicBarrier() {
 		}
 }
 
+func isThreadInterrupted(th *object.Object) bool {
+	if th == nil || th == object.Null {
+		return false
+	}
+	th.ThMutex.RLock()
+	defer th.ThMutex.RUnlock()
+	interrupted, ok := th.FieldTable["interrupted"].Fvalue.(types.JavaBool)
+	return ok && interrupted == types.JavaBoolTrue
+}
+
 func getCyclicBarrierState(self *object.Object) (*cyclicBarrierState, interface{}) {
 	self.ThMutex.RLock()
 	defer self.ThMutex.RUnlock()
@@ -132,7 +142,14 @@ func cyclicBarrierAwait(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.BrokenBarrierException, "CyclicBarrier is broken")
 	}
 
-	// In a real JVM, we should also check for thread interruption
+	// Check for thread interruption
+	currentThread := params[len(params)-1].(*object.Object)
+	if isThreadInterrupted(currentThread) {
+		state.broken = true
+		state.lastBroken = true
+		state.barrierCond.Broadcast()
+		return ghelpers.GetGErrBlk(excNames.InterruptedException, "Thread interrupted before wait")
+	}
 
 	index := state.count - 1
 	state.count = index
@@ -162,6 +179,15 @@ func cyclicBarrierAwait(params []interface{}) interface{} {
 	// Wait for others
 	for generation == state.generation {
 		state.barrierCond.Wait()
+
+		// Check for thread interruption
+		if isThreadInterrupted(currentThread) {
+			state.broken = true
+			state.lastBroken = true
+			state.barrierCond.Broadcast()
+			return ghelpers.GetGErrBlk(excNames.InterruptedException, "Thread interrupted during wait")
+		}
+
 		if generation != state.generation {
 			if state.lastBroken {
 				return ghelpers.GetGErrBlk(excNames.BrokenBarrierException, "CyclicBarrier broken or reset during wait")

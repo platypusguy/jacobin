@@ -7,6 +7,7 @@
 package javaUtil
 
 import (
+	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -50,7 +51,7 @@ func TestCyclicBarrier_Basic(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
-		res := cyclicBarrierAwait([]interface{}{cb})
+		res := cyclicBarrierAwait([]interface{}{cb, object.Null})
 		if err, ok := res.(*ghelpers.GErrBlk); ok {
 			t.Errorf("Thread 1 await failed: %v", err.ErrMsg)
 			return
@@ -69,7 +70,7 @@ func TestCyclicBarrier_Basic(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
-		res := cyclicBarrierAwait([]interface{}{cb})
+		res := cyclicBarrierAwait([]interface{}{cb, object.Null})
 		if err, ok := res.(*ghelpers.GErrBlk); ok {
 			t.Errorf("Thread 2 await failed: %v", err.ErrMsg)
 			return
@@ -95,6 +96,25 @@ func TestCyclicBarrier_Basic(t *testing.T) {
 	}
 }
 
+func TestCyclicBarrier_Interrupt(t *testing.T) {
+	globals.InitStringPool()
+	cb := newCyclicBarrierObj()
+	cyclicBarrierInit([]interface{}{cb, int64(2)})
+
+	th := object.MakeEmptyObject()
+	th.FieldTable["interrupted"] = object.Field{Ftype: types.Int, Fvalue: types.JavaBoolTrue}
+
+	// Should fail immediately if already interrupted
+	res := cyclicBarrierAwait([]interface{}{cb, th})
+	if err, ok := res.(*ghelpers.GErrBlk); !ok || err.ExceptionType != excNames.InterruptedException {
+		t.Fatalf("Expected InterruptedException, got %v", res)
+	}
+
+	if broken := cyclicBarrierIsBroken([]interface{}{cb}).(types.JavaBool); broken != types.JavaBoolTrue {
+		t.Fatalf("expected broken barrier after interrupt, got %v", broken)
+	}
+}
+
 func TestCyclicBarrier_Reset(t *testing.T) {
 	globals.InitStringPool()
 	cb := newCyclicBarrierObj()
@@ -105,7 +125,7 @@ func TestCyclicBarrier_Reset(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
-		res := cyclicBarrierAwait([]interface{}{cb})
+		res := cyclicBarrierAwait([]interface{}{cb, object.Null})
 		if _, ok := res.(*ghelpers.GErrBlk); !ok {
 			t.Errorf("Expected BrokenBarrierException after reset, but got success")
 		}
