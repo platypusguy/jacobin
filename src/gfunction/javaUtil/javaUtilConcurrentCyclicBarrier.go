@@ -75,6 +75,8 @@ func Load_Util_Concurrent_CyclicBarrier() {
 }
 
 func getCyclicBarrierState(self *object.Object) (*cyclicBarrierState, interface{}) {
+	self.ThMutex.RLock()
+	defer self.ThMutex.RUnlock()
 	field, exists := self.FieldTable["state"]
 	if !exists {
 		return nil, ghelpers.GetGErrBlk(excNames.NullPointerException, "getCyclicBarrierState: CyclicBarrier not initialized")
@@ -98,7 +100,7 @@ func cyclicBarrierInitAction(params []interface{}) interface{} {
 	}
 	barrierAction, _ := params[2].(*object.Object)
 
-	mu := &sync.Mutex{}
+	mu := &sync.RWMutex{}
 	state := &cyclicBarrierState{
 		parties:       int(parties),
 		count:         int(parties),
@@ -108,6 +110,8 @@ func cyclicBarrierInitAction(params []interface{}) interface{} {
 		barrierAction: barrierAction,
 	}
 
+	self.ThMutex.Lock()
+	defer self.ThMutex.Unlock()
 	self.FieldTable["state"] = object.Field{Ftype: types.ArrayList, Fvalue: state} // Using ArrayList type as a placeholder for pointer
 	return nil
 }
@@ -175,6 +179,8 @@ func cyclicBarrierGetParties(params []interface{}) interface{} {
 	if err != nil {
 		return err
 	}
+	state.barrierCond.L.(*sync.RWMutex).RLock()
+	defer state.barrierCond.L.(*sync.RWMutex).RUnlock()
 	return int64(state.parties)
 }
 
@@ -184,6 +190,8 @@ func cyclicBarrierIsBroken(params []interface{}) interface{} {
 	if err != nil {
 		return err
 	}
+	state.barrierCond.L.(*sync.RWMutex).RLock()
+	defer state.barrierCond.L.(*sync.RWMutex).RUnlock()
 	return object.JavaBooleanFromGoBoolean(state.broken)
 }
 
@@ -214,7 +222,7 @@ func cyclicBarrierGetNumberWaiting(params []interface{}) interface{} {
 	if err != nil {
 		return err
 	}
-	state.barrierCond.L.Lock()
-	defer state.barrierCond.L.Unlock()
+	state.barrierCond.L.(*sync.RWMutex).RLock()
+	defer state.barrierCond.L.(*sync.RWMutex).RUnlock()
 	return int64(state.parties - state.count)
 }
