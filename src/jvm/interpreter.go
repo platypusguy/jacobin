@@ -3966,14 +3966,6 @@ func doMonitorenter(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
-	// Yield.
-	if mtrdebug {
-		var msg string
-		msg = fmt.Sprintf("DEBUG MONITOR-ENTRY YIELD threadID=%d", fr.Thread)
-		trace.Trace(msg)
-	}
-	runtime.Gosched()
-
 	// DEBUG if configured to do so.
 	if mtrdebug {
 		var msg string
@@ -4094,7 +4086,6 @@ func doMonitorexit(fr *frames.Frame, _ int64) int {
 		msg = fmt.Sprintf("DEBUG MONITOR-EXIT YIELD threadID=%d", fr.Thread)
 		trace.Trace(msg)
 	}
-	runtime.Gosched()
 
 	return 1
 }
