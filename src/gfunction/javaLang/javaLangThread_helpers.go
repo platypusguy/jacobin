@@ -136,7 +136,7 @@ func RegisterThread(th *object.Object) {
 }
 
 // Should we need to create a thread (as in tests), here is the instantiable implementation
-func ThreadCreateNoarg(_ []interface{}) any {
+func ThreadCreateObject(_ []interface{}) any {
 	th := object.MakeEmptyObjectWithClassName(&types.ClassNameThread)
 	populateThreadObject(th)
 	return th

@@ -933,7 +933,7 @@ func TestPeekWithStackUnderflow(t *testing.T) {
 	InitGlobalFunctionPointers()
 	javaLang.InitializeGlobalThreadGroups()
 
-	thObj := javaLang.ThreadCreateNoarg(nil).(*object.Object)
+	thObj := javaLang.ThreadCreateObject(nil).(*object.Object)
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
 	javaLang.ThreadInitWithName(params)
@@ -1017,7 +1017,7 @@ func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
 	// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
 	InitGlobalFunctionPointers()
 	javaLang.InitializeGlobalThreadGroups()
-	thObj := javaLang.ThreadCreateNoarg(nil).(*object.Object)
+	thObj := javaLang.ThreadCreateObject(nil).(*object.Object)
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
 	javaLang.ThreadInitWithName(params)
@@ -1152,7 +1152,7 @@ func TestPopWithStackUnderflow(t *testing.T) {
 	var f *frames.Frame
 	globals.InitGlobals("test")
 	javaLang.InitializeGlobalThreadGroups()
-	thObj := javaLang.ThreadCreateNoarg(nil).(*object.Object)
+	thObj := javaLang.ThreadCreateObject(nil).(*object.Object)
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
 	javaLang.ThreadInitWithName(params)
@@ -1342,7 +1342,7 @@ func TestPushWithStackOverflow(t *testing.T) {
 	classloader.FetchMethodAndCP("java/lang/Object", "wait", "(JI)V")
 
 	var f *frames.Frame
-	thObj := javaLang.ThreadCreateNoarg(nil).(*object.Object)
+	thObj := javaLang.ThreadCreateObject(nil).(*object.Object)
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
 	javaLang.ThreadInitWithName(params)

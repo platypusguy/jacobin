@@ -50,7 +50,7 @@ func staticsGet(cls, name string) any { return statics.GetStaticValue(cls, name)
 
 func TestThreadCreateNoarg_Defaults(t *testing.T) {
 	EnsureTGInit()
-	obj := ThreadCreateNoarg(nil).(*object.Object)
+	obj := ThreadCreateObject(nil).(*object.Object)
 	if obj.FieldTable["ID"].Fvalue.(int64) == 0 {
 		t.Errorf("expected non-zero thread ID")
 	}
@@ -97,7 +97,7 @@ func TestThreadCreateNoarg_Defaults(t *testing.T) {
 
 func TestThreadInitWithName_ErrWrongArity(t *testing.T) {
 	EnsureTGInit()
-	ret := ThreadInitWithName([]any{ThreadCreateNoarg(nil)})
+	ret := ThreadInitWithName([]any{ThreadCreateObject(nil)})
 	g := ret.(*ghelpers.GErrBlk)
 	if g.ExceptionType != excNames.IllegalArgumentException {
 		t.Fatalf("expected IllegalArgumentException, got %d", g.ExceptionType)
@@ -111,7 +111,7 @@ func TestThreadInitWithName_ErrWrongTypes(t *testing.T) {
 	if ret.(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatalf("expected IllegalArgumentException for non-thread first arg")
 	}
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	ret2 := ThreadInitWithName([]any{th, 5})
 	if ret2.(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatalf("expected IllegalArgumentException for non-string name")
@@ -120,7 +120,7 @@ func TestThreadInitWithName_ErrWrongTypes(t *testing.T) {
 
 func TestThreadInitWithName_Success(t *testing.T) {
 	EnsureTGInit()
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	nm := object.StringObjectFromGoString("Alpha")
 	fs := makeAframeSet()
 	_ = ThreadInitWithName([]any{fs, th, nm})
@@ -133,11 +133,11 @@ func TestThreadInitWithName_Success(t *testing.T) {
 func TestThreadInitWithRunnableAndName_Paths(t *testing.T) {
 	EnsureTGInit()
 	// wrong arity
-	if threadInitWithRunnableAndName([]any{ThreadCreateNoarg(nil)}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
+	if threadInitWithRunnableAndName([]any{ThreadCreateObject(nil)}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IllegalArgumentException for arity")
 	}
 	// wrong types each position
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	nm := object.StringObjectFromGoString("B")
 	runnable := makeRunnableDescriptor("C", "run", "()V")
 
@@ -164,7 +164,7 @@ func TestThreadInitWithThreadGroupAndName_Paths(t *testing.T) {
 	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	mainTG := gr.ThreadGroups["main"].(*object.Object)
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	nm := object.StringObjectFromGoString("D")
 	fs := makeAframeSet()
 
@@ -190,7 +190,7 @@ func TestThreadInitWithThreadGroupRunnableAndName_Paths(t *testing.T) {
 	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	mainTG := gr.ThreadGroups["main"].(*object.Object)
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	nm := object.StringObjectFromGoString("E")
 	runnable := makeRunnableDescriptor("C2", "run", "()V")
 
@@ -219,7 +219,7 @@ func TestThreadInitFromPackageConstructor_Paths(t *testing.T) {
 	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	mainTG := gr.ThreadGroups["main"].(*object.Object)
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	nm := object.StringObjectFromGoString("P")
 	runnable := makeRunnableDescriptor("RC", "run", "()V")
 
@@ -272,8 +272,8 @@ func TestThreadActiveCount(t *testing.T) {
 	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	gr.Threads = map[int]interface{}{}
-	gr.Threads[1] = ThreadCreateNoarg(nil)
-	gr.Threads[2] = ThreadCreateNoarg(nil)
+	gr.Threads[1] = ThreadCreateObject(nil)
+	gr.Threads[2] = ThreadCreateObject(nil)
 	if threadActiveCount(nil).(int64) != 2 {
 		t.Errorf("expected 2 active threads")
 	}
@@ -301,7 +301,7 @@ func TestThreadDumpStack_Paths(t *testing.T) {
 	f.Thread = 5
 	fs.PushFront(f)
 	// register thread with name
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	th.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: object.StringObjectFromGoString("T")}
 	globals.GetGlobalRef().Threads[5] = th
 
@@ -334,7 +334,7 @@ func TestThreadGetId_Paths(t *testing.T) {
 	if threadGetId([]any{123}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("type")
 	}
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	// success
 	id := threadGetId([]any{th}).(int64)
 	if id != th.FieldTable["ID"].Fvalue.(int64) {
@@ -344,7 +344,7 @@ func TestThreadGetId_Paths(t *testing.T) {
 
 func TestThreadGetNamePriorityStateGroupInterrupted(t *testing.T) {
 	EnsureTGInit()
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	// getName
 	if threadGetName(nil).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("arity getName")
@@ -425,7 +425,7 @@ func TestThreadSetName_Paths(t *testing.T) {
 	if threadSetName([]any{123, object.StringObjectFromGoString("x")}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("type")
 	}
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	if threadSetName([]any{th, object.Null}).(*ghelpers.GErrBlk).ExceptionType != excNames.NullPointerException {
 		t.Fatal("npe expected")
 	}
@@ -447,7 +447,7 @@ func TestThreadSetPriority_Paths(t *testing.T) {
 	if threadSetPriority([]any{123, int64(5)}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("type")
 	}
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	if threadSetPriority([]any{th, "x"}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("priority type")
 	}
@@ -511,7 +511,7 @@ func TestThreadInitWithRunnable_Paths(t *testing.T) {
 	if threadInitWithRunnable([]any{123, runnable}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IllegalArgumentException for non-thread first arg")
 	}
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	if threadInitWithRunnable([]any{th, 456}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IllegalArgumentException for non-runnable second arg")
 	}
@@ -526,7 +526,7 @@ func TestThreadCurrentThread(t *testing.T) {
 	EnsureTGInit()
 	fs := makeAframeSet()
 	f := fs.Front().Value.(*frames.Frame)
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	globals.GetGlobalRef().Threads[f.Thread] = th
 
 	// Arity error
@@ -549,8 +549,8 @@ func TestThreadEnumerate(t *testing.T) {
 	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	gr.Threads = map[int]interface{}{}
-	th1 := ThreadCreateNoarg(nil).(*object.Object)
-	th2 := ThreadCreateNoarg(nil).(*object.Object)
+	th1 := ThreadCreateObject(nil).(*object.Object)
+	th2 := ThreadCreateObject(nil).(*object.Object)
 	gr.Threads[1] = th1
 	gr.Threads[2] = th2
 
@@ -584,7 +584,7 @@ func TestThreadEnumerate(t *testing.T) {
 
 func TestThreadIsAliveTerminated(t *testing.T) {
 	EnsureTGInit()
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 
 	// isAlive arity
 	if threadIsAlive(nil).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
@@ -644,7 +644,7 @@ func TestThreadToString_AllPaths(t *testing.T) {
 	}
 
 	// Success
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	th.KlassName = types.StringPoolThreadIndex
 	th.FieldTable["ID"] = object.Field{Ftype: types.Int, Fvalue: int64(10)}
 	th.FieldTable["name"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.StringObjectFromGoString("Thread-10")}
@@ -665,7 +665,7 @@ func TestThreadToString_AllPaths(t *testing.T) {
 
 func TestThreadHelpers(t *testing.T) {
 	EnsureTGInit()
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 
 	// GetThreadState
 	if GetThreadState(th) != NEW {
@@ -704,7 +704,7 @@ func TestThreadHelpers(t *testing.T) {
 
 func TestRegisterThread(t *testing.T) {
 	EnsureTGInit()
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	th.FieldTable["ID"] = object.Field{Ftype: types.Int, Fvalue: int64(999)}
 
 	RegisterThread(th)
@@ -730,7 +730,7 @@ func TestThreadRun_Paths(t *testing.T) {
 		t.Fatal("type")
 	}
 
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	th.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: object.StringObjectFromGoString("Runner")}
 
 	// Success (returns nil, logs warning)
@@ -743,10 +743,10 @@ func TestThreadJoin_Paths(t *testing.T) {
 	EnsureTGInit()
 	fs := makeAframeSet()
 	f := fs.Front().Value.(*frames.Frame)
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	globals.GetGlobalRef().Threads[f.Thread] = th
 
-	target := ThreadCreateNoarg(nil).(*object.Object)
+	target := ThreadCreateObject(nil).(*object.Object)
 
 	// Arity/Type errors
 	if threadJoin([]any{123, target}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
@@ -781,7 +781,7 @@ func TestThreadInitNull(t *testing.T) {
 		t.Fatal("type")
 	}
 	// Success
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	if threadInitNull([]any{fs, th}) != nil {
 		t.Errorf("expected nil on success")
 	}
@@ -791,7 +791,7 @@ func TestThreadInitWithThreadGroupRunnable(t *testing.T) {
 	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	mainTG := gr.ThreadGroups["main"].(*object.Object)
-	th := ThreadCreateNoarg(nil).(*object.Object)
+	th := ThreadCreateObject(nil).(*object.Object)
 	runnable := makeRunnableDescriptor("RC3", "run", "()V")
 
 	// Arity

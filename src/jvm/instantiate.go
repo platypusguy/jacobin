@@ -51,7 +51,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	case types.StringClassName:
 		return object.NewStringObject(), nil
 	case types.ClassNameThread:
-		return javaLang.ThreadCreateNoarg(nil), nil
+		return javaLang.ThreadCreateObject(nil), nil
 	case types.ClassNameThreadGroup:
 		return javaLang.MakeThreadGroup(), nil
 	}
