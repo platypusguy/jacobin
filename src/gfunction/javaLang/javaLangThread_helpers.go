@@ -87,12 +87,20 @@ func populateThreadObject(t *object.Object) {
 	t.ThMutex.Lock()
 	defer t.ThMutex.Unlock()
 
-	idField := object.Field{Ftype: types.Int, Fvalue: threadNumberingNext(nil).(int64)}
+	// If this function has already been called, just return.
+	idField, ok := t.FieldTable["ID"]
+	if ok {
+		return
+	}
+
+	// Establish the thread ID.
+	thid := threadNumberingNext(nil).(int64)
+	idField = object.Field{Ftype: types.Int, Fvalue: thid}
 	t.FieldTable["ID"] = idField
 
 	// the JDK defaults to "Thread-N" where N is the thread number
 	// the sole exception is the main thread, which is called "main"
-	defaultName := fmt.Sprintf("Thread-%d", idField.Fvalue)
+	defaultName := fmt.Sprintf("Thread-%d", thid)
 	nameField := object.Field{Ftype: types.JavaByteArray, Fvalue: object.StringObjectFromGoString(defaultName)}
 	t.FieldTable["name"] = nameField
 
@@ -152,9 +160,6 @@ func ThreadCreateObject(_ []interface{}) any {
 //   - the thread state is not an object
 //   - the thread state is missing the value field
 //   - max wait time <= 0
-//
-// Sentinel for continuing the loop
-var continueLoop = struct{}{}
 
 func waitForTermination(waitingThread, targetThread *object.Object, maxTime int64) interface{} {
 
