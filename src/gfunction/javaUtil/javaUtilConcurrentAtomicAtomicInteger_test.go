@@ -243,3 +243,53 @@ func TestAtomicInteger_ErrorPaths_In_AddHelper(t *testing.T) {
 		}
 	}
 }
+
+func TestAtomicInteger_32BitOverflow(t *testing.T) {
+	globals.InitStringPool()
+
+	ai := newAtomicIntegerObj()
+	_ = atomicIntegerInitInt([]interface{}{ai, int64(2147483647)}) // Integer.MAX_VALUE
+
+	// incrementAndGet on Integer.MAX_VALUE should wrap to Integer.MIN_VALUE (-2147483648)
+	newv := atomicIntegerIncrementAndGet([]interface{}{ai}).(int64)
+	if newv != -2147483648 {
+		t.Fatalf("expected wrap to -2147483648 on increment, got %d", newv)
+	}
+	if cur := aiGet(t, ai); cur != -2147483648 {
+		t.Fatalf("expected current value -2147483648, got %d", cur)
+	}
+
+	// decrementAndGet on Integer.MIN_VALUE should wrap back to Integer.MAX_VALUE (2147483647)
+	newv = atomicIntegerDecrementAndGet([]interface{}{ai}).(int64)
+	if newv != 2147483647 {
+		t.Fatalf("expected wrap to 2147483647 on decrement, got %d", newv)
+	}
+
+	// addAndGet with overflow
+	newv = atomicIntegerAddAndGet([]interface{}{ai, int64(2)}).(int64)
+	if newv != -2147483647 {
+		t.Fatalf("expected wrap to -2147483647, got %d", newv)
+	}
+}
+
+func TestAtomicInteger_MethodSignatures(t *testing.T) {
+	globals.InitStringPool()
+	Load_Util_Concurrent_Atomic_AtomicInteger()
+
+	sigToString := "java/util/concurrent/atomic/AtomicInteger.toString()Ljava/lang/String;"
+	if gmeth, ok := ghelpers.MethodSignatures[sigToString]; !ok {
+		t.Fatalf("missing method signature: %s", sigToString)
+	} else if gmeth.ParamSlots != 0 {
+		t.Fatalf("expected 0 param slots for %s, got %d", sigToString, gmeth.ParamSlots)
+	}
+
+	sigGetOpaque := "java/util/concurrent/atomic/AtomicInteger.getOpaque()I"
+	if _, ok := ghelpers.MethodSignatures[sigGetOpaque]; !ok {
+		t.Fatalf("missing method signature: %s", sigGetOpaque)
+	}
+
+	sigWeakVolatile := "java/util/concurrent/atomic/AtomicInteger.weakCompareAndSetVolatile(II)Z"
+	if _, ok := ghelpers.MethodSignatures[sigWeakVolatile]; !ok {
+		t.Fatalf("missing method signature: %s", sigWeakVolatile)
+	}
+}
