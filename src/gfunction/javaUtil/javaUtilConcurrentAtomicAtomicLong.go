@@ -22,7 +22,7 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  atomicLongClinit,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.<init>()V"] =
@@ -82,7 +82,7 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.doubleValue()D"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  atomicLongToFloat,
+			GFunction:  atomicLongToDouble,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.floatValue()F"] =
@@ -142,7 +142,7 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.getOpaque()J"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  atomicLongGet,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.getPlain()J"] =
@@ -160,7 +160,7 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.intValue()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  atomicLongGet,
+			GFunction:  atomicLongToInt,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.lazySet(J)V"] =
@@ -235,22 +235,18 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.weakCompareAndSetVolatile(JJ)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.VMSupportsCS8()Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  atomicLongVMSupportsCS8,
 		}
 
-}
-
-func atomicLongClinit([]interface{}) interface{} {
-	className := "java/util/concurrent/atomic/AtomicLong"
-	obj := object.MakeEmptyObjectWithClassName(&className)
-	initialField := object.Field{Ftype: types.Long, Fvalue: int64(0)}
-	obj.ThMutex.Lock()
-	defer obj.ThMutex.Unlock()
-	obj.FieldTable["value"] = initialField
-	return nil
 }
 
 func atomicLongInitVoid(params []interface{}) interface{} {
@@ -367,7 +363,23 @@ func atomicLongToString(params []interface{}) interface{} {
 	return object.StringObjectFromGoString(str)
 }
 
+func atomicLongToInt(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	obj.ThMutex.RLock()
+	defer obj.ThMutex.RUnlock()
+	longValue := obj.FieldTable["value"].Fvalue.(int64)
+	return int64(int32(longValue))
+}
+
 func atomicLongToFloat(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	obj.ThMutex.RLock()
+	defer obj.ThMutex.RUnlock()
+	longValue := obj.FieldTable["value"].Fvalue.(int64)
+	return float32(longValue)
+}
+
+func atomicLongToDouble(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	obj.ThMutex.RLock()
 	defer obj.ThMutex.RUnlock()

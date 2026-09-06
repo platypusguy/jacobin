@@ -15,7 +15,7 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  atomicIntegerClinit,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.<init>()V"] =
@@ -135,7 +135,7 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.getOpaque()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  atomicIntegerGet,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.getPlain()I"] =
@@ -192,7 +192,7 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 			GFunction:  atomicIntegerSet,
 		}
 
-	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.toString()Ljava/base/String;"] =
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  atomicIntegerToString,
@@ -228,17 +228,12 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-}
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.weakCompareAndSetVolatile(II)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
 
-// "java/util/concurrent/atomic/AtomicInteger.<clinit>()V"
-func atomicIntegerClinit([]interface{}) interface{} {
-	className := "java/util/concurrent/atomic/AtomicInteger"
-	obj := object.MakeEmptyObjectWithClassName(&className)
-	initialField := object.Field{Ftype: types.Int, Fvalue: int64(0)}
-	obj.ThMutex.Lock()
-	defer obj.ThMutex.Unlock()
-	obj.FieldTable["value"] = initialField
-	return nil
 }
 
 // "java/util/concurrent/atomic/AtomicInteger.<init>()V"
@@ -254,7 +249,7 @@ func atomicIntegerInitVoid(params []interface{}) interface{} {
 // "java/util/concurrent/atomic/AtomicInteger.<init>(I)V"
 func atomicIntegerInitInt(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
-	initialValue := params[1].(int64)
+	initialValue := int64(int32(params[1].(int64)))
 	initialField := object.Field{Ftype: types.Int, Fvalue: initialValue}
 	obj.ThMutex.Lock()
 	defer obj.ThMutex.Unlock()
@@ -265,7 +260,7 @@ func atomicIntegerInitInt(params []interface{}) interface{} {
 // "java/util/concurrent/atomic/AtomicInteger.Set(I)V"
 func atomicIntegerSet(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
-	initialValue := params[1].(int64)
+	initialValue := int64(int32(params[1].(int64)))
 	initialField := object.Field{Ftype: types.Int, Fvalue: initialValue}
 	obj.ThMutex.Lock()
 	defer obj.ThMutex.Unlock()
@@ -291,7 +286,7 @@ func atomicIntegerGetAndSet(params []interface{}) interface{} {
 	obj.ThMutex.Lock()
 	defer obj.ThMutex.Unlock()
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
-	newValue := params[1].(int64)
+	newValue := int64(int32(params[1].(int64)))
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
 	return oldValue
@@ -302,11 +297,11 @@ func atomicIntegerCompareAndSet(params []interface{}) interface{} {
 	obj.ThMutex.Lock()
 	defer obj.ThMutex.Unlock()
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
-	expectedValue := params[1].(int64)
+	expectedValue := int64(int32(params[1].(int64)))
 	if oldValue != expectedValue {
 		return int64(0)
 	}
-	newValue := params[2].(int64)
+	newValue := int64(int32(params[2].(int64)))
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
 	return int64(1)
@@ -402,11 +397,12 @@ func fnAtomicIntegerAdd(params []interface{}, newFlag bool) interface{} {
 	}
 
 	// Validate the second parameter (int64 value to add)
-	addend, ok := params[1].(int64)
+	addendRaw, ok := params[1].(int64)
 	if !ok {
 		errMsg := "fnAtomicIntegerAdd: Second parameter is not a valid int64"
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
+	addend := int64(int32(addendRaw))
 
 	// Set up for lock and deferred unlock.
 	obj.ThMutex.Lock()
@@ -430,8 +426,8 @@ func fnAtomicIntegerAdd(params []interface{}, newFlag bool) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Perform addition and update the AtomicInteger value field.
-	newValue := formerValue + addend
+	// Perform addition and update the AtomicInteger value field with 32-bit wrapping.
+	newValue := int64(int32(formerValue + addend))
 	obj.FieldTable["value"] = object.Field{
 		Ftype:  types.Int,
 		Fvalue: newValue,

@@ -150,7 +150,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 	InitializePrimitiveWrappers()
-	th := javaLang.ThreadCreateNoarg(nil).(*object.Object)
+	th := javaLang.ThreadCreateObject(nil).(*object.Object)
 	className := "Hello2"
 	methName := "main"
 	methType := "([Ljava/lang/String;)V"

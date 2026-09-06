@@ -124,7 +124,7 @@ func TestHexIDIVException(t *testing.T) {
 	// Run class ThrowIDIVexception
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
-	th := javaLang.ThreadCreateNoarg(nil).(*object.Object)
+	th := javaLang.ThreadCreateObject(nil).(*object.Object)
 	args := []interface{}{th, "ThrowIDIVexception", "main", "([Ljava/lang/String;)V"}
 	RunJavaThread(args)
 
