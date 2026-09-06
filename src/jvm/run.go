@@ -335,20 +335,22 @@ func createAndInitNewFrame(
 		destLocal = 1                               // The first parameter starts at index 1
 		lenLocals++                                 // There is 1 more local needed
 
-		// Lock the instance-object.
-		err := obj.ObjLock(int32(fram.Thread))
-		if err != nil {
-			fqn := fram.ClName + "." + fram.MethName + fram.MethType
-			errMsg := fmt.Sprintf("createAndInitNewFrame: ObjLock error, PC: %d, FQN: %s", fram.PC, fqn)
-			return nil, errors.New(errMsg)
-		}
-		if globals.TraceInst {
-			traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: Locked class-object %s", fram.ClName)
-			trace.Trace(traceInfo)
-		}
+		// Lock the instance-object if the method is synchronized.
+		if fram.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
+			err := obj.ObjLock(int32(fram.Thread))
+			if err != nil {
+				fqn := fram.ClName + "." + fram.MethName + fram.MethType
+				errMsg := fmt.Sprintf("createAndInitNewFrame: ObjLock error, PC: %d, FQN: %s", fram.PC, fqn)
+				return nil, errors.New(errMsg)
+			}
+			if globals.TraceInst {
+				traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: Locked class-object %s", fram.ClName)
+				trace.Trace(traceInfo)
+			}
 
-		// Save class-name object pointer in the frame for return and catch-frame processing.
-		fram.ObjSync = obj
+			// Save class-name object pointer in the frame for return and catch-frame processing.
+			fram.ObjSync = obj
+		}
 	} else {
 		// Since includeObjectRef is false, this is a static case: invokestatic.
 		// Check for synchronized method and lock the class object if so.
