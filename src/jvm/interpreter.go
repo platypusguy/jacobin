@@ -3284,6 +3284,18 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
+	// Make sure that the reference is truly an object.
+	switch objRef.(type) {
+	case *object.Object:
+	default:
+		errMsg := fmt.Sprintf("INVOKEINTERFACE: objRef is not an object, observed type: %T", objRef)
+		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURRED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
 	// get the name of the objectRef's class, and make sure it's loaded
 	objRefClassName := *(stringPool.GetStringPointer(objRef.(*object.Object).KlassName))
 	if err := classloader.LoadClassFromNameOnly(objRefClassName); err != nil {
