@@ -2183,7 +2183,9 @@ func doReturn(fr *frames.Frame, _ int64) int {
 func doGetStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
+	CP.Mutex.RLock()
 	CPentry := CP.CpIndex[CPslot] // value is checked in codeCheck.go
+	CP.Mutex.RUnlock()
 
 	// get the field entry
 	field := CP.FieldRefs[CPentry.Slot]
@@ -2251,7 +2253,9 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 func doPutStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 	CP := fr.CP.(*classloader.CPool)
+	CP.Mutex.RLock()
 	CPentry := CP.CpIndex[CPslot] // value is checked in codeCheck.go
+	CP.Mutex.RUnlock()
 
 	// get the field entry
 	field := CP.FieldRefs[CPentry.Slot]
@@ -2968,7 +2972,13 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 
+	// This CP entry can be concurrently written (as a CachedMeth) by
+	// doInvokevirtual/doInvokestatic running in other threads that share
+	// this same class's constant pool, so the read must be lock-protected
+	// to avoid a data race that can yield a torn/incorrect CpEntry.
+	CP.Mutex.RLock()
 	entry := CP.CpIndex[CPslot]
+	CP.Mutex.RUnlock()
 	if entry.Type == classloader.Interface {
 		className, methodName, methodType =
 			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
@@ -3236,7 +3246,9 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 	zeroByte := fr.Meth[fr.PC+4]
 
 	CP := fr.CP.(*classloader.CPool)
+	CP.Mutex.RLock()
 	CPentry := CP.CpIndex[CPslot]
+	CP.Mutex.RUnlock()
 	if CPentry.Type != classloader.Interface || zeroByte != 0 { // remove the zeroByte test later
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
@@ -3252,13 +3264,17 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 
 	// get the class entry from this method
 	interfaceRef := method.ClassIndex
+	CP.Mutex.RLock()
 	interfaceNameIndex := CP.ClassRefs[CP.CpIndex[interfaceRef].Slot]
+	CP.Mutex.RUnlock()
 	interfaceNamePtr := stringPool.GetStringPointer(interfaceNameIndex)
 	interfaceName := *interfaceNamePtr
 
 	// get the method name for this method
 	nAndTindex := method.NameAndType
+	CP.Mutex.RLock()
 	nAndTentry := CP.CpIndex[nAndTindex]
+	CP.Mutex.RUnlock()
 	nAndTslot := nAndTentry.Slot
 	nAndT := CP.NameAndTypes[nAndTslot]
 	interfaceMethodNameIndex := nAndT.NameIndex
