@@ -7,21 +7,39 @@
 package javaUtil
 
 import (
+	"container/list"
 	"jacobin/src/excNames"
+	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"sync"
 )
 
+type generation struct {
+	broken bool
+}
+
 type cyclicBarrierState struct {
-	parties       int
-	count         int
-	generation    int
-	broken        bool
-	lastBroken    bool
+	mu            sync.RWMutex
+	parties       int64
+	count         int64
+	gen           *generation
 	barrierCond   *sync.Cond
 	barrierAction *object.Object
+}
+
+func (s *cyclicBarrierState) nextGeneration() {
+	s.barrierCond.Broadcast()
+	s.count = s.parties
+	s.gen = &generation{broken: false}
+}
+
+func (s *cyclicBarrierState) breakBarrier() {
+	s.gen.broken = true
+	s.count = s.parties
+	s.barrierCond.Broadcast()
 }
 
 func Load_Util_Concurrent_CyclicBarrier() {
@@ -39,8 +57,9 @@ func Load_Util_Concurrent_CyclicBarrier() {
 
 	ghelpers.MethodSignatures["java/util/concurrent/CyclicBarrier.await()I"] =
 		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  cyclicBarrierAwait,
+			ParamSlots:   0,
+			NeedsContext: true,
+			GFunction:    cyclicBarrierAwait,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/CyclicBarrier.await(JLjava/util/concurrent/TimeUnit;)I"] =
@@ -80,11 +99,37 @@ func isThreadInterrupted(th *object.Object) bool {
 	}
 	th.ThMutex.RLock()
 	defer th.ThMutex.RUnlock()
-	interrupted, ok := th.FieldTable["interrupted"].Fvalue.(types.JavaBool)
-	return ok && interrupted == types.JavaBoolTrue
+	fld, ok := th.FieldTable["interrupted"]
+	if !ok {
+		return false
+	}
+	switch v := fld.Fvalue.(type) {
+	case int64:
+		return v == types.JavaBoolTrue
+	case int:
+		return v != 0
+	default:
+		return false
+	}
+}
+
+func clearThreadInterrupted(th *object.Object) {
+	if th == nil || th == object.Null {
+		return
+	}
+	th.ThMutex.Lock()
+	defer th.ThMutex.Unlock()
+	fld, ok := th.FieldTable["interrupted"]
+	if ok {
+		fld.Fvalue = types.JavaBoolFalse
+		th.FieldTable["interrupted"] = fld
+	}
 }
 
 func getCyclicBarrierState(self *object.Object) (*cyclicBarrierState, interface{}) {
+	if self == nil || object.IsNull(self) {
+		return nil, ghelpers.GetGErrBlk(excNames.NullPointerException, "getCyclicBarrierState: CyclicBarrier is null")
+	}
 	self.ThMutex.RLock()
 	defer self.ThMutex.RUnlock()
 	field, exists := self.FieldTable["state"]
@@ -92,62 +137,115 @@ func getCyclicBarrierState(self *object.Object) (*cyclicBarrierState, interface{
 		return nil, ghelpers.GetGErrBlk(excNames.NullPointerException, "getCyclicBarrierState: CyclicBarrier not initialized")
 	}
 	state, ok := field.Fvalue.(*cyclicBarrierState)
-	if !ok {
+	if !ok || state == nil {
 		return nil, ghelpers.GetGErrBlk(excNames.VirtualMachineError, "getCyclicBarrierState: Invalid CyclicBarrier storage")
 	}
 	return state, nil
 }
 
 func cyclicBarrierInit(params []interface{}) interface{} {
+	if len(params) == 0 {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "CyclicBarrier.<init>: null parameters")
+	}
+	self, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(self) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "CyclicBarrier.<init>: self is null")
+	}
+	if len(params) < 2 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "CyclicBarrier.<init>: missing parties parameter")
+	}
 	return cyclicBarrierInitAction([]interface{}{params[0], params[1], object.Null})
 }
 
 func cyclicBarrierInitAction(params []interface{}) interface{} {
-	self := params[0].(*object.Object)
+	if len(params) < 2 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "CyclicBarrier.<init>: insufficient parameters")
+	}
+	self, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(self) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "CyclicBarrier.<init>: self is null")
+	}
 	parties, ok := params[1].(int64)
 	if !ok || parties <= 0 {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "CyclicBarrier parties must be positive")
 	}
-	barrierAction, _ := params[2].(*object.Object)
+	var barrierAction *object.Object
+	if len(params) > 2 {
+		barrierAction, _ = params[2].(*object.Object)
+	}
 
-	mu := &sync.RWMutex{}
 	state := &cyclicBarrierState{
-		parties:       int(parties),
-		count:         int(parties),
-		generation:    0,
-		broken:        false,
-		barrierCond:   sync.NewCond(mu),
+		parties:       parties,
+		count:         parties,
+		gen:           &generation{broken: false},
 		barrierAction: barrierAction,
 	}
+	state.barrierCond = sync.NewCond(&state.mu)
 
 	self.ThMutex.Lock()
 	defer self.ThMutex.Unlock()
-	self.FieldTable["state"] = object.Field{Ftype: types.ArrayList, Fvalue: state} // Using ArrayList type as a placeholder for pointer
+	self.FieldTable["state"] = object.Field{Ftype: types.Ref, Fvalue: state}
 	return nil
 }
 
 func cyclicBarrierAwait(params []interface{}) interface{} {
-	self := params[0].(*object.Object)
+	if len(params) == 0 {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierAwait: null parameters")
+	}
+
+	var self *object.Object
+	var currentThread *object.Object
+
+	if fs, ok := params[0].(*list.List); ok {
+		// NeedsContext=true: params = [fs, self]
+		if len(params) < 2 {
+			return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierAwait: missing self object")
+		}
+		var isObj bool
+		self, isObj = params[1].(*object.Object)
+		if !isObj || object.IsNull(self) {
+			return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierAwait: null self object")
+		}
+		if fs != nil && fs.Front() != nil {
+			if fr, ok := fs.Front().Value.(*frames.Frame); ok {
+				gr := globals.GetGlobalRef()
+				gr.ThreadLock.RLock()
+				if th, exists := gr.Threads[fr.Thread]; exists && th != nil {
+					currentThread, _ = th.(*object.Object)
+				}
+				gr.ThreadLock.RUnlock()
+			}
+		}
+	} else if obj, ok := params[0].(*object.Object); ok {
+		self = obj
+		if len(params) > 1 {
+			currentThread, _ = params[1].(*object.Object)
+		}
+	} else {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "cyclicBarrierAwait: invalid parameters")
+	}
+
+	if object.IsNull(self) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierAwait: null self object")
+	}
+
 	state, err := getCyclicBarrierState(self)
 	if err != nil {
 		return err
 	}
 
-	state.barrierCond.L.Lock()
-	defer state.barrierCond.L.Unlock()
+	state.mu.Lock()
+	defer state.mu.Unlock()
 
-	generation := state.generation
+	g := state.gen
 
-	if state.broken {
+	if g.broken {
 		return ghelpers.GetGErrBlk(excNames.BrokenBarrierException, "CyclicBarrier is broken")
 	}
 
-	// Check for thread interruption
-	currentThread := params[len(params)-1].(*object.Object)
 	if isThreadInterrupted(currentThread) {
-		state.broken = true
-		state.lastBroken = true
-		state.barrierCond.Broadcast()
+		clearThreadInterrupted(currentThread)
+		state.breakBarrier()
 		return ghelpers.GetGErrBlk(excNames.InterruptedException, "Thread interrupted before wait")
 	}
 
@@ -155,100 +253,101 @@ func cyclicBarrierAwait(params []interface{}) interface{} {
 	state.count = index
 
 	if index == 0 {
-		// Last thread arrived
-		ranAction := false
-		if state.barrierAction != nil && state.barrierAction != object.Null {
-			// Action execution not fully implemented (requires Java call)
-		}
-
-		if !ranAction {
-			// Success
-			state.lastBroken = false
-			state.generation++
-			state.count = state.parties
-			state.barrierCond.Broadcast()
-			return int64(0)
-		}
-		// If action failed, break barrier
-		state.broken = true
-		state.lastBroken = true
-		state.barrierCond.Broadcast()
-		return ghelpers.GetGErrBlk(excNames.BrokenBarrierException, "Barrier action failed")
+		state.nextGeneration()
+		return int64(0)
 	}
 
-	// Wait for others
-	for generation == state.generation {
+	for {
 		state.barrierCond.Wait()
 
-		// Check for thread interruption
 		if isThreadInterrupted(currentThread) {
-			state.broken = true
-			state.lastBroken = true
-			state.barrierCond.Broadcast()
+			clearThreadInterrupted(currentThread)
+			if g == state.gen && !g.broken {
+				state.breakBarrier()
+				return ghelpers.GetGErrBlk(excNames.InterruptedException, "Thread interrupted during wait")
+			}
 			return ghelpers.GetGErrBlk(excNames.InterruptedException, "Thread interrupted during wait")
 		}
 
-		if generation != state.generation {
-			if state.lastBroken {
-				return ghelpers.GetGErrBlk(excNames.BrokenBarrierException, "CyclicBarrier broken or reset during wait")
-			}
-			return int64(index)
+		if g.broken {
+			return ghelpers.GetGErrBlk(excNames.BrokenBarrierException, "CyclicBarrier broken or reset during wait")
+		}
+
+		if g != state.gen {
+			return index
 		}
 	}
-
-	return int64(index)
 }
 
 func cyclicBarrierGetParties(params []interface{}) interface{} {
-	self := params[0].(*object.Object)
+	if len(params) == 0 {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierGetParties: null parameters")
+	}
+	self, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(self) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierGetParties: null self object")
+	}
 	state, err := getCyclicBarrierState(self)
 	if err != nil {
 		return err
 	}
-	state.barrierCond.L.(*sync.RWMutex).RLock()
-	defer state.barrierCond.L.(*sync.RWMutex).RUnlock()
-	return int64(state.parties)
+	state.mu.RLock()
+	defer state.mu.RUnlock()
+	return state.parties
 }
 
 func cyclicBarrierIsBroken(params []interface{}) interface{} {
-	self := params[0].(*object.Object)
+	if len(params) == 0 {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierIsBroken: null parameters")
+	}
+	self, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(self) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierIsBroken: null self object")
+	}
 	state, err := getCyclicBarrierState(self)
 	if err != nil {
 		return err
 	}
-	state.barrierCond.L.(*sync.RWMutex).RLock()
-	defer state.barrierCond.L.(*sync.RWMutex).RUnlock()
-	return object.JavaBooleanFromGoBoolean(state.broken)
+	state.mu.RLock()
+	defer state.mu.RUnlock()
+	return object.JavaBooleanFromGoBoolean(state.gen.broken)
 }
 
 func cyclicBarrierReset(params []interface{}) interface{} {
-	self := params[0].(*object.Object)
+	if len(params) == 0 {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierReset: null parameters")
+	}
+	self, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(self) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierReset: null self object")
+	}
 	state, err := getCyclicBarrierState(self)
 	if err != nil {
 		return err
 	}
 
-	state.barrierCond.L.Lock()
-	defer state.barrierCond.L.Unlock()
+	state.mu.Lock()
+	defer state.mu.Unlock()
 
-	state.broken = true
-	state.lastBroken = true
-	state.generation++ // Mark this generation as done/broken
-	state.barrierCond.Broadcast()
-
-	state.count = state.parties
-	state.broken = false // Start new generation fresh
+	state.breakBarrier()
+	state.nextGeneration()
 
 	return nil
 }
 
 func cyclicBarrierGetNumberWaiting(params []interface{}) interface{} {
-	self := params[0].(*object.Object)
+	if len(params) == 0 {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierGetNumberWaiting: null parameters")
+	}
+	self, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(self) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "cyclicBarrierGetNumberWaiting: null self object")
+	}
 	state, err := getCyclicBarrierState(self)
 	if err != nil {
 		return err
 	}
-	state.barrierCond.L.(*sync.RWMutex).RLock()
-	defer state.barrierCond.L.(*sync.RWMutex).RUnlock()
-	return int64(state.parties - state.count)
+	state.mu.RLock()
+	defer state.mu.RUnlock()
+	return state.parties - state.count
 }

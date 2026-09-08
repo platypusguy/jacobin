@@ -254,8 +254,11 @@ func threadInterrupt(params []interface{}) any {
 		errMsg := "threadInterrupt: Expected thread to be an object"
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
+
+	thObj.ThMutex.Lock()
 	fld, ok := thObj.FieldTable["interrupted"]
 	if !ok {
+		thObj.ThMutex.Unlock()
 		errMsg := "threadInterrupt: Missing the \"interrupted\" field in the thread object"
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
@@ -263,6 +266,7 @@ func threadInterrupt(params []interface{}) any {
 	thObj.FieldTable["interrupted"] = fld
 
 	thID, ok := thObj.FieldTable["ID"].Fvalue.(int64)
+	thObj.ThMutex.Unlock()
 	if !ok {
 		errMsg := "threadInterrupt: Missing the \"ID\" field in the thread object"
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
@@ -272,7 +276,6 @@ func threadInterrupt(params []interface{}) any {
 	object.WaitingThreads.RLock()
 	defer object.WaitingThreads.RUnlock()
 	if obj := object.WaitingThreads.MapThToObj[uint32(thID)]; obj != nil {
-		// The interrupted thread is waiting on an object (obj).
 		monitor := obj.GetMonitor()
 		if monitor != nil || monitor.Owner == object.MONITOR_OWNER_NONE {
 			monitor.Cond.Broadcast()
