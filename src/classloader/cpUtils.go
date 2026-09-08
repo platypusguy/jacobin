@@ -61,11 +61,14 @@ func FetchCPentry(cp *CPool, index int) CpType {
 	}
 
 	// if index is out of range, return error
+	cp.Mutex.RLock()
 	if index < 1 || index >= len(cp.CpIndex) {
+		cp.Mutex.RUnlock()
 		return CpType{EntryType: 0, RetType: IS_ERROR}
 	}
 
 	entry := cp.CpIndex[index]
+	cp.Mutex.RUnlock()
 
 	switch entry.Type {
 	// integers
@@ -104,7 +107,9 @@ func FetchCPentry(cp *CPool, index int) CpType {
 			RetType: IS_CLASS_REF, StringVal: &className}
 
 	case StringConst: // points to a CP entry, which is a UTF-8 string constant
+		cp.Mutex.RLock()
 		e := cp.CpIndex[entry.Slot]
+		cp.Mutex.RUnlock()
 		// should point to a UTF-8
 		if e.Type != UTF8 {
 			return CpType{EntryType: 0, RetType: IS_ERROR}
@@ -194,25 +199,35 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string, s
 }
 
 func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, string) {
+	// All the reads of CP.CpIndex below can race with concurrent cache writes
+	// performed by doInvokestatic/doInvokevirtual (under CP.Mutex.Lock()) when
+	// multiple Java threads share this class's constant pool, so they must be
+	// lock-protected to avoid observing a torn/incorrect CpEntry.
+	CP.Mutex.RLock()
 	methodRef := CP.CpIndex[cpIndex].Slot
 	classIndex := CP.InterfaceRefs[methodRef].ClassIndex
-
 	classRefIdx := CP.CpIndex[classIndex].Slot
+	nameAndTypeCPindex := CP.InterfaceRefs[methodRef].NameAndType
+	nameAndTypeIndex := CP.CpIndex[nameAndTypeCPindex].Slot
+	CP.Mutex.RUnlock()
+
 	classIdx := CP.ClassRefs[classRefIdx]
 	classNamePtr := stringPool.GetStringPointer(uint32(classIdx))
 	className := *classNamePtr
 
 	// now get the method signature
-	nameAndTypeCPindex := CP.InterfaceRefs[methodRef].NameAndType
-	nameAndTypeIndex := CP.CpIndex[nameAndTypeCPindex].Slot
 	nameAndType := CP.NameAndTypes[nameAndTypeIndex]
 	methNameCPindex := nameAndType.NameIndex
+	CP.Mutex.RLock()
 	methNameUTF8index := CP.CpIndex[methNameCPindex].Slot
+	CP.Mutex.RUnlock()
 	methName := CP.Utf8Refs[methNameUTF8index]
 
 	// and get the method signature/description
 	methSigCPindex := nameAndType.DescIndex
+	CP.Mutex.RLock()
 	methSigUTF8index := CP.CpIndex[methSigCPindex].Slot
+	CP.Mutex.RUnlock()
 	methSig := CP.Utf8Refs[methSigUTF8index]
 
 	return className, methName, methSig
@@ -234,14 +249,20 @@ func GetClassNameFromCPclassref(CP *CPool, cpIndex uint16) string {
 // in the constant pool, and it returns the name and type of the target method. Note
 // there is no error checking here.
 func GetNATfieldsFromCPindex(CP *CPool, cpIndex int) (name, signature string) {
+	// Lock-protect all reads of CP.CpIndex: this slice is concurrently written
+	// (under CP.Mutex.Lock()) by doInvokestatic/doInvokevirtual when caching
+	// resolved methods, and multiple Java threads can call this function for
+	// the same constant-pool entries at the same time.
+	CP.Mutex.RLock()
 	nameAndTypeIndex := CP.CpIndex[cpIndex].Slot
 	nameAndType := CP.NameAndTypes[nameAndTypeIndex]
 	methNameCPindex := nameAndType.NameIndex
 	methNameUTF8index := CP.CpIndex[methNameCPindex].Slot
-	name = CP.Utf8Refs[methNameUTF8index]
-
 	methSigCPindex := nameAndType.DescIndex
 	methSigUTF8index := CP.CpIndex[methSigCPindex].Slot
+	CP.Mutex.RUnlock()
+
+	name = CP.Utf8Refs[methNameUTF8index]
 	signature = CP.Utf8Refs[methSigUTF8index]
 
 	return name, signature
