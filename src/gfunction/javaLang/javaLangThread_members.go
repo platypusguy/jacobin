@@ -166,7 +166,7 @@ func threadGetName(params []interface{}) any {
 // Returns an error block if the input parameter count is invalid.
 func threadGetPriority(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadGetPriority: Expected no parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetPriority: Expected 1 parameter, got %d parameters", len(params))
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
