@@ -183,10 +183,10 @@ runInitializer:
 				methDesc := k.Data.CP.Utf8Refs[m.Desc]
 				fullMethodName := fmt.Sprintf("%s.%s%s", k.Data.Name, methName, methDesc)
 				err = classloader.CheckCodeValidity(
-					&code, &k.Data.CP, m.CodeAttr.MaxStack, k.Data.Access, &fullMethodName)
+					&code, &k.Data.CP, m.CodeAttr.MaxStack, m.CodeAttr.MaxLocals, k.Data.Access, &fullMethodName)
 			} else { // most common path:
 				err = classloader.CheckCodeValidity(
-					&code, &k.Data.CP, m.CodeAttr.MaxStack, k.Data.Access, nil)
+					&code, &k.Data.CP, m.CodeAttr.MaxStack, m.CodeAttr.MaxLocals, k.Data.Access, nil)
 			}
 
 			if err != nil {

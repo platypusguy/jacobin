@@ -470,14 +470,14 @@ var CheckTable = [203]BytecodeFunc{
 	PushFloatRet2,        // FLOAD           0x17
 	PushFloatRet2,        // DLOAD           0x18
 	PushIntRet2,          // ALOAD           0x19
-	PushInt,              // ILOAD_0         0x1A
-	PushInt,              // ILOAD_1         0x1B
-	PushInt,              // ILOAD_2         0x1C
-	PushInt,              // ILOAD_3         0x1D
-	PushInt,              // LLOAD_0         0x1E
-	PushInt,              // LLOAD_1         0x1F
-	PushInt,              // LLOAD_2         0x20
-	PushInt,              // LLOAD_3         0x21
+	CheckIload0,          // ILOAD_0         0x1A
+	CheckIload1,          // ILOAD_1         0x1B
+	CheckIload2,          // ILOAD_2         0x1C
+	CheckIload3,          // ILOAD_3         0x1D
+	CheckIload0,          // LLOAD_0         0x1E
+	CheckIload1,          // LLOAD_1         0x1F
+	CheckIload2,          // LLOAD_2         0x20
+	CheckIload3,          // LLOAD_3         0x21
 	PushFloat,            // FLOAD_0         0x22
 	PushFloat,            // FLOAD_1         0x23
 	PushFloat,            // FLOAD_2         0x24
@@ -655,9 +655,10 @@ var CP *CPool
 var Code []byte
 var StackEntries int
 var MaxStack int
+var MaxLocals int
 var wideInEffect bool
 
-func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFlags, methNamePtr *string) error {
+func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, maxLocals int, access AccessFlags, methNamePtr *string) error {
 	if codePtr == nil {
 		errMsg := "CheckCodeValidity: ptr to code segment is nil"
 		return errors.New(errMsg)
@@ -695,6 +696,7 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 	PC = 0
 	PrevPC = -1 // -1 means no previous PC
 	MaxStack = maxStack
+	MaxLocals = maxLocals
 	StackEntries = 0
 	wideInEffect = false
 
@@ -863,34 +865,6 @@ func storeFloatRet2() int {
 	return 2
 }
 
-// ICONST* and LCONST Push an int or long onto op stack
-func PushInt() int {
-	StackEntries += 1
-	return 1
-}
-
-// ILOAD and LLOAD
-func CheckIload() int {
-	StackEntries += 1
-	if wideInEffect {
-		wideInEffect = false
-		return 3
-	}
-	return 2
-}
-
-// ILOAD* and LLOAD* Push an int or long from local onto op stack
-func PushIntRet2() int {
-	StackEntries += 1
-	return 2
-}
-
-// for LDC variants (but not LDC itself)
-func PushIntRet3() int {
-	StackEntries += 1
-	return 3
-}
-
 // GETFIELD 0xB4 Get non-static field from object and push it onto the stack
 func CheckGetfield() int {
 	// check that the index points to a field reference in the CP
@@ -953,6 +927,12 @@ func CheckGotow() int {
 	return 5
 }
 
+// ICONST* and LCONST Push an int or long onto op stack
+func PushInt() int {
+	StackEntries += 1
+	return 1
+}
+
 // IF_ACMPEQ 0xA5 (and the many other IF* bytecodes)
 func CheckIf() int { // most IF* bytecodes come here. Jump if condition is met
 	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
@@ -976,6 +956,64 @@ func CheckIfzero() int { // Jump if condition w.r.t 0 is met
 	}
 	StackEntries -= 1
 	return 3
+}
+
+// ILOAD and LLOAD
+func CheckIload() int {
+	StackEntries += 1
+	if wideInEffect {
+		wideInEffect = false
+		return 3
+	}
+	return 2
+}
+
+// ILOAD_0, LLOAD_0
+func CheckIload0() int {
+	if MaxLocals < 1 {
+		errMsg := fmt.Sprintf("%s:\n ILOAD_0 at %d: index 0 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	StackEntries += 1
+	return 1
+}
+
+// ILOAD_1, LLOAD_1
+func CheckIload1() int {
+	if MaxLocals < 2 {
+		errMsg := fmt.Sprintf("%s:\n ILOAD_1 at %d: index 1 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	StackEntries += 1
+	return 1
+}
+
+// ILOAD_2, LLOAD_2
+func CheckIload2() int {
+	if MaxLocals < 3 {
+		errMsg := fmt.Sprintf("%s:\n ILOAD_2 at %d: index 2 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	StackEntries += 1
+	return 1
+}
+
+// ILOAD_3, LLOAD_3
+func CheckIload3() int {
+	if MaxLocals < 4 {
+		errMsg := fmt.Sprintf("%s:\n ILOAD_3 at %d: index 3 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	StackEntries += 1
+	return 1
 }
 
 // INVOKEDYNAMIC 0xBA
@@ -1312,6 +1350,16 @@ func Return4() int {
 
 func Return5() int {
 	return 5
+}
+
+func PushIntRet2() int {
+	StackEntries += 1
+	return 2
+}
+
+func PushIntRet3() int {
+	StackEntries += 1
+	return 3
 }
 
 func BytecodeIsForLongOrDouble(bytecode byte) bool {

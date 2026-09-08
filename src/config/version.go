@@ -14,8 +14,8 @@ import "strconv"
 // v 0.7.000 made  28 Feb 25 at 3,733 GitHub commits (technically, this file updated on 2 Mar 24)
 // v 0.8.000 made  31 Aug 25 at 4,245 GitHub commits (end of year 4 of the project)
 // v 0.9.000 made  28 Feb 26 at 5,015 Github commits (technically, this file updated on 6 Mar 26)
-
-var JacobinVersion = "0.9.014"
+// v 0.9.100 made   6 Sep 26 at 5,330 GitHub commits (end of year 5 of the project)
+var JacobinVersion = "0.9.101"
 
 // GetJacobinVersion returns a manually updated version number and an
 // automatically updated build #. The latter being updated by bumpbuildno.go
