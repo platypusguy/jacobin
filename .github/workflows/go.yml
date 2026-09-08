@@ -27,10 +27,10 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@v7
 
     - name: Set up Go
-      uses: actions/setup-go@main
+      uses: actions/setup-go@v7
       with:
         go-version: '1.26.x'
         cache: true
@@ -41,7 +41,7 @@ jobs:
       run: echo "$HOME/go/bin" >> $GITHUB_PATH
       
     - name: Setup JDK
-      uses: actions/setup-java@main
+      uses: actions/setup-java@v6
       with:
         distribution: 'oracle'
         java-version: '21'
