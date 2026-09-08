@@ -101,21 +101,21 @@ jobs:
         echo "LOGS_NAME=jacotest-logs-${{ matrix.os }}-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
       
     - name: Create Summary Artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.REPORT_NAME }}
         path: jacotest.go/reports
         retention-days: 7
 
     - name: Create Logs Artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.LOGS_NAME }}
         path: jacotest.go/logs
         retention-days: 7
         
     - name: Upload OS-specific passfail file
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: passfail-${{ matrix.os }}
         path: passfail-${{ matrix.os }}.txt
@@ -168,7 +168,7 @@ jobs:
           cat $LIST_ALL | python3 jacotest.go/py/combinedCsv.py > $CSV
       
       - name: Upload combined CSV
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: combined-csv
           path: ${{ env.CSV }}
