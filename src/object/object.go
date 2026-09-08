@@ -574,8 +574,8 @@ func (obj *Object) ObjectWait(threadID int32, millis int64) error {
 	}
 
 	// Check if already interrupted before waiting
-	if isThreadInterrupted(uint32(threadID)) {
-		clearThreadInterrupted(uint32(threadID))
+	if IsThreadInterrupted(uint32(threadID)) {
+		ClearThreadInterrupted(uint32(threadID))
 		return errors.New("thread interrupted")
 	}
 
@@ -633,8 +633,8 @@ func (obj *Object) ObjectWait(threadID int32, millis int64) error {
 		}
 
 		// Check thread interruption status
-		if isThreadInterrupted(uint32(threadID)) {
-			clearThreadInterrupted(uint32(threadID))
+		if IsThreadInterrupted(uint32(threadID)) {
+			ClearThreadInterrupted(uint32(threadID))
 			interruptErr = errors.New("thread interrupted during wait")
 		}
 
@@ -643,8 +643,8 @@ func (obj *Object) ObjectWait(threadID int32, millis int64) error {
 		monitor.Cond.Wait() // Atomically unlocks Mutex, waits, relocks on wakeup
 
 		// Check thread interruption status
-		if isThreadInterrupted(uint32(threadID)) {
-			clearThreadInterrupted(uint32(threadID))
+		if IsThreadInterrupted(uint32(threadID)) {
+			ClearThreadInterrupted(uint32(threadID))
 			interruptErr = errors.New("thread interrupted during wait")
 		}
 	}
@@ -677,20 +677,26 @@ func (obj *Object) ObjectWait(threadID int32, millis int64) error {
 	return nil
 }
 
-func isThreadInterrupted(thID uint32) bool {
+func IsThreadInterrupted(thID uint32) bool {
 	gr := globals.GetGlobalRef()
 	gr.ThreadLock.RLock()
-	defer gr.ThreadLock.RUnlock()
 	thObj := gr.Threads[int(thID)].(*Object)
+	gr.ThreadLock.RUnlock()
+
+	thObj.ThMutex.RLock()
+	defer thObj.ThMutex.RUnlock()
 	interrupted := thObj.FieldTable["interrupted"].Fvalue.(types.JavaBool)
 	return interrupted == types.JavaBoolTrue
 }
 
-func clearThreadInterrupted(thID uint32) {
+func ClearThreadInterrupted(thID uint32) {
 	gr := globals.GetGlobalRef()
-	gr.ThreadLock.Lock()
-	defer gr.ThreadLock.Unlock()
+	gr.ThreadLock.RLock()
 	thObj := gr.Threads[int(thID)].(*Object)
+	gr.ThreadLock.RUnlock()
+
+	thObj.ThMutex.Lock()
+	defer thObj.ThMutex.Unlock()
 	fld := thObj.FieldTable["interrupted"]
 	fld.Fvalue = types.JavaBoolFalse
 	thObj.FieldTable["interrupted"] = fld

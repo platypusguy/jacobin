@@ -16,7 +16,10 @@ import (
 	"jacobin/src/statics"
 	"jacobin/src/types"
 	"os"
+	"runtime"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 )
 
@@ -624,10 +627,131 @@ func TestThreadIsAliveTerminated(t *testing.T) {
 }
 
 func TestThreadYield(t *testing.T) {
-	// yield just returns nil
+	EnsureTGInit()
+	// yield returns nil for various inputs
 	if threadYield(nil) != nil {
-		t.Errorf("threadYield should return nil")
+		t.Errorf("threadYield(nil) should return nil")
 	}
+	if threadYield([]any{}) != nil {
+		t.Errorf("threadYield([]any{}) should return nil")
+	}
+	if threadYield([]any{1, 2, "test"}) != nil {
+		t.Errorf("threadYield with extra params should return nil")
+	}
+
+	// Verify method signature registration
+	Load_Lang_Thread()
+	meth, exists := ghelpers.MethodSignatures["java/lang/Thread.yield()V"]
+	if !exists {
+		t.Fatalf("Method signature java/lang/Thread.yield()V not registered")
+	}
+	if meth.ParamSlots != 0 {
+		t.Errorf("Expected ParamSlots 0 for Thread.yield, got %d", meth.ParamSlots)
+	}
+	if meth.GFunction == nil {
+		t.Fatalf("Expected non-nil GFunction for Thread.yield")
+	}
+	if res := meth.GFunction(nil); res != nil {
+		t.Errorf("Expected nil result from Thread.yield GFunction, got %v", res)
+	}
+}
+
+func TestThreadYield_Contention(t *testing.T) {
+	EnsureTGInit()
+	Load_Lang_Thread()
+
+	origProcs := runtime.GOMAXPROCS(2)
+	defer runtime.GOMAXPROCS(origProcs)
+
+	const (
+		numGoroutines = 16
+		numIterations = 500
+	)
+
+	meth := ghelpers.MethodSignatures["java/lang/Thread.yield()V"]
+	yieldFn := meth.GFunction
+
+	// Test Scenario 1: CAS Spin-Lock under contention with Thread.yield()
+	var (
+		spinLock   atomic.Bool
+		counter    int64
+		yieldCount atomic.Int64
+		wg         sync.WaitGroup
+	)
+
+	for range numGoroutines {
+		wg.Go(func() {
+			for range numIterations {
+				for !spinLock.CompareAndSwap(false, true) {
+					yieldCount.Add(1)
+					yieldFn(nil)
+				}
+				// Critical section
+				counter++
+				spinLock.Store(false)
+				yieldFn(nil)
+			}
+		})
+	}
+
+	wg.Wait()
+
+	expectedCount := int64(numGoroutines * numIterations)
+	if counter != expectedCount {
+		t.Errorf("CAS spinlock counter mismatch: expected %d, got %d", expectedCount, counter)
+	}
+	if yieldCount.Load() == 0 {
+		t.Logf("Warning: 0 yield calls during CAS contention")
+	}
+
+	// Test Scenario 2: Token Ring Passing with Thread.yield()
+	var (
+		turn      atomic.Int64
+		ringDone  atomic.Bool
+		ringWg    sync.WaitGroup
+		completed atomic.Int64
+	)
+
+	for id := range numGoroutines {
+		ringWg.Go(func() {
+			for !ringDone.Load() {
+				if turn.Load()%int64(numGoroutines) == int64(id) {
+					c := completed.Add(1)
+					if c >= expectedCount {
+						ringDone.Store(true)
+						turn.Add(1)
+						break
+					}
+					turn.Add(1)
+				} else {
+					yieldFn(nil)
+				}
+			}
+		})
+	}
+
+	ringWg.Wait()
+
+	if completed.Load() < expectedCount {
+		t.Errorf("Token ring did not reach expected completions: got %d, expected at least %d", completed.Load(), expectedCount)
+	}
+
+	// Test Scenario 3: Shared Object FieldTable mutation under contention with Thread.yield()
+	th := ThreadCreateObject(nil).(*object.Object)
+	var objWg sync.WaitGroup
+	for range numGoroutines {
+		objWg.Go(func() {
+			for range 100 {
+				th.ThMutex.Lock()
+				fld := th.FieldTable["priority"]
+				fld.Fvalue = (fld.Fvalue.(int64) % 10) + 1
+				th.FieldTable["priority"] = fld
+				th.ThMutex.Unlock()
+				yieldFn(nil)
+			}
+		})
+	}
+	objWg.Wait()
 }
 
 func TestThreadToString_AllPaths(t *testing.T) {
