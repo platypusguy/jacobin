@@ -474,10 +474,10 @@ var CheckTable = [203]BytecodeFunc{
 	CheckIload1,          // ILOAD_1         0x1B
 	CheckIload2,          // ILOAD_2         0x1C
 	CheckIload3,          // ILOAD_3         0x1D
-	CheckIload0,          // LLOAD_0         0x1E
-	CheckIload1,          // LLOAD_1         0x1F
-	CheckIload2,          // LLOAD_2         0x20
-	CheckIload3,          // LLOAD_3         0x21
+	CheckLload0,          // LLOAD_0         0x1E
+	CheckLload1,          // LLOAD_1         0x1F
+	CheckLload2,          // LLOAD_2         0x20
+	CheckLload3,          // LLOAD_3         0x21
 	PushFloat,            // FLOAD_0         0x22
 	PushFloat,            // FLOAD_1         0x23
 	PushFloat,            // FLOAD_2         0x24
@@ -968,7 +968,7 @@ func CheckIload() int {
 	return 2
 }
 
-// ILOAD_0, LLOAD_0
+// ILOAD_0
 func CheckIload0() int {
 	if MaxLocals < 1 {
 		errMsg := fmt.Sprintf("%s:\n ILOAD_0 at %d: index 0 into locals is invalid",
@@ -980,7 +980,7 @@ func CheckIload0() int {
 	return 1
 }
 
-// ILOAD_1, LLOAD_1
+// ILOAD_1
 func CheckIload1() int {
 	if MaxLocals < 2 {
 		errMsg := fmt.Sprintf("%s:\n ILOAD_1 at %d: index 1 into locals is invalid",
@@ -992,7 +992,7 @@ func CheckIload1() int {
 	return 1
 }
 
-// ILOAD_2, LLOAD_2
+// ILOAD_2
 func CheckIload2() int {
 	if MaxLocals < 3 {
 		errMsg := fmt.Sprintf("%s:\n ILOAD_2 at %d: index 2 into locals is invalid",
@@ -1004,7 +1004,7 @@ func CheckIload2() int {
 	return 1
 }
 
-// ILOAD_3, LLOAD_3
+// ILOAD_3
 func CheckIload3() int {
 	if MaxLocals < 4 {
 		errMsg := fmt.Sprintf("%s:\n ILOAD_3 at %d: index 3 into locals is invalid",
@@ -1181,6 +1181,54 @@ func storeInt() int {
 func storeIntRet2() int {
 	StackEntries -= 1
 	return 2
+}
+
+// LLOAD_0
+func CheckLload0() int {
+	if MaxLocals < 2 { // LLOAD requires two locals entries
+		errMsg := fmt.Sprintf("%s:\n LLOAD_0 at %d: index 0 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	StackEntries += 1
+	return 1
+}
+
+// LLOAD_1
+func CheckLload1() int {
+	if MaxLocals < 3 { // locals[0] + two locals for long
+		errMsg := fmt.Sprintf("%s:\n LLOAD_1 at %d: index 1 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	StackEntries += 1
+	return 1
+}
+
+// LLOAD_2
+func CheckLload2() int {
+	if MaxLocals < 4 { // locals 0, 1 + two locals for long
+		errMsg := fmt.Sprintf("%s:\n LLOAD_2 at %d: index 2 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	StackEntries += 1
+	return 1
+}
+
+// LLOAD_3
+func CheckLload3() int {
+	if MaxLocals < 5 { // locals 0, 1, 2 + two locals for long
+		errMsg := fmt.Sprintf("%s:\n LLOAD_3 at %d: index 3 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	StackEntries += 1
+	return 1
 }
 
 // LOOKUPSWITCH 0xAB
