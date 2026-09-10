@@ -898,6 +898,44 @@ func TestCheckIfeq_HighLevel(t *testing.T) {
 	}
 }
 
+// ILOAD_1
+func TestCheckIload1Valid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ILOAD_1}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckIload1Valid failed: %v", err)
+	}
+}
+
+// ILOAD_1
+func TestCheckIload1Invalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ILOAD_1}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+	// only 1 local, so load from locals[1] should fail
+	err := CheckCodeValidity(&code, &cp, 10, 1, af, nil)
+	if err == nil {
+		t.Errorf("CheckIload1Invalid failed to return error")
+	}
+}
+
 // INVOKEDYNAMIC 0xBA
 func TestCheckInvokedynamic_Success(t *testing.T) {
 	globals.InitGlobals("test")
