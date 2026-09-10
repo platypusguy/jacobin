@@ -146,7 +146,7 @@ func threadGetId(params []interface{}) any {
 // Returns an error block if the input is invalid or not a Thread object.
 func threadGetName(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadGetName: Expected no parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetName: Expected 1 parameter, got %d parameters", len(params))
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -166,7 +166,7 @@ func threadGetName(params []interface{}) any {
 // Returns an error block if the input parameter count is invalid.
 func threadGetPriority(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadGetPriority: Expected no parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetPriority: Expected 1 parameter, got %d parameters", len(params))
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
