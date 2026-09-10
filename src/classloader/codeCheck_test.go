@@ -898,6 +898,25 @@ func TestCheckIfeq_HighLevel(t *testing.T) {
 	}
 }
 
+// ILOAD_0
+func TestCheckIload0Valid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ILOAD_0}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckIload0Valid failed: %v", err)
+	}
+}
+
 // ILOAD_1
 func TestCheckIload1Valid(t *testing.T) {
 	globals.InitGlobals("test")
@@ -933,6 +952,82 @@ func TestCheckIload1Invalid(t *testing.T) {
 	err := CheckCodeValidity(&code, &cp, 10, 1, af, nil)
 	if err == nil {
 		t.Errorf("CheckIload1Invalid failed to return error")
+	}
+}
+
+// ILOAD_2
+func TestCheckIload2Valid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ILOAD_2}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckIload2Valid failed: %v", err)
+	}
+}
+
+// ILOAD_2
+func TestCheckIload2Invalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ILOAD_2}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+	// only 1 local, so load from locals[2] should fail
+	err := CheckCodeValidity(&code, &cp, 10, 1, af, nil)
+	if err == nil {
+		t.Errorf("CheckIload2Invalid failed to return error")
+	}
+}
+
+// ILOAD_3
+func TestCheckIload3Valid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ILOAD_3}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckIload3Valid failed: %v", err)
+	}
+}
+
+// ILOAD_3
+func TestCheckIload3Invalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ILOAD_3}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+	// only 1 local, so load from locals[3] should fail
+	err := CheckCodeValidity(&code, &cp, 10, 1, af, nil)
+	if err == nil {
+		t.Errorf("CheckIload3Invalid failed to return error")
 	}
 }
 
