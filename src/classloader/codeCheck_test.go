@@ -1479,6 +1479,139 @@ func TestPushIntRet3_StackIncrement(t *testing.T) {
 	}
 }
 
+// LLOAD_0
+func TestCheckLload0Valid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.LLOAD_0}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckLload0Valid failed: %v", err)
+	}
+}
+
+// LLOAD_1
+func TestCheckLload1Valid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.LLOAD_1}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckLload1Valid failed: %v", err)
+	}
+}
+
+// LLOAD_1
+func TestCheckLload1Invalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.LLOAD_1}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+	// only 1 local, so load from locals[1] should fail
+	err := CheckCodeValidity(&code, &cp, 10, 1, af, nil)
+	if err == nil {
+		t.Errorf("CheckLload1Invalid failed to return error")
+	}
+}
+
+// LLOAD_2
+func TestCheckLload2Valid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.LLOAD_2}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckLload2Valid failed: %v", err)
+	}
+}
+
+// LLOAD_2
+func TestCheckLload2Invalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.LLOAD_2}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+	// only 1 local, so load from locals[2] should fail
+	err := CheckCodeValidity(&code, &cp, 10, 1, af, nil)
+	if err == nil {
+		t.Errorf("CheckLload2Invalid failed to return error")
+	}
+}
+
+// LLOAD_3
+func TestCheckLload3Valid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.LLOAD_3}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckLload3Valid failed: %v", err)
+	}
+}
+
+// LLOAD_3
+func TestCheckLload3Invalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.LLOAD_3}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+	// only 1 local, so load from locals[3] should fail
+	err := CheckCodeValidity(&code, &cp, 10, 1, af, nil)
+	if err == nil {
+		t.Errorf("CheckLload3Invalid failed to return error")
+	}
+}
+
 // LOOKUPSWITCH with zero padding (PC+1 is already 4-byte aligned)
 func TestLookupswitch_ZeroPadding(t *testing.T) {
 	globals.InitGlobals("test")
