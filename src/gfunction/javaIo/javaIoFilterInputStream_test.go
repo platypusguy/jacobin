@@ -55,6 +55,11 @@ func newFISObj() *object.Object {
 	return object.MakeEmptyObjectWithClassName(&className)
 }
 
+func newBAISObj() *object.Object {
+	className := "java/io/ByteArrayInputStream"
+	return object.MakeEmptyObjectWithClassName(&className)
+}
+
 func TestFilterInputStream_Init_Success(t *testing.T) {
 	globals.InitStringPool()
 
@@ -114,5 +119,106 @@ func TestFilterInputStream_Delegation(t *testing.T) {
 	// 6. Test delegation for close()
 	if res := filterInputStreamClose([]interface{}{filter}); res != nil {
 		t.Fatalf("close() error: %v", res)
+	}
+}
+
+func TestFilterInputStream_MarkResetMarkSupported(t *testing.T) {
+	globals.InitStringPool()
+	Load_Io_ByteArrayInputStream()
+
+	content := []byte("ABCDEFGHIJ")
+	bais := newBAISObj()
+	bufObj := &object.Object{FieldTable: map[string]object.Field{
+		"value": {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(string(content))},
+	}}
+	ByteArrayInputStreamInit([]interface{}{bais, bufObj})
+
+	filter := newFilterInputStreamObj()
+	initFilterInputStream([]interface{}{filter, bais})
+
+	// markSupported() should delegate to true
+	if ms := filterInputStreamMarkSupported([]interface{}{filter}); ms != types.JavaBoolTrue {
+		t.Fatalf("markSupported() expected true, got %v", ms)
+	}
+
+	// mark(5) should delegate without error
+	if res := filterInputStreamMark([]interface{}{filter, int64(5)}); res != nil {
+		t.Fatalf("mark(5) error: %v", res)
+	}
+
+	// consume a couple of bytes, then reset()
+	filterInputStreamRead([]interface{}{filter})
+	filterInputStreamRead([]interface{}{filter})
+
+	if res := filterInputStreamReset([]interface{}{filter}); res != nil {
+		t.Fatalf("reset() error: %v", res)
+	}
+}
+
+func TestFilterInputStream_ReadByteArrayOffset(t *testing.T) {
+	globals.InitStringPool()
+	Load_Io_ByteArrayInputStream()
+
+	content := []byte("ABCDEFGHIJ")
+	bais := newBAISObj()
+	bufObj := &object.Object{FieldTable: map[string]object.Field{
+		"value": {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString(string(content))},
+	}}
+	ByteArrayInputStreamInit([]interface{}{bais, bufObj})
+
+	filter := newFilterInputStreamObj()
+	initFilterInputStream([]interface{}{filter, bais})
+
+	dst := newJavaByteArrayObj(4)
+	r := filterInputStreamReadByteArrayOffset([]interface{}{filter, dst, int64(0), int64(4)})
+	if n, ok := r.(int64); !ok || n != 4 {
+		t.Fatalf("read([BII)I expected 4, got %v", r)
+	}
+}
+
+func TestFilterInputStream_ReadByteArray(t *testing.T) {
+	globals.InitStringPool()
+	Load_Io_FileInputStream()
+
+	content := []byte("ABCDEFGHIJ")
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test2.txt")
+	os.WriteFile(path, content, 0644)
+
+	fis := newFISObj()
+	pathObj := object.StringObjectFromGoString(path)
+	InitFileInputStreamString([]interface{}{fis, pathObj})
+
+	filter := newFilterInputStreamObj()
+	initFilterInputStream([]interface{}{filter, fis})
+
+	dst := newJavaByteArrayObj(4)
+	r := filterInputStreamReadByteArray([]interface{}{filter, dst})
+	if n, ok := r.(int64); !ok || n != 4 {
+		t.Fatalf("read([B)I expected 4, got %v", r)
+	}
+}
+
+func TestFilterInputStream_LoadRegistersMethods(t *testing.T) {
+	globals.InitStringPool()
+	Load_Io_FilterInputStream()
+
+	expected := []string{
+		"java/io/FilterInputStream.<clinit>()V",
+		"java/io/FilterInputStream.<init>(Ljava/io/InputStream;)V",
+		"java/io/FilterInputStream.available()I",
+		"java/io/FilterInputStream.close()V",
+		"java/io/FilterInputStream.mark(I)V",
+		"java/io/FilterInputStream.markSupported()Z",
+		"java/io/FilterInputStream.read()I",
+		"java/io/FilterInputStream.read([B)I",
+		"java/io/FilterInputStream.read([BII)I",
+		"java/io/FilterInputStream.reset()V",
+		"java/io/FilterInputStream.skip(J)J",
+	}
+	for _, sig := range expected {
+		if _, ok := ghelpers.MethodSignatures[sig]; !ok {
+			t.Fatalf("expected method signature %q to be registered", sig)
+		}
 	}
 }
