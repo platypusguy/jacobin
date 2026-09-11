@@ -11,6 +11,7 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"time"
 )
 
 // Implementation of java/util/logging/LogRecord.
@@ -223,7 +224,7 @@ func loggingLogRecordInit(params []interface{}) interface{} {
 	obj.FieldTable[fieldNameLogRecordSourceMethodName] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
 	obj.FieldTable[fieldNameLogRecordParameters] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
 	obj.FieldTable[fieldNameLogRecordThreadID] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
-	obj.FieldTable[fieldNameLogRecordMillis] = object.Field{Ftype: types.Long, Fvalue: int64(0)}
+	obj.FieldTable[fieldNameLogRecordMillis] = object.Field{Ftype: types.Long, Fvalue: time.Now().UnixMilli()}
 	obj.FieldTable[fieldNameLogRecordThrown] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
 	obj.FieldTable[fieldNameLogRecordResourceBundleName] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
 	obj.FieldTable[fieldNameLogRecordResourceBundle] = object.Field{Ftype: types.Ref, Fvalue: object.Null}

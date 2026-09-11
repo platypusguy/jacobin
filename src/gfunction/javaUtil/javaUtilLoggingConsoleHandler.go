@@ -68,7 +68,7 @@ func loggingConsoleHandlerInit(params []interface{}) interface{} {
 	defer obj.ThMutex.Unlock()
 	obj.FieldTable[fieldNameHandlerLevel] = object.Field{Ftype: types.Ref, Fvalue: makeLevelObject("INFO", standardLevels["INFO"], "")}
 	obj.FieldTable[fieldNameHandlerFilter] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
-	obj.FieldTable[fieldNameHandlerFormatter] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
+	obj.FieldTable[fieldNameHandlerFormatter] = object.Field{Ftype: types.Ref, Fvalue: makeDefaultSimpleFormatter()}
 	obj.FieldTable[fieldNameHandlerEncoding] = object.Field{Ftype: types.StringClassRef, Fvalue: ""}
 	obj.FieldTable[fieldNameHandlerErrorManager] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
 	return nil
@@ -106,17 +106,12 @@ func loggingConsoleHandlerPublish(params []interface{}) interface{} {
 		return nil
 	}
 
-	msgFld, exists := record.FieldTable["message"]
-	if !exists {
+	msg := formatLogRecordWithHandlerFormatter(obj, record)
+	if msg == "" {
 		return nil
 	}
-	msgObj, ok := msgFld.Fvalue.(*object.Object)
-	if !ok || msgObj == nil || object.IsNull(msgObj) {
-		return nil
-	}
-	msg := object.GoStringFromStringObject(msgObj)
 
 	stderr := statics.GetStaticValue("java/lang/System", "err").(*os.File)
-	_, _ = fmt.Fprintln(stderr, msg)
+	_, _ = fmt.Fprint(stderr, msg)
 	return nil
 }

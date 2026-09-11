@@ -38,7 +38,7 @@ func captureLoggerOutput(t *testing.T, fn func()) string {
 
 func TestLoggingLoggerConfig(t *testing.T) {
 	out := captureLoggerOutput(t, func() {
-		ret := loggingLoggerConfig([]interface{}{nil, object.StringObjectFromGoString("hello config")})
+		ret := loggingLoggerConfig([]interface{}{nil, nil, object.StringObjectFromGoString("hello config")})
 		if ret != nil {
 			t.Fatalf("loggingLoggerConfig returned error: %v", ret)
 		}
@@ -120,7 +120,7 @@ func TestLoggingLoggerFinestFinerInfoSevereWarning(t *testing.T) {
 	}
 	for _, c := range cases {
 		out := captureLoggerOutput(t, func() {
-			ret := c.fn([]interface{}{nil, object.StringObjectFromGoString("msg1")})
+			ret := c.fn([]interface{}{nil, nil, object.StringObjectFromGoString("msg1")})
 			if ret != nil {
 				t.Fatalf("%s returned error: %v", c.prefix, ret)
 			}
@@ -138,7 +138,7 @@ func TestLoggingLoggerWarningWithParams(t *testing.T) {
 			object.StringObjectFromGoString("a"),
 			object.StringObjectFromGoString("b"),
 		}}
-		ret := loggingLoggerWarningWithParams([]interface{}{nil,
+		ret := loggingLoggerWarningWithParams([]interface{}{nil, nil,
 			object.StringObjectFromGoString("msg2"), arr})
 		if ret != nil {
 			t.Fatalf("loggingLoggerWarningWithParams returned error: %v", ret)
@@ -154,7 +154,7 @@ func TestLoggingLoggerLog(t *testing.T) {
 	level := makeLevelObject("SEVERE", standardLevels["SEVERE"], "")
 
 	out := captureLoggerOutput(t, func() {
-		ret := loggingLoggerLog([]interface{}{nil, level, object.StringObjectFromGoString("bad thing")})
+		ret := loggingLoggerLog([]interface{}{nil, nil, level, object.StringObjectFromGoString("bad thing")})
 		if ret != nil {
 			t.Fatalf("loggingLoggerLog returned error: %v", ret)
 		}
@@ -173,7 +173,7 @@ func TestLoggingLoggerLogWithParams(t *testing.T) {
 		arr.FieldTable["value"] = object.Field{Fvalue: []*object.Object{
 			object.StringObjectFromGoString("x"),
 		}}
-		ret := loggingLoggerLogWithParams([]interface{}{nil, level, object.StringObjectFromGoString("msg"), arr})
+		ret := loggingLoggerLogWithParams([]interface{}{nil, nil, level, object.StringObjectFromGoString("msg"), arr})
 		if ret != nil {
 			t.Fatalf("loggingLoggerLogWithParams returned error: %v", ret)
 		}
@@ -284,7 +284,7 @@ func TestLoggingLoggerLog_NilLevelDefaultsToInfo(t *testing.T) {
 	globals.InitStringPool()
 
 	out := captureLoggerOutput(t, func() {
-		ret := loggingLoggerLog([]interface{}{nil, object.Null, object.StringObjectFromGoString("msg")})
+		ret := loggingLoggerLog([]interface{}{nil, nil, object.Null, object.StringObjectFromGoString("msg")})
 		if ret != nil {
 			t.Fatalf("loggingLoggerLog returned error: %v", ret)
 		}
@@ -296,7 +296,7 @@ func TestLoggingLoggerLog_NilLevelDefaultsToInfo(t *testing.T) {
 
 func TestLoggingLoggerFine(t *testing.T) {
 	out := captureLoggerOutput(t, func() {
-		ret := loggingLoggerFine([]interface{}{nil, object.StringObjectFromGoString("fine msg")})
+		ret := loggingLoggerFine([]interface{}{nil, nil, object.StringObjectFromGoString("fine msg")})
 		if ret != nil {
 			t.Fatalf("loggingLoggerFine returned error: %v", ret)
 		}

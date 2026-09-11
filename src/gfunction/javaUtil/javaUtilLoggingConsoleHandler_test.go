@@ -8,6 +8,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/statics"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -59,7 +60,8 @@ func TestLoggingConsoleHandlerPublish_WritesToSystemErr(t *testing.T) {
 
 	_ = w.Close()
 	buf, _ := io.ReadAll(r)
-	if got := string(buf); got != "hello console\n" {
+	got := string(buf)
+	if !strings.Contains(got, "INFO: hello console") {
 		t.Fatalf("unexpected published output: %q", got)
 	}
 }

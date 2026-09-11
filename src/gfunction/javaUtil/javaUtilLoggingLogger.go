@@ -7,8 +7,10 @@
 package javaUtil
 
 import (
+	"container/list"
 	"fmt"
 	"jacobin/src/excNames"
+	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/statics"
@@ -16,6 +18,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Implementation of java/util/logging/Logger.
@@ -60,7 +63,7 @@ func Load_Util_Logging_Logger() {
 		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerAddHandler}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.config(Ljava/lang/String;)V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerConfig}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerConfig, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.entering(Ljava/lang/String;Ljava/lang/String;)V"] =
 		ghelpers.GMeth{ParamSlots: 2, GFunction: loggingLoggerEntering}
@@ -75,13 +78,13 @@ func Load_Util_Logging_Logger() {
 		ghelpers.GMeth{ParamSlots: 3, GFunction: loggingLoggerExitingWithParam}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.fine(Ljava/lang/String;)V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerFine}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerFine, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.finer(Ljava/lang/String;)V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerFiner}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerFiner, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.finest(Ljava/lang/String;)V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerFinest}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerFinest, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.getAnonymousLogger()Ljava/util/logging/Logger;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: loggingLoggerGetAnonymousLogger}
@@ -123,16 +126,16 @@ func Load_Util_Logging_Logger() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: loggingLoggerGetUseParentHandlers}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.info(Ljava/lang/String;)V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerInfo}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerInfo, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.isLoggable(Ljava/util/logging/Level;)Z"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerIsLoggable}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.log(Ljava/util/logging/Level;Ljava/lang/String;)V"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: loggingLoggerLog}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: loggingLoggerLog, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.log(Ljava/util/logging/Level;Ljava/lang/String;[Ljava/lang/Object;)V"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: loggingLoggerLogWithParams}
+		ghelpers.GMeth{ParamSlots: 3, GFunction: loggingLoggerLogWithParams, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.logp(Ljava/util/logging/Level;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"] =
 		ghelpers.GMeth{ParamSlots: 4, GFunction: loggingLoggerLogp}
@@ -162,16 +165,16 @@ func Load_Util_Logging_Logger() {
 		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerSetUseParentHandlers}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.severe(Ljava/lang/String;)V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerSevere}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerSevere, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.throwing(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V"] =
 		ghelpers.GMeth{ParamSlots: 3, GFunction: loggingLoggerThrowing}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.warning(Ljava/lang/String;)V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerWarning}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: loggingLoggerWarning, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/util/logging/Logger.warning(Ljava/lang/String;[Ljava/lang/Object;)V"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: loggingLoggerWarningWithParams}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: loggingLoggerWarningWithParams, NeedsContext: true}
 }
 
 // makeLoggerObject creates a new Logger object with the given name and resource
@@ -505,14 +508,14 @@ func loggingLoggerRemoveHandler(params []interface{}) interface{} {
 func loggingLoggerGetHandlers(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || obj == nil {
-		errMsg := "loggingLoggerGetHandlers: The first parameter is not an object"
+		errMsg := fmt.Sprintf("loggingLoggerGetHandlers: The first parameter is not an object, observed: %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	obj.ThMutex.RLock()
 	defer obj.ThMutex.RUnlock()
 	handlers, _ := obj.FieldTable[fieldNameLoggerHandlers].Fvalue.([]*object.Object)
 	result := object.MakeEmptyObject()
-	result.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: handlers}
+	result.FieldTable["value"] = object.Field{Ftype: types.RefArray, Fvalue: handlers}
 	return result
 }
 
@@ -540,7 +543,8 @@ func loggingLoggerIsLoggable(params []interface{}) interface{} {
 
 // "java/util/logging/Logger.fine(Ljava/lang/String;)V"
 func loggingLoggerFine(params []interface{}) interface{} {
-	return loggingLoggerWrite("FINE", loggingLoggerStringArg(params[1]))
+	frameStack, _ := params[0].(*list.List)
+	return loggingLoggerEmit(params[1], "FINE", loggingLoggerStringArg(params[2]), frameStack)
 }
 
 // loggingLoggerStringArg extracts a Go string from a java/lang/String parameter.
@@ -553,6 +557,9 @@ func loggingLoggerStringArg(param interface{}) string {
 }
 
 // loggingLoggerWrite formats a level-tagged message and writes it to System.err.
+// This is the fallback used when a Logger has no registered handlers (nor any
+// ancestor with handlers), matching the console-only behavior previously used
+// unconditionally by this file.
 func loggingLoggerWrite(levelPrefix, msg string) interface{} {
 	stderr, ok := statics.GetStaticValue("java/lang/System", "err").(*os.File)
 	if !ok || stderr == nil {
@@ -560,6 +567,137 @@ func loggingLoggerWrite(levelPrefix, msg string) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
 	_, _ = fmt.Fprintf(stderr, "%s: %s\n", levelPrefix, msg)
+	return nil
+}
+
+// loggingLoggerCallerFrame returns the top-most frame of the given JVM frame
+// stack (i.e., the frame of the Java method that called into the Logger's
+// native method), or nil if unavailable. This mirrors what real HotSpot does
+// via internal stack-walking to determine the calling class/method for
+// SimpleFormatter's default output.
+func loggingLoggerCallerFrame(frameStack *list.List) *frames.Frame {
+	if frameStack == nil || frameStack.Front() == nil {
+		return nil
+	}
+	f, ok := frameStack.Front().Value.(*frames.Frame)
+	if !ok {
+		return nil
+	}
+	return f
+}
+
+// loggingLoggerMakeRecord builds a LogRecord Object for the given level/message,
+// tagging it with the logger's name (if any), the current time, and the
+// calling class/method (derived from the JVM frame stack, when available) so
+// Handlers/Formatters (notably SimpleFormatter) can use them.
+func loggingLoggerMakeRecord(levelName, msg string, loggerObj *object.Object, callerFrame *frames.Frame) *object.Object {
+	levelValue, ok := standardLevels[levelName]
+	if !ok {
+		levelValue = standardLevels["INFO"]
+	}
+	record := object.MakeEmptyObjectWithClassName(&logRecordClassName)
+	record.FieldTable[fieldNameHandlerLevel] = object.Field{Ftype: types.Ref, Fvalue: makeLevelObject(levelName, levelValue, "")}
+	record.FieldTable[fieldNameLogRecordMessage] = object.Field{Ftype: types.Ref, Fvalue: object.StringObjectFromGoString(msg)}
+	loggerName := interface{}(object.Null)
+	if loggerObj != nil {
+		if name, ok := loggerObj.FieldTable[fieldNameLoggerName].Fvalue.(string); ok && name != "" {
+			loggerName = object.StringObjectFromGoString(name)
+		}
+	}
+	record.FieldTable[fieldNameLogRecordLoggerName] = object.Field{Ftype: types.Ref, Fvalue: loggerName}
+	record.FieldTable[fieldNameLogRecordSequenceNumber] = object.Field{Ftype: types.Long, Fvalue: int64(0)}
+
+	sourceClassName := interface{}(object.Null)
+	sourceMethodName := interface{}(object.Null)
+	if callerFrame != nil {
+		if callerFrame.ClName != "" {
+			sourceClassName = object.StringObjectFromGoString(callerFrame.ClName)
+		}
+		if callerFrame.MethName != "" {
+			sourceMethodName = object.StringObjectFromGoString(callerFrame.MethName)
+		}
+	}
+	record.FieldTable[fieldNameLogRecordSourceClassName] = object.Field{Ftype: types.Ref, Fvalue: sourceClassName}
+	record.FieldTable[fieldNameLogRecordSourceMethodName] = object.Field{Ftype: types.Ref, Fvalue: sourceMethodName}
+	record.FieldTable[fieldNameLogRecordMillis] = object.Field{Ftype: types.Long, Fvalue: time.Now().UnixMilli()}
+	return record
+}
+
+// loggingLoggerPublishToHandler dispatches a LogRecord to a single Handler,
+// invoking the correct native publish implementation for the Handler's
+// concrete class (FileHandler/ConsoleHandler/StreamHandler/plain Handler).
+func loggingLoggerPublishToHandler(handler *object.Object, record *object.Object) {
+	if handler == nil || object.IsNull(handler) {
+		return
+	}
+	params := []interface{}{handler, record}
+	switch object.GoStringFromStringPoolIndex(handler.KlassName) {
+	case fileHandlerClassName:
+		_ = loggingFileHandlerPublish(params)
+	case consoleHandlerClassName:
+		_ = loggingConsoleHandlerPublish(params)
+	case streamHandlerClassName:
+		_ = loggingStreamHandlerPublish(params)
+	default:
+		_ = loggingHandlerPublish(params)
+	}
+}
+
+// loggingLoggerDispatchToHandlers walks the given Logger's handlers, then
+// (while useParentHandlers is true) its ancestors' handlers, publishing the
+// record to each. It returns true if at least one handler received the record.
+func loggingLoggerDispatchToHandlers(loggerObj *object.Object, record *object.Object) bool {
+	dispatched := false
+	current := loggerObj
+	for current != nil && !object.IsNull(current) {
+		current.ThMutex.RLock()
+		handlers, _ := current.FieldTable[fieldNameLoggerHandlers].Fvalue.([]*object.Object)
+		useParent, hasUseParent := current.FieldTable[fieldNameLoggerUseParentHandlers].Fvalue.(int64)
+		parent, hasParent := current.FieldTable[fieldNameLoggerParent].Fvalue.(*object.Object)
+		current.ThMutex.RUnlock()
+
+		for _, handler := range handlers {
+			loggingLoggerPublishToHandler(handler, record)
+			dispatched = true
+		}
+
+		if hasUseParent && useParent == 0 {
+			break
+		}
+		if !hasParent || parent == nil || object.IsNull(parent) {
+			break
+		}
+		current = parent
+	}
+	return dispatched
+}
+
+// loggingLoggerEmit is the common entry point for all the message-emitting
+// Logger methods (config/info/severe/log/etc.). If the receiver Logger (or
+// one of its ancestors) has registered Handlers, the message is published to
+// them as a LogRecord (so e.g. a FileHandler actually gets written to);
+// otherwise it falls back to writing directly to System.err.
+func loggingLoggerEmit(receiver interface{}, levelName, msg string, frameStack *list.List) interface{} {
+	loggerObj, _ := receiver.(*object.Object)
+	if loggerObj == nil || object.IsNull(loggerObj) {
+		return loggingLoggerWrite(levelName, msg)
+	}
+
+	levelValue, ok := standardLevels[levelName]
+	if !ok {
+		levelValue = standardLevels["INFO"]
+	}
+	effective := loggingLoggerEffectiveLevel(loggerObj)
+	effectiveValue, _ := effective.FieldTable[fieldNameLevelValue].Fvalue.(int64)
+	if levelValue < effectiveValue {
+		return nil
+	}
+
+	callerFrame := loggingLoggerCallerFrame(frameStack)
+	record := loggingLoggerMakeRecord(levelName, msg, loggerObj, callerFrame)
+	if !loggingLoggerDispatchToHandlers(loggerObj, record) {
+		return loggingLoggerWrite(levelName, msg)
+	}
 	return nil
 }
 
@@ -591,14 +729,15 @@ func loggingLoggerFormatParams(param interface{}) string {
 
 // "java/util/logging/Logger.config(Ljava/lang/String;)V"
 func loggingLoggerConfig(params []interface{}) interface{} {
-	return loggingLoggerWrite("CONFIG", loggingLoggerStringArg(params[1]))
+	frameStack, _ := params[0].(*list.List)
+	return loggingLoggerEmit(params[1], "CONFIG", loggingLoggerStringArg(params[2]), frameStack)
 }
 
 // "java/util/logging/Logger.entering(Ljava/lang/String;Ljava/lang/String;)V"
 func loggingLoggerEntering(params []interface{}) interface{} {
 	sourceClass := loggingLoggerStringArg(params[1])
 	sourceMethod := loggingLoggerStringArg(params[2])
-	return loggingLoggerWrite("FINER", fmt.Sprintf("ENTRY %s %s", sourceClass, sourceMethod))
+	return loggingLoggerEmit(params[0], "FINER", fmt.Sprintf("ENTRY %s %s", sourceClass, sourceMethod), nil)
 }
 
 // "java/util/logging/Logger.entering(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V"
@@ -606,14 +745,14 @@ func loggingLoggerEnteringWithParam(params []interface{}) interface{} {
 	sourceClass := loggingLoggerStringArg(params[1])
 	sourceMethod := loggingLoggerStringArg(params[2])
 	param := loggingLoggerFormatParams(params[3])
-	return loggingLoggerWrite("FINER", fmt.Sprintf("ENTRY %s %s %s", sourceClass, sourceMethod, param))
+	return loggingLoggerEmit(params[0], "FINER", fmt.Sprintf("ENTRY %s %s %s", sourceClass, sourceMethod, param), nil)
 }
 
 // "java/util/logging/Logger.exiting(Ljava/lang/String;Ljava/lang/String;)V"
 func loggingLoggerExiting(params []interface{}) interface{} {
 	sourceClass := loggingLoggerStringArg(params[1])
 	sourceMethod := loggingLoggerStringArg(params[2])
-	return loggingLoggerWrite("FINER", fmt.Sprintf("RETURN %s %s", sourceClass, sourceMethod))
+	return loggingLoggerEmit(params[0], "FINER", fmt.Sprintf("RETURN %s %s", sourceClass, sourceMethod), nil)
 }
 
 // "java/util/logging/Logger.exiting(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V"
@@ -621,22 +760,25 @@ func loggingLoggerExitingWithParam(params []interface{}) interface{} {
 	sourceClass := loggingLoggerStringArg(params[1])
 	sourceMethod := loggingLoggerStringArg(params[2])
 	result := loggingLoggerStringArg(params[3])
-	return loggingLoggerWrite("FINER", fmt.Sprintf("RETURN %s %s %s", sourceClass, sourceMethod, result))
+	return loggingLoggerEmit(params[0], "FINER", fmt.Sprintf("RETURN %s %s %s", sourceClass, sourceMethod, result), nil)
 }
 
 // "java/util/logging/Logger.finest(Ljava/lang/String;)V"
 func loggingLoggerFinest(params []interface{}) interface{} {
-	return loggingLoggerWrite("FINEST", loggingLoggerStringArg(params[1]))
+	frameStack, _ := params[0].(*list.List)
+	return loggingLoggerEmit(params[1], "FINEST", loggingLoggerStringArg(params[2]), frameStack)
 }
 
 // "java/util/logging/Logger.finer(Ljava/lang/String;)V"
 func loggingLoggerFiner(params []interface{}) interface{} {
-	return loggingLoggerWrite("FINER", loggingLoggerStringArg(params[1]))
+	frameStack, _ := params[0].(*list.List)
+	return loggingLoggerEmit(params[1], "FINER", loggingLoggerStringArg(params[2]), frameStack)
 }
 
 // "java/util/logging/Logger.info(Ljava/lang/String;)V"
 func loggingLoggerInfo(params []interface{}) interface{} {
-	return loggingLoggerWrite("INFO", loggingLoggerStringArg(params[1]))
+	frameStack, _ := params[0].(*list.List)
+	return loggingLoggerEmit(params[1], "INFO", loggingLoggerStringArg(params[2]), frameStack)
 }
 
 // loggingLoggerLevelName returns the name of the given Level object, or "INFO" if unavailable.
@@ -654,20 +796,22 @@ func loggingLoggerLevelName(param interface{}) string {
 
 // "java/util/logging/Logger.log(Ljava/util/logging/Level;Ljava/lang/String;)V"
 func loggingLoggerLog(params []interface{}) interface{} {
-	levelName := loggingLoggerLevelName(params[1])
-	msg := loggingLoggerStringArg(params[2])
-	return loggingLoggerWrite(levelName, msg)
+	frameStack, _ := params[0].(*list.List)
+	levelName := loggingLoggerLevelName(params[2])
+	msg := loggingLoggerStringArg(params[3])
+	return loggingLoggerEmit(params[1], levelName, msg, frameStack)
 }
 
 // "java/util/logging/Logger.log(Ljava/util/logging/Level;Ljava/lang/String;[Ljava/lang/Object;)V"
 func loggingLoggerLogWithParams(params []interface{}) interface{} {
-	levelName := loggingLoggerLevelName(params[1])
-	msg := loggingLoggerStringArg(params[2])
-	extra := loggingLoggerFormatParams(params[3])
+	frameStack, _ := params[0].(*list.List)
+	levelName := loggingLoggerLevelName(params[2])
+	msg := loggingLoggerStringArg(params[3])
+	extra := loggingLoggerFormatParams(params[4])
 	if extra != "" {
 		msg = msg + " [" + extra + "]"
 	}
-	return loggingLoggerWrite(levelName, msg)
+	return loggingLoggerEmit(params[1], levelName, msg, frameStack)
 }
 
 // "java/util/logging/Logger.logp(Ljava/util/logging/Level;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
@@ -676,7 +820,7 @@ func loggingLoggerLogp(params []interface{}) interface{} {
 	sourceClass := loggingLoggerStringArg(params[2])
 	sourceMethod := loggingLoggerStringArg(params[3])
 	msg := loggingLoggerStringArg(params[4])
-	return loggingLoggerWrite(levelName, fmt.Sprintf("%s %s: %s", sourceClass, sourceMethod, msg))
+	return loggingLoggerEmit(params[0], levelName, fmt.Sprintf("%s %s: %s", sourceClass, sourceMethod, msg), nil)
 }
 
 // "java/util/logging/Logger.logp(Ljava/util/logging/Level;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)V"
@@ -689,7 +833,7 @@ func loggingLoggerLogpWithParams(params []interface{}) interface{} {
 	if extra != "" {
 		msg = msg + " [" + extra + "]"
 	}
-	return loggingLoggerWrite(levelName, fmt.Sprintf("%s %s: %s", sourceClass, sourceMethod, msg))
+	return loggingLoggerEmit(params[0], levelName, fmt.Sprintf("%s %s: %s", sourceClass, sourceMethod, msg), nil)
 }
 
 // "java/util/logging/Logger.logrb(Ljava/util/logging/Level;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
@@ -699,7 +843,7 @@ func loggingLoggerLogrb(params []interface{}) interface{} {
 	sourceClass := loggingLoggerStringArg(params[2])
 	sourceMethod := loggingLoggerStringArg(params[3])
 	msg := loggingLoggerStringArg(params[5])
-	return loggingLoggerWrite(levelName, fmt.Sprintf("%s %s: %s", sourceClass, sourceMethod, msg))
+	return loggingLoggerEmit(params[0], levelName, fmt.Sprintf("%s %s: %s", sourceClass, sourceMethod, msg), nil)
 }
 
 // "java/util/logging/Logger.logrb(Ljava/util/logging/Level;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)V"
@@ -712,32 +856,35 @@ func loggingLoggerLogrbWithParams(params []interface{}) interface{} {
 	if extra != "" {
 		msg = msg + " [" + extra + "]"
 	}
-	return loggingLoggerWrite(levelName, fmt.Sprintf("%s %s: %s", sourceClass, sourceMethod, msg))
+	return loggingLoggerEmit(params[0], levelName, fmt.Sprintf("%s %s: %s", sourceClass, sourceMethod, msg), nil)
 }
 
 // "java/util/logging/Logger.severe(Ljava/lang/String;)V"
 func loggingLoggerSevere(params []interface{}) interface{} {
-	return loggingLoggerWrite("SEVERE", loggingLoggerStringArg(params[1]))
+	frameStack, _ := params[0].(*list.List)
+	return loggingLoggerEmit(params[1], "SEVERE", loggingLoggerStringArg(params[2]), frameStack)
 }
 
 // "java/util/logging/Logger.throwing(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V"
 func loggingLoggerThrowing(params []interface{}) interface{} {
 	sourceClass := loggingLoggerStringArg(params[1])
 	sourceMethod := loggingLoggerStringArg(params[2])
-	return loggingLoggerWrite("FINER", fmt.Sprintf("THROW %s %s", sourceClass, sourceMethod))
+	return loggingLoggerEmit(params[0], "FINER", fmt.Sprintf("THROW %s %s", sourceClass, sourceMethod), nil)
 }
 
 // "java/util/logging/Logger.warning(Ljava/lang/String;)V"
 func loggingLoggerWarning(params []interface{}) interface{} {
-	return loggingLoggerWrite("WARNING", loggingLoggerStringArg(params[1]))
+	frameStack, _ := params[0].(*list.List)
+	return loggingLoggerEmit(params[1], "WARNING", loggingLoggerStringArg(params[2]), frameStack)
 }
 
 // "java/util/logging/Logger.warning(Ljava/lang/String;[Ljava/lang/Object;)V"
 func loggingLoggerWarningWithParams(params []interface{}) interface{} {
-	msg := loggingLoggerStringArg(params[1])
-	extra := loggingLoggerFormatParams(params[2])
+	frameStack, _ := params[0].(*list.List)
+	msg := loggingLoggerStringArg(params[2])
+	extra := loggingLoggerFormatParams(params[3])
 	if extra != "" {
 		msg = msg + " [" + extra + "]"
 	}
-	return loggingLoggerWrite("WARNING", msg)
+	return loggingLoggerEmit(params[1], "WARNING", msg, frameStack)
 }

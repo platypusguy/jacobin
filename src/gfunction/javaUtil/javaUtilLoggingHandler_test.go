@@ -9,6 +9,7 @@ import (
 	"jacobin/src/statics"
 	"jacobin/src/types"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -18,9 +19,8 @@ func newHandlerObj() *object.Object {
 
 func makeLogRecord(levelName string, levelValue int64, message string) *object.Object {
 	rec := object.MakeEmptyObject()
-	rec.FieldTable[fieldNameLevelValue] = object.Field{Ftype: types.Int, Fvalue: levelValue}
+	rec.FieldTable[fieldNameHandlerLevel] = object.Field{Ftype: types.Ref, Fvalue: makeLevelObject(levelName, levelValue, "")}
 	rec.FieldTable["message"] = object.Field{Ftype: types.Ref, Fvalue: object.StringObjectFromGoString(message)}
-	_ = levelName
 	return rec
 }
 
@@ -134,7 +134,8 @@ func TestLoggingHandlerPublish_WritesToSystemErr(t *testing.T) {
 
 	_ = w.Close()
 	buf, _ := io.ReadAll(r)
-	if got := string(buf); got != "hello handler\n" {
+	got := string(buf)
+	if !strings.Contains(got, "INFO: hello handler") {
 		t.Fatalf("unexpected published output: %q", got)
 	}
 }

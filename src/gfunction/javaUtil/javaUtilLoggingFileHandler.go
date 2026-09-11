@@ -35,7 +35,7 @@ var fieldNameFileHandlerCount = "count"
 var fieldNameFileHandlerAppend = "append"
 var fieldNameFileHandlerFile = "fileHandle"
 
-const defaultFileHandlerPattern = "jacobin%u.log"
+const defaultFileHandlerPattern = "default_file_handler_%u.log"
 
 func Load_Util_Logging_FileHandler() {
 
@@ -124,7 +124,7 @@ func initFileHandlerCommon(obj *object.Object, pattern string, limit, count, app
 	defer obj.ThMutex.Unlock()
 	obj.FieldTable[fieldNameHandlerLevel] = object.Field{Ftype: types.Ref, Fvalue: makeLevelObject("ALL", standardLevels["ALL"], "")}
 	obj.FieldTable[fieldNameHandlerFilter] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
-	obj.FieldTable[fieldNameHandlerFormatter] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
+	obj.FieldTable[fieldNameHandlerFormatter] = object.Field{Ftype: types.Ref, Fvalue: makeDefaultSimpleFormatter()}
 	obj.FieldTable[fieldNameHandlerEncoding] = object.Field{Ftype: types.StringClassRef, Fvalue: ""}
 	obj.FieldTable[fieldNameHandlerErrorManager] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
 	obj.FieldTable[fieldNameFileHandlerPattern] = object.Field{Ftype: types.StringClassRef, Fvalue: pattern}
@@ -296,15 +296,10 @@ func loggingFileHandlerPublish(params []interface{}) interface{} {
 		return nil
 	}
 
-	msgFld, exists := record.FieldTable["message"]
-	if !exists {
+	msg := formatLogRecordWithHandlerFormatter(obj, record)
+	if msg == "" {
 		return nil
 	}
-	msgObj, ok := msgFld.Fvalue.(*object.Object)
-	if !ok || msgObj == nil || object.IsNull(msgObj) {
-		return nil
-	}
-	msg := object.GoStringFromStringObject(msgObj)
 
 	obj.ThMutex.RLock()
 	osFile, hasFile := obj.FieldTable[fieldNameFileHandlerFile].Fvalue.(*os.File)
@@ -314,7 +309,7 @@ func loggingFileHandlerPublish(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
 
-	_, err := fmt.Fprintln(osFile, msg)
+	_, err := fmt.Fprint(osFile, msg)
 	if err != nil {
 		errMsg := fmt.Sprintf("loggingFileHandlerPublish: write failed, reason: %s", err.Error())
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)

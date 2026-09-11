@@ -7,10 +7,13 @@
 package javaUtil
 
 import (
+	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
+	"jacobin/src/statics"
 	"jacobin/src/types"
+	"math"
 	"strconv"
 )
 
@@ -27,7 +30,7 @@ var fieldNameLevelResourceBundleName = "resourceBundleName"
 
 // standardLevels maps the standard Level names to their integer values, used by parse().
 var standardLevels = map[string]int64{
-	"OFF":     int64(2147483647), // Integer.MAX_VALUE
+	"OFF":     int64(math.MaxInt32),
 	"SEVERE":  1000,
 	"WARNING": 900,
 	"INFO":    800,
@@ -35,7 +38,7 @@ var standardLevels = map[string]int64{
 	"FINE":    500,
 	"FINER":   400,
 	"FINEST":  300,
-	"ALL":     int64(-2147483648), // Integer.MIN_VALUE
+	"ALL":     int64(math.MinInt32),
 }
 
 func Load_Util_Logging_Level() {
@@ -43,7 +46,7 @@ func Load_Util_Logging_Level() {
 	ghelpers.MethodSignatures["java/util/logging/Level.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
+			GFunction:  loggingLevelClinit,
 		}
 
 	ghelpers.MethodSignatures["java/util/logging/Level.<init>(Ljava/lang/String;I)V"] =
@@ -105,6 +108,21 @@ func Load_Util_Logging_Level() {
 			ParamSlots: 0,
 			GFunction:  loggingLevelToString,
 		}
+}
+
+// loggingLevelClinit is the static initializer for java/util/logging/Level. It creates
+// the standard Level instances (OFF, SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST, ALL)
+// and registers them as public static final fields, matching the real java.util.logging.Level.
+// This is necessary because other classes (e.g. FileHandler, StreamHandler) access these
+// fields directly via GETSTATIC.
+func loggingLevelClinit(_ []interface{}) interface{} {
+	for name, value := range standardLevels {
+		_ = statics.AddStatic(levelClassName+"."+name, statics.Static{
+			Type:  types.Ref,
+			Value: makeLevelObject(name, value, ""),
+		})
+	}
+	return nil
 }
 
 // makeLevelObject creates a Level object with the given name, value, and resource bundle name.
@@ -216,7 +234,7 @@ func loggingLevelGetResourceBundleName(params []interface{}) interface{} {
 func loggingLevelIntValue(params []interface{}) interface{} {
 	obj, ok := params[0].(*object.Object)
 	if !ok || obj == nil {
-		errMsg := "loggingLevelIntValue: The first parameter is not an object"
+		errMsg := fmt.Sprintf("loggingLevelIntValue: The first parameter is not an object, observed type: %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	obj.ThMutex.RLock()

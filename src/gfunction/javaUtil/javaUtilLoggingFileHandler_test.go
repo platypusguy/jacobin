@@ -7,6 +7,7 @@ import (
 	"jacobin/src/object"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -85,7 +86,7 @@ func TestLoggingFileHandlerInitPatternAppend(t *testing.T) {
 		t.Fatalf("os.ReadFile: %v", err)
 	}
 	got := string(data)
-	if got != "line1\nline2\n" {
+	if !strings.Contains(got, "INFO: line1") || !strings.Contains(got, "INFO: line2") {
 		t.Fatalf("expected appended content, got %q", got)
 	}
 }
@@ -142,7 +143,7 @@ func TestLoggingFileHandlerPublish_WritesToFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("os.ReadFile: %v", err)
 	}
-	if got := string(data); got != "hello file\n" {
+	if got := string(data); !strings.Contains(got, "INFO: hello file") {
 		t.Fatalf("unexpected file content: %q", got)
 	}
 }
