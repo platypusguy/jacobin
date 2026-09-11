@@ -197,6 +197,13 @@ func TestFilterInputStream_ReadByteArray(t *testing.T) {
 	if n, ok := r.(int64); !ok || n != 4 {
 		t.Fatalf("read([B)I expected 4, got %v", r)
 	}
+
+	// Close the underlying file so the OS file handle is released before the
+	// temp directory is cleaned up (required on Windows, where an open file
+	// cannot be removed/renamed).
+	if res := filterInputStreamClose([]interface{}{filter}); res != nil {
+		t.Fatalf("close() error: %v", res)
+	}
 }
 
 func TestFilterInputStream_LoadRegistersMethods(t *testing.T) {
