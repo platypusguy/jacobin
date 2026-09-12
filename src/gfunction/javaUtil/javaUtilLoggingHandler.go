@@ -340,6 +340,7 @@ func loggingHandlerSetLevel(params []interface{}) interface{} {
 // A LogRecord is loggable if this Handler's filter (if any) accepts it, and
 // the LogRecord's level is >= this Handler's level.
 func loggingHandlerIsLoggable(params []interface{}) interface{} {
+	fs, params := loggingExtractFsAndArgs(params)
 	obj, ok := params[0].(*object.Object)
 	if !ok || obj == nil {
 		errMsg := "loggingHandlerIsLoggable: The first parameter is not an object"
@@ -352,9 +353,20 @@ func loggingHandlerIsLoggable(params []interface{}) interface{} {
 	obj.ThMutex.RUnlock()
 
 	if hasFilter && filter != nil && !object.IsNull(filter) {
-		result := loggingFilterIsLoggable(params[1:])
-		if result != types.JavaBoolTrue {
-			return types.JavaBoolFalse
+		record, _ := params[1].(*object.Object)
+		// The filter may be a user-supplied class with its own isLoggable()
+		// override; dispatch to the actual bytecode implementation, mirroring
+		// what a real Handler.publish() does (filter.isLoggable(record)).
+		if custom, ok := loggingInvokeUserJavaMethod(fs, filter, "isLoggable",
+			"(Ljava/util/logging/LogRecord;)Z", record); ok {
+			if b, ok := custom.(int64); ok && b != types.JavaBoolTrue {
+				return types.JavaBoolFalse
+			}
+		} else {
+			result := loggingFilterIsLoggable(params[1:])
+			if result != types.JavaBoolTrue {
+				return types.JavaBoolFalse
+			}
 		}
 	}
 
@@ -378,13 +390,14 @@ func loggingHandlerIsLoggable(params []interface{}) interface{} {
 // "java/util/logging/Handler.publish(Ljava/util/logging/LogRecord;)V"
 // Writes the LogRecord's message to System.err if it is loggable by this Handler.
 func loggingHandlerPublish(params []interface{}) interface{} {
-	obj, ok := params[0].(*object.Object)
+	fs, args := loggingExtractFsAndArgs(params)
+	obj, ok := args[0].(*object.Object)
 	if !ok || obj == nil {
 		errMsg := "loggingHandlerPublish: The first parameter is not an object"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	if len(params) < 2 {
+	if len(args) < 2 {
 		errMsg := "loggingHandlerPublish: Requires a LogRecord parameter"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
@@ -394,12 +407,12 @@ func loggingHandlerPublish(params []interface{}) interface{} {
 		return nil
 	}
 
-	record, ok := params[1].(*object.Object)
+	record, ok := args[1].(*object.Object)
 	if !ok || record == nil || object.IsNull(record) {
 		return nil
 	}
 
-	msg := formatLogRecordWithHandlerFormatter(obj, record)
+	msg := formatLogRecordWithHandlerFormatter(obj, record, fs)
 	if msg == "" {
 		return nil
 	}

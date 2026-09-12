@@ -85,13 +85,14 @@ func loggingConsoleHandlerClose([]interface{}) interface{} {
 // "java/util/logging/ConsoleHandler.publish(Ljava/util/logging/LogRecord;)V"
 // Writes the LogRecord's message to System.err if it is loggable by this Handler.
 func loggingConsoleHandlerPublish(params []interface{}) interface{} {
-	obj, ok := params[0].(*object.Object)
+	fs, args := loggingExtractFsAndArgs(params)
+	obj, ok := args[0].(*object.Object)
 	if !ok || obj == nil {
 		errMsg := "loggingConsoleHandlerPublish: The first parameter is not an object"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	if len(params) < 2 {
+	if len(args) < 2 {
 		errMsg := "loggingConsoleHandlerPublish: Requires a LogRecord parameter"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
@@ -101,12 +102,12 @@ func loggingConsoleHandlerPublish(params []interface{}) interface{} {
 		return nil
 	}
 
-	record, ok := params[1].(*object.Object)
+	record, ok := args[1].(*object.Object)
 	if !ok || record == nil || object.IsNull(record) {
 		return nil
 	}
 
-	msg := formatLogRecordWithHandlerFormatter(obj, record)
+	msg := formatLogRecordWithHandlerFormatter(obj, record, fs)
 	if msg == "" {
 		return nil
 	}
