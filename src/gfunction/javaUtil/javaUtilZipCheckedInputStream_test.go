@@ -89,6 +89,49 @@ func TestCheckedInputStream_Read(t *testing.T) {
 	}
 }
 
+func TestCheckedInputStream_ReadByteArray(t *testing.T) {
+	globals.InitStringPool()
+	javaIo.Load_Io_FileInputStream()
+	javaUtil.Load_Util_Zip_Crc32_Crc32c()
+	javaUtil.Load_Util_Zip_CheckedInputStream()
+
+	tmpFile, err := os.CreateTemp("", "test_checked_input_stream_array")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	content := []byte("hello world")
+	if _, err := tmpFile.Write(content); err != nil {
+		t.Fatal(err)
+	}
+	tmpFile.Close()
+
+	crc := newCRC32Obj()
+	javaUtil.Crc32InitIEEE([]interface{}{crc})
+
+	fis := newFISObj()
+	pathObj := object.StringObjectFromGoString(tmpFile.Name())
+	javaIo.InitFileInputStreamString([]interface{}{fis, pathObj})
+
+	cis := newCheckedInputStreamObj()
+	javaUtil.CheckedInputStreamInit([]interface{}{cis, fis, crc})
+
+	// Simulate cis.read(buffer) - the no-offset/length overload.
+	buf := make([]types.JavaByte, len(content))
+	bufObj := object.MakePrimitiveObject("[B", types.JavaByteArray, buf)
+	n := javaUtil.CheckedInputStreamReadByteArray([]interface{}{cis, bufObj})
+	if nr, ok := n.(int64); !ok || nr != int64(len(content)) {
+		t.Errorf("Expected %d bytes read, got %v", len(content), n)
+	}
+
+	// Checksum must be updated (non-zero) via the delegated call.
+	valC := javaUtil.Crc32GetValue([]interface{}{crc})
+	if v, ok := valC.(int64); !ok || v == 0 {
+		t.Errorf("Checksum should not be 0 after read(byte[])")
+	}
+}
+
 func TestCheckedInputStream_Skip(t *testing.T) {
 	globals.InitStringPool()
 	javaIo.Load_Io_FileInputStream()

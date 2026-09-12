@@ -9,6 +9,7 @@ package misc
 import (
 	"bytes"
 	"fmt"
+	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
@@ -37,6 +38,12 @@ func Load_jj() {
 		ghelpers.GMeth{
 			ParamSlots: 3,
 			GFunction:  jjDumpStatics,
+		}
+
+	ghelpers.MethodSignatures["jj._dumpMTable()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  jjDumpMTable,
 		}
 
 	ghelpers.MethodSignatures["jj._dumpObject(Ljava/lang/Object;Ljava/lang/String;I)V"] =
@@ -261,6 +268,11 @@ func jjDumpStatics(params []interface{}) interface{} {
 	className := object.ObjectFieldToString(classNameObj, "value")
 
 	statics.DumpStatics(from, selection, className)
+	return nil
+}
+
+func jjDumpMTable([]interface{}) interface{} {
+	classloader.DumpMTable()
 	return nil
 }
 

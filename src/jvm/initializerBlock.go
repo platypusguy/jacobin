@@ -67,6 +67,22 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 	// now execute any encountered <clinit> code in this class
 	for i := len(superClasses) - 1; i >= 0; i-- {
 		className := superClasses[i]
+
+		// Fetch the Klass entry that corresponds to this specific class in the
+		// superclass chain (not the originally-passed k, which corresponds to
+		// the class at the bottom of the chain). Otherwise, the wrong class's
+		// ClInit status is set/checked, and Frame.ClName is mislabeled with
+		// the wrong class when running a superclass's <clinit>.
+		classK := k
+		if className != k.Data.Name {
+			classK = classloader.MethAreaFetch(className)
+			if classK == nil {
+				errMsg := "runInitializationBlock: MethAreaFetch could not find class " + className
+				trace.Error(errMsg)
+				return errors.New(errMsg)
+			}
+		}
+
 		me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
 		if err == nil {
 			if me.MethName == 0 {
@@ -76,9 +92,9 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 			}
 			switch me.MType {
 			case 'J': // it's a Java initializer (the most common case)
-				err = runJavaInitializer(me.Meth, k, fs)
+				err = runJavaInitializer(me.Meth, classK, fs)
 			case 'G': // it's a golang implementation of the initializer
-				err = runNativeInitializer(me, k, fs)
+				err = runNativeInitializer(me, classK, fs)
 			}
 			if err != nil {
 				return err

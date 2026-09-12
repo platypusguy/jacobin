@@ -40,6 +40,12 @@ func Load_Util_Zip_CheckedInputStream() {
 			GFunction:  CheckedInputStreamRead,
 		}
 
+	ghelpers.MethodSignatures["java/util/zip/CheckedInputStream.read([B)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  CheckedInputStreamReadByteArray,
+		}
+
 	ghelpers.MethodSignatures["java/util/zip/CheckedInputStream.read([BII)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
@@ -99,6 +105,18 @@ func CheckedInputStreamRead(params []interface{}) interface{} {
 	}
 
 	return val
+}
+
+func CheckedInputStreamReadByteArray(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	buf := params[1].(*object.Object)
+
+	javaBytes, ok := buf.FieldTable["value"].Fvalue.([]types.JavaByte)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IOException, "CheckedInputStreamReadByteArray: byte array parameter lacks a \"value\" field")
+	}
+
+	return CheckedInputStreamReadArray([]interface{}{self, buf, int64(0), int64(len(javaBytes))})
 }
 
 func CheckedInputStreamReadArray(params []interface{}) interface{} {

@@ -268,10 +268,22 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 
 	if methEntry.Meth != nil { // we found the entry in the MTable
 		if methEntry.MType == 'J' {
-			return MTentry{Meth: methEntry.Meth, MType: 'J'}, nil
+			return MTentry{
+				Meth:      methEntry.Meth,
+				MType:     'J',
+				MethClass: stringPool.GetStringIndex(&className),
+				MethName:  stringPool.GetStringIndex(&methName),
+				MethType:  stringPool.GetStringIndex(&methType),
+			}, nil
 		}
 		if methEntry.MType == 'G' {
-			return MTentry{Meth: methEntry.Meth, MType: 'G'}, nil
+			return MTentry{
+				Meth:      methEntry.Meth,
+				MType:     'G',
+				MethClass: stringPool.GetStringIndex(&className),
+				MethName:  stringPool.GetStringIndex(&methName),
+				MethType:  stringPool.GetStringIndex(&methType),
+			}, nil
 		}
 		errMsg := fmt.Sprintf("FetchMethodAndCP: methEntry.Meth != nil BUT methEntry.MType is neither J nor G for %s", methFQN)
 		trace.Error(errMsg)
@@ -349,15 +361,24 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		// Get the superclass name.
 		className = *stringPool.GetStringPointer(k.Data.SuperclassIndex)
 
-		// Matching a special Jacobin class?
-		if className == types.ClassNameThread || className == types.ClassNameThreadGroup {
-			methFQN = className + "." + methName + methType
-			methEntry = GetMtableEntry(methFQN)
-			if methEntry.Meth != nil { // we found the entry in the MTable
-				if methEntry.MType == 'G' {
-					return methEntry, nil
-				}
-			}
+		// Before searching the superclass's own bytecode method table, check
+		// whether a G-function (golang gfunction) is registered for this
+		// method at this superclass level. This handles gfunction classes
+		// whose ancestors (e.g. Handler, for a FileHandler/StreamHandler
+		// object) implement the method natively; without this check, the
+		// search would incorrectly fall through to real JDK bytecode (if
+		// any) further up the superclass chain, silently bypassing the
+		// registered gfunction.
+		superMethFQN := className + "." + methName + methType
+		methEntry = GetMtableEntry(superMethFQN)
+		if methEntry.Meth != nil && methEntry.MType == 'G' { // we found a G-function entry in the MTable
+			return MTentry{
+				Meth:      methEntry.Meth,
+				MType:     'G',
+				MethClass: stringPool.GetStringIndex(&className),
+				MethName:  stringPool.GetStringIndex(&methName),
+				MethType:  stringPool.GetStringIndex(&methType),
+			}, nil
 		}
 
 		// Get the method area of the class.
