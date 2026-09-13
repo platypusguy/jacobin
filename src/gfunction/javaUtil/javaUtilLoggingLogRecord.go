@@ -11,6 +11,7 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"sync/atomic"
 	"time"
 )
 
@@ -46,6 +47,16 @@ var fieldNameLogRecordThrown = "thrown"
 var fieldNameLogRecordResourceBundleName = "resourceBundleName"
 var fieldNameLogRecordResourceBundle = "resourceBundle"
 
+// logRecordSequenceCounter mirrors the real JDK's global, monotonically
+// increasing LogRecord sequence number, assigned when a LogRecord is created.
+var logRecordSequenceCounter atomic.Int64
+
+// loggingLogRecordNextSequenceNumber returns the next global sequence number
+// to assign to a newly created LogRecord.
+func loggingLogRecordNextSequenceNumber() int64 {
+	return logRecordSequenceCounter.Add(1) - 1
+}
+
 func Load_Util_Logging_LogRecord() {
 
 	ghelpers.MethodSignatures["java/util/logging/LogRecord.<init>(Ljava/util/logging/Level;Ljava/lang/String;)V"] =
@@ -75,7 +86,7 @@ func Load_Util_Logging_LogRecord() {
 	ghelpers.MethodSignatures["java/util/logging/LogRecord.getMillis()J"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapDeprecated,
+			GFunction:  loggingLogRecordGetMillis,
 		}
 
 	ghelpers.MethodSignatures["java/util/logging/LogRecord.getParameters()[Ljava/lang/Object;"] =
@@ -147,7 +158,7 @@ func Load_Util_Logging_LogRecord() {
 	ghelpers.MethodSignatures["java/util/logging/LogRecord.setMillis(J)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapDeprecated,
+			GFunction:  loggingLogRecordSetMillis,
 		}
 
 	ghelpers.MethodSignatures["java/util/logging/LogRecord.setParameters([Ljava/lang/Object;)V"] =
@@ -219,7 +230,7 @@ func loggingLogRecordInit(params []interface{}) interface{} {
 	obj.FieldTable[fieldNameHandlerLevel] = object.Field{Ftype: types.Ref, Fvalue: level}
 	obj.FieldTable[fieldNameLogRecordMessage] = object.Field{Ftype: types.Ref, Fvalue: message}
 	obj.FieldTable[fieldNameLogRecordLoggerName] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
-	obj.FieldTable[fieldNameLogRecordSequenceNumber] = object.Field{Ftype: types.Long, Fvalue: int64(0)}
+	obj.FieldTable[fieldNameLogRecordSequenceNumber] = object.Field{Ftype: types.Long, Fvalue: loggingLogRecordNextSequenceNumber()}
 	obj.FieldTable[fieldNameLogRecordSourceClassName] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
 	obj.FieldTable[fieldNameLogRecordSourceMethodName] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
 	obj.FieldTable[fieldNameLogRecordParameters] = object.Field{Ftype: types.Ref, Fvalue: object.Null}
@@ -315,6 +326,35 @@ func loggingLogRecordSetLoggerName(params []interface{}) interface{} {
 	obj.ThMutex.Lock()
 	defer obj.ThMutex.Unlock()
 	obj.FieldTable[fieldNameLogRecordLoggerName] = object.Field{Ftype: types.Ref, Fvalue: params[1]}
+	return nil
+}
+
+// "java/util/logging/LogRecord.getMillis()J"
+// Deprecated as of Java 9 (in favor of getInstant()) but still functional.
+func loggingLogRecordGetMillis(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		errMsg := "loggingLogRecordGetMillis: The first parameter is not an object"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	obj.ThMutex.RLock()
+	defer obj.ThMutex.RUnlock()
+	millis, _ := obj.FieldTable[fieldNameLogRecordMillis].Fvalue.(int64)
+	return millis
+}
+
+// "java/util/logging/LogRecord.setMillis(J)V"
+// Deprecated as of Java 9 (in favor of setInstant()) but still functional.
+func loggingLogRecordSetMillis(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		errMsg := "loggingLogRecordSetMillis: The first parameter is not an object"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	millis, _ := params[1].(int64)
+	obj.ThMutex.Lock()
+	defer obj.ThMutex.Unlock()
+	obj.FieldTable[fieldNameLogRecordMillis] = object.Field{Ftype: types.Long, Fvalue: millis}
 	return nil
 }
 

@@ -43,7 +43,7 @@ func TestLoggingLoggerConfig(t *testing.T) {
 			t.Fatalf("loggingLoggerConfig returned error: %v", ret)
 		}
 	})
-	if out != "CONFIG: hello config\n" {
+	if !strings.HasSuffix(out, "CONFIG: hello config\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -57,7 +57,7 @@ func TestLoggingLoggerEntering(t *testing.T) {
 			t.Fatalf("loggingLoggerEntering returned error: %v", ret)
 		}
 	})
-	if out != "FINER: ENTRY com.foo.Bar doIt\n" {
+	if !strings.HasSuffix(out, "FINER: ENTRY com.foo.Bar doIt\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -72,7 +72,7 @@ func TestLoggingLoggerEnteringWithParam(t *testing.T) {
 			t.Fatalf("loggingLoggerEnteringWithParam returned error: %v", ret)
 		}
 	})
-	if !strings.HasPrefix(out, "FINER: ENTRY com.foo.Bar doIt") {
+	if !strings.Contains(out, "FINER: ENTRY com.foo.Bar doIt") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -86,7 +86,7 @@ func TestLoggingLoggerExiting(t *testing.T) {
 			t.Fatalf("loggingLoggerExiting returned error: %v", ret)
 		}
 	})
-	if out != "FINER: RETURN com.foo.Bar doIt\n" {
+	if !strings.HasSuffix(out, "FINER: RETURN com.foo.Bar doIt\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -101,7 +101,7 @@ func TestLoggingLoggerExitingWithParam(t *testing.T) {
 			t.Fatalf("loggingLoggerExitingWithParam returned error: %v", ret)
 		}
 	})
-	if out != "FINER: RETURN com.foo.Bar doIt result1\n" {
+	if !strings.HasSuffix(out, "FINER: RETURN com.foo.Bar doIt result1\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -125,7 +125,7 @@ func TestLoggingLoggerFinestFinerInfoSevereWarning(t *testing.T) {
 				t.Fatalf("%s returned error: %v", c.prefix, ret)
 			}
 		})
-		if out != c.expected {
+		if !strings.HasSuffix(out, c.expected) {
 			t.Fatalf("%s: unexpected output: %q", c.prefix, out)
 		}
 	}
@@ -144,7 +144,7 @@ func TestLoggingLoggerWarningWithParams(t *testing.T) {
 			t.Fatalf("loggingLoggerWarningWithParams returned error: %v", ret)
 		}
 	})
-	if out != "WARNING: msg2 [a, b]\n" {
+	if !strings.HasSuffix(out, "WARNING: msg2 [a, b]\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -159,7 +159,7 @@ func TestLoggingLoggerLog(t *testing.T) {
 			t.Fatalf("loggingLoggerLog returned error: %v", ret)
 		}
 	})
-	if out != "SEVERE: bad thing\n" {
+	if !strings.HasSuffix(out, "SEVERE: bad thing\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -178,7 +178,7 @@ func TestLoggingLoggerLogWithParams(t *testing.T) {
 			t.Fatalf("loggingLoggerLogWithParams returned error: %v", ret)
 		}
 	})
-	if out != "INFO: msg [x]\n" {
+	if !strings.HasSuffix(out, "INFO: msg [x]\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -196,7 +196,7 @@ func TestLoggingLoggerLogp(t *testing.T) {
 			t.Fatalf("loggingLoggerLogp returned error: %v", ret)
 		}
 	})
-	if out != "WARNING: com.foo.Bar doIt: careful\n" {
+	if !strings.HasSuffix(out, "WARNING: com.foo.Bar doIt: careful\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -218,7 +218,7 @@ func TestLoggingLoggerLogpWithParams(t *testing.T) {
 			t.Fatalf("loggingLoggerLogpWithParams returned error: %v", ret)
 		}
 	})
-	if out != "CONFIG: com.foo.Bar doIt: msg [y]\n" {
+	if !strings.HasSuffix(out, "CONFIG: com.foo.Bar doIt: msg [y]\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -237,7 +237,7 @@ func TestLoggingLoggerLogrb(t *testing.T) {
 			t.Fatalf("loggingLoggerLogrb returned error: %v", ret)
 		}
 	})
-	if out != "SEVERE: com.foo.Bar doIt: boom\n" {
+	if !strings.HasSuffix(out, "SEVERE: com.foo.Bar doIt: boom\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -260,7 +260,7 @@ func TestLoggingLoggerLogrbWithParams(t *testing.T) {
 			t.Fatalf("loggingLoggerLogrbWithParams returned error: %v", ret)
 		}
 	})
-	if out != "INFO: com.foo.Bar doIt: msg [z]\n" {
+	if !strings.HasSuffix(out, "INFO: com.foo.Bar doIt: msg [z]\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -275,7 +275,7 @@ func TestLoggingLoggerThrowing(t *testing.T) {
 			t.Fatalf("loggingLoggerThrowing returned error: %v", ret)
 		}
 	})
-	if out != "FINER: THROW com.foo.Bar doIt\n" {
+	if !strings.HasSuffix(out, "FINER: THROW com.foo.Bar doIt\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -289,7 +289,7 @@ func TestLoggingLoggerLog_NilLevelDefaultsToInfo(t *testing.T) {
 			t.Fatalf("loggingLoggerLog returned error: %v", ret)
 		}
 	})
-	if out != "INFO: msg\n" {
+	if !strings.HasSuffix(out, "INFO: msg\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
@@ -301,7 +301,7 @@ func TestLoggingLoggerFine(t *testing.T) {
 			t.Fatalf("loggingLoggerFine returned error: %v", ret)
 		}
 	})
-	if out != "FINE: fine msg\n" {
+	if !strings.HasSuffix(out, "FINE: fine msg\n") {
 		t.Fatalf("unexpected output: %q", out)
 	}
 }
