@@ -478,14 +478,14 @@ var CheckTable = [203]BytecodeFunc{
 	CheckLload1,          // LLOAD_1         0x1F
 	CheckLload2,          // LLOAD_2         0x20
 	CheckLload3,          // LLOAD_3         0x21
-	PushFloat,            // FLOAD_0         0x22
-	PushFloat,            // FLOAD_1         0x23
-	PushFloat,            // FLOAD_2         0x24
-	PushFloat,            // FLOAD_3         0x25
-	PushFloat,            // DLOAD_0         0x26
-	PushFloat,            // DLOAD_1         0x27
-	PushFloat,            // DLOAD_2         0x28
-	PushFloat,            // DLOAD_3         0x29
+	CheckIload0,          // FLOAD_0         0x22
+	CheckIload1,          // FLOAD_1         0x23
+	CheckIload2,          // FLOAD_2         0x24
+	CheckIload3,          // FLOAD_3         0x25
+	CheckLload0,          // DLOAD_0         0x26
+	CheckLload1,          // DLOAD_1         0x27
+	CheckLload2,          // DLOAD_2         0x28
+	CheckLload3,          // DLOAD_3         0x29
 	PushInt,              // ALOAD_0         0x2A
 	PushInt,              // ALOAD_1         0x2B
 	PushInt,              // ALOAD_2         0x2C
