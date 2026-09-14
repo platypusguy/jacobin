@@ -167,13 +167,14 @@ func loggingStreamHandlerFlush(params []interface{}) interface{} {
 // Writes the LogRecord's message to the underlying output stream if it is
 // loggable by this Handler and a stream has been set.
 func loggingStreamHandlerPublish(params []interface{}) interface{} {
-	obj, ok := params[0].(*object.Object)
+	fs, args := loggingExtractFsAndArgs(params)
+	obj, ok := args[0].(*object.Object)
 	if !ok || obj == nil {
 		errMsg := "loggingStreamHandlerPublish: The first parameter is not an object"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	if len(params) < 2 {
+	if len(args) < 2 {
 		errMsg := "loggingStreamHandlerPublish: Requires a LogRecord parameter"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
@@ -183,12 +184,12 @@ func loggingStreamHandlerPublish(params []interface{}) interface{} {
 		return nil
 	}
 
-	record, ok := params[1].(*object.Object)
+	record, ok := args[1].(*object.Object)
 	if !ok || record == nil || object.IsNull(record) {
 		return nil
 	}
 
-	msg := formatLogRecordWithHandlerFormatter(obj, record)
+	msg := formatLogRecordWithHandlerFormatter(obj, record, fs)
 	if msg == "" {
 		return nil
 	}

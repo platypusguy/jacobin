@@ -226,14 +226,17 @@ func TestLoggingLogRecordMethodSignaturesRegistered(t *testing.T) {
 		}
 	}
 
-	deprecated := []string{
-		"java/util/logging/LogRecord.getMillis()J",
-		"java/util/logging/LogRecord.setMillis(J)V",
+	// getMillis/setMillis are deprecated as of Java 9 (in favor of
+	// getInstant()/setInstant()), but real JDK still runs them (they are not
+	// unsupported), so they must remain functional rather than trapped.
+	functional := map[string]interface{}{
+		"java/util/logging/LogRecord.getMillis()J":  loggingLogRecordGetMillis,
+		"java/util/logging/LogRecord.setMillis(J)V": loggingLogRecordSetMillis,
 	}
-	for _, key := range deprecated {
+	for key, want := range functional {
 		gm := ghelpers.MethodSignatures[key]
-		if reflect.ValueOf(gm.GFunction).Pointer() != reflect.ValueOf(ghelpers.TrapDeprecated).Pointer() {
-			t.Errorf("%s: expected GFunction to be ghelpers.TrapDeprecated", key)
+		if reflect.ValueOf(gm.GFunction).Pointer() != reflect.ValueOf(want).Pointer() {
+			t.Errorf("%s: expected GFunction to be functional (not trapped)", key)
 		}
 	}
 }

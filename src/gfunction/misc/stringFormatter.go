@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 	"unsafe"
 )
@@ -89,6 +90,14 @@ func StringFormatter(params []interface{}) interface{} {
 		obj := valuesIn[ii]
 		if obj == nil || object.IsNull(obj) {
 			rawArgs = append(rawArgs, nil)
+			continue
+		}
+		// Special-case java.util.Date: it has a "value" field of Ftype=Long
+		// (millis since epoch), but must not be unwrapped as a raw long --
+		// it needs to keep its object identity so %s can render it via its
+		// real toString() (see coerceJavaString), not as a numeric value.
+		if object.GoStringFromStringPoolIndex(obj.KlassName) == "java/util/Date" {
+			rawArgs = append(rawArgs, obj)
 			continue
 		}
 		// Prefer handling by presence of a "value" field; fall back to BigInteger/BigDecimal detection.
@@ -495,6 +504,16 @@ func coerceJavaString(args []interface{}, idx int) string {
 							return javaMath.FormatDecimalString(unscaled, scale)
 						}
 					}
+				}
+			}
+		}
+		// Special-case java.util.Date to mimic its real toString() output
+		// (e.g. "Sat Sep 12 16:52:33 CDT 2026"), rather than the generic
+		// ClassName@hex fallback below.
+		if object.GoStringFromStringPoolIndex(vv.KlassName) == "java/util/Date" {
+			if valFld, ok := vv.FieldTable["value"]; ok && valFld.Ftype == types.Long {
+				if millis, ok2 := valFld.Fvalue.(int64); ok2 {
+					return time.UnixMilli(millis).Local().Format("Mon Jan 2 15:04:05 MST 2006")
 				}
 			}
 		}

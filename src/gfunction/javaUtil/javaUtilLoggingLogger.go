@@ -50,6 +50,8 @@ var loggerRegistry = map[string]*object.Object{}
 var loggerRegistryMutex sync.Mutex
 var globalLoggerObj *object.Object
 var globalLoggerMutex sync.Mutex
+var rootLoggerObj *object.Object
+var rootLoggerMutex sync.Mutex
 
 func Load_Util_Logging_Logger() {
 
@@ -243,7 +245,7 @@ func loggingLoggerGetOrCreate(name, resourceBundleName string) *object.Object {
 	}
 
 	logger := makeLoggerObject(name, resourceBundleName)
-	logger.FieldTable[fieldNameLoggerParent] = object.Field{Ftype: types.Ref, Fvalue: loggingLoggerGlobal()}
+	logger.FieldTable[fieldNameLoggerParent] = object.Field{Ftype: types.Ref, Fvalue: loggingLoggerRoot()}
 	loggerRegistry[name] = logger
 	return logger
 }
@@ -255,8 +257,30 @@ func loggingLoggerGlobal() *object.Object {
 	if globalLoggerObj == nil {
 		globalLoggerObj = makeLoggerObject("global", "")
 		globalLoggerObj.FieldTable[fieldNameHandlerLevel] = object.Field{Ftype: types.Ref, Fvalue: makeLevelObject("INFO", standardLevels["INFO"], "")}
+		globalLoggerObj.FieldTable[fieldNameLoggerParent] = object.Field{Ftype: types.Ref, Fvalue: loggingLoggerRoot()}
 	}
 	return globalLoggerObj
+}
+
+// loggingLoggerRoot lazily creates and returns the shared root Logger instance
+// (name ""), matching real JDK semantics where LogManager installs a default
+// ConsoleHandler (with a default SimpleFormatter and no filter) on the root
+// logger. Because every named Logger's parent chain ultimately reaches this
+// root logger, and useParentHandlers defaults to true, adding a ConsoleHandler
+// directly to a named logger causes HotSpot-style doubled console output --
+// once via the named logger's own handler, and once via the root logger's
+// default ConsoleHandler -- unless the caller calls setUseParentHandlers(false).
+func loggingLoggerRoot() *object.Object {
+	rootLoggerMutex.Lock()
+	defer rootLoggerMutex.Unlock()
+	if rootLoggerObj == nil {
+		rootLoggerObj = makeLoggerObject("", "")
+		rootLoggerObj.FieldTable[fieldNameHandlerLevel] = object.Field{Ftype: types.Ref, Fvalue: makeLevelObject("INFO", standardLevels["INFO"], "")}
+		defaultConsoleHandler := object.MakeEmptyObjectWithClassName(&consoleHandlerClassName)
+		_ = loggingConsoleHandlerInit([]interface{}{defaultConsoleHandler})
+		rootLoggerObj.FieldTable[fieldNameLoggerHandlers] = object.Field{Ftype: types.Ref, Fvalue: []*object.Object{defaultConsoleHandler}}
+	}
+	return rootLoggerObj
 }
 
 // "java/util/logging/Logger.getGlobal()Ljava/util/logging/Logger;"
@@ -267,14 +291,14 @@ func loggingLoggerGetGlobal([]interface{}) interface{} {
 // "java/util/logging/Logger.getAnonymousLogger()Ljava/util/logging/Logger;"
 func loggingLoggerGetAnonymousLogger([]interface{}) interface{} {
 	logger := makeLoggerObject("", "")
-	logger.FieldTable[fieldNameLoggerParent] = object.Field{Ftype: types.Ref, Fvalue: loggingLoggerGlobal()}
+	logger.FieldTable[fieldNameLoggerParent] = object.Field{Ftype: types.Ref, Fvalue: loggingLoggerRoot()}
 	return logger
 }
 
 // "java/util/logging/Logger.getAnonymousLogger(Ljava/lang/String;)Ljava/util/logging/Logger;"
 func loggingLoggerGetAnonymousLoggerWithBundle(params []interface{}) interface{} {
 	logger := makeLoggerObject("", loggingLoggerStringArg(params[0]))
-	logger.FieldTable[fieldNameLoggerParent] = object.Field{Ftype: types.Ref, Fvalue: loggingLoggerGlobal()}
+	logger.FieldTable[fieldNameLoggerParent] = object.Field{Ftype: types.Ref, Fvalue: loggingLoggerRoot()}
 	return logger
 }
 
@@ -558,15 +582,26 @@ func loggingLoggerStringArg(param interface{}) string {
 
 // loggingLoggerWrite formats a level-tagged message and writes it to System.err.
 // This is the fallback used when a Logger has no registered handlers (nor any
-// ancestor with handlers), matching the console-only behavior previously used
-// unconditionally by this file.
+// ancestor with handlers). It mirrors the real JDK's root Logger, which has a
+// default ConsoleHandler with a SimpleFormatter attached, producing the
+// familiar two-line output (date/class/method, then LEVEL: message).
 func loggingLoggerWrite(levelPrefix, msg string) interface{} {
+	return loggingLoggerWriteRecord(loggingLoggerMakeRecord(levelPrefix, msg, nil, nil))
+}
+
+// loggingLoggerWriteRecord formats the given LogRecord using the default
+// SimpleFormatter and writes the result to System.err.
+func loggingLoggerWriteRecord(record *object.Object) interface{} {
 	stderr, ok := statics.GetStaticValue("java/lang/System", "err").(*os.File)
 	if !ok || stderr == nil {
 		errMsg := "loggingLoggerWrite: could not obtain System.err"
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
-	_, _ = fmt.Fprintf(stderr, "%s: %s\n", levelPrefix, msg)
+	formatted := ""
+	if msgObj, ok := loggingSimpleFormatterFormat([]interface{}{record}).(*object.Object); ok && msgObj != nil {
+		formatted = object.GoStringFromStringObject(msgObj)
+	}
+	_, _ = fmt.Fprint(stderr, formatted)
 	return nil
 }
 
@@ -605,7 +640,7 @@ func loggingLoggerMakeRecord(levelName, msg string, loggerObj *object.Object, ca
 		}
 	}
 	record.FieldTable[fieldNameLogRecordLoggerName] = object.Field{Ftype: types.Ref, Fvalue: loggerName}
-	record.FieldTable[fieldNameLogRecordSequenceNumber] = object.Field{Ftype: types.Long, Fvalue: int64(0)}
+	record.FieldTable[fieldNameLogRecordSequenceNumber] = object.Field{Ftype: types.Long, Fvalue: loggingLogRecordNextSequenceNumber()}
 
 	sourceClassName := interface{}(object.Null)
 	sourceMethodName := interface{}(object.Null)
@@ -626,11 +661,11 @@ func loggingLoggerMakeRecord(levelName, msg string, loggerObj *object.Object, ca
 // loggingLoggerPublishToHandler dispatches a LogRecord to a single Handler,
 // invoking the correct native publish implementation for the Handler's
 // concrete class (FileHandler/ConsoleHandler/StreamHandler/plain Handler).
-func loggingLoggerPublishToHandler(handler *object.Object, record *object.Object) {
+func loggingLoggerPublishToHandler(handler *object.Object, record *object.Object, frameStack *list.List) {
 	if handler == nil || object.IsNull(handler) {
 		return
 	}
-	params := []interface{}{handler, record}
+	params := []interface{}{frameStack, handler, record}
 	switch object.GoStringFromStringPoolIndex(handler.KlassName) {
 	case fileHandlerClassName:
 		_ = loggingFileHandlerPublish(params)
@@ -646,7 +681,7 @@ func loggingLoggerPublishToHandler(handler *object.Object, record *object.Object
 // loggingLoggerDispatchToHandlers walks the given Logger's handlers, then
 // (while useParentHandlers is true) its ancestors' handlers, publishing the
 // record to each. It returns true if at least one handler received the record.
-func loggingLoggerDispatchToHandlers(loggerObj *object.Object, record *object.Object) bool {
+func loggingLoggerDispatchToHandlers(loggerObj *object.Object, record *object.Object, frameStack *list.List) bool {
 	dispatched := false
 	current := loggerObj
 	for current != nil && !object.IsNull(current) {
@@ -657,7 +692,7 @@ func loggingLoggerDispatchToHandlers(loggerObj *object.Object, record *object.Ob
 		current.ThMutex.RUnlock()
 
 		for _, handler := range handlers {
-			loggingLoggerPublishToHandler(handler, record)
+			loggingLoggerPublishToHandler(handler, record, frameStack)
 			dispatched = true
 		}
 
@@ -695,8 +730,8 @@ func loggingLoggerEmit(receiver interface{}, levelName, msg string, frameStack *
 
 	callerFrame := loggingLoggerCallerFrame(frameStack)
 	record := loggingLoggerMakeRecord(levelName, msg, loggerObj, callerFrame)
-	if !loggingLoggerDispatchToHandlers(loggerObj, record) {
-		return loggingLoggerWrite(levelName, msg)
+	if !loggingLoggerDispatchToHandlers(loggerObj, record, frameStack) {
+		return loggingLoggerWriteRecord(record)
 	}
 	return nil
 }

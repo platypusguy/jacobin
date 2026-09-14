@@ -7,6 +7,8 @@
 package javaUtil
 
 import (
+	"container/list"
+
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
@@ -160,7 +162,7 @@ func loggingFormatterGetTail(params []interface{}) interface{} {
 // formatter is set (should not normally happen, since every Handler is
 // initialized with a default SimpleFormatter), it falls back to the raw
 // message text so nothing is silently dropped.
-func formatLogRecordWithHandlerFormatter(handlerObj *object.Object, record *object.Object) string {
+func formatLogRecordWithHandlerFormatter(handlerObj *object.Object, record *object.Object, fs *list.List) string {
 	handlerObj.ThMutex.RLock()
 	formatter, hasFormatter := handlerObj.FieldTable[fieldNameHandlerFormatter].Fvalue.(*object.Object)
 	handlerObj.ThMutex.RUnlock()
@@ -171,8 +173,18 @@ func formatLogRecordWithHandlerFormatter(handlerObj *object.Object, record *obje
 		switch className {
 		case simpleFormatterClassName:
 			ret = loggingSimpleFormatterFormat([]interface{}{record})
-		default:
+		case formatterClassName:
 			ret = loggingFormatterFormat([]interface{}{record})
+		default:
+			// Possibly a user-supplied Formatter subclass with its own
+			// format(LogRecord) override; dispatch to the actual bytecode
+			// implementation, mirroring real Handler.publish() behavior.
+			if custom, ok := loggingInvokeUserJavaMethod(fs, formatter, "format",
+				"(Ljava/util/logging/LogRecord;)Ljava/lang/String;", record); ok {
+				ret = custom
+			} else {
+				ret = loggingFormatterFormat([]interface{}{record})
+			}
 		}
 		if strObj, ok := ret.(*object.Object); ok && strObj != nil {
 			return object.GoStringFromStringObject(strObj)
