@@ -723,7 +723,8 @@ func ClassGetSimpleName(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "ClassGetSimpleName: invalid or null object")
 	}
 
-	name := obj.FieldTable["name"].Fvalue.(string)
+	nameObj := obj.FieldTable["name"].Fvalue.(*object.Object)
+	name := object.GoStringFromStringObject(nameObj)
 
 	// Handle arrays - use canonical name logic but return simple name for component
 	if strings.HasPrefix(name, types.Array) {
