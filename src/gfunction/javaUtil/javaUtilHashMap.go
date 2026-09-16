@@ -225,8 +225,10 @@ func Load_Util_Hash_Map() {
 
 // Initialise a hash map object to an empty state.
 func hashmapInit(params []interface{}) interface{} {
+
 	hashmapMutex.Lock()
 	defer hashmapMutex.Unlock()
+	
 	nilMap := make(types.DefHashMap)
 	obj := params[0].(*object.Object)
 	if obj.KlassName == 0 || obj.KlassName == types.InvalidStringIndex {
@@ -258,7 +260,8 @@ func hashmapInitFromMap(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
-	// Initialise this HashMap to an empty state first.
+	// Initialise this HashMap to an empty state first. hashmapInit locks
+	// hashmapMutex itself, so it must not be called while already holding it.
 	if ret := hashmapInit(params); ret != nil {
 		return ret
 	}
@@ -312,6 +315,7 @@ func _getKey(param interface{}) (interface{}, bool) {
 
 // Put inserts a key-value pair into the HashMap and returns the previous value or null.
 func hashmapPut(params []interface{}) interface{} {
+
 	hashmapMutex.Lock()
 	defer hashmapMutex.Unlock()
 
@@ -366,6 +370,10 @@ func hashmapPut(params []interface{}) interface{} {
 
 // Get a hash map entry. Return nil if there is not one that matches the key.
 func hashmapGet(params []interface{}) interface{} {
+
+	hashmapMutex.RLock()
+	defer hashmapMutex.RUnlock()
+
 	if len(params) < 2 {
 		errMsg := "hashmapGet: Requires 2 parameters: HashMap and key"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -408,6 +416,10 @@ func hashmapGet(params []interface{}) interface{} {
 
 // Get a hash map entry. If it is not present, return the default value.
 func hashmapGetOrDefault(params []interface{}) interface{} {
+
+	hashmapMutex.RLock()
+	defer hashmapMutex.RUnlock()
+
 	if len(params) < 3 {
 		errMsg := "hashmapGetOrDefault: Requires 3 parameters: HashMap, key, and default value"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -450,6 +462,7 @@ func hashmapGetOrDefault(params []interface{}) interface{} {
 
 // Remove a hash map entry. Return the removed value or nil if there is not one that matches the key.
 func hashmapRemove(params []interface{}) interface{} {
+
 	hashmapMutex.Lock()
 	defer hashmapMutex.Unlock()
 
@@ -500,6 +513,9 @@ func hashmapRemove(params []interface{}) interface{} {
 // Get the size of the hash map.
 func hashmapSize(params []interface{}) interface{} {
 
+	hashmapMutex.RLock()
+	defer hashmapMutex.RUnlock()
+
 	this, ok := params[0].(*object.Object)
 	if !ok || this == nil {
 		errMsg := "hashmapSize: The first parameter is not an object"
@@ -526,6 +542,7 @@ func hashmapSize(params []interface{}) interface{} {
 
 func hashmapIsEmpty(params []interface{}) interface{} {
 
+	// Don't RLOCK the mutex. Function hashmapSize does this.
 	result := hashmapSize(params)
 	switch result.(type) {
 	case *ghelpers.GErrBlk:
@@ -539,6 +556,7 @@ func hashmapIsEmpty(params []interface{}) interface{} {
 }
 
 func hashmapPutAll(params []interface{}) interface{} {
+
 	hashmapMutex.Lock()
 	defer hashmapMutex.Unlock()
 
@@ -595,6 +613,10 @@ func hashmapPutAll(params []interface{}) interface{} {
 
 // Does the hash map Have the given key?
 func hashmapContainsKey(params []interface{}) interface{} {
+
+	hashmapMutex.RLock()
+	defer hashmapMutex.RUnlock()
+
 	if len(params) < 2 {
 		errMsg := "hashmapContainsKey: Requires 2 parameters: HashMap and key"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
