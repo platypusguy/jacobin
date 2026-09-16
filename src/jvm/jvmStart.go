@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-5 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-6 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -31,7 +31,7 @@ var globPtr *globals.Globals
 
 // JVMrun is where everything begins
 // The call to shutdown.Exit() exits the program (after some cleanup and logging); the reason
-// it is here returned is because: in testing mode, the actual exit() call is side-stepped and
+// it is here returned is because in testing mode, the actual exit() call is side-stepped and
 // instead an int is returned. This is necessary because calling exit() during testing exits
 // the testing run as well.
 func JVMrun() int {
@@ -82,7 +82,7 @@ func JVMrun() int {
 	globPtr.ClasspathRaw = os.Getenv("CLASSPATH")
 	expandClasspth(globPtr)
 
-	// handle the command-line interface (CLI) -- i.e., process the args
+	// handle the command-line interface (CLI)
 	LoadOptionsTable(globPtr)
 	err := HandleCli(os.Args, globPtr)
 	if err != nil {
@@ -96,8 +96,7 @@ func JVMrun() int {
 	}
 
 	// Initialize classloaders and method area
-	err = classloader.Init()
-	if err != nil {
+	if classloader.Init() != nil {
 		return shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
@@ -137,8 +136,8 @@ func JVMrun() int {
 		globPtr.ClasspathRaw = archive.ClasspathRaw
 		globPtr.Classpath = archive.Classpath
 
-	} else if globPtr.StartingClass != "" { // if a class file or class name was specified
-		// Determine whether StartingClass is a filesystem path to a .class file
+	} else if globPtr.StartingClass != "" { // if a class file or class name was specified,
+		// determine whether StartingClass is a filesystem path to a .class file
 		// or a class name intended to be resolved via the classpath (including jars).
 		starting := globPtr.StartingClass
 		// Fast path: if the exact path exists on disk, load from file (preserves old behavior)
@@ -148,21 +147,21 @@ func JVMrun() int {
 				return shutdown.Exit(shutdown.JVM_EXCEPTION)
 			}
 		} else {
-			// Treat it as a class name. Normalize:
+			// treat it as a class name. Normalize:
 			// 1) strip trailing .class if present
-			// 2) convert dots/backslashes to forward slashes for internal name
+			// 2) convert dots and backslashes to forward slashes for internal name
 			// 3) trim any leading slashes
 			name := strings.TrimSuffix(starting, ".class")
 			nameSlash := strings.ReplaceAll(name, ".", "/")
 			nameSlash = strings.ReplaceAll(nameSlash, "\\", "/")
 			nameSlash = strings.TrimLeft(nameSlash, "/")
 
-			// Load by name using the classpath search (dirs and jars)
+			// load by name using the classpath search (dirs and jars)
 			if err = classloader.LoadClassFromNameOnly(nameSlash); err != nil {
 				// LoadClassFromNameOnly already emitted diagnostics
 				return shutdown.Exit(shutdown.JVM_EXCEPTION)
 			}
-			// Record the main class string in the StringPool for later retrieval
+			// record the main class string in the StringPool for later retrieval
 			nameDot := strings.ReplaceAll(nameSlash, "/", ".")
 			mainClassNameIndex = stringPool.GetStringIndex(&nameDot)
 		}
@@ -174,25 +173,21 @@ func JVMrun() int {
 
 	// if assertions were enabled on the command line for the program, then make sure
 	// that the assertion status is set in the Statics table w/ an entry corresponding
-	// to the main class. 	// Otherwise, it was previously initialized to "disabled".
+	// to the main class.
 	if globPtr.Options["-ea"].Set {
 		_ = statics.AddStatic("main.$assertionsDisabled",
 			statics.Static{Type: types.Int, Value: types.JavaBoolFalse})
 	}
 
-	// the following was commented out per JACOBIN-327. Likely to be reinstated at some later point.
-	// Preload the main class and its dependencies.
-	// classloader.LoadReferencedClasses(mainClass)
-
-	// initialize the MTable (table caching methods) and load the gfunctions
-	// and in addition execute some initialization gfunctions (e.g., in javaLangThreadGroup.go)
+	// initialize the MTable (table caching method references) and load the gfunctions
+	// and execute some initialization gfunctions (e.g., in javaLangThreadGroup.go)
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 
 	// initialize the primitive-boxing classes
 	InitializePrimitiveWrappers()
 
-	// Initialize the initial global thread groups
+	// initialize the initial global thread groups
 	javaLang.InitializeGlobalThreadGroups()
 
 	// create the main thread
@@ -207,14 +202,14 @@ func JVMrun() int {
 		object.JavaByteArrayFromGoString(clName),
 		object.JavaByteArrayFromGoString(methName),
 		object.JavaByteArrayFromGoString(methType))
-	params := []interface{}{t, runnable, object.StringObjectFromGoString("main")}
+	params := []any{t, runnable, object.StringObjectFromGoString("main")}
 	globals.GetGlobalRef().FuncInvokeGFunction(
 		"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)
 	if globals.TraceInst {
 		trace.Trace(fmt.Sprintf("Starting execution with: %s.%s%s", clName, methName, methType))
 	}
 
-	// Instantiate the class so that any static initializers are run.
+	// instantiate the class so that any static initializers are run.
 	fs := frames.CreateFrameStack()
 	_, instantiateError :=
 		globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
@@ -223,7 +218,7 @@ func JVMrun() int {
 		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
 	}
 
-	// Run the main thread. Note: the thread is registered in java/lang/Thread.start()
+	// run the main thread. Note: the thread is registered by java/lang/Thread.start()
 	args := []any{t, clName, methName, methType}
 	globals.GetGlobalRef().FuncRunThread(args)
 	return shutdown.Exit(shutdown.OK)
