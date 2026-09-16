@@ -22,6 +22,7 @@ import (
 	"jacobin/src/gfunction/javaTime"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/gfunction/javaxCrypto"
+	"jacobin/src/gfunction/jdkInternalReflect"
 	"jacobin/src/gfunction/misc"
 	"jacobin/src/gfunction/sunSecurity"
 	"jacobin/src/globals"
@@ -229,6 +230,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// jdk/internal/misc/*
 	misc.Load_Jdk_Internal_Misc_Unsafe()
 	misc.Load_Jdk_Internal_Misc_ScopedMemoryAccess()
+	jdkInternalReflect.Load_Internal_Jdk_Reflect()
 
 	// sun.misc.*
 	misc.Load_Sun_Misc_Unsafe()

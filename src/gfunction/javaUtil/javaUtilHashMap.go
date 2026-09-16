@@ -50,7 +50,7 @@ func Load_Util_Hash_Map() {
 	ghelpers.MethodSignatures["java/util/HashMap.<init>(Ljava/util/Map;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  hashmapInitFromMap,
 		}
 
 	ghelpers.MethodSignatures["java/util/HashMap.clear()V"] =
@@ -236,6 +236,56 @@ func hashmapInit(params []interface{}) interface{} {
 	fld.Ftype = types.HashMap
 	fld.Fvalue = nilMap
 	obj.FieldTable[fieldNameMap] = fld
+	return nil
+}
+
+// Initialise a hash map object from an existing Map, copying all its entries.
+func hashmapInitFromMap(params []interface{}) interface{} {
+	if len(params) < 2 {
+		errMsg := "hashmapInitFromMap: requires 2 parameters: HashMap and source Map"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	this, ok := params[0].(*object.Object)
+	if !ok || this == nil {
+		errMsg := "hashmapInitFromMap: The first parameter is not an object"
+		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
+	}
+
+	that, ok := params[1].(*object.Object)
+	if !ok || that == nil {
+		errMsg := "hashmapInitFromMap: The 2nd parameter is not an object"
+		return ghelpers.GetGErrBlk(excNames.ClassCastException, errMsg)
+	}
+
+	// Initialise this HashMap to an empty state first.
+	if ret := hashmapInit(params); ret != nil {
+		return ret
+	}
+
+	hashmapMutex.Lock()
+	defer hashmapMutex.Unlock()
+
+	// Get the hash map from this.
+	thisFld := this.FieldTable[fieldNameMap]
+	thisHmap, ok := thisFld.Fvalue.(types.DefHashMap)
+	if !ok {
+		errMsg := "hashmapInitFromMap: The HashMap is not present in the 1st parameter"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Get the hash map from that (the source Map).
+	thatFld := that.FieldTable[fieldNameMap]
+	thatHmap, ok := thatFld.Fvalue.(types.DefHashMap)
+	if !ok {
+		errMsg := "hashmapInitFromMap: The Map is not present in the 2nd parameter"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	for key, value := range thatHmap {
+		thisHmap[key] = value
+	}
+
 	return nil
 }
 

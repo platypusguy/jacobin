@@ -154,6 +154,74 @@ func TestHashMap_PutAll_MergesEntries(t *testing.T) {
 	}
 }
 
+func TestHashMap_InitFromMap_CopiesEntries(t *testing.T) {
+	globals.InitStringPool()
+
+	src := newHashMapObj()
+	hmInit(t, src)
+
+	_ = hashmapPut([]interface{}{src, strKey("a"), object.StringObjectFromGoString("A")})
+	_ = hashmapPut([]interface{}{src, intKey(7), object.StringObjectFromGoString("seven")})
+
+	dst := newHashMapObj()
+	if ret := hashmapInitFromMap([]interface{}{dst, src}); ret != nil {
+		t.Fatalf("hashmapInitFromMap returned error: %v", ret)
+	}
+
+	if sz := hashmapSize([]interface{}{dst}).(int64); sz != 2 {
+		t.Fatalf("expected size 2 in dst after init from map, got %d", sz)
+	}
+
+	if v := hashmapGet([]interface{}{dst, strKey("a")}).(*object.Object); object.GoStringFromStringObject(v) != "A" {
+		t.Fatalf("expected key 'a' -> 'A' after init from map")
+	}
+	if v := hashmapGet([]interface{}{dst, intKey(7)}).(*object.Object); object.GoStringFromStringObject(v) != "seven" {
+		t.Fatalf("expected key 7 -> 'seven' after init from map")
+	}
+}
+
+func TestHashMap_InitFromMap_ErrorPaths(t *testing.T) {
+	globals.InitStringPool()
+
+	// Wrong param count
+	if err := hashmapInitFromMap([]interface{}{newHashMapObj()}); err == nil {
+		t.Fatalf("expected error for wrong param count")
+	} else if geb, ok := err.(*ghelpers.GErrBlk); ok {
+		if geb.ExceptionType != excNames.IllegalArgumentException {
+			t.Fatalf("expected IllegalArgumentException")
+		}
+	}
+
+	// First param not object -> ClassCastException
+	if err := hashmapInitFromMap([]interface{}{int64(5), newHashMapObj()}); err == nil {
+		t.Fatalf("expected error for non-object first param")
+	} else if geb, ok := err.(*ghelpers.GErrBlk); ok {
+		if geb.ExceptionType != excNames.ClassCastException {
+			t.Fatalf("expected ClassCastException")
+		}
+	}
+
+	// Second param not object -> ClassCastException
+	if err := hashmapInitFromMap([]interface{}{newHashMapObj(), int64(5)}); err == nil {
+		t.Fatalf("expected error for non-object second param")
+	} else if geb, ok := err.(*ghelpers.GErrBlk); ok {
+		if geb.ExceptionType != excNames.ClassCastException {
+			t.Fatalf("expected ClassCastException")
+		}
+	}
+
+	// Second param object, but not initialised as a map -> IllegalArgumentException
+	dst := newHashMapObj()
+	notMap := object.MakeEmptyObjectWithClassName(&classNameHashMap)
+	if err := hashmapInitFromMap([]interface{}{dst, notMap}); err == nil {
+		t.Fatalf("expected error for uninitialised source map")
+	} else if geb, ok := err.(*ghelpers.GErrBlk); ok {
+		if geb.ExceptionType != excNames.IllegalArgumentException {
+			t.Fatalf("expected IllegalArgumentException")
+		}
+	}
+}
+
 func TestHashMap_ErrorPaths(t *testing.T) {
 	globals.InitStringPool()
 
