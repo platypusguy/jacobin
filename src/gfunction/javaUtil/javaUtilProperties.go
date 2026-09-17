@@ -13,7 +13,6 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
-	"sync"
 )
 
 // Implementation of some of the functions in Java/util/Locale.
@@ -167,11 +166,7 @@ func Load_Util_Properties() {
 
 }
 
-var propertiesMutex = sync.RWMutex{}
-
 func PropertiesInit(params []interface{}) interface{} {
-	propertiesMutex.Lock()
-	defer propertiesMutex.Unlock()
 
 	nilMap := make(types.DefProperties)
 	obj, ok := params[0].(*object.Object)
@@ -246,8 +241,6 @@ func propertiesGetProperty(params []interface{}) interface{} {
 
 // Given a properties table and a key, remove this entry.
 func propertiesRemove(params []interface{}) interface{} {
-	propertiesMutex.Lock()
-	defer propertiesMutex.Unlock()
 
 	// Get properties table.
 	this, ok := params[0].(*object.Object)
@@ -296,8 +289,6 @@ func propertiesRemove(params []interface{}) interface{} {
 
 // Given a properties table and a key, set its entry ith the specified value.
 func PropertiesSetProperty(params []interface{}) interface{} {
-	propertiesMutex.Lock()
-	defer propertiesMutex.Unlock()
 
 	// Get properties table.
 	this, ok := params[0].(*object.Object)
