@@ -44,47 +44,4 @@ func voidClinit(_ []interface{}) interface{} {
 
 	return nil
 
-	/*
-		// Create the primitive class object for "void"
-		primJlc := classloader.MakeJlcEntry("void", true)
-
-		// Register it in the JLCmap so it can be found by name "void"
-		classloader.JlcMapLock.Lock()
-		classloader.JLCmap["void"] = primJlc
-		classloader.JlcMapLock.Unlock()
-
-		// Set the static field Void.TYPE to this object
-		_ = statics.AddStatic("java/lang/Void.TYPE", statics.Static{
-			Type:  types.Ref,
-			Value: object.MakePrimitiveObjectFromJlcInstance("void"),
-		})
-
-		// Also update the Jlc entry for Void to include this static field in its Statics list
-		classloader.JlcMapLock.RLock()
-		voidJlc, ok := classloader.JLCmap[classNameVoid]
-		classloader.JlcMapLock.RUnlock()
-
-		if ok {
-			fieldName := "TYPE"
-			fieldDesc := types.Jlc
-			entry := fieldName + fieldDesc
-
-			found := false
-			voidJlc.Lock.Lock()
-			if slices.Contains(voidJlc.Statics, entry) {
-				found = true
-			}
-			if !found {
-				voidJlc.Statics = append(voidJlc.Statics, entry)
-			}
-			voidJlc.Lock.Unlock()
-		} else {
-			// This should not happen if LoadBaseClasses ran and loaded Integer
-			if globals.TraceClass {
-				trace.Warning("voidClinit: java/lang/Void not found in JLCmap")
-			}
-		}
-		return nil
-
-	*/
 }
