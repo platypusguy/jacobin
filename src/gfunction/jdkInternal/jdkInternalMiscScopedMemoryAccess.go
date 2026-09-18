@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package misc
+package jdkInternal
 
 import "jacobin/src/gfunction/ghelpers"
 

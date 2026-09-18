@@ -12,6 +12,7 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/javaAwt"
 	"jacobin/src/gfunction/javaIo"
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/gfunction/javaMath"
@@ -22,7 +23,10 @@ import (
 	"jacobin/src/gfunction/javaTime"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/gfunction/javaxCrypto"
+	"jacobin/src/gfunction/javaxNet"
+	"jacobin/src/gfunction/jdkInternal"
 	"jacobin/src/gfunction/misc"
+	"jacobin/src/gfunction/sunMisc"
 	"jacobin/src/gfunction/sunSecurity"
 	"jacobin/src/globals"
 	"jacobin/src/stringPool"
@@ -45,7 +49,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	ghelpers.Load_Traps_Java_Security()
 
 	// java/awt/*
-	misc.Load_Awt_Graphics_Environment()
+	javaAwt.Load_Awt_Graphics_Environment()
 
 	// java/io/*
 	javaIo.Load_Io_BufferedInputStream()
@@ -224,14 +228,14 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_Zip_Crc32_Crc32c()
 
 	// javax.*
-	misc.Load_Javax_Net_Ssl_SSLContext()
+	javaxNet.Load_Javax_Net_Ssl_SSLContext()
 
 	// jdk/internal/misc/*
-	misc.Load_Jdk_Internal_Misc_Unsafe()
-	misc.Load_Jdk_Internal_Misc_ScopedMemoryAccess()
+	jdkInternal.Load_Jdk_Internal_Misc_Unsafe()
+	jdkInternal.Load_Jdk_Internal_Misc_ScopedMemoryAccess()
 
 	// sun.misc.*
-	misc.Load_Sun_Misc_Unsafe()
+	sunMisc.Load_Sun_Misc_Unsafe()
 
 	// Sun
 	sunSecurity.Load_Sun_Security_Action_GetBooleanAction()

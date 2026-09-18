@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package misc
+package jdkInternal
 
 import (
 	"jacobin/src/excNames"
@@ -43,13 +43,13 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"] = // offset to start of first item in an array
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  unsafeArrayBaseOffset,
+			GFunction:  UnsafeArrayBaseOffset,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.arrayIndexScale(Ljava/lang/Class;)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  unsafeArrayIndexScale,
+			GFunction:  UnsafeArrayIndexScale,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I"] =
@@ -61,73 +61,73 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
-			GFunction:  unsafeCompareAndSetInt,
+			GFunction:  UnsafeCompareAndSetInt,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getAndAddInt(Ljava/lang/Object;JI)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  unsafeCompareAndSetInt,
+			GFunction:  UnsafeCompareAndSetInt,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  unsafeGetIntVolatile,
+			GFunction:  UnsafeGetIntVolatile,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getLong(Ljava/lang/Object;J)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  unsafeGetLong,
+			GFunction:  UnsafeGetLong,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getUnsafe()Ljdk/internal/misc/Unsafe;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  unsafeGetUnsafe,
+			GFunction:  UnsafeGetUnsafe,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.compareAndSetLong(Ljava/lang/Object;JJJ)Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 5,
-			GFunction:  unsafeCompareAndSetLong,
+			GFunction:  UnsafeCompareAndSetLong,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.compareAndSetReference(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 5,
-			GFunction:  unsafeCompareAndSetReference,
+			GFunction:  UnsafeCompareAndSetReference,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getAndAddLong(Ljava/lang/Object;JJ)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
-			GFunction:  unsafeCompareAndSetLong,
+			GFunction:  UnsafeCompareAndSetLong,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getAndSetInt(Ljava/lang/Object;JI)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  unsafeCompareAndSetInt,
+			GFunction:  UnsafeCompareAndSetInt,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getAndSetLong(Ljava/lang/Object;JJ)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
-			GFunction:  unsafeCompareAndSetLong,
+			GFunction:  UnsafeCompareAndSetLong,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getAndSetReference(Ljava/lang/Object;JLjava/lang/Object;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  unsafeCompareAndSetReference,
+			GFunction:  UnsafeCompareAndSetReference,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getLongVolatile(Ljava/lang/Object;J)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  unsafeGetLong,
+			GFunction:  UnsafeGetLong,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getReference(Ljava/lang/Object;J)Ljava/lang/Object;"] =
@@ -169,19 +169,19 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.objectFieldOffset(Ljava/lang/reflect/Field;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  unsafeObjectFieldOffset1,
+			GFunction:  UnsafeObjectFieldOffset1,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.objectFieldOffset(Ljava/lang/Class;Ljava/lang/String;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  unsafeObjectFieldOffset1,
+			GFunction:  UnsafeObjectFieldOffset1,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.staticFieldOffset(Ljava/lang/reflect/Field;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  unsafeObjectFieldOffset1,
+			GFunction:  UnsafeObjectFieldOffset1,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.staticFieldBase(Ljava/lang/reflect/Field;)Ljava/lang/Object;"] =
@@ -209,7 +209,7 @@ var classUnsafeName = "jdk/internal/misc/Unsafe"
 // Return the number of bytes between the beginning of the object and the first element.
 // This is used in computing the pointer to a given element
 // "jdk/internal/misc/Unsafe.unsafeArrayBaseOffset(Ljava/lang/Class;)I"
-func unsafeArrayBaseOffset(params []interface{}) interface{} {
+func UnsafeArrayBaseOffset(params []interface{}) interface{} {
 	p := params[0]
 	if p == nil || p == object.Null {
 		errMsg := "unsafeArrayBaseOffset: Object is a null pointer"
@@ -219,7 +219,7 @@ func unsafeArrayBaseOffset(params []interface{}) interface{} {
 }
 
 // Return the size of the elements of an array
-func unsafeArrayIndexScale(params []interface{}) interface{} {
+func UnsafeArrayIndexScale(params []interface{}) interface{} {
 	arrObj := params[0] // array class whose scale factor is to be returned
 	if arrObj == object.Null {
 		errMsg := "unsafeArrayIndexScale: Object is a null pointer"
@@ -248,7 +248,7 @@ func unsafeArrayIndexScale0(params []interface{}) interface{} {
 
 // SWAG
 // "jdk/internal/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I"
-func unsafeGetIntVolatile(params []interface{}) interface{} {
+func UnsafeGetIntVolatile(params []interface{}) interface{} {
 	var hash int64
 	switch params[1].(type) {
 	case nil:
@@ -264,19 +264,19 @@ func unsafeGetIntVolatile(params []interface{}) interface{} {
 
 // SWAG
 // "jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z"
-func unsafeCompareAndSetInt(params []interface{}) interface{} {
+func UnsafeCompareAndSetInt(params []interface{}) interface{} {
 	return int64(1) // SWAG
 }
 
 // SWAG
 // "jdk/internal/misc/Unsafe.compareAndSetLong(Ljava/lang/Object;JJJ)Z"
-func unsafeCompareAndSetLong(params []interface{}) interface{} {
+func UnsafeCompareAndSetLong(params []interface{}) interface{} {
 	return int64(1) // SWAG
 }
 
 // SWAG
 // "jdk/internal/misc/Unsafe.compareAndSetReference(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"
-func unsafeCompareAndSetReference(params []interface{}) interface{} {
+func UnsafeCompareAndSetReference(params []interface{}) interface{} {
 	return int64(1) // SWAG
 }
 
@@ -297,16 +297,16 @@ func unsafeGetAndAddInt(params []interface{}) interface{} {
 	return wint
 }
 
-func unsafeGetUnsafe([]interface{}) interface{} {
+func UnsafeGetUnsafe([]interface{}) interface{} {
 	obj := object.MakeEmptyObjectWithClassName(&classUnsafeName)
 	return obj
 }
 
-func unsafeObjectFieldOffset1([]interface{}) interface{} {
+func UnsafeObjectFieldOffset1([]interface{}) interface{} {
 	return int64(0)
 }
 
-func unsafeGetLong(params []interface{}) interface{} {
+func UnsafeGetLong(params []interface{}) interface{} {
 	obj, ok := params[1].(*object.Object)
 	if !ok {
 		trace.Warning("unsafeGetLong: Not an object, returning 0")
