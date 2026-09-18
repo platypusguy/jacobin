@@ -4,10 +4,11 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package misc
+package sunMisc
 
 import (
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/jdkInternal"
 )
 
 func Load_Sun_Misc_Unsafe() {
@@ -21,49 +22,49 @@ func Load_Sun_Misc_Unsafe() {
 	ghelpers.MethodSignatures["sun/misc/Unsafe.getUnsafe()Lsun/misc/Unsafe;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  unsafeGetUnsafe,
+			GFunction:  jdkInternal.UnsafeGetUnsafe,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  unsafeArrayBaseOffset,
+			GFunction:  jdkInternal.UnsafeArrayBaseOffset,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.arrayIndexScale(Ljava/lang/Class;)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  unsafeArrayIndexScale,
+			GFunction:  jdkInternal.UnsafeArrayIndexScale,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.objectFieldOffset(Ljava/lang/reflect/Field;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  unsafeObjectFieldOffset1,
+			GFunction:  jdkInternal.UnsafeObjectFieldOffset1,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.compareAndSwapInt(Ljava/lang/Object;JII)Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
-			GFunction:  unsafeCompareAndSetInt,
+			GFunction:  jdkInternal.UnsafeCompareAndSetInt,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.compareAndSwapLong(Ljava/lang/Object;JJJ)Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 5,
-			GFunction:  unsafeCompareAndSetLong,
+			GFunction:  jdkInternal.UnsafeCompareAndSetLong,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.compareAndSwapObject(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 5,
-			GFunction:  unsafeCompareAndSetReference,
+			GFunction:  jdkInternal.UnsafeCompareAndSetReference,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.getInt(Ljava/lang/Object;J)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  unsafeGetIntVolatile,
+			GFunction:  jdkInternal.UnsafeGetIntVolatile,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.putInt(Ljava/lang/Object;JI)V"] =
@@ -75,7 +76,7 @@ func Load_Sun_Misc_Unsafe() {
 	ghelpers.MethodSignatures["sun/misc/Unsafe.getLong(Ljava/lang/Object;J)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  unsafeGetLong,
+			GFunction:  jdkInternal.UnsafeGetLong,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.putLong(Ljava/lang/Object;JJ)V"] =
@@ -99,13 +100,13 @@ func Load_Sun_Misc_Unsafe() {
 	ghelpers.MethodSignatures["sun/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  unsafeGetIntVolatile,
+			GFunction:  jdkInternal.UnsafeGetIntVolatile,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.getLongVolatile(Ljava/lang/Object;J)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  unsafeGetLong,
+			GFunction:  jdkInternal.UnsafeGetLong,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.getObjectVolatile(Ljava/lang/Object;J)Ljava/lang/Object;"] =
@@ -141,7 +142,7 @@ func Load_Sun_Misc_Unsafe() {
 	ghelpers.MethodSignatures["sun/misc/Unsafe.staticFieldOffset(Ljava/lang/reflect/Field;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  unsafeObjectFieldOffset1,
+			GFunction:  jdkInternal.UnsafeObjectFieldOffset1,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.staticFieldBase(Ljava/lang/reflect/Field;)Ljava/lang/Object;"] =

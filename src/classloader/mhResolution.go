@@ -486,7 +486,7 @@ func getClassObj(descriptor string, fr *frames.Frame) (*object.Object, error) {
 	// We must initialize the class, as per JVM spec for 'ldc' resolution.
 	params := []interface{}{
 		nameObj,
-		types.JavaBoolTrue, // initialize the class -- not sure we need this
+		types.JavaBoolTrue, // initialize the class -- TODO: do we need this?
 		nil,                // class loader (default to bootstrap loader)
 		fr.FrameStack,
 	}
@@ -494,15 +494,13 @@ func getClassObj(descriptor string, fr *frames.Frame) (*object.Object, error) {
 
 	result := globals.GetGlobalRef().FuncInvokeGFunction(gfuncName, params)
 
-	// TODO: check for errBlk and handle exceptions like ClassNotFoundException.
+	// Check for normal return.
 	obj, ok := result.(*object.Object)
 	if ok {
 		return obj, nil
 	}
-	if result == nil {
-		return nil, fmt.Errorf("getClassObj: Class.forName failed for '%s', nil object returned", forNameArg)
-	}
 
-	// TODO: result holds a *ghelpers.GErrBlk but I cannot handle it because that would cause a Go compiler cycle !!
-	return nil, fmt.Errorf("getClassObj: TODO! Class.forName failed for '%s', unexpected result type: %T", forNameArg, result)
+	// The G function returned an error. Ignore returned GErrBlk.
+	return nil, fmt.Errorf("getClassObj: Class.forName failed for '%s', err: ClassNotFoundException", forNameArg)
+
 }

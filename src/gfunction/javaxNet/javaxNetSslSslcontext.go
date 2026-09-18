@@ -1,4 +1,4 @@
-package misc
+package javaxNet
 
 import (
 	"jacobin/src/gfunction/ghelpers"
