@@ -13,12 +13,10 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/stringPool"
 	"jacobin/src/types"
-	"sync"
 )
 
 var classNameHashMap = "java/util/HashMap"
 var classNameHashSet = "java/util/HashSet"
-var hashmapMutex = sync.RWMutex{}
 var fieldNameMap = "map"
 
 func Load_Util_Hash_Map() {
@@ -225,8 +223,6 @@ func Load_Util_Hash_Map() {
 
 // Initialise a hash map object to an empty state.
 func hashmapInit(params []interface{}) interface{} {
-	hashmapMutex.Lock()
-	defer hashmapMutex.Unlock()
 	nilMap := make(types.DefHashMap)
 	obj := params[0].(*object.Object)
 	if obj.KlassName == 0 || obj.KlassName == types.InvalidStringIndex {
@@ -262,8 +258,6 @@ func _getKey(param interface{}) (interface{}, bool) {
 
 // Put inserts a key-value pair into the HashMap and returns the previous value or null.
 func hashmapPut(params []interface{}) interface{} {
-	hashmapMutex.Lock()
-	defer hashmapMutex.Unlock()
 
 	if len(params) < 3 {
 		errMsg := "hashmapPut: requires 3 parameters: HashMap, key, and value"
@@ -400,8 +394,6 @@ func hashmapGetOrDefault(params []interface{}) interface{} {
 
 // Remove a hash map entry. Return the removed value or nil if there is not one that matches the key.
 func hashmapRemove(params []interface{}) interface{} {
-	hashmapMutex.Lock()
-	defer hashmapMutex.Unlock()
 
 	if len(params) < 2 {
 		errMsg := "hashmapRemove: Requires 2 parameters: HashMap and key"
@@ -489,8 +481,6 @@ func hashmapIsEmpty(params []interface{}) interface{} {
 }
 
 func hashmapPutAll(params []interface{}) interface{} {
-	hashmapMutex.Lock()
-	defer hashmapMutex.Unlock()
 
 	if len(params) < 2 {
 		errMsg := "hashmapPutAll: requires 2 parameters: this HashMap and that HashMap"
