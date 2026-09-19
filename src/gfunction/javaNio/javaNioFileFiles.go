@@ -166,6 +166,74 @@ func Load_Nio_File_Files() {
 		ghelpers.GMeth{ParamSlots: 3, GFunction: filesWriteString}
 	ghelpers.MethodSignatures["java/nio/file/Files.writeString(Ljava/nio/file/Path;Ljava/lang/CharSequence;Ljava/nio/charset/Charset;[Ljava/nio/file/OpenOption;)Ljava/nio/file/Path;"] =
 		ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
+
+	// getFileStore
+	ghelpers.MethodSignatures["java/nio/file/Files.getFileStore(Ljava/nio/file/Path;)Ljava/nio/file/FileStore;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+
+	// getLastModifiedTime
+	ghelpers.MethodSignatures["java/nio/file/Files.getLastModifiedTime(Ljava/nio/file/Path;[Ljava/nio/file/LinkOption;)Ljava/nio/file/attribute/FileTime;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
+	// getOwner
+	ghelpers.MethodSignatures["java/nio/file/Files.getOwner(Ljava/nio/file/Path;[Ljava/nio/file/LinkOption;)Ljava/nio/file/attribute/UserPrincipal;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
+	// getPosixFilePermissions
+	ghelpers.MethodSignatures["java/nio/file/Files.getPosixFilePermissions(Ljava/nio/file/Path;[Ljava/nio/file/LinkOption;)Ljava/util/Set;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
+	// isExecutable / isHidden / isReadable / isWritable
+	ghelpers.MethodSignatures["java/nio/file/Files.isExecutable(Ljava/nio/file/Path;)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.isHidden(Ljava/nio/file/Path;)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.isReadable(Ljava/nio/file/Path;)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.isWritable(Ljava/nio/file/Path;)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+
+	// newBufferedReader / newBufferedWriter
+	ghelpers.MethodSignatures["java/nio/file/Files.newBufferedReader(Ljava/nio/file/Path;)Ljava/io/BufferedReader;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.newBufferedReader(Ljava/nio/file/Path;Ljava/nio/charset/Charset;)Ljava/io/BufferedReader;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.newBufferedWriter(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/io/BufferedWriter;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.newBufferedWriter(Ljava/nio/file/Path;Ljava/nio/charset/Charset;[Ljava/nio/file/OpenOption;)Ljava/io/BufferedWriter;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+
+	// newByteChannel
+	ghelpers.MethodSignatures["java/nio/file/Files.newByteChannel(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/nio/channels/SeekableByteChannel;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.newByteChannel(Ljava/nio/file/Path;Ljava/util/Set;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/channels/SeekableByteChannel;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+
+	// probeContentType
+	ghelpers.MethodSignatures["java/nio/file/Files.probeContentType(Ljava/nio/file/Path;)Ljava/lang/String;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+
+	// readAttributes
+	ghelpers.MethodSignatures["java/nio/file/Files.readAttributes(Ljava/nio/file/Path;Ljava/lang/Class;[Ljava/nio/file/LinkOption;)Ljava/nio/file/attribute/BasicFileAttributes;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.readAttributes(Ljava/nio/file/Path;Ljava/lang/String;[Ljava/nio/file/LinkOption;)Ljava/util/Map;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+
+	// setAttribute
+	ghelpers.MethodSignatures["java/nio/file/Files.setAttribute(Ljava/nio/file/Path;Ljava/lang/String;Ljava/lang/Object;[Ljava/nio/file/LinkOption;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
+
+	// setLastModifiedTime
+	ghelpers.MethodSignatures["java/nio/file/Files.setLastModifiedTime(Ljava/nio/file/Path;Ljava/nio/file/attribute/FileTime;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
+	// setOwner
+	ghelpers.MethodSignatures["java/nio/file/Files.setOwner(Ljava/nio/file/Path;Ljava/nio/file/attribute/UserPrincipal;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
+	// setPosixFilePermissions
+	ghelpers.MethodSignatures["java/nio/file/Files.setPosixFilePermissions(Ljava/nio/file/Path;Ljava/util/Set;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 }
 
 // --- Helpers ---
