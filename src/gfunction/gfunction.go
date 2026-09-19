@@ -120,6 +120,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaNet.Load_Net_Http_HttpRequest()
 
 	// java/nio/*
+	javaNio.Load_Nio_Charset_Charset()
 	javaNio.Load_Nio_File_Attribute_BasicFileAttributes()
 	javaNio.Load_Nio_File_Attribute_FileTime()
 	javaNio.Load_Nio_File_Files()

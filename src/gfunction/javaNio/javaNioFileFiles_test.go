@@ -130,6 +130,89 @@ func Test_Files_CreateFile_Directory_Delete_DeleteIfExists(t *testing.T) {
 	}
 }
 
+func Test_Files_CreateDirectories(t *testing.T) {
+	globals.InitGlobals("test")
+	dir := t.TempDir()
+	nested := filepath.Join(dir, "a", "b", "c")
+	r := filesCreateDirectories([]interface{}{newPath(nested), object.Null})
+	if _, ok := r.(*object.Object); !ok {
+		t.Fatalf("createDirectories should return Path, got %T", r)
+	}
+	if fi, err := os.Stat(nested); err != nil || !fi.IsDir() {
+		t.Fatalf("nested directory was not created: %v", err)
+	}
+	// calling again on an existing hierarchy should succeed (MkdirAll is idempotent)
+	r2 := filesCreateDirectories([]interface{}{newPath(nested), object.Null})
+	if _, ok := r2.(*object.Object); !ok {
+		t.Fatalf("createDirectories should be idempotent, got %T", r2)
+	}
+}
+
+func Test_Files_CreateLink(t *testing.T) {
+	globals.InitGlobals("test")
+	dir := t.TempDir()
+	target := filepath.Join(dir, "orig.txt")
+	if err := os.WriteFile(target, []byte("hard"), 0o644); err != nil {
+		t.Fatalf("prep: %v", err)
+	}
+	link := filepath.Join(dir, "hardlink.txt")
+	r := filesCreateLink([]interface{}{newPath(link), newPath(target), object.Null})
+	if _, ok := r.(*object.Object); !ok {
+		t.Fatalf("createLink should return Path, got %T", r)
+	}
+	b, err := os.ReadFile(link)
+	if err != nil || string(b) != "hard" {
+		t.Fatalf("hard link content mismatch: %v %q", err, string(b))
+	}
+
+	// error path: target doesn't exist
+	r2 := filesCreateLink([]interface{}{newPath(filepath.Join(dir, "another")), newPath(filepath.Join(dir, "nope")), object.Null})
+	if _, ok := r2.(*ghelpers.GErrBlk); !ok {
+		t.Fatalf("expected error for createLink with missing target, got %T", r2)
+	}
+}
+
+func Test_Files_CreateTempFileInDir_And_CreateTempDirectoryInDir(t *testing.T) {
+	globals.InitGlobals("test")
+	dir := t.TempDir()
+
+	tf := filesCreateTempFileInDir([]interface{}{newPath(dir), object.StringObjectFromGoString("pre"), object.StringObjectFromGoString(".suf"), object.Null})
+	tfObj, ok := tf.(*object.Object)
+	if !ok {
+		t.Fatalf("createTempFileInDir should return Path, got %T", tf)
+	}
+	tfPath, gerr := pathToGoString(tfObj)
+	if gerr != nil {
+		t.Fatalf("pathToGoString failed: %+v", gerr)
+	}
+	if filepath.Dir(tfPath) != dir {
+		t.Fatalf("temp file should be created in %q, got %q", dir, tfPath)
+	}
+
+	td := filesCreateTempDirectoryInDir([]interface{}{newPath(dir), object.StringObjectFromGoString("pfx"), object.Null})
+	tdObj, ok := td.(*object.Object)
+	if !ok {
+		t.Fatalf("createTempDirectoryInDir should return Path, got %T", td)
+	}
+	tdPath, gerr2 := pathToGoString(tdObj)
+	if gerr2 != nil {
+		t.Fatalf("pathToGoString failed: %+v", gerr2)
+	}
+	if filepath.Dir(tdPath) != dir {
+		t.Fatalf("temp directory should be created in %q, got %q", dir, tdPath)
+	}
+	if fi, err := os.Stat(tdPath); err != nil || !fi.IsDir() {
+		t.Fatalf("expected temp directory to exist: %v", err)
+	}
+
+	// error path: parent directory doesn't exist
+	bad := filepath.Join(dir, "nope", "deeper")
+	rerr := filesCreateTempFileInDir([]interface{}{newPath(bad), object.StringObjectFromGoString("pre"), object.StringObjectFromGoString(".suf"), object.Null})
+	if _, ok := rerr.(*ghelpers.GErrBlk); !ok {
+		t.Fatalf("expected error for createTempFileInDir with missing parent dir, got %T", rerr)
+	}
+}
+
 func Test_Files_Copy_And_Move(t *testing.T) {
 	globals.InitGlobals("test")
 	dir := t.TempDir()
