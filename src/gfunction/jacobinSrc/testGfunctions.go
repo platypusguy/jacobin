@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
-package gfunction
+package jacobinSrc
 
 import (
 	"jacobin/src/classloader"
@@ -182,5 +182,18 @@ func CheckTestGfunctionsLoaded() {
 	}
 	classloader.MethAreaInsert("jacobin/src/test/Object", &klass)
 
-	LoadTestGfunctions(&classloader.MTable)
+	Load_TestGfunctions()
+	for key, val := range ghelpers.TestMethodSignatures {
+		gme := ghelpers.GMeth{
+			ParamSlots:   val.ParamSlots,
+			GFunction:    val.GFunction,
+			NeedsContext: val.NeedsContext,
+		}
+		tableEntry := classloader.MTentry{
+			MType: 'G',
+			Meth:  gme,
+		}
+		classloader.AddEntry(&classloader.MTable, key, tableEntry)
+	}
+	ghelpers.TestGfunctionsLoaded = true
 }

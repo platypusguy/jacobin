@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023-5 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2026 by  the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -12,13 +12,16 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/jacobinSrc"
 	"jacobin/src/gfunction/javaAwt"
 	"jacobin/src/gfunction/javaIo"
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/gfunction/javaMath"
 	"jacobin/src/gfunction/javaNet"
 	"jacobin/src/gfunction/javaNio"
+	"jacobin/src/gfunction/javaRmi"
 	"jacobin/src/gfunction/javaSecurity"
+	"jacobin/src/gfunction/javaSql"
 	"jacobin/src/gfunction/javaText"
 	"jacobin/src/gfunction/javaTime"
 	"jacobin/src/gfunction/javaUtil"
@@ -42,14 +45,10 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// Load traps first, then override with our implementations for Files
 	// so any methods we implement replace trapped entries.
-	ghelpers.Load_Traps()
-	ghelpers.Load_Traps_Java_Io()
-	ghelpers.Load_Traps_Javax_Crypto()
-	ghelpers.Load_Traps_Java_Nio()
-	ghelpers.Load_Traps_Java_Security()
 
 	// java/awt/*
 	javaAwt.Load_Awt_Graphics_Environment()
+	javaAwt.Load_Awt_Traps()
 
 	// java/io/*
 	javaIo.Load_Io_BufferedInputStream()
@@ -71,6 +70,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaIo.Load_Io_OutputStreamWriter()
 	javaIo.Load_Io_PrintStream()
 	javaIo.Load_Io_RandomAccessFile()
+	javaIo.Load_Traps_Java_Io()
 
 	// java/lang/*
 	javaLang.ClassClinitIsh() // Special case clinit for java/lang/Class.
@@ -106,12 +106,14 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Throwable()
 	javaLang.Load_Lang_UTF16()
 	javaLang.Load_Lang_Void()
+	javaLang.Load_Traps_Java_Lang()
 
 	// java/math/*
 	javaMath.Load_Math_Big_Decimal()
 	javaMath.Load_Math_Big_Integer()
 	javaMath.Load_Math_Math_Context()
 	javaMath.Load_Math_Rounding_Mode()
+	javaMath.Load_Traps_Java_Math()
 
 	// java/net/*
 	javaNet.Load_Net_Http_HttpClient()
@@ -126,6 +128,10 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaNio.Load_Nio_File_SimpleFileVisitor()
 	javaNio.Load_Nio_File_Path()
 	javaNio.Load_Nio_File_Paths()
+	javaNio.Load_Traps_Java_Nio()
+
+	// java/rmi/*
+	javaRmi.Load_Traps_Java_Rmi()
 
 	// java/text/*
 	javaText.Load_Text_ChoiceFormat()
@@ -158,25 +164,14 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaSecurity.Load_Security_AlgorithmParameters()
 	javaSecurity.Load_Security_Spec_NamedParameterSpec()
 	javaSecurity.Load_Security_Spec_AlgorithmParameterSpec()
+	javaSecurity.Load_Traps_Java_Security()
+
+	// java/sql
+	javaSql.Load_Traps_Java_Sql()
 
 	// java.time/*
 	javaTime.Load_Time_Traps()
 	javaTime.Load_Time_Duration()
-
-	// javax/crypto/*
-	javaxCrypto.Load_Crypto_Cipher()
-	javaxCrypto.Load_Crypto_ExemptionMechanism()
-	javaxCrypto.Load_Crypto_Interfaces_DH_Keys()
-	javaxCrypto.Load_Crypto_KEM()
-	javaxCrypto.Load_Crypto_KeyAgreement()
-	javaxCrypto.Load_Crypto_Mac()
-	javaxCrypto.Load_Crypto_SecretKeyFactory()
-	javaxCrypto.Load_Crypto_Spec_DHParameterSpec()
-	javaxCrypto.Load_Crypto_Spec_GCMParameterSpec()
-	javaxCrypto.Load_Crypto_Spec_IvParameterSpec()
-	javaxCrypto.Load_Crypto_Spec_PBEKeySpec()
-	javaxCrypto.Load_Crypto_Spec_PBEParameterSpec()
-	javaxCrypto.Load_Crypto_Spec_SecretKeySpec()
 
 	// java/util/*
 	javaUtil.Load_Util_ArrayList()
@@ -226,27 +221,44 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_Zip_Adler32()
 	javaUtil.Load_Util_Zip_CheckedInputStream()
 	javaUtil.Load_Util_Zip_Crc32_Crc32c()
+	javaUtil.Load_Traps_Java_Util()
 
-	// javax.*
+	// javax/crypto/*
+	javaxCrypto.Load_Crypto_Cipher()
+	javaxCrypto.Load_Crypto_ExemptionMechanism()
+	javaxCrypto.Load_Crypto_Interfaces_DH_Keys()
+	javaxCrypto.Load_Crypto_KEM()
+	javaxCrypto.Load_Crypto_KeyAgreement()
+	javaxCrypto.Load_Crypto_Mac()
+	javaxCrypto.Load_Crypto_SecretKeyFactory()
+	javaxCrypto.Load_Crypto_Spec_DHParameterSpec()
+	javaxCrypto.Load_Crypto_Spec_GCMParameterSpec()
+	javaxCrypto.Load_Crypto_Spec_IvParameterSpec()
+	javaxCrypto.Load_Crypto_Spec_PBEKeySpec()
+	javaxCrypto.Load_Crypto_Spec_PBEParameterSpec()
+	javaxCrypto.Load_Crypto_Spec_SecretKeySpec()
+	javaxCrypto.Load_Traps_Javax_Crypto()
+
+	// javax/net/*
 	javaxNet.Load_Javax_Net_Ssl_SSLContext()
 
 	// jdk/internal/misc/*
 	jdkInternal.Load_Jdk_Internal_Misc_Unsafe()
 	jdkInternal.Load_Jdk_Internal_Misc_ScopedMemoryAccess()
+	jdkInternal.Load_Traps_Jdk_Internal()
 
-	// sun.misc.*
+	// sun/misc/*
 	sunMisc.Load_Sun_Misc_Unsafe()
+	sunMisc.Load_Traps_Sun_Misc()
 
-	// Sun
+	// sun/security/*
 	sunSecurity.Load_Sun_Security_Action_GetBooleanAction()
 	sunSecurity.Load_Sun_Security_Action_GetIntegerAction()
 	sunSecurity.Load_Sun_Security_Action_GetLongAction()
 	sunSecurity.Load_Sun_Security_Action_GetPropertyAction()
 	sunSecurity.Load_Sun_Security_Jca_ProviderList()
 	sunSecurity.Load_Sun_Security_Jca_Providers()
-
-	// Load functions that invoke ghelpers.ClinitGeneric() and do nothing else.
-	Load_Other_Methods()
+	sunSecurity.Load_Traps_Sun_Security()
 
 	// Load diagnostic helper functions.
 	misc.Load_jj()
@@ -258,7 +270,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 // load the test gfunctions in testGfunctions.go
 func LoadTestGfunctions(MTable *classloader.MT) {
-	Load_TestGfunctions()
+	jacobinSrc.Load_TestGfunctions()
 	loadlib(MTable, ghelpers.TestMethodSignatures)
 	ghelpers.TestGfunctionsLoaded = true
 }

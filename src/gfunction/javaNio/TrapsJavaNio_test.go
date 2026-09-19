@@ -1,15 +1,16 @@
-package ghelpers
+package javaNio
 
 import (
+	"jacobin/src/gfunction/ghelpers"
 	"reflect"
 	"testing"
 )
 
 func TestLoad_Traps_Java_Nio_RegistersSomeMethods(t *testing.T) {
 	// Preserve global map and restore after test
-	saved := MethodSignatures
-	defer func() { MethodSignatures = saved }()
-	MethodSignatures = make(map[string]GMeth)
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
 
 	Load_Traps_Java_Nio()
 
@@ -20,15 +21,15 @@ func TestLoad_Traps_Java_Nio_RegistersSomeMethods(t *testing.T) {
 		fn      func([]interface{}) interface{}
 		checkFn bool
 	}{
-		{"java/nio/file/AccessMode.<clinit>()V", 0, TrapClass, true},
-		{"java/nio/ByteBuffer.<clinit>()V", 0, TrapClass, true},
-		{"java/nio/file/Files.<clinit>()V", 0, TrapClass, true},
-		{"java/nio/charset/StandardCharsets.<clinit>()V", 0, TrapClass, true},
-		{"java/nio/channels/FileChannel.<clinit>()V", 0, TrapClass, true},
+		{"java/nio/file/AccessMode.<clinit>()V", 0, ghelpers.TrapClass, true},
+		{"java/nio/ByteBuffer.<clinit>()V", 0, ghelpers.TrapClass, true},
+		{"java/nio/file/Files.<clinit>()V", 0, ghelpers.TrapClass, true},
+		{"java/nio/charset/StandardCharsets.<clinit>()V", 0, ghelpers.TrapClass, true},
+		{"java/nio/channels/FileChannel.<clinit>()V", 0, ghelpers.TrapClass, true},
 	}
 
 	for _, c := range checks {
-		gm, ok := MethodSignatures[c.key]
+		gm, ok := ghelpers.MethodSignatures[c.key]
 		if !ok {
 			t.Fatalf("missing MethodSignatures entry for %s", c.key)
 		}

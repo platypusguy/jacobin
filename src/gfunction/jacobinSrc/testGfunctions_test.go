@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
-package gfunction
+package jacobinSrc
 
 import (
 	"jacobin/src/classloader"
