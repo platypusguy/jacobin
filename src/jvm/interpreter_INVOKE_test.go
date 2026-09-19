@@ -10,7 +10,7 @@ import (
 	"io"
 	"jacobin/src/classloader"
 	"jacobin/src/frames"
-	"jacobin/src/gfunction"
+	"jacobin/src/gfunction/jacobinSrc"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/opcodes"
@@ -352,7 +352,7 @@ func TestNewInvokeSpecialGmethodNoParams(t *testing.T) {
 		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodNoParams")
 	}
 
-	gfunction.CheckTestGfunctionsLoaded()
+	jacobinSrc.CheckTestGfunctionsLoaded()
 
 	f := newFrame(opcodes.INVOKESPECIAL)
 	f.Meth = append(f.Meth, 0x00)
@@ -423,7 +423,7 @@ func TestNewInvokeSpecialGmethodNoParamsReturnsD(t *testing.T) {
 		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodReturnsD")
 	}
 
-	gfunction.CheckTestGfunctionsLoaded()
+	jacobinSrc.CheckTestGfunctionsLoaded()
 
 	f := newFrame(opcodes.INVOKESPECIAL)
 	f.Meth = append(f.Meth, 0x00)
@@ -494,7 +494,7 @@ func TestNewInvokeSpecialGmethodErrorReturn(t *testing.T) {
 		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodErrorReturn")
 	}
 
-	gfunction.CheckTestGfunctionsLoaded()
+	jacobinSrc.CheckTestGfunctionsLoaded()
 
 	f := newFrame(opcodes.INVOKESPECIAL)
 	f.Meth = append(f.Meth, 0x00)
@@ -567,7 +567,7 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 		t.Errorf("Failure to load classes in TestInvokeStaticGmethodNoParams")
 	}
 
-	gfunction.CheckTestGfunctionsLoaded()
+	jacobinSrc.CheckTestGfunctionsLoaded()
 
 	f := newFrame(opcodes.INVOKESTATIC)
 	f.Meth = append(f.Meth, 0x00)
@@ -670,7 +670,7 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 		t.Errorf("Failure to load classes in TestInvokeStaticGmethodNoParams")
 	}
 
-	gfunction.CheckTestGfunctionsLoaded()
+	jacobinSrc.CheckTestGfunctionsLoaded()
 
 	f := newFrame(opcodes.INVOKESTATIC)
 	f.Meth = append(f.Meth, 0x00)
