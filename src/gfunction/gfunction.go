@@ -128,7 +128,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaNio.Load_Nio_File_SimpleFileVisitor()
 	javaNio.Load_Nio_File_Path()
 	javaNio.Load_Nio_File_Paths()
-	javaNio.Load_Traps_Java_Nio()
 
 	// java/rmi/*
 	javaRmi.Load_Traps_Java_Rmi()
