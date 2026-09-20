@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024-5 by the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024-6 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -18,219 +18,10 @@ import (
 	"os"
 )
 
-// Here we check the bytecodes of a method. The method is passed as a byte slice.
-// The bytecodes are checked against a function lookup table which calls the function
-// to performs the check. It then uses the skip table to determine the number of bytes
-// to skip to the next bytecode. If an error occurs, a ClassFormatException is thrown.
-
-// NOTE: The unit tests for these functions are in codeCheck_test.go in the jvm package.
-// Placed there to avoid circular dependencies.
-
-var bytecodeSkipTable = map[byte]int{
-	0x00: 1, // NOP
-	0x01: 1, // ACONST_NULL
-	0x02: 1, // ICONST_M1
-	0x03: 1, // ICONST_0
-	0x04: 1, // ICONST_1
-	0x05: 1, // ICONST_2
-	0x06: 1, // ICONST_3
-	0x07: 1, // ICONST_4
-	0x08: 1, // ICONST_5
-	0x09: 1, // LCONST_0
-	0x0A: 1, // LCONST_1
-	0x0B: 1, // FCONST_0
-	0x0C: 1, // FCONST_1
-	0x0D: 1, // FCONST_2
-	0x0E: 1, // DCONST_0
-	0x0F: 1, // DCONST_1
-	0x10: 2, // BIPUSH
-	0x11: 3, // SIPUSH
-	0x12: 2, // LDC
-	0x13: 3, // LDC_W
-	0x14: 3, // LDC2_W
-	0x15: 2, // ILOAD
-	0x16: 2, // LLOAD
-	0x17: 2, // FLOAD
-	0x18: 2, // DLOAD
-	0x19: 2, // ALOAD
-	0x1A: 1, // ILOAD_0
-	0x1B: 1, // ILOAD_1
-	0x1C: 1, // ILOAD_2
-	0x1D: 1, // ILOAD_3
-	0x1E: 1, // LLOAD_0
-	0x1F: 1, // LLOAD_1
-	0x20: 1, // LLOAD_2
-	0x21: 1, // LLOAD_3
-	0x22: 1, // FLOAD_0
-	0x23: 1, // FLOAD_1
-	0x24: 1, // FLOAD_2
-	0x25: 1, // FLOAD_3
-	0x26: 1, // DLOAD_0
-	0x27: 1, // DLOAD_1
-	0x28: 1, // DLOAD_2
-	0x29: 1, // DLOAD_3
-	0x2A: 1, // ALOAD_0
-	0x2B: 1, // ALOAD_1
-	0x2C: 1, // ALOAD_2
-	0x2D: 1, // ALOAD_3
-	0x2E: 1, // IALOAD
-	0x2F: 1, // LALOAD
-	0x30: 1, // FALOAD
-	0x31: 1, // DALOAD
-	0x32: 1, // AALOAD
-	0x33: 1, // BALOAD
-	0x34: 1, // CALOAD
-	0x35: 1, // SALOAD
-	0x36: 2, // ISTORE
-	0x37: 2, // LSTORE
-	0x38: 2, // FSTORE
-	0x39: 2, // DSTORE
-	0x3A: 2, // ASTORE
-	0x3B: 1, // ISTORE_0
-	0x3C: 1, // ISTORE_1
-	0x3D: 1, // ISTORE_2
-	0x3E: 1, // ISTORE_3
-	0x3F: 1, // LSTORE_0
-	0x40: 1, // LSTORE_1
-	0x41: 1, // LSTORE_2
-	0x42: 1, // LSTORE_3
-	0x43: 1, // FSTORE_0
-	0x44: 1, // FSTORE_1
-	0x45: 1, // FSTORE_2
-	0x46: 1, // FSTORE_3
-	0x47: 1, // DSTORE_0
-	0x48: 1, // DSTORE_1
-	0x49: 1, // DSTORE_2
-	0x4A: 1, // DSTORE_3
-	0x4B: 1, // ASTORE_0
-	0x4C: 1, // ASTORE_1
-	0x4D: 1, // ASTORE_2
-	0x4E: 1, // ASTORE_3
-	0x4F: 1, // IASTORE
-	0x50: 1, // LASTORE
-	0x51: 1, // FASTORE
-	0x52: 1, // DASTORE
-	0x53: 1, // AASTORE
-	0x54: 1, // BASTORE
-	0x55: 1, // CASTORE
-	0x56: 1, // SASTORE
-	0x57: 1, // POP
-	0x58: 1, // POP2
-	0x59: 1, // DUP
-	0x5A: 1, // DUP_X1
-	0x5B: 1, // DUP_X2
-	0x5C: 1, // DUP2
-	0x5D: 1, // DUP2_X1
-	0x5E: 1, // DUP2_X2
-	0x5F: 1, // SWAP
-	0x60: 1, // IADD
-	0x61: 1, // LADD
-	0x62: 1, // FADD
-	0x63: 1, // DADD
-	0x64: 1, // ISUB
-	0x65: 1, // LSUB
-	0x66: 1, // FSUB
-	0x67: 1, // DSUB
-	0x68: 1, // IMUL
-	0x69: 1, // LMUL
-	0x6A: 1, // FMUL
-	0x6B: 1, // DMUL
-	0x6C: 1, // IDIV
-	0x6D: 1, // LDIV
-	0x6E: 1, // FDIV
-	0x6F: 1, // DDIV
-	0x70: 1, // IREM
-	0x71: 1, // LREM
-	0x72: 1, // FREM
-	0x73: 1, // DREM
-	0x74: 1, // INEG
-	0x75: 1, // LNEG
-	0x76: 1, // FNEG
-	0x77: 1, // DNEG
-	0x78: 1, // ISHL
-	0x79: 1, // LSHL
-	0x7A: 1, // ISHR
-	0x7B: 1, // LSHR
-	0x7C: 1, // IUSHR
-	0x7D: 1, // LUSHR
-	0x7E: 1, // IAND
-	0x7F: 1, // LAND
-	0x80: 1, // IOR
-	0x81: 1, // LOR
-	0x82: 1, // IXOR
-	0x83: 1, // LXOR
-	0x84: 3, // IINC
-	0x85: 1, // I2L
-	0x86: 1, // I2F
-	0x87: 1, // I2D
-	0x88: 1, // L2I
-	0x89: 1, // L2F
-	0x8A: 1, // L2D
-	0x8B: 1, // F2I
-	0x8C: 1, // F2L
-	0x8D: 1, // F2D
-	0x8E: 1, // D2I
-	0x8F: 1, // D2L
-	0x90: 1, // D2F
-	0x91: 1, // I2B
-	0x92: 1, // I2C
-	0x93: 1, // I2S
-	0x94: 1, // LCMP
-	0x95: 1, // FCMPL
-	0x96: 1, // FCMPG
-	0x97: 1, // DCMPL
-	0x98: 1, // DCMPG
-	0x99: 3, // IFEQ
-	0x9A: 3, // IFNE
-	0x9B: 3, // IFLT
-	0x9C: 3, // IFGE
-	0x9D: 3, // IFGT
-	0x9E: 3, // IFLE
-	0x9F: 3, // IF_ICMPEQ
-	0xA0: 3, // IF_ICMPNE
-	0xA1: 3, // IF_ICMPLT
-	0xA2: 3, // IF_ICMPGE
-	0xA3: 3, // IF_ICMPGT
-	0xA4: 3, // IF_ICMPLE
-	0xA5: 3, // IF_ACMPEQ
-	0xA6: 3, // IF_ACMPNE
-	0xA7: 3, // GOTO
-	0xA8: 3, // JSR
-	0xA9: 2, // RET
-	0xAA: 0, // TABLESWITCH
-	0xAB: 0, // LOOKUPSWITCH
-	0xAC: 1, // IRETURN
-	0xAD: 1, // LRETURN
-	0xAE: 1, // FRETURN
-	0xAF: 1, // DRETURN
-	0xB0: 1, // ARETURN
-	0xB1: 1, // RETURN
-	0xB2: 3, // GETSTATIC
-	0xB3: 3, // PUTSTATIC
-	0xB4: 3, // GETFIELD
-	0xB5: 3, // PUTFIELD
-	0xB6: 3, // INVOKEVIRTUAL
-	0xB7: 3, // INVOKESPECIAL
-	0xB8: 3, // INVOKESTATIC
-	0xB9: 5, // INVOKEINTERFACE
-	0xBA: 5, // INVOKEDYNAMIC
-	0xBB: 3, // NEW
-	0xBC: 2, // NEWARRAY
-	0xBD: 3, // ANEWARRAY
-	0xBE: 1, // ARRAYLENGTH
-	0xBF: 1, // ATHROW
-	0xC0: 3, // CHECKCAST
-	0xC1: 3, // INSTANCEOF
-	0xC2: 1, // MONITORENTER
-	0xC3: 1, // MONITOREXIT
-	0xC4: 0, // WIDE
-	0xC5: 4, // MULTIANEWARRAY
-	0xC6: 3, // IFNULL
-	0xC7: 3, // IFNONNULL
-	0xC8: 5, // GOTO_W
-	0xC9: 5, // JSR_W
-	0xCA: 1, // BREAKPOINT
-}
+// Here we check the bytecodes of a method. The method is passed as a slice of bytes.
+// The instructions are checked via a function lookup table that calls the verifier
+// function. That function returns either an error code or the number of bytes to skip
+// to reach the next bytecode. If an error occurs, a ClassFormatException is thrown.
 
 var BytecodeNames = [203]string{
 	"NOP",             // 0x00
@@ -715,14 +506,15 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, maxLocals int, 
 			errMsg := fmt.Sprintf("Check of %s instruction: Invalid bytecode or argument at location %d",
 				BytecodeNames[opcode], PC)
 			return errors.New(errMsg)
-		} else {
-			if ret+PC > len(code) {
-				errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
-				return errors.New(errMsg)
-			}
-			PrevPC = PC
-			PC += ret
 		}
+
+		if ret+PC > len(code) {
+			errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
+			return errors.New(errMsg)
+		}
+
+		PrevPC = PC
+		PC += ret
 	}
 	return nil
 }
@@ -976,6 +768,7 @@ func CheckIload0() int {
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
+
 	StackEntries += 1
 	return 1
 }
@@ -1251,16 +1044,6 @@ func checkLookupswitch() int { // need to check this
 	return (basePC - PC) + 1
 }
 
-func CheckPop() int {
-	StackEntries -= 1
-	return 1
-}
-
-func CheckPop2() int {
-	StackEntries -= 2
-	return 1
-}
-
 // NEW 0xBB
 func CheckNew() int {
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
@@ -1276,6 +1059,18 @@ func CheckNew() int {
 	}
 	StackEntries += 1
 	return 3
+}
+
+// POP
+func CheckPop() int {
+	StackEntries -= 1
+	return 1
+}
+
+// POP2
+func CheckPop2() int {
+	StackEntries -= 2
+	return 1
 }
 
 // PUTFIELD 0xB5 Put non-static field
