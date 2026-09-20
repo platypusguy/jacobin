@@ -93,6 +93,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Process_Handle_Impl()
 	javaLang.Load_Lang_Reflect_Modifier()
 	javaLang.Load_Lang_Runtime()
+	javaLang.Load_Lang_Runtime_SwitchBootstraps()
 	javaLang.Load_Lang_SecurityManager()
 	javaLang.Load_Lang_Short()
 	javaLang.Load_Lang_StackTraceELement()
@@ -106,7 +107,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Throwable()
 	javaLang.Load_Lang_UTF16()
 	javaLang.Load_Lang_Void()
-	javaLang.Load_Traps_Java_Lang()
 
 	// java/math/*
 	javaMath.Load_Math_Big_Decimal()
@@ -118,8 +118,14 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// java/net/*
 	javaNet.Load_Net_Http_HttpClient()
 	javaNet.Load_Net_Http_HttpRequest()
+	javaNet.Load_Net_InetAddress()
+	javaNet.Load_Net_ServerSocket()
+	javaNet.Load_Net_Socket()
+	javaNet.Load_Net_SocketAddress()
+	javaNet.Load_Net_SocketOption()
 
 	// java/nio/*
+	javaNio.Load_Nio_Channels_ServerSocketChannel()
 	javaNio.Load_Nio_Charset_Charset()
 	javaNio.Load_Nio_File_Attribute_BasicFileAttributes()
 	javaNio.Load_Nio_File_Attribute_FileTime()
@@ -132,15 +138,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java/rmi/*
 	javaRmi.Load_Traps_Java_Rmi()
-
-	// java/text/*
-	javaText.Load_Text_ChoiceFormat()
-	javaText.Load_Text_DateFormat()
-	javaText.Load_Text_DecimalFormat()
-	javaText.Load_Text_ListFormat()
-	javaText.Load_Text_NumberFormat()
-	javaText.Load_Text_MessageFormat()
-	javaText.Load_Text_SimpleDateFormat()
 
 	// java/security/*
 	javaSecurity.Load_ECFieldAndPoint()
@@ -168,6 +165,15 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java/sql
 	javaSql.Load_Traps_Java_Sql()
+
+	// java/text/*
+	javaText.Load_Text_ChoiceFormat()
+	javaText.Load_Text_DateFormat()
+	javaText.Load_Text_DecimalFormat()
+	javaText.Load_Text_ListFormat()
+	javaText.Load_Text_NumberFormat()
+	javaText.Load_Text_MessageFormat()
+	javaText.Load_Text_SimpleDateFormat()
 
 	// java.time/*
 	javaTime.Load_Time_Traps()
@@ -221,6 +227,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_Zip_Adler32()
 	javaUtil.Load_Util_Zip_CheckedInputStream()
 	javaUtil.Load_Util_Zip_Crc32_Crc32c()
+	javaUtil.Load_Util_Zip_ZipInputStream()
 	javaUtil.Load_Traps_Java_Util()
 
 	// javax/crypto/*
@@ -237,7 +244,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaxCrypto.Load_Crypto_Spec_PBEKeySpec()
 	javaxCrypto.Load_Crypto_Spec_PBEParameterSpec()
 	javaxCrypto.Load_Crypto_Spec_SecretKeySpec()
-	javaxCrypto.Load_Traps_Javax_Crypto()
 
 	// javax/net/*
 	javaxNet.Load_Javax_Net_Ssl_SSLContext()
@@ -245,11 +251,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// jdk/internal/misc/*
 	jdkInternal.Load_Jdk_Internal_Misc_Unsafe()
 	jdkInternal.Load_Jdk_Internal_Misc_ScopedMemoryAccess()
-	jdkInternal.Load_Traps_Jdk_Internal()
 
 	// sun/misc/*
 	sunMisc.Load_Sun_Misc_Unsafe()
-	sunMisc.Load_Traps_Sun_Misc()
 
 	// sun/security/*
 	sunSecurity.Load_Sun_Security_Action_GetBooleanAction()
