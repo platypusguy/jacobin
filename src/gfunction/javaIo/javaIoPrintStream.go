@@ -621,6 +621,13 @@ func _printString(params []interface{}, newLine bool) interface{} {
 	if !ok {
 		errMsg := fmt.Sprintf("_printString: Expected io.Writer, observed param count: %d, type: %T, value: %v",
 			len(params), params[0], params[0])
+		if len(params) > 0 {
+			switch params[0].(type) {
+			case *object.Object:
+				obj := params[0].(*object.Object)
+				obj.DumpObject("_printString: unexpected object in params[0]", 0)
+			}
+		}
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
