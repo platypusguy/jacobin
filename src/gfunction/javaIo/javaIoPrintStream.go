@@ -619,14 +619,16 @@ func Printf(params []interface{}) interface{} {
 func _printString(params []interface{}, newLine bool) interface{} {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
-		errMsg := fmt.Sprintf("_printString: Expected io.Writer, observed %T", params[0])
+		errMsg := fmt.Sprintf("_printString: Expected io.Writer, observed param count: %d, type: %T, value: %v",
+			len(params), params[0], params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	var str string
 	param1, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("_printString: Expected params[1] of type *object.Object but observed type %T\n", params[1])
+		errMsg := fmt.Sprintf("_printString: Expected params[1] of type *object.Object, observed param count: %d, type: %T, value: %v",
+			len(params), params[1], params[1])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -649,7 +651,7 @@ func _printString(params []interface{}, newLine bool) interface{} {
 			case []types.JavaByte:
 				str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 			default:
-				errMsg := fmt.Sprintf("_printString: Expected value field to be type byte but observed type %T\n", fld.Fvalue)
+				errMsg := fmt.Sprintf("_printString: Expected value field to be type Java byte but observed type %T\n", fld.Fvalue)
 				return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 			}
 		}
