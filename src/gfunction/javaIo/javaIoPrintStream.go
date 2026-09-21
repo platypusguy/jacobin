@@ -27,7 +27,7 @@ import (
  a struct of an int (the number of slots to pop off the caller's operand stack when
  creating the new frame and a function. All methods have the same signature, regardless
  of the signature of their Java counterparts. That signature is that it accepts a slice
- of interface{} and returns an interface{}. The accepted slice can be empty and the
+ of any and returns an any. The accepted slice can be empty and the
  return interface can be nil. This covers all Java functions. (Objects are returned
  as a 64-bit address in this scheme (as they are in the JVM).
 
@@ -353,7 +353,7 @@ func Load_Io_PrintStream() {
 }
 
 // "java/io/PrintStream.flush()V"
-func PrintFlush(params []interface{}) interface{} {
+func PrintFlush(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintChar: Expected io.Writer, observed %T", params[0])
@@ -367,7 +367,7 @@ func PrintFlush(params []interface{}) interface{} {
 
 // java/io/PrintStream.write([B)V
 // java/io/PrintStream.write([BII)V
-func printstreamWriteFromByteArray(params []interface{}) interface{} {
+func printstreamWriteFromByteArray(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("java/io/PrintStream.write: Expected io.Writer, observed %T", params[0])
@@ -404,38 +404,38 @@ func printstreamWriteFromByteArray(params []interface{}) interface{} {
 	}
 
 	str := object.GoStringFromJavaByteArray(jba)
-	fmt.Fprint(writer, str)
+	_,_ = fmt.Fprint(writer, str)
 	return nil
 }
 
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline (V = void)
 // "java/io/PrintStream.println()V"
-func PrintlnV(params []interface{}) interface{} {
+func PrintlnV(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnV: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	fmt.Fprintln(writer, "")
+	_,_ = fmt.Fprintln(writer, "")
 	return nil
 }
 
 // "java/io/PrintStream.println(C)V"
-func PrintlnChar(params []interface{}) interface{} {
+func PrintlnChar(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnChar: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	bb := byte(params[1].(int64))
-	fmt.Fprintln(writer, string(bb))
+	_,_ = fmt.Fprintln(writer, string(bb))
 	return nil
 }
 
 // "java/io/PrintStream.println(B)V"
 // "java/io/PrintStream.println(I)V"
 // "java/io/PrintStream.println(S)V"
-func PrintlnBIS(params []interface{}) interface{} {
+func PrintlnBIS(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnBIS: Expected io.Writer, observed %T", params[0])
@@ -445,12 +445,12 @@ func PrintlnBIS(params []interface{}) interface{} {
 	if !ok {
 		intToPrint = int64(params[1].(int8))
 	}
-	fmt.Fprintln(writer, intToPrint)
+	_, _ = fmt.Fprintln(writer, intToPrint)
 	return nil
 }
 
 // "java/io/PrintStream.println(Z)V"
-func PrintlnBoolean(params []interface{}) interface{} {
+func PrintlnBoolean(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnBoolean: Expected io.Writer, observed %T", params[0])
@@ -463,62 +463,62 @@ func PrintlnBoolean(params []interface{}) interface{} {
 	} else {
 		boolToPrint = false
 	}
-	fmt.Fprintln(writer, boolToPrint)
+	_, _ = fmt.Fprintln(writer, boolToPrint)
 	return nil
 }
 
 // "java/io/PrintStream.println(J)V"
-func PrintlnLong(params []interface{}) interface{} {
+func PrintlnLong(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnLong: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
-	fmt.Fprintln(writer, longToPrint)
+	_, _ = fmt.Fprintln(writer, longToPrint)
 	return nil
 }
 
 // PrintlnDouble = java/io/Prinstream.print(double)
-func PrintlnDouble(params []interface{}) interface{} {
+func PrintlnDouble(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnDouble: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprintln(writer, strconv.FormatFloat(xx, 'g', -1, 64))
+	_, _ = fmt.Fprintln(writer, strconv.FormatFloat(xx, 'g', -1, 64))
 	return nil
 }
 
 // PrintlnFloat = java/io/Prinstream.print(float)
-func PrintlnFloat(params []interface{}) interface{} {
+func PrintlnFloat(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnFloat: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprintln(writer, strconv.FormatFloat(xx, 'g', -1, 32))
+	_, _ = fmt.Fprintln(writer, strconv.FormatFloat(xx, 'g', -1, 32))
 	return nil
 }
 
 // "java/io/PrintStream.print(C)V"
-func PrintChar(params []interface{}) interface{} {
+func PrintChar(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintChar: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	bb := byte(params[1].(int64))
-	fmt.Fprint(writer, string(bb))
+	_, _ = fmt.Fprint(writer, string(bb))
 	return nil
 }
 
 // "java/io/PrintStream.print(B)V"
 // "java/io/PrintStream.print(I)V"
 // "java/io/PrintStream.print(S)V"
-func PrintBIS(params []interface{}) interface{} {
+func PrintBIS(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintBIS: Expected io.Writer, observed %T", params[0])
@@ -528,13 +528,13 @@ func PrintBIS(params []interface{}) interface{} {
 	if !ok {
 		intToPrint = int64(params[1].(int8))
 	}
-	fmt.Fprint(writer, intToPrint)
+	_, _ = fmt.Fprint(writer, intToPrint)
 	return nil
 }
 
 // PrintBoolean = java/io/Prinstream.print(boolean)
 // "java/io/PrintStream.print(Z)V"
-func PrintBoolean(params []interface{}) interface{} {
+func PrintBoolean(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintBoolean: Expected io.Writer, observed %T", params[0])
@@ -547,58 +547,58 @@ func PrintBoolean(params []interface{}) interface{} {
 	} else {
 		boolToPrint = false
 	}
-	fmt.Fprint(writer, boolToPrint)
+	_, _ = fmt.Fprint(writer, boolToPrint)
 	return nil
 }
 
 // PrintLong = java/io/Prinstream.print(long)
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 // "java/io/PrintStream.print(J)V"
-func PrintLong(params []interface{}) interface{} {
+func PrintLong(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintLong: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
-	fmt.Fprint(writer, longToPrint)
+	_, _ = fmt.Fprint(writer, longToPrint)
 	return nil
 }
 
 // PrintDouble = java/io/Prinstream.print(double)
-func PrintDouble(params []interface{}) interface{} {
+func PrintDouble(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintDouble: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprint(writer, strconv.FormatFloat(xx, 'g', -1, 64))
+	_, _ = fmt.Fprint(writer, strconv.FormatFloat(xx, 'g', -1, 64))
 	return nil
 }
 
 // PrintFloat = java/io/Prinstream.print(float)
-func PrintFloat(params []interface{}) interface{} {
+func PrintFloat(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintFloat: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprint(writer, strconv.FormatFloat(xx, 'g', -1, 32))
+	_, _ = fmt.Fprint(writer, strconv.FormatFloat(xx, 'g', -1, 32))
 	return nil
 }
 
 // Printf -- handle the variable args and then call golang's own printf function
 // "java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"
-func Printf(params []interface{}) interface{} {
+func Printf(params []any) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("Printf: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	var intfSprintf = new([]interface{})
+	var intfSprintf = new([]any)
 	*intfSprintf = append(*intfSprintf, params[1]) // The format string
 	*intfSprintf = append(*intfSprintf, params[2]) // The object array
 	retval := misc.StringFormatter(*intfSprintf)
@@ -610,13 +610,13 @@ func Printf(params []interface{}) interface{} {
 	objPtr := retval.(*object.Object)
 	str := object.GoStringFromStringObject(objPtr)
 
-	fmt.Fprint(writer, str)
+	_,_ = fmt.Fprint(writer, str)
 
 	return params[0] // Return the PrintStream object
 }
 
 // "java/io/PrintStream.println(Ljava/lang/String;)V"
-func _printString(params []interface{}, newLine bool) interface{} {
+func _printString(params []any, newLine bool) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("_printString: Expected io.Writer, observed param count: %d, type: %T, value: %v",
@@ -665,9 +665,9 @@ func _printString(params []interface{}, newLine bool) interface{} {
 	}
 
 	if newLine {
-		fmt.Fprintln(writer, str)
+		_, _ = fmt.Fprintln(writer, str)
 	} else {
-		fmt.Fprint(writer, str)
+		_, _ = fmt.Fprint(writer, str)
 	}
 
 	return nil
@@ -675,17 +675,17 @@ func _printString(params []interface{}, newLine bool) interface{} {
 
 // Print string
 // "java/io/PrintStream.print(Ljava/lang/String;)V"
-func PrintString(params []interface{}) interface{} {
+func PrintString(params []any) any {
 	return _printString(params, false)
 }
 
 // "java/io/PrintStream.println(Ljava/lang/String;)V"
-func PrintlnString(params []interface{}) interface{} {
+func PrintlnString(params []any) any {
 	return _printString(params, true)
 }
 
 // Called by PrintObject and PrintlnObject
-func _printObject(params []interface{}, newLine bool) interface{} {
+func _printObject(params []any, newLine bool) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("_printObject: Expected io.Writer, observed %T", params[0])
@@ -706,7 +706,7 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 				break
 			}
 			if object.IsObjectClass(inObj, types.ClassNameBigDecimal) {
-				res := javaMath.BigdecimalToString([]interface{}{inObj})
+				res := javaMath.BigdecimalToString([]any{inObj})
 				if strObj, ok := res.(*object.Object); ok {
 					strBuffer = object.GoStringFromStringObject(strObj)
 					break
@@ -714,7 +714,7 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 				return res
 			}
 			if object.IsObjectClass(inObj, types.ClassNameBigInteger) {
-				res := javaMath.BigIntegerToString([]interface{}{inObj})
+				res := javaMath.BigIntegerToString([]any{inObj})
 				if strObj, ok := res.(*object.Object); ok {
 					strBuffer = object.GoStringFromStringObject(strObj)
 					break
@@ -722,7 +722,7 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 				return res
 			}
 			if object.IsObjectClass(inObj, types.ClassNameThread) {
-				res := javaLang.ThreadToString([]interface{}{inObj})
+				res := javaLang.ThreadToString([]any{inObj})
 				if strObj, ok := res.(*object.Object); ok {
 					strBuffer = object.GoStringFromStringObject(strObj)
 					break
@@ -730,7 +730,7 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 				return res
 			}
 			if object.IsObjectClass(inObj, types.ClassNameThreadState) {
-				res := javaLang.ThreadStateToString([]interface{}{inObj})
+				res := javaLang.ThreadStateToString([]any{inObj})
 				if strObj, ok := res.(*object.Object); ok {
 					strBuffer = object.GoStringFromStringObject(strObj)
 					break
@@ -744,12 +744,13 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 			}
 			strBuffer = strBuffer[:len(strBuffer)-2] + "}"
 			if newLine {
-				fmt.Fprintln(writer, strBuffer)
-				return nil
-			} else {
-				fmt.Fprint(writer, strBuffer)
+				_,_ = fmt.Fprintln(writer, strBuffer)
 				return nil
 			}
+
+			_,_ = fmt.Fprint(writer, strBuffer)
+			return nil
+
 		default:
 			errMsg := fmt.Sprintf("_printObject: Unsupported parameter type: %T", params[1])
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -757,9 +758,9 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 	}
 
 	if newLine {
-		fmt.Fprintln(writer, strBuffer)
+		_,_ = fmt.Fprintln(writer, strBuffer)
 	} else {
-		fmt.Fprint(writer, strBuffer)
+		_,_ = fmt.Fprint(writer, strBuffer)
 	}
 
 	return nil
@@ -767,7 +768,7 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 
 // Print an Object's contents
 // "java/io/PrintStream.print(Ljava/lang/Object;)V"
-func PrintObject(params []interface{}) interface{} {
+func PrintObject(params []any) any {
 	// Check for null object.
 	if params[1] == nil || object.IsNull(params[1]) {
 		writer, ok := params[0].(io.Writer)
@@ -775,7 +776,7 @@ func PrintObject(params []interface{}) interface{} {
 			errMsg := fmt.Sprintf("PrintObject: Expected io.Writer, observed %T", params[0])
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
-		fmt.Fprint(writer, types.NullString)
+		_,_ = fmt.Fprint(writer, types.NullString)
 		return nil
 	}
 
@@ -790,7 +791,7 @@ func PrintObject(params []interface{}) interface{} {
 
 // Println an Object's contents
 // "java/io/PrintStream.println(Ljava/lang/Object;)V"
-func PrintlnObject(params []interface{}) interface{} {
+func PrintlnObject(params []any) any {
 	// Check for null object.
 	if params[1] == nil || object.IsNull(params[1]) {
 		writer, ok := params[0].(io.Writer)
@@ -798,7 +799,7 @@ func PrintlnObject(params []interface{}) interface{} {
 			errMsg := fmt.Sprintf("PrintlnObject: Expected io.Writer, observed %T", params[0])
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
-		fmt.Fprintln(writer, types.NullString)
+		_,_ = fmt.Fprintln(writer, types.NullString)
 		return nil
 	}
 
@@ -812,7 +813,7 @@ func PrintlnObject(params []interface{}) interface{} {
 }
 
 // Print a linked list like this: [A, B, C]
-func _printLinkedList(params []interface{}, newLine bool) interface{} {
+func _printLinkedList(params []any, newLine bool) any {
 	writer, ok := params[0].(io.Writer)
 	if !ok {
 		errMsg := fmt.Sprintf("_printLinkedList: Expected io.Writer, observed %T", params[0])
@@ -849,7 +850,7 @@ func _printLinkedList(params []interface{}, newLine bool) interface{} {
 		// Start with the front element.
 		// Continue to the end.
 		element := llst.Front()
-		fmt.Fprint(writer, "[")
+		_,_ = fmt.Fprint(writer, "[")
 		for ix := 0; ix < llst.Len(); ix++ {
 			strBuffer += object.StringifyAnythingGo(element.Value)
 			strBuffer += ", "
@@ -861,9 +862,9 @@ func _printLinkedList(params []interface{}, newLine bool) interface{} {
 	strBuffer = strBuffer[:len(strBuffer)-2] + "]"
 
 	if newLine {
-		fmt.Fprintln(writer, strBuffer)
+		_,_ = fmt.Fprintln(writer, strBuffer)
 	} else {
-		fmt.Fprint(writer, strBuffer)
+		_,_ = fmt.Fprint(writer, strBuffer)
 	}
 
 	return nil

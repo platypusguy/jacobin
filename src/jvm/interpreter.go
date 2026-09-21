@@ -323,7 +323,7 @@ func interpret(fs *list.List) {
 			// Create a dummy exception object and then load it with
 			// the JVM frame stack entries. Then print those out.
 			thro := object.MakeEmptyObject()
-			params := []interface{}{fs, thro}
+			params := []any{fs, thro}
 			_ = javaLang.ThrowableInitNull(params)
 			stackTrace := thro.FieldTable["stackTrace"].Fvalue.(*object.Object)
 			traceEntries := stackTrace.FieldTable["value"].Fvalue.([]*object.Object)
@@ -2304,7 +2304,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		return ERROR_OCCURRED
 	}
 
-	var value interface{}
+	var value any
 	switch prevLoaded.Type {
 	// We want all forms normalized to int64
 	case types.Bool:
@@ -2426,7 +2426,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	// Extract field.
 	obj := ref.(*object.Object)
 	var fieldType string
-	var fieldValue interface{}
+	var fieldValue any
 
 	obj.ThMutex.RLock()
 	objField, ok := obj.FieldTable[fieldName]
@@ -3003,7 +3003,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		// get the parameters/args, if any, off the stack
 		gmethData := mtEntry.Meth.(ghelpers.GMeth)
 		paramCount := gmethData.ParamSlots
-		var params []interface{}
+		var params []any
 		for i := 0; i < paramCount; i++ {
 			// This is not problematic because the params count in the gfunction definition
 			// counts slots, rather than items, so doubles and longs are listed as two slots.
