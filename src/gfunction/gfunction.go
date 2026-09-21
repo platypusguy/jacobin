@@ -114,7 +114,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaMath.Load_Math_Big_Integer()
 	javaMath.Load_Math_Math_Context()
 	javaMath.Load_Math_Rounding_Mode()
-	javaMath.Load_Traps_Java_Math()
 
 	// java/net/*
 	javaNet.Load_Net_Http_HttpClient()
