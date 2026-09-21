@@ -28,11 +28,11 @@ const U16 = "U" // uint16
 
 const Array = "["
 const BoolArray = "[Z"
-const CharArray = "[R"     // char array is = rune array
+const CharArray = "[R" // char array is = rune array
 const DoubleArray = "[D"
 const GoByteArray = "[GB" // array of golang bytes (i.e., uint8)
 const IntArray = "[I"
-const JavaByteArray = "[B" // Java byte array (i.e., int8). See GoByteArray for uint8.
+const JavaByteArray = "[B"       // Java byte array (i.e., int8). See GoByteArray for uint8.
 const JavaStringObjectRef = "JS" // type for an *object.Object that points to a java/lang/String object
 const FloatArray = "[F"
 const LongArray = "[J"
@@ -59,22 +59,11 @@ const StringIndex = "T" // The index into the string pool
 const GolangString = "G"
 
 // === Field types created and used in gfunctions. NOTE: JACOBIN-932 seeks to get rid of these types
-const BigInteger = "*BI" // The related Fvalue is a Golang *big.Int
-const BigDecimal = "*BD"
-const ArrayList = "*AL"
-const FileHandle = "*FH"      // The related Fvalue is a Golang *os.File
-const HashMap = "*HM"         // The related Fvalue is a Golang map[interface{}]interface{}
-const Vector = "*VC"          // The related Fvalue is a Golang []interface{}
-const LinkedList = "*LL"      // The related Fvalue is a Golang *list.List
-const Properties = "*PT"      // The related Fvalue is a Golang map[interface{}]interface{}
-const Map = "MAP"             // Golang map (E.g. security services in java/Security/Provider.Service)
-const StringTokenizer = "*ST" // The related Fvalue is a Golang *stringTokenizerState
-
-// Security field types
-const ECPoint = "ECpt"
-const PrivateKey = "PRV" // Java security private key
-const PublicKey = "PUB"  // Java security public key
+const LinkedList = "*LL" // The related Fvalue is a Golang *list.List
 // ===== end of Ftypes that JACOBIN-932 seeks to address
+
+// O/S file handle
+const FileHandle = "*FH" // The related Fvalue is a Golang *os.File
 
 type DefHashMap map[any]any
 type DefProperties map[string]string

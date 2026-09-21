@@ -93,7 +93,7 @@ func securityProvSvcInit(params []any) any {
 	var attributes = map[string]*object.Object{}
 	attributes["ImplementedIn"] = object.StringObjectFromGoString("Software")
 	attributes["blockSize"] = object.StringObjectFromGoString("null")
-	this.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
+	this.FieldTable["attributes"] = object.Field{Ftype: types.Ref, Fvalue: attributes}
 
 	return nil
 }

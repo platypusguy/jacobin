@@ -18,7 +18,7 @@ func TestKeyMethods(t *testing.T) {
 	priv, _ := rsa.GenerateKey(rand.Reader, 2048)
 	pub := &priv.PublicKey
 	pubObj := NewGoRuntimeService("RSAPublicKey", "RSA", types.ClassNameRSAPublicKey)
-	pubObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pub}
+	pubObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pub}
 
 	// Test getAlgorithm
 	alg := keyGetAlgorithm([]any{pubObj})
@@ -41,7 +41,7 @@ func TestKeyMethods(t *testing.T) {
 
 	// 2. RSA Private Key
 	privObj := NewGoRuntimeService("RSAPrivateKey", "RSA", types.ClassNameRSAPrivateKey)
-	privObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
+	privObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: priv}
 
 	format = keyGetFormat([]any{privObj})
 	if object.GoStringFromStringObject(format.(*object.Object)) != "PKCS#8" {
@@ -57,7 +57,7 @@ func TestKeyMethods(t *testing.T) {
 	// 3. Ed25519
 	pubEd, _, _ := ed25519.GenerateKey(rand.Reader)
 	pubEdObj := NewGoRuntimeService("Ed25519", "Ed25519", types.ClassNameEdECPublicKey)
-	pubEdObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubEd}
+	pubEdObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pubEd}
 
 	alg = keyGetAlgorithm([]any{pubEdObj})
 	if object.GoStringFromStringObject(alg.(*object.Object)) != "Ed25519" {

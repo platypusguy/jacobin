@@ -113,20 +113,20 @@ func ecparameterGenSpecInitString(params []any) any {
 
 	// Wrap P (prime field)
 	curveObj.FieldTable["p"] = object.Field{
-		Ftype:  types.BigInteger,
-		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, curveParams.P),
+		Ftype:  types.Ref,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, curveParams.P),
 	}
 
 	// Wrap A (coefficient, -3 for NIST curves)
 	curveObj.FieldTable["a"] = object.Field{
-		Ftype:  types.BigInteger,
-		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, big.NewInt(-3)),
+		Ftype:  types.Ref,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, big.NewInt(-3)),
 	}
 
 	// Wrap B (coefficient)
 	curveObj.FieldTable["b"] = object.Field{
-		Ftype:  types.BigInteger,
-		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, curveParams.B),
+		Ftype:  types.Ref,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, curveParams.B),
 	}
 
 	// --- Create generator point (G) ---
@@ -134,17 +134,17 @@ func ecparameterGenSpecInitString(params []any) any {
 
 	// Wrap Gx
 	generatorObj.FieldTable["x"] = object.Field{
-		Ftype:  types.BigInteger,
-		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, curveParams.Gx),
+		Ftype:  types.Ref,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, curveParams.Gx),
 	}
 
 	// Wrap Gy
 	generatorObj.FieldTable["y"] = object.Field{
-		Ftype:  types.BigInteger,
-		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, curveParams.Gy),
+		Ftype:  types.Ref,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, curveParams.Gy),
 	}
 
-	curveObj.FieldTable["generator"] = object.Field{Ftype: types.ECPoint, Fvalue: generatorObj}
+	curveObj.FieldTable["generator"] = object.Field{Ftype: types.Ref, Fvalue: generatorObj}
 
 	// --- Populate ECParameterSpec fields ---
 	thisObj.FieldTable["name"] = object.Field{Ftype: types.StringClassName, Fvalue: curveNameObj}
@@ -153,8 +153,8 @@ func ecparameterGenSpecInitString(params []any) any {
 
 	// Wrap N (order)
 	thisObj.FieldTable["n"] = object.Field{
-		Ftype:  types.BigInteger,
-		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, curveParams.N),
+		Ftype:  types.Ref,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, curveParams.N),
 	}
 
 	// Co-factor.

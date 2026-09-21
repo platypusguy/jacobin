@@ -176,7 +176,7 @@ func PropertiesInit(params []interface{}) interface{} {
 	}
 	object.ClearFieldTable(obj)
 	fld := obj.FieldTable[types.FieldNameProperties]
-	fld.Ftype = types.Properties
+	fld.Ftype = types.Ref
 	fld.Fvalue = nilMap
 	obj.FieldTable[types.FieldNameProperties] = fld
 	return nil

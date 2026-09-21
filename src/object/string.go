@@ -278,9 +278,6 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 			}
 			return errMsg
 		}
-
-	case types.BigInteger:
-		return fmt.Sprint(fld.Fvalue)
 	case types.Bool:
 		boolAsInt64 := fld.Fvalue.(int64)
 		if boolAsInt64 > 0 {

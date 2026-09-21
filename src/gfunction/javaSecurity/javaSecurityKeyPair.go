@@ -59,8 +59,8 @@ func keypairInit(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "keypairInit: param[2] is not an Object")
 	}
 
-	thisObj.FieldTable["public"] = object.Field{Ftype: types.PublicKey, Fvalue: pub}
-	thisObj.FieldTable["private"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
+	thisObj.FieldTable["public"] = object.Field{Ftype: types.Ref, Fvalue: pub}
+	thisObj.FieldTable["private"] = object.Field{Ftype: types.Ref, Fvalue: priv}
 
 	return nil
 }

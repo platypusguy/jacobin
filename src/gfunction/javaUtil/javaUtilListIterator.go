@@ -200,11 +200,11 @@ func listiteratorRemove(params []interface{}) interface{} {
 	if className == "java/util/ArrayList" {
 		list, _ := GetArrayListFromObject(state.collection)
 		list = append(list[:state.lastReturned], list[state.lastReturned+1:]...)
-		state.collection.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: list}
+		state.collection.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 	} else if className == "java/util/Vector" {
 		list, _ := GetVectorFromObject(state.collection)
 		list = append(list[:state.lastReturned], list[state.lastReturned+1:]...)
-		state.collection.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: list}
+		state.collection.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 	}
 
 	if state.lastReturned < state.cursor {
@@ -228,11 +228,11 @@ func listiteratorSet(params []interface{}) interface{} {
 	if className == "java/util/ArrayList" {
 		list, _ := GetArrayListFromObject(state.collection)
 		list[state.lastReturned] = obj
-		state.collection.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: list}
+		state.collection.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 	} else if className == "java/util/Vector" {
 		list, _ := GetVectorFromObject(state.collection)
 		list[state.lastReturned] = obj
-		state.collection.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: list}
+		state.collection.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 	}
 	return nil
 }
@@ -249,13 +249,13 @@ func listiteratorAdd(params []interface{}) interface{} {
 		list = append(list, nil)
 		copy(list[state.cursor+1:], list[state.cursor:])
 		list[state.cursor] = obj
-		state.collection.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: list}
+		state.collection.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 	} else if className == "java/util/Vector" {
 		list, _ := GetVectorFromObject(state.collection)
 		list = append(list, nil)
 		copy(list[state.cursor+1:], list[state.cursor:])
 		list[state.cursor] = obj
-		state.collection.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: list}
+		state.collection.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 	}
 	state.cursor++
 	state.lastReturned = -1

@@ -110,7 +110,7 @@ func dhPrivateGetX(params []any) any {
 			"dhPrivateKeyGetX: DH private key x-field extraction failed",
 		)
 	}
-	xObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, xValue)
+	xObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, xValue)
 
 	return xObj
 }
@@ -146,7 +146,7 @@ func dhPublicKeyGetY(params []any) any {
 			"dhPublicKeyGetY: DH public key y-field extraction failed",
 		)
 	}
-	yObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, yValue)
+	yObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, yValue)
 
 	return yObj
 }

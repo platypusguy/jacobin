@@ -22,7 +22,7 @@ func TestDHPrivateGetX(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		xValue := big.NewInt(12345)
 		innerObj := object.MakeEmptyObject()
-		innerObj.FieldTable["x"] = object.Field{Ftype: types.BigInteger, Fvalue: xValue}
+		innerObj.FieldTable["x"] = object.Field{Ftype: types.Ref, Fvalue: xValue}
 
 		thisObj := object.MakeEmptyObject()
 		thisObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: innerObj}
@@ -91,7 +91,7 @@ func TestDHPublicGetY(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		yValue := big.NewInt(67890)
 		innerObj := object.MakeEmptyObject()
-		innerObj.FieldTable["y"] = object.Field{Ftype: types.BigInteger, Fvalue: yValue}
+		innerObj.FieldTable["y"] = object.Field{Ftype: types.Ref, Fvalue: yValue}
 
 		thisObj := object.MakeEmptyObject()
 		thisObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: innerObj}

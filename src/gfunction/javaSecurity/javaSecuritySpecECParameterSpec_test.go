@@ -92,7 +92,7 @@ func TestECParameterSpecInit(t *testing.T) {
 	thisObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECParameterSpec)
 	curveObj := object.MakeEmptyObjectWithClassName(&types.ClassNameEllipticCurve)
 	gObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECPoint)
-	nObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, big.NewInt(12345))
+	nObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, big.NewInt(12345))
 	hVal := int64(1)
 
 	params := []any{thisObj, curveObj, gObj, nObj, hVal}
@@ -122,7 +122,7 @@ func TestECParameterSpecGetters(t *testing.T) {
 	thisObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECParameterSpec)
 	curveObj := object.MakeEmptyObjectWithClassName(&types.ClassNameEllipticCurve)
 	gObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECPoint)
-	nObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, big.NewInt(12345))
+	nObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, big.NewInt(12345))
 	hVal := int64(1)
 
 	thisObj.FieldTable = map[string]object.Field{

@@ -641,7 +641,7 @@ func TestStringifyAnythingGo_Field_Float(t *testing.T) {
 
 func TestStringifyAnythingGo_Field_BigInteger(t *testing.T) {
 	bigInt := big.NewInt(123456789)
-	field := Field{Ftype: types.BigInteger, Fvalue: bigInt}
+	field := Field{Ftype: types.Ref, Fvalue: bigInt}
 
 	result := StringifyAnythingGo(field)
 	if result != "123456789" {

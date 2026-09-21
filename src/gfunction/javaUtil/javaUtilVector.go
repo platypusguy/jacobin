@@ -343,7 +343,7 @@ func Load_Util_Vector() {
 
 func vectorInit(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: make([]interface{}, 0)}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: make([]interface{}, 0)}
 	return nil
 }
 
@@ -356,7 +356,7 @@ func vectorInitWithCapacity(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "vectorInitWithCapacity: negative capacity")
 	}
 	self := params[0].(*object.Object)
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: make([]interface{}, 0, capacity)}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: make([]interface{}, 0, capacity)}
 	return nil
 }
 
@@ -383,7 +383,7 @@ func vectorAdd(params []interface{}) interface{} {
 		return err
 	}
 	v = append(v, params[1])
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: v}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: v}
 	return types.JavaBoolTrue
 }
 
@@ -401,7 +401,7 @@ func vectorAddAtIndex(params []interface{}) interface{} {
 	v = append(v, nil)
 	copy(v[index+1:], v[index:])
 	v[index] = obj
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: v}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: v}
 	return nil
 }
 
@@ -440,7 +440,7 @@ func vectorSet(params []interface{}) interface{} {
 	}
 	old := v[index]
 	v[index] = obj
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: v}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: v}
 	return old
 }
 
@@ -483,7 +483,7 @@ func vectorClear(params []interface{}) interface{} {
 		return err
 	}
 	v = v[:0]
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: v}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: v}
 	return nil
 }
 
@@ -499,7 +499,7 @@ func vectorRemoveAtIndex(params []interface{}) interface{} {
 	}
 	old := v[index]
 	v = append(v[:index], v[index+1:]...)
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: v}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: v}
 	return old
 }
 
@@ -522,7 +522,7 @@ func vectorRemoveObject(params []interface{}) interface{} {
 		}
 		if eq {
 			v = append(v[:i], v[i+1:]...)
-			self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: v}
+			self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: v}
 			return types.JavaBoolTrue
 		}
 	}
@@ -659,7 +659,7 @@ func vectorInsertElementAt(params []interface{}) interface{} {
 	v = append(v, nil)
 	copy(v[index+1:], v[index:])
 	v[index] = obj
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: v}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: v}
 	return nil
 }
 
@@ -680,7 +680,7 @@ func vectorSetSize(params []interface{}) interface{} {
 			v = append(v, object.Null)
 		}
 	}
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: v}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: v}
 	return nil
 }
 
@@ -713,7 +713,7 @@ func vectorTrimToSize(params []interface{}) interface{} {
 	}
 	newV := make([]interface{}, len(v))
 	copy(newV, v)
-	self.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: newV}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: newV}
 	return nil
 }
 
@@ -762,7 +762,7 @@ func vectorClone(params []interface{}) interface{} {
 	}
 	newV := make([]interface{}, len(v))
 	copy(newV, v)
-	clone := object.MakePrimitiveObject("java/util/Vector", types.Vector, newV)
+	clone := object.MakePrimitiveObject("java/util/Vector", types.Ref, newV)
 	return clone
 }
 

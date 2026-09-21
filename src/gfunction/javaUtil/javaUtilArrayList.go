@@ -238,7 +238,7 @@ func arraylistInit(params []interface{}) interface{} {
 
 	object.ClearFieldTable(self)
 	self.FieldTable["value"] = object.Field{
-		Ftype:  types.ArrayList,
+		Ftype:  types.Ref,
 		Fvalue: make([]interface{}, 0, 10),
 	}
 	return nil
@@ -261,7 +261,7 @@ func arraylistInitWithCapacity(params []interface{}) interface{} {
 
 	object.ClearFieldTable(self)
 	self.FieldTable["value"] = object.Field{
-		Ftype:  types.ArrayList,
+		Ftype:  types.Ref,
 		Fvalue: make([]interface{}, 0, int(capacity)),
 	}
 	return nil
@@ -288,7 +288,7 @@ func arraylistAdd(params []interface{}) interface{} {
 		return err
 	}
 	list = append(list, element)
-	self.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: list}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 
 	return types.JavaBoolTrue
 }
@@ -316,7 +316,7 @@ func arraylistAddAtIndex(params []interface{}) interface{} {
 	copy(list[index+1:], list[index:])
 	list[index] = element
 
-	self.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: list}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 
 	return nil
 }
@@ -421,7 +421,7 @@ func arraylistClear(params []interface{}) interface{} {
 		return err
 	}
 	list = list[:0]
-	self.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: list}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 	return nil
 }
 
@@ -444,7 +444,7 @@ func arraylistRemoveAtIndex(params []interface{}) interface{} {
 
 	oldValue := list[index]
 	list = append(list[:index], list[index+1:]...)
-	self.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: list}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 
 	return oldValue
 }
@@ -465,7 +465,7 @@ func arraylistRemoveObject(params []interface{}) interface{} {
 		}
 		if eq {
 			list = append(list[:i], list[i+1:]...)
-			self.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: list}
+			self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: list}
 			return types.JavaBoolTrue
 		}
 	}
@@ -564,7 +564,7 @@ func arraylistTrimToSize(params []interface{}) interface{} {
 	}
 	newlist := make([]interface{}, len(list))
 	copy(newlist, list)
-	self.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: newlist}
+	self.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: newlist}
 	return nil
 }
 
@@ -577,7 +577,7 @@ func arraylistClone(params []interface{}) interface{} {
 	newlist := make([]interface{}, len(list))
 	copy(newlist, list)
 
-	clone := object.MakePrimitiveObject(classNameArrayList, types.ArrayList, newlist)
+	clone := object.MakePrimitiveObject(classNameArrayList, types.Ref, newlist)
 	return clone
 }
 

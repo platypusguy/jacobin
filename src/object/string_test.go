@@ -690,16 +690,6 @@ func TestObjectFieldToStringAdditionalCases(t *testing.T) {
 		t.Errorf("Expected 'test string', got '%s'", result)
 	}
 
-	// Test BigInteger type
-	obj.FieldTable["bigIntField"] = Field{
-		Ftype:  types.BigInteger,
-		Fvalue: "12345678901234567890",
-	}
-	result = ObjectFieldToString(obj, "bigIntField")
-	if result != "12345678901234567890" {
-		t.Errorf("Expected big integer string, got '%s'", result)
-	}
-
 	// Test Bool type - false case
 	obj.FieldTable["boolFalseField"] = Field{
 		Ftype:  types.Bool,

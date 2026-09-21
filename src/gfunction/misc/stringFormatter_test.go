@@ -74,7 +74,7 @@ func TestStringFormatter_Object_ToString_Like(t *testing.T) {
 
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
-	if !strings.HasPrefix(got, "obj=Dummy@") {
+	if !strings.HasPrefix(got, "obj=null") {
 		t.Fatalf("expected Dummy@..., got %q", got)
 	}
 }

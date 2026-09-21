@@ -579,7 +579,7 @@ func SystemGetProperties([]interface{}) interface{} {
 	propMap["user.name"] = globals.GetSystemProperty("user.name")
 	propMap["user.timezone"] = globals.GetSystemProperty("user.timezone")
 
-	return object.MakeOneFieldObject(types.ClassNameProperties, types.FieldNameProperties, types.Properties, propMap)
+	return object.MakeOneFieldObject(types.ClassNameProperties, types.FieldNameProperties, types.Ref, propMap)
 
 }
 

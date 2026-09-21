@@ -171,7 +171,7 @@ func NewGoRuntimeService(typ, algo, className string) *object.Object {
 
 	// Add the attributes map to the services object field table.
 	svc.FieldTable["attributes"] = object.Field{
-		Ftype:  types.Map,
+		Ftype:  types.Ref,
 		Fvalue: attributes,
 	}
 

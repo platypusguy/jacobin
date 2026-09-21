@@ -59,10 +59,10 @@ func TestKeyAgreement_ECDH(t *testing.T) {
 
 	// Wrap Keys
 	privateKeyObjA := javaSecurity.NewGoRuntimeService("ECPrivateKey", "EC", types.ClassNameECPrivateKey)
-	privateKeyObjA.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privA}
+	privateKeyObjA.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: privA}
 
 	publicKeyObjB := javaSecurity.NewGoRuntimeService("ECPublicKey", "EC", types.ClassNameECPublicKey)
-	publicKeyObjB.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: &privB.PublicKey}
+	publicKeyObjB.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: &privB.PublicKey}
 
 	// 3. Init
 	resInit := keyagreementInit([]any{kaObj, privateKeyObjA})
@@ -116,10 +116,10 @@ func TestKeyAgreement_X25519(t *testing.T) {
 	_, _ = rand.Read(pubB)
 
 	privateKeyObjA := javaSecurity.NewGoRuntimeService("XDH", "XDH", types.ClassNameEdECPrivateKey)
-	privateKeyObjA.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privA}
+	privateKeyObjA.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: privA}
 
 	publicKeyObjB := javaSecurity.NewGoRuntimeService("XDH", "XDH", types.ClassNameEdECPublicKey)
-	publicKeyObjB.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubB}
+	publicKeyObjB.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pubB}
 
 	// 3. Init
 	keyagreementInit([]any{kaObj, privateKeyObjA})

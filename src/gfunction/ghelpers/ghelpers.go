@@ -120,16 +120,16 @@ func EofGet(obj *object.Object) bool {
 // Fvalue holds *big.Int (pointer).
 func InitBigIntegerField(obj *object.Object, argValue int64) {
 	ptrBigInt := big.NewInt(argValue)
-	fldValue := object.Field{Ftype: types.BigInteger, Fvalue: ptrBigInt}
+	fldValue := object.Field{Ftype: types.Ref, Fvalue: ptrBigInt}
 	obj.FieldTable["value"] = fldValue
 	var fldSign object.Field
 	switch {
 	case argValue == 0:
-		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(0)}
+		fldSign = object.Field{Ftype: types.Ref, Fvalue: int64(0)}
 	case argValue < 0:
-		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(-1)}
+		fldSign = object.Field{Ftype: types.Ref, Fvalue: int64(-1)}
 	default:
-		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(+1)}
+		fldSign = object.Field{Ftype: types.Ref, Fvalue: int64(+1)}
 	}
 	obj.FieldTable["signum"] = fldSign
 }

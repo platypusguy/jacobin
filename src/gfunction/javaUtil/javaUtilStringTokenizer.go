@@ -113,7 +113,7 @@ func stringTokenizerInit(params []interface{}) interface{} {
 
 	object.ClearFieldTable(self)
 	self.FieldTable["value"] = object.Field{
-		Ftype:  types.StringTokenizer,
+		Ftype:  types.Ref,
 		Fvalue: state,
 	}
 
