@@ -100,6 +100,20 @@ func StringFormatter(params []interface{}) interface{} {
 			rawArgs = append(rawArgs, obj)
 			continue
 		}
+		if object.GoStringFromStringPoolIndex(obj.KlassName) == "java/math/BigInteger" {
+			fld, ok := obj.FieldTable["value"]
+			if !ok {
+				rawArgs = append(rawArgs, obj)
+				continue
+			}
+			// Underlying Go value is *big.Int in the value field
+			if bi, ok := fld.Fvalue.(*big.Int); ok {
+				rawArgs = append(rawArgs, bi)
+			} else {
+				rawArgs = append(rawArgs, obj)
+			}
+			continue
+		}
 		// Prefer handling by presence of a "value" field; fall back to BigInteger/BigDecimal detection.
 		fld, hasValue := obj.FieldTable["value"]
 		if hasValue && fld.Ftype == types.StringClassRef {
@@ -149,13 +163,6 @@ func StringFormatter(params []interface{}) interface{} {
 				rawArgs = append(rawArgs, intWithBits{v: fld.Fvalue.(int64), bits: 16})
 			case types.Byte:
 				rawArgs = append(rawArgs, intWithBits{v: fld.Fvalue.(int64), bits: 8})
-			case types.BigInteger:
-				// Underlying Go value is *big.Int in the value field
-				if bi, ok := fld.Fvalue.(*big.Int); ok {
-					rawArgs = append(rawArgs, bi)
-				} else {
-					rawArgs = append(rawArgs, obj)
-				}
 			default:
 				// keep the full object for later processing (e.g., %s/%b/%h)
 				rawArgs = append(rawArgs, obj)
@@ -489,11 +496,14 @@ func coerceJavaString(args []interface{}, idx int) string {
 		}
 		// Special-case BigInteger and BigDecimal to return their numeric string
 		if valFld, ok := vv.FieldTable["value"]; ok {
-			if valFld.Ftype == types.BigInteger {
+			if object.GoStringFromStringPoolIndex(vv.KlassName) == "java/math/BigInteger" {
 				if bi, ok2 := valFld.Fvalue.(*big.Int); ok2 {
 					return bi.String()
 				}
+				return "null"
 			}
+		} else {
+			return "null"
 		}
 		if iv, ok := vv.FieldTable["intVal"]; ok {
 			if sc, ok2 := vv.FieldTable["scale"]; ok2 {

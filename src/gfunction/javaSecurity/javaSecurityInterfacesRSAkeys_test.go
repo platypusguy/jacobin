@@ -22,11 +22,11 @@ func makeRSAKeyObjects(t *testing.T, bits int) (*object.Object, *object.Object) 
 
 	// Public key object
 	pubObj := NewGoRuntimeService("RSAPublicKey", "RSA", types.ClassNameRSAPublicKey)
-	pubObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: &priv.PublicKey}
+	pubObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: &priv.PublicKey}
 
 	// Private key object
 	prvObj := NewGoRuntimeService("RSAPrivateKey", "RSA", types.ClassNameRSAPrivateKey)
-	prvObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
+	prvObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: priv}
 
 	return prvObj, pubObj
 }
@@ -134,7 +134,7 @@ func TestRSAInterfaces_InvalidParams(t *testing.T) {
 
 	// Wrong value type in this
 	bogus := object.MakeEmptyObjectWithClassName(&types.ClassNameRSAPublicKey)
-	bogus.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: "not-a-key"}
+	bogus.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: "not-a-key"}
 	if _, ok := rsaKeyGetModulus([]any{bogus}).(*ghelpers.GErrBlk); !ok {
 		t.Error("expected error for wrong value type in rsaKeyGetModulus")
 	}

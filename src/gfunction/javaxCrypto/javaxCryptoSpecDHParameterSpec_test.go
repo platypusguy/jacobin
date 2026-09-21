@@ -124,8 +124,8 @@ func TestDHParameterSpecGetters(t *testing.T) {
 	lVal := int64(10)
 
 	specObj := object.MakeEmptyObject()
-	specObj.FieldTable["p"] = object.Field{Ftype: types.BigInteger, Fvalue: pVal}
-	specObj.FieldTable["g"] = object.Field{Ftype: types.BigInteger, Fvalue: gVal}
+	specObj.FieldTable["p"] = object.Field{Ftype: types.Ref, Fvalue: pVal}
+	specObj.FieldTable["g"] = object.Field{Ftype: types.Ref, Fvalue: gVal}
 	specObj.FieldTable["l"] = object.Field{Ftype: types.Int, Fvalue: lVal}
 
 	t.Run("GetP Success", func(t *testing.T) {

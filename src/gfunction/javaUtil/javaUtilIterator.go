@@ -224,9 +224,9 @@ func iteratorRemove(params []interface{}) interface{} {
 
 		wlist = append(wlist[:lastIdx], wlist[lastIdx+1:]...)
 		if className == "java/util/ArrayList" {
-			colObj.FieldTable["value"] = object.Field{Ftype: types.ArrayList, Fvalue: wlist}
+			colObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: wlist}
 		} else {
-			colObj.FieldTable["value"] = object.Field{Ftype: types.Vector, Fvalue: wlist}
+			colObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: wlist}
 		}
 
 		// Update iterator state

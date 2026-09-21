@@ -86,10 +86,10 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 			}
 
 			privateKeyObj := NewGoRuntimeService("RSA", "RSA", types.ClassNameRSAPrivateKey)
-			privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privRsa}
+			privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: privRsa}
 
 			publicKeyObj := NewGoRuntimeService("RSA", "RSA", types.ClassNameRSAPublicKey)
-			publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubRsa}
+			publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pubRsa}
 
 			keyPairObj = NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "RSA", types.ClassNameKeyPair)
 			keyPairObj.FieldTable["private"] = object.Field{Ftype: types.ClassNameRSAPrivateKey, Fvalue: privateKeyObj}
@@ -117,22 +117,22 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 			err = dsa.GenerateKey(priv, rand.Reader)
 			if err == nil {
 				dsaParamsObj := NewGoRuntimeService("DSA", "DSA", types.ClassNameDSAParameterSpec)
-				dsaParamsObj.FieldTable["p"] = object.Field{Ftype: types.BigInteger, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, params.P)}
-				dsaParamsObj.FieldTable["q"] = object.Field{Ftype: types.BigInteger, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, params.Q)}
-				dsaParamsObj.FieldTable["g"] = object.Field{Ftype: types.BigInteger, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, params.G)}
+				dsaParamsObj.FieldTable["p"] = object.Field{Ftype: types.Ref, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, params.P)}
+				dsaParamsObj.FieldTable["q"] = object.Field{Ftype: types.Ref, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, params.Q)}
+				dsaParamsObj.FieldTable["g"] = object.Field{Ftype: types.Ref, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, params.G)}
 
 				pubKey := &dsa.PublicKey{Parameters: *params, Y: new(big.Int).Set(priv.PublicKey.Y)}
 				publicKeyObj := NewGoRuntimeService("DSA", "DSA", types.ClassNameDSAPublicKey)
-				publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubKey}
+				publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pubKey}
 				publicKeyObj.FieldTable["params"] = object.Field{Ftype: types.Ref, Fvalue: dsaParamsObj}
 
 				privateKeyObj := NewGoRuntimeService("DSA", "DSA", types.ClassNameDSAPrivateKey)
-				privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
+				privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: priv}
 				privateKeyObj.FieldTable["params"] = object.Field{Ftype: types.Ref, Fvalue: dsaParamsObj}
 
 				keyPairObj = NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "DSA", types.ClassNameKeyPair)
-				keyPairObj.FieldTable["private"] = object.Field{Ftype: types.PrivateKey, Fvalue: privateKeyObj}
-				keyPairObj.FieldTable["public"] = object.Field{Ftype: types.PublicKey, Fvalue: publicKeyObj}
+				keyPairObj.FieldTable["private"] = object.Field{Ftype: types.Ref, Fvalue: privateKeyObj}
+				keyPairObj.FieldTable["public"] = object.Field{Ftype: types.Ref, Fvalue: publicKeyObj}
 			}
 		}
 
@@ -156,29 +156,29 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 			if err == nil {
 				params := curve.Params()
 				curveObj := NewGoRuntimeService("EC", "EC", types.ClassNameEllipticCurve)
-				curveObj.FieldTable["p"] = object.Field{Ftype: types.BigInteger, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, params.P)}
-				curveObj.FieldTable["a"] = object.Field{Ftype: types.BigInteger, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, big.NewInt(-3))}
-				curveObj.FieldTable["b"] = object.Field{Ftype: types.BigInteger, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, params.B)}
+				curveObj.FieldTable["p"] = object.Field{Ftype: types.Ref, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, params.P)}
+				curveObj.FieldTable["a"] = object.Field{Ftype: types.Ref, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, big.NewInt(-3))}
+				curveObj.FieldTable["b"] = object.Field{Ftype: types.Ref, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, params.B)}
 
 				generatorObj := NewGoRuntimeService("EC", "EC", types.ClassNameECPoint)
-				generatorObj.FieldTable["x"] = object.Field{Ftype: types.BigInteger, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, params.Gx)}
-				generatorObj.FieldTable["y"] = object.Field{Ftype: types.BigInteger, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, params.Gy)}
+				generatorObj.FieldTable["x"] = object.Field{Ftype: types.Ref, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, params.Gx)}
+				generatorObj.FieldTable["y"] = object.Field{Ftype: types.Ref, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, params.Gy)}
 
-				curveObj.FieldTable["generator"] = object.Field{Ftype: types.ECPoint, Fvalue: generatorObj}
+				curveObj.FieldTable["generator"] = object.Field{Ftype: types.Ref, Fvalue: generatorObj}
 
 				ecSpecObj := NewGoRuntimeService("EC", "EC", types.ClassNameECParameterSpec)
 				ecSpecObj.FieldTable["curve"] = object.Field{Ftype: types.Ref, Fvalue: curveObj}
 				ecSpecObj.FieldTable["g"] = object.Field{Ftype: types.Ref, Fvalue: generatorObj}
-				ecSpecObj.FieldTable["n"] = object.Field{Ftype: types.BigInteger, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, params.N)}
+				ecSpecObj.FieldTable["n"] = object.Field{Ftype: types.Ref, Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, params.N)}
 				ecSpecObj.FieldTable["h"] = object.Field{Ftype: types.Int, Fvalue: int64(1)}
 
 				pubKey := &ecdsa.PublicKey{Curve: priv.PublicKey.Curve, X: new(big.Int).Set(priv.PublicKey.X), Y: new(big.Int).Set(priv.PublicKey.Y)}
 				publicKeyObj := NewGoRuntimeService("EC", "EC", types.ClassNameECPublicKey)
-				publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubKey}
+				publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pubKey}
 				publicKeyObj.FieldTable["params"] = object.Field{Ftype: types.Ref, Fvalue: ecSpecObj}
 
 				privateKeyObj := NewGoRuntimeService("EC", "EC", types.ClassNameECPrivateKey)
-				privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
+				privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: priv}
 				privateKeyObj.FieldTable["params"] = object.Field{Ftype: types.Ref, Fvalue: ecSpecObj}
 
 				keyPairObj = NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "EC", types.ClassNameKeyPair)
@@ -223,14 +223,14 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 				publicKeyObj := NewGoRuntimeService(curveType, curveName, types.ClassNameEdECPublicKey)
 				pubCopy := make(ed25519.PublicKey, len(pub))
 				copy(pubCopy, pub)
-				publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubCopy}
+				publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pubCopy}
 
 				privateKeyObj := NewGoRuntimeService(curveType, curveName, types.ClassNameEdECPrivateKey)
-				privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
+				privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: priv}
 
 				keyPairObj = NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "EdDEc", types.ClassNameKeyPair)
-				keyPairObj.FieldTable["private"] = object.Field{Ftype: types.PrivateKey, Fvalue: privateKeyObj}
-				keyPairObj.FieldTable["public"] = object.Field{Ftype: types.PublicKey, Fvalue: publicKeyObj}
+				keyPairObj.FieldTable["private"] = object.Field{Ftype: types.Ref, Fvalue: privateKeyObj}
+				keyPairObj.FieldTable["public"] = object.Field{Ftype: types.Ref, Fvalue: publicKeyObj}
 			}
 		case "Ed448":
 			pub, priv, err := ed448.GenerateKey(rand.Reader)
@@ -244,16 +244,16 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 			pubKeyCopy := make([]byte, len(pub))
 			copy(pubKeyCopy, pub)
 			publicKeyObj := NewGoRuntimeService(curveType, curveName, types.ClassNameEdECPublicKey)
-			publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubKeyCopy}
+			publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pubKeyCopy}
 
 			privKeyCopy := make([]byte, len(priv))
 			copy(privKeyCopy, priv)
 			privateKeyObj := NewGoRuntimeService(curveType, curveName, types.ClassNameEdECPrivateKey)
-			privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privKeyCopy}
+			privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: privKeyCopy}
 
 			keyPairObj = NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "EdEc", types.ClassNameKeyPair)
-			keyPairObj.FieldTable["private"] = object.Field{Ftype: types.PrivateKey, Fvalue: privateKeyObj}
-			keyPairObj.FieldTable["public"] = object.Field{Ftype: types.PublicKey, Fvalue: publicKeyObj}
+			keyPairObj.FieldTable["private"] = object.Field{Ftype: types.Ref, Fvalue: privateKeyObj}
+			keyPairObj.FieldTable["public"] = object.Field{Ftype: types.Ref, Fvalue: publicKeyObj}
 
 		default:
 			return ghelpers.GetGErrBlk(
@@ -274,14 +274,14 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 			pubKeyCopy := make([]byte, len(pub))
 			copy(pubKeyCopy, pub)
 			publicKeyObj := NewGoRuntimeService(algorithm, algorithm, types.ClassNameEdECPublicKey)
-			publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubKeyCopy}
+			publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pubKeyCopy}
 
 			privateKeyObj := NewGoRuntimeService(algorithm, algorithm, types.ClassNameEdECPrivateKey)
-			privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
+			privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: priv}
 
 			keyPairObj = NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "EdEc", types.ClassNameKeyPair)
-			keyPairObj.FieldTable["private"] = object.Field{Ftype: types.PrivateKey, Fvalue: privateKeyObj}
-			keyPairObj.FieldTable["public"] = object.Field{Ftype: types.PublicKey, Fvalue: publicKeyObj}
+			keyPairObj.FieldTable["private"] = object.Field{Ftype: types.Ref, Fvalue: privateKeyObj}
+			keyPairObj.FieldTable["public"] = object.Field{Ftype: types.Ref, Fvalue: publicKeyObj}
 		}
 
 	case "X448":
@@ -292,14 +292,14 @@ func keypairgeneratorGenerateKeyPair(params []any) any {
 			copy(pub, priv)
 
 			publicKeyObj := NewGoRuntimeService(algorithm, algorithm, types.ClassNameEdECPublicKey)
-			publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pub}
+			publicKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pub}
 
 			privateKeyObj := NewGoRuntimeService(algorithm, algorithm, types.ClassNameEdECPrivateKey)
-			privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
+			privateKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: priv}
 
 			keyPairObj = NewGoRuntimeService(types.SecurityServiceKeyPairGenerator, "EdEc", types.ClassNameKeyPair)
-			keyPairObj.FieldTable["private"] = object.Field{Ftype: types.PrivateKey, Fvalue: privateKeyObj}
-			keyPairObj.FieldTable["public"] = object.Field{Ftype: types.PublicKey, Fvalue: publicKeyObj}
+			keyPairObj.FieldTable["private"] = object.Field{Ftype: types.Ref, Fvalue: privateKeyObj}
+			keyPairObj.FieldTable["public"] = object.Field{Ftype: types.Ref, Fvalue: publicKeyObj}
 		}
 
 	default:

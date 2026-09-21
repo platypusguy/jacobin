@@ -147,8 +147,8 @@ func TestSecurityProviderInitWithFloatVersion(t *testing.T) {
 
 	// Verify services map is initialized
 	servicesField := provider.FieldTable["services"]
-	if servicesField.Ftype != types.Map {
-		t.Errorf("services field type should be %s, got %s", types.Map, servicesField.Ftype)
+	if servicesField.Ftype != types.Ref {
+		t.Errorf("services field type should be %s, got %s", types.Ref, servicesField.Ftype)
 	}
 	if _, ok := servicesField.Fvalue.(map[string]*object.Object); !ok {
 		t.Errorf("services field value should be map[string]*object.Object")
@@ -302,7 +302,7 @@ func TestSecurityProviderGetServiceWithNilParams(t *testing.T) {
 
 	className := "java/security/Provider"
 	provider := object.MakeEmptyObjectWithClassName(&className)
-	provider.FieldTable["services"] = object.Field{Ftype: types.Map, Fvalue: map[string]*object.Object{}}
+	provider.FieldTable["services"] = object.Field{Ftype: types.Ref, Fvalue: map[string]*object.Object{}}
 
 	// Test with nil type parameter
 	result := securityProviderGetService([]any{provider, nil, object.StringObjectFromGoString("algo")})
@@ -323,7 +323,7 @@ func TestSecurityProviderGetServiceNotFound(t *testing.T) {
 
 	className := "java/security/Provider"
 	provider := object.MakeEmptyObjectWithClassName(&className)
-	provider.FieldTable["services"] = object.Field{Ftype: types.Map, Fvalue: map[string]*object.Object{}}
+	provider.FieldTable["services"] = object.Field{Ftype: types.Ref, Fvalue: map[string]*object.Object{}}
 
 	typeObj := object.StringObjectFromGoString("Cipher")
 	algoObj := object.StringObjectFromGoString("AES")
@@ -342,7 +342,7 @@ func TestSecurityProviderGetServiceFound(t *testing.T) {
 	providerClassName := "java/security/Provider"
 	provider := object.MakeEmptyObjectWithClassName(&providerClassName)
 	services := map[string]*object.Object{}
-	provider.FieldTable["services"] = object.Field{Ftype: types.Map, Fvalue: services}
+	provider.FieldTable["services"] = object.Field{Ftype: types.Ref, Fvalue: services}
 
 	// Create service
 	serviceClassName := "java/security/Provider$Service"
@@ -371,7 +371,7 @@ func TestSecurityProviderPutService(t *testing.T) {
 	providerClassName := "java/security/Provider"
 	provider := object.MakeEmptyObjectWithClassName(&providerClassName)
 	services := map[string]*object.Object{}
-	provider.FieldTable["services"] = object.Field{Ftype: types.Map, Fvalue: services}
+	provider.FieldTable["services"] = object.Field{Ftype: types.Ref, Fvalue: services}
 
 	// Create service
 	serviceClassName := "java/security/Provider$Service"
@@ -403,7 +403,7 @@ func TestSecurityProviderPutServiceOverwrite(t *testing.T) {
 	providerClassName := "java/security/Provider"
 	provider := object.MakeEmptyObjectWithClassName(&providerClassName)
 	services := map[string]*object.Object{}
-	provider.FieldTable["services"] = object.Field{Ftype: types.Map, Fvalue: services}
+	provider.FieldTable["services"] = object.Field{Ftype: types.Ref, Fvalue: services}
 
 	// Create first service
 	serviceClassName := "java/security/Provider$Service"

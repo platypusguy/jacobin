@@ -9,7 +9,6 @@ package object
 import (
 	"jacobin/src/globals"
 	"jacobin/src/types"
-	"math/big"
 	"strconv"
 	"testing"
 )
@@ -36,19 +35,6 @@ func TestObjectFieldToStringPos(t *testing.T) {
 	var obsFloat float64
 	var err error
 	obj := makeGenericObject()
-
-	// BigInteger
-	var bi = new(big.Int)
-	_, ok := bi.SetString(fieldStrValue, 10)
-	if !ok {
-		t.Errorf("(big.Int).SetString() failed, skipping BigInteger test\n")
-	} else {
-		setField(obj, fieldName, types.BigInteger, bi)
-		str := ObjectFieldToString(obj, fieldName)
-		if str != fieldStrValue {
-			t.Errorf("BigInteger, expected: %s, observed: %s\n", fieldStrValue, str)
-		}
-	}
 
 	// Boolean scalar
 	setField(obj, fieldName, types.Bool, types.JavaBoolFalse)

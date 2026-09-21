@@ -65,18 +65,18 @@ func generateDHKeyPair(kpgObj *object.Object) (*object.Object, *object.Object, e
 
 	// --- Construct DHPrivateKey object ---
 	privKey := object.MakeEmptyObjectWithClassName(&types.ClassNameDHPrivateKey)
-	privKey.FieldTable["x"] = object.Field{Ftype: types.BigInteger, Fvalue: xValue}
-	privKey.FieldTable["p"] = object.Field{Ftype: types.BigInteger, Fvalue: pBI}
-	privKey.FieldTable["g"] = object.Field{Ftype: types.BigInteger, Fvalue: gBI}
+	privKey.FieldTable["x"] = object.Field{Ftype: types.Ref, Fvalue: xValue}
+	privKey.FieldTable["p"] = object.Field{Ftype: types.Ref, Fvalue: pBI}
+	privKey.FieldTable["g"] = object.Field{Ftype: types.Ref, Fvalue: gBI}
 	privKey.FieldTable["l"] = object.Field{Ftype: types.Int, Fvalue: lValue}
 	privKey.FieldTable["params"] = object.Field{Ftype: types.Ref, Fvalue: kpgObj.FieldTable["paramSpec"].Fvalue}
 	privKey.FieldTable["algorithm"] = object.Field{Ftype: types.Ref, Fvalue: kpgObj.FieldTable["algorithm"].Fvalue}
 
 	// --- Construct DHPublicKey object ---
 	pubKey := object.MakeEmptyObjectWithClassName(&types.ClassNameDHPublicKey)
-	pubKey.FieldTable["y"] = object.Field{Ftype: types.BigInteger, Fvalue: yValue}
-	pubKey.FieldTable["p"] = object.Field{Ftype: types.BigInteger, Fvalue: pBI}
-	pubKey.FieldTable["g"] = object.Field{Ftype: types.BigInteger, Fvalue: gBI}
+	pubKey.FieldTable["y"] = object.Field{Ftype: types.Ref, Fvalue: yValue}
+	pubKey.FieldTable["p"] = object.Field{Ftype: types.Ref, Fvalue: pBI}
+	pubKey.FieldTable["g"] = object.Field{Ftype: types.Ref, Fvalue: gBI}
 	pubKey.FieldTable["l"] = object.Field{Ftype: types.Int, Fvalue: lValue}
 	pubKey.FieldTable["params"] = object.Field{Ftype: types.Ref, Fvalue: kpgObj.FieldTable["paramSpec"].Fvalue}
 	pubKey.FieldTable["algorithm"] = object.Field{Ftype: types.Ref, Fvalue: kpgObj.FieldTable["algorithm"].Fvalue}

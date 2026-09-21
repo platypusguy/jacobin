@@ -210,7 +210,7 @@ func listOf(params []interface{}) interface{} {
 	list := make([]interface{}, len(params))
 	copy(list, params)
 
-	listObj := object.MakePrimitiveObject("java/util/ArrayList", types.ArrayList, list)
+	listObj := object.MakePrimitiveObject("java/util/ArrayList", types.Ref, list)
 	return listObj
 }
 

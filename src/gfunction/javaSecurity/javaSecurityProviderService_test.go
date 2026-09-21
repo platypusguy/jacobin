@@ -169,8 +169,8 @@ func TestSecurityProvSvcInitHappyPath(t *testing.T) {
 	if !exists {
 		t.Fatalf("attributes field not set")
 	}
-	if attributesField.Ftype != types.Map {
-		t.Errorf("Expected attributes Ftype %s, got %s", types.Map, attributesField.Ftype)
+	if attributesField.Ftype != types.Ref {
+		t.Errorf("Expected attributes Ftype %s, got %s", types.Ref, attributesField.Ftype)
 	}
 }
 
@@ -447,7 +447,7 @@ func TestSecurityProvSvcGetAttributeFound(t *testing.T) {
 		"BlockSize":   object.StringObjectFromGoString("16"),
 		"Implementor": object.StringObjectFromGoString("SunProvider"),
 	}
-	service.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
+	service.FieldTable["attributes"] = object.Field{Ftype: types.Ref, Fvalue: attributes}
 
 	keyObj := object.StringObjectFromGoString("KeySize")
 	result := securityProvSvcGetAttribute([]any{service, keyObj})
@@ -472,7 +472,7 @@ func TestSecurityProvSvcGetAttributeNotFound(t *testing.T) {
 	attributes := map[string]*object.Object{
 		"KeySize": object.StringObjectFromGoString("2048"),
 	}
-	service.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
+	service.FieldTable["attributes"] = object.Field{Ftype: types.Ref, Fvalue: attributes}
 
 	keyObj := object.StringObjectFromGoString("NonExistent")
 	result := securityProvSvcGetAttribute([]any{service, keyObj})
@@ -492,7 +492,7 @@ func TestSecurityProvSvcGetAttributeNilKey(t *testing.T) {
 	attributes := map[string]*object.Object{
 		"KeySize": object.StringObjectFromGoString("2048"),
 	}
-	service.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
+	service.FieldTable["attributes"] = object.Field{Ftype: types.Ref, Fvalue: attributes}
 
 	result := securityProvSvcGetAttribute([]any{service, object.StringObjectFromGoString("")})
 
@@ -511,7 +511,7 @@ func TestSecurityProvSvcGetAttributeInvalidKeyType(t *testing.T) {
 	attributes := map[string]*object.Object{
 		"KeySize": object.StringObjectFromGoString("2048"),
 	}
-	service.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: attributes}
+	service.FieldTable["attributes"] = object.Field{Ftype: types.Ref, Fvalue: attributes}
 	result := securityProvSvcGetAttribute([]any{service, 123})
 	if !object.IsNull(result) {
 		t.Errorf("Expected nil for invalid key type, got %v", result)

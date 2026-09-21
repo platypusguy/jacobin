@@ -86,7 +86,7 @@ func TestECFieldFp(t *testing.T) {
 	globals.InitGlobals("test")
 
 	pVal := big.NewInt(123456789)
-	pObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, pVal)
+	pObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, pVal)
 	thisObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECParameterSpec)
 
 	// Test ecFieldFpInit
@@ -124,8 +124,8 @@ func TestECPoint(t *testing.T) {
 
 	xVal := big.NewInt(100)
 	yVal := big.NewInt(200)
-	xObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, xVal)
-	yObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, yVal)
+	xObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, xVal)
+	yObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, yVal)
 	thisObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECPoint)
 
 	// Test ecPointInit

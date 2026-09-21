@@ -59,8 +59,8 @@ func TestDSAPrivateKeyGetX(t *testing.T) {
 
 	// Positive test
 	keyObj := object.MakeEmptyObjectWithClassName(&types.ClassNameDSAPrivateKey)
-	xObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, xVal)
-	keyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: xObj}
+	xObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, xVal)
+	keyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: xObj}
 
 	result := dsaPrivateGetX([]any{keyObj})
 	if result != xObj {
@@ -84,7 +84,7 @@ func TestDSAPrivateKeyGetX(t *testing.T) {
 	if err := dsaPrivateGetX([]any{"not an object"}); !isGErrBlk(err) {
 		t.Error("Expected error for non-object param")
 	}
-	keyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: "not a big.Int"}
+	keyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: "not a big.Int"}
 	if err := dsaPrivateGetX([]any{keyObj}); !isGErrBlk(err) {
 		t.Error("Expected error for invalid value type")
 	}
@@ -96,8 +96,8 @@ func TestDSAPublicKeyGetY(t *testing.T) {
 
 	// Positive test
 	keyObj := object.MakeEmptyObjectWithClassName(&types.ClassNameDSAPublicKey)
-	yObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, yVal)
-	keyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: yObj}
+	yObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, yVal)
+	keyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: yObj}
 
 	result := dsaPublicKeyGetY([]any{keyObj})
 	if result != yObj {
@@ -117,7 +117,7 @@ func TestDSAPublicKeyGetY(t *testing.T) {
 	if err := dsaPublicKeyGetY([]any{}); !isGErrBlk(err) {
 		t.Error("Expected error for empty params")
 	}
-	keyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: nil}
+	keyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 	if err := dsaPublicKeyGetY([]any{keyObj}); !isGErrBlk(err) {
 		t.Error("Expected error for missing value")
 	}
@@ -130,12 +130,12 @@ func TestDSAParamsGetters(t *testing.T) {
 	g := big.NewInt(13)
 
 	paramsObj := object.MakeEmptyObjectWithClassName(&types.ClassNameDSAParameterSpec)
-	pObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, p)
-	qObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, q)
-	gObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, g)
-	paramsObj.FieldTable["p"] = object.Field{Ftype: types.BigInteger, Fvalue: pObj}
-	paramsObj.FieldTable["q"] = object.Field{Ftype: types.BigInteger, Fvalue: qObj}
-	paramsObj.FieldTable["g"] = object.Field{Ftype: types.BigInteger, Fvalue: gObj}
+	pObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, p)
+	qObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, q)
+	gObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, g)
+	paramsObj.FieldTable["p"] = object.Field{Ftype: types.Ref, Fvalue: pObj}
+	paramsObj.FieldTable["q"] = object.Field{Ftype: types.Ref, Fvalue: qObj}
+	paramsObj.FieldTable["g"] = object.Field{Ftype: types.Ref, Fvalue: gObj}
 
 	// Test getP
 	resP := dsaParamsGetP([]any{paramsObj})

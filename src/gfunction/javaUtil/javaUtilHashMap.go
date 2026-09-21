@@ -229,7 +229,7 @@ func hashmapInit(params []interface{}) interface{} {
 		obj.KlassName = object.StringPoolIndexFromGoString(classNameHashMap)
 	}
 	fld := obj.FieldTable[fieldNameMap]
-	fld.Ftype = types.HashMap
+	fld.Ftype = types.Ref
 	fld.Fvalue = nilMap
 	obj.FieldTable[fieldNameMap] = fld
 	return nil

@@ -63,7 +63,7 @@ func dhparameterspecGetG(args []interface{}) interface{} {
 			funcName+": g not initialized")
 	}
 
-	return object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, g)
+	return object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, g)
 }
 
 func dhparameterspecGetL(args []interface{}) interface{} {
@@ -102,7 +102,7 @@ func dhparameterspecGetP(args []interface{}) interface{} {
 			funcName+": p not initialized")
 	}
 
-	return object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, p)
+	return object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, p)
 }
 
 func dhparameterspecInit(args []interface{}) interface{} {
@@ -151,12 +151,12 @@ func dhparameterspecInit(args []interface{}) interface{} {
 	}
 
 	obj.FieldTable["p"] = object.Field{
-		Ftype:  types.BigInteger,
+		Ftype:  types.Ref,
 		Fvalue: p,
 	}
 
 	obj.FieldTable["g"] = object.Field{
-		Ftype:  types.BigInteger,
+		Ftype:  types.Ref,
 		Fvalue: g,
 	}
 

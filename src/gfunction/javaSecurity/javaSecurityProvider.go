@@ -135,7 +135,7 @@ func securityProviderInit(params []any) any {
 	this.FieldTable["info"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(infoStr)}
 
 	// Initialize services map in an empty state.
-	this.FieldTable["services"] = object.Field{Ftype: types.Map, Fvalue: map[string]*object.Object{}}
+	this.FieldTable["services"] = object.Field{Ftype: types.Ref, Fvalue: map[string]*object.Object{}}
 
 	return nil
 }

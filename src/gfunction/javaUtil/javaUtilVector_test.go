@@ -90,7 +90,7 @@ func TestVector_ListIterator(t *testing.T) {
 	Load_Util_Vector()
 	Load_Util_ListIterator()
 
-	vObj := object.MakePrimitiveObject("java/util/Vector", types.Vector, []interface{}{})
+	vObj := object.MakePrimitiveObject("java/util/Vector", types.Ref, []interface{}{})
 	vectorAdd([]interface{}{vObj, object.StringObjectFromGoString("a")})
 	vectorAdd([]interface{}{vObj, object.StringObjectFromGoString("b")})
 	vectorAdd([]interface{}{vObj, object.StringObjectFromGoString("c")})

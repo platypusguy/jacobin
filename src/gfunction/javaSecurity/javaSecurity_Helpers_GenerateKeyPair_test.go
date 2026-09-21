@@ -46,11 +46,11 @@ func makeKeyPairGenerator(algo string, keySize int64) *object.Object {
 func makeDHKeyPairGenerator(p, g int64, l int64) *object.Object {
 	obj := makeKeyPairGenerator("DH", -1)
 	obj.FieldTable["p"] = object.Field{
-		Ftype:  types.BigInteger,
+		Ftype:  types.Ref,
 		Fvalue: big.NewInt(p),
 	}
 	obj.FieldTable["g"] = object.Field{
-		Ftype:  types.BigInteger,
+		Ftype:  types.Ref,
 		Fvalue: big.NewInt(g),
 	}
 	obj.FieldTable["l"] = object.Field{
@@ -60,8 +60,8 @@ func makeDHKeyPairGenerator(p, g int64, l int64) *object.Object {
 
 	// Mock DHParameterSpec and store it in paramSpec field
 	paramSpec := object.MakeEmptyObjectWithClassName(&types.ClassNameDHParameterSpec)
-	paramSpec.FieldTable["p"] = object.Field{Ftype: types.BigInteger, Fvalue: p}
-	paramSpec.FieldTable["g"] = object.Field{Ftype: types.BigInteger, Fvalue: g}
+	paramSpec.FieldTable["p"] = object.Field{Ftype: types.Ref, Fvalue: p}
+	paramSpec.FieldTable["g"] = object.Field{Ftype: types.Ref, Fvalue: g}
 	paramSpec.FieldTable["l"] = object.Field{Ftype: types.Int, Fvalue: l}
 	obj.FieldTable["paramSpec"] = object.Field{Ftype: types.Ref, Fvalue: paramSpec}
 

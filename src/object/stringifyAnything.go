@@ -285,8 +285,6 @@ func StringifyAnythingGo(arg interface{}) string {
 			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 64)
 		case types.Float:
 			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 32)
-		case types.BigInteger:
-			return fmt.Sprint(fld.Fvalue)
 		case types.LinkedList: // LinkedList must contain objects, not primitives due to recursive call to this function
 			strBuffer := "["
 			llst := fld.Fvalue.(*list.List)

@@ -76,7 +76,7 @@ func TestECPrivateKeyGetS(t *testing.T) {
 	priv, _ := ecdsa.GenerateKey(curve, rand.Reader)
 
 	privKeyObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECPrivateKey)
-	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: priv}
+	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: priv}
 
 	res := ecPrivateKeyGetS([]any{privKeyObj})
 	obj, ok := res.(*object.Object)
@@ -90,7 +90,7 @@ func TestECPrivateKeyGetS(t *testing.T) {
 	}
 
 	// Negative test: invalid value type
-	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: "not a key"}
+	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: "not a key"}
 	res = ecPrivateKeyGetS([]any{privKeyObj})
 	if _, ok := res.(*ghelpers.GErrBlk); !ok {
 		t.Errorf("Expected GErrBlk for invalid value type, got %T", res)
@@ -123,7 +123,7 @@ func TestECPublicKeyGetW(t *testing.T) {
 	// Case 1: Manual "w" field
 	pointObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECPoint)
 	pubKeyObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECPublicKey)
-	pubKeyObj.FieldTable["w"] = object.Field{Ftype: types.ECPoint, Fvalue: pointObj}
+	pubKeyObj.FieldTable["w"] = object.Field{Ftype: types.Ref, Fvalue: pointObj}
 
 	res := ecPublicKeyGetW([]any{pubKeyObj})
 	if res != pointObj {
@@ -134,7 +134,7 @@ func TestECPublicKeyGetW(t *testing.T) {
 	delete(pubKeyObj.FieldTable, "w")
 	curve := elliptic.P256()
 	priv, _ := ecdsa.GenerateKey(curve, rand.Reader)
-	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: &priv.PublicKey}
+	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: &priv.PublicKey}
 
 	res = ecPublicKeyGetW([]any{pubKeyObj})
 	resObj, ok := res.(*object.Object)

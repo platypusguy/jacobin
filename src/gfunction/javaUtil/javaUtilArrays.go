@@ -460,7 +460,7 @@ func utilArraysAsList(params []interface{}) interface{} {
 	}
 
 	// Return an ArrayList object
-	listObj := object.MakePrimitiveObject("java/util/ArrayList", types.ArrayList, ifaceElements)
+	listObj := object.MakePrimitiveObject("java/util/ArrayList", types.Ref, ifaceElements)
 	return listObj
 }
 

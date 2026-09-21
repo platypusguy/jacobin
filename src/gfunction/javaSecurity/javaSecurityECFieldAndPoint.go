@@ -131,7 +131,7 @@ func ecFieldFpInit(params []any) any {
 	}
 
 	thisObj.FieldTable = map[string]object.Field{
-		"p": {Ftype: types.BigInteger, Fvalue: pObj},
+		"p": {Ftype: types.Ref, Fvalue: pObj},
 	}
 
 	return nil // <init> returns void
@@ -198,8 +198,8 @@ func ecPointInit(params []any) any {
 
 	// Populate the thisObj FieldTable
 	thisObj.FieldTable = map[string]object.Field{
-		"x": {Ftype: types.BigInteger, Fvalue: xObj},
-		"y": {Ftype: types.BigInteger, Fvalue: yObj},
+		"x": {Ftype: types.Ref, Fvalue: xObj},
+		"y": {Ftype: types.Ref, Fvalue: yObj},
 	}
 
 	return nil // <init> always returns void

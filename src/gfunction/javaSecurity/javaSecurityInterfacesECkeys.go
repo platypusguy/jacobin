@@ -124,7 +124,7 @@ func ecPrivateKeyGetS(params []any) any {
 		)
 	}
 
-	bigintObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecprivkey.D)
+	bigintObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, ecprivkey.D)
 
 	return bigintObj
 }
@@ -190,12 +190,12 @@ func ecPublicKeyGetW(params []any) any {
 	// Create ECPoint object
 	pointObj := NewGoRuntimeService("ECPoint", "", types.ClassNameECPoint)
 	pointObj.FieldTable["x"] = object.Field{
-		Ftype:  types.BigInteger,
-		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecpubkey.X),
+		Ftype:  types.Ref,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, ecpubkey.X),
 	}
 	pointObj.FieldTable["y"] = object.Field{
-		Ftype:  types.BigInteger,
-		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, ecpubkey.Y),
+		Ftype:  types.Ref,
+		Fvalue: object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, ecpubkey.Y),
 	}
 
 	return pointObj

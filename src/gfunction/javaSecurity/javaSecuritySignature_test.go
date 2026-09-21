@@ -66,7 +66,7 @@ func TestSignatureGFunctions_RSA(t *testing.T) {
 	// 3. initSign
 	privKey, _ := rsa.GenerateKey(rand.Reader, 2048)
 	privKeyObj := NewGoRuntimeService("RSAPrivateKey", "RSA", types.ClassNameRSAPrivateKey)
-	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privKey}
+	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: privKey}
 
 	res = signatureInitSign([]any{sigObj, privKeyObj})
 	if res != nil {
@@ -88,7 +88,7 @@ func TestSignatureGFunctions_RSA(t *testing.T) {
 
 	// 6. initVerify
 	pubKeyObj := NewGoRuntimeService("RSAPublicKey", "RSA", types.ClassNameRSAPublicKey)
-	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: &privKey.PublicKey}
+	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: &privKey.PublicKey}
 
 	res = signatureInitVerify([]any{sigObj, pubKeyObj})
 	if res != nil {
@@ -133,7 +133,7 @@ func TestSignatureGFunctions_ECDSA(t *testing.T) {
 
 	privKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	privKeyObj := NewGoRuntimeService("ECPrivateKey", "EC", types.ClassNameECPrivateKey)
-	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privKey}
+	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: privKey}
 
 	signatureInitSign([]any{sigObj, privKeyObj})
 
@@ -145,7 +145,7 @@ func TestSignatureGFunctions_ECDSA(t *testing.T) {
 	sigResultObj := res.(*object.Object)
 
 	pubKeyObj := NewGoRuntimeService("ECPublicKey", "EC", types.ClassNameECPublicKey)
-	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: &privKey.PublicKey}
+	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: &privKey.PublicKey}
 
 	signatureInitVerify([]any{sigObj, pubKeyObj})
 	signatureUpdateBytes([]any{sigObj, dataObj})
@@ -172,7 +172,7 @@ func TestSignatureGFunctions_DSA(t *testing.T) {
 	dsa.GenerateKey(privKey, rand.Reader)
 
 	privKeyObj := NewGoRuntimeService("DSAPrivateKey", "DSA", types.ClassNameDSAPrivateKey)
-	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privKey}
+	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: privKey}
 
 	signatureInitSign([]any{sigObj, privKeyObj})
 
@@ -184,7 +184,7 @@ func TestSignatureGFunctions_DSA(t *testing.T) {
 	sigResultObj := res.(*object.Object)
 
 	pubKeyObj := NewGoRuntimeService("DSAPublicKey", "DSA", types.ClassNameDSAPublicKey)
-	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: &privKey.PublicKey}
+	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: &privKey.PublicKey}
 
 	signatureInitVerify([]any{sigObj, pubKeyObj})
 	signatureUpdateBytes([]any{sigObj, dataObj})
@@ -207,7 +207,7 @@ func TestSignatureGFunctions_Ed25519(t *testing.T) {
 	pubKey, privKey, _ := ed25519.GenerateKey(rand.Reader)
 
 	privKeyObj := NewGoRuntimeService("Ed25519", "Ed25519", types.ClassNameEdECPrivateKey)
-	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privKey}
+	privKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: privKey}
 
 	signatureInitSign([]any{sigObj, privKeyObj})
 
@@ -219,7 +219,7 @@ func TestSignatureGFunctions_Ed25519(t *testing.T) {
 	sigResultObj := res.(*object.Object)
 
 	pubKeyObj := NewGoRuntimeService("Ed25519", "Ed25519", types.ClassNameEdECPublicKey)
-	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.PublicKey, Fvalue: pubKey}
+	pubKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: pubKey}
 
 	signatureInitVerify([]any{sigObj, pubKeyObj})
 	signatureUpdateBytes([]any{sigObj, dataObj})
@@ -267,7 +267,7 @@ func TestSignature_InvalidParams(t *testing.T) {
 	// Test initSign with wrong key type
 	privKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	ecPrivKeyObj := NewGoRuntimeService("ECPrivateKey", "EC", types.ClassNameECPrivateKey)
-	ecPrivKeyObj.FieldTable["value"] = object.Field{Ftype: types.PrivateKey, Fvalue: privKey}
+	ecPrivKeyObj.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: privKey}
 
 	res = signatureInitSign([]any{sigObj, ecPrivKeyObj})
 	if err, ok := res.(*ghelpers.GErrBlk); !ok || err.ExceptionType != excNames.InvalidKeyException {

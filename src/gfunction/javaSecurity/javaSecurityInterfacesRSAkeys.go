@@ -114,11 +114,11 @@ func rsaKeyGetModulus(params []any) any {
 	// The RSAKey super-interface is shared by both RSAPublicKey and RSAPrivateKey.
 	// Support extracting modulus from either kind of underlying Go key.
 	if rsapubkey, ok := thisObj.FieldTable["value"].Fvalue.(*rsa.PublicKey); ok {
-		bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, rsapubkey.N)
+		bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, rsapubkey.N)
 		return bigint
 	}
 	if rsaprivkey, ok := thisObj.FieldTable["value"].Fvalue.(*rsa.PrivateKey); ok {
-		bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, rsaprivkey.N)
+		bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, rsaprivkey.N)
 		return bigint
 	}
 
@@ -152,7 +152,7 @@ func rsaprivateGetExponent(params []any) any {
 		)
 	}
 
-	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, rsaprvkey.D)
+	bigint := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, rsaprvkey.D)
 
 	return bigint
 }

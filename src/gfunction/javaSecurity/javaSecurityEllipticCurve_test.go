@@ -40,8 +40,8 @@ func TestEllipticCurve(t *testing.T) {
 
 	// Create dependencies
 	fieldObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECPoint) // Using a dummy class name
-	aObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, big.NewInt(123))
-	bObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, big.NewInt(456))
+	aObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, big.NewInt(123))
+	bObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, big.NewInt(456))
 
 	// Create EllipticCurve object
 	ecObj := object.MakeEmptyObjectWithClassName(&types.ClassNameEllipticCurve)
@@ -94,7 +94,7 @@ func TestEllipticCurveInvalidParams(t *testing.T) {
 
 	ecObj := object.MakeEmptyObjectWithClassName(&types.ClassNameEllipticCurve)
 	fieldObj := object.MakeEmptyObjectWithClassName(&types.ClassNameECPoint)
-	aObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, big.NewInt(123))
+	aObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.Ref, big.NewInt(123))
 	// bObj missing
 
 	// Test Init with missing parameter
