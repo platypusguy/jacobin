@@ -232,7 +232,6 @@ var BytecodeNames = [203]string{
 type BytecodeFunc func() int
 
 var ERROR_OCCURRED = math.MaxInt32
-var WideInEffect = false
 
 var CheckTable = [203]BytecodeFunc{
 	Return1,              // NOP             0x00
