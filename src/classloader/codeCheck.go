@@ -233,7 +233,7 @@ type BytecodeFunc func() int
 
 var ERROR_OCCURRED = math.MaxInt32
 
-var CheckTable = [203]BytecodeFunc{
+var CheckTable = [256]BytecodeFunc{
 	Return1,              // NOP             0x00
 	CheckAconstnull,      // ACONST_NULL     0x01
 	PushInt,              // ICONST_M1       0x02
@@ -400,7 +400,7 @@ var CheckTable = [203]BytecodeFunc{
 	CheckIf,              // IF_ICMPGT       0xA3
 	CheckIf,              // IF_ICMPLE       0xA4
 	CheckIf,              // IF_ACMPEQ       0xA5
-	CheckIf,              // IF_ACMPNE       0xA6 // stack-checking code got this far
+	CheckIf,              // IF_ACMPNE       0xA6
 	CheckGoto,            // GOTO            0xA7
 	CheckGoto,            // JSR             0xA8
 	Return2,              // RET             0xA9
@@ -437,6 +437,59 @@ var CheckTable = [203]BytecodeFunc{
 	CheckGotow,           // GOTO_W          0xC8
 	Return5,              // JSR_W           0xC9
 	Return1,              // BREAKPOINT      0xCA
+	InvalidBytecode,      // 0xCB All following bytecodes (thru 0xFF) are invalid in a class file
+	InvalidBytecode,      // 0xCC
+	InvalidBytecode,      // 0xCD
+	InvalidBytecode,      // 0xCE
+	InvalidBytecode,      // 0xCF
+	InvalidBytecode,      // 0xD0
+	InvalidBytecode,      // 0xD1
+	InvalidBytecode,      // 0xD2
+	InvalidBytecode,      // 0xD3
+	InvalidBytecode,      // 0xD4
+	InvalidBytecode,      // 0xD5
+	InvalidBytecode,      // 0xD6
+	InvalidBytecode,      // 0xD7
+	InvalidBytecode,      // 0xD8
+	InvalidBytecode,      // 0xD9
+	InvalidBytecode,      // 0xDA
+	InvalidBytecode,      // 0xDB
+	InvalidBytecode,      // 0xDC
+	InvalidBytecode,      // 0xDD
+	InvalidBytecode,      // 0xDE
+	InvalidBytecode,      // 0xDF
+	InvalidBytecode,      // 0xE0
+	InvalidBytecode,      // 0xE1
+	InvalidBytecode,      // 0xE2
+	InvalidBytecode,      // 0xE3
+	InvalidBytecode,      // 0xE4
+	InvalidBytecode,      // 0xE5
+	InvalidBytecode,      // 0xE6
+	InvalidBytecode,      // 0xE7
+	InvalidBytecode,      // 0xE8
+	InvalidBytecode,      // 0xE9
+	InvalidBytecode,      // 0xEA
+	InvalidBytecode,      // 0xEB
+	InvalidBytecode,      // 0xEC
+	InvalidBytecode,      // 0xED
+	InvalidBytecode,      // 0xEE
+	InvalidBytecode,      // 0xEF
+	InvalidBytecode,      // 0xF0
+	InvalidBytecode,      // 0xF1
+	InvalidBytecode,      // 0xF2
+	InvalidBytecode,      // 0xF3
+	InvalidBytecode,      // 0xF4
+	InvalidBytecode,      // 0xF5
+	InvalidBytecode,      // 0xF6
+	InvalidBytecode,      // 0xF7
+	InvalidBytecode,      // 0xF8
+	InvalidBytecode,      // 0xF9
+	InvalidBytecode,      // 0xFA
+	InvalidBytecode,      // 0xFB
+	InvalidBytecode,      // 0xFC
+	InvalidBytecode,      // 0xFD
+	InvalidBytecode,      // 0xFE
+	InvalidBytecode,      // 0xFF
 }
 
 var PC int
@@ -1242,4 +1295,12 @@ func BytecodePushes32BitValue(bytecode byte) bool {
 	default:
 		return false
 	}
+}
+
+// bytecode instructions 204-255 (0xCB-0xFF) are disallowed in class files
+func InvalidBytecode() int {
+	errMsg := fmt.Sprintf("%s: Invalid bytecode instruction at %d: %X",
+		excNames.JVMexceptionNames[excNames.VerifyError], PC, Code[PC])
+	trace.Error(errMsg)
+	return ERROR_OCCURRED
 }
