@@ -17,6 +17,60 @@ import (
 	"strings"
 )
 
+// ResolveCallSite is the high-level function called by the INVOKEDYNAMIC instruction.
+// It coordinates the resolution of the bootstrap method and the creation of the CallSite.
+func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, error) {
+	// index is the index into the constant pool for the CONSTANT_InvokeDynamic_info entry
+
+	// Fetch the InvokeDynamic entry (it was previously validated in codeCheck.go)
+	idEntry := FetchCPentry(cp, index)
+
+	// idEntry.AddrVal.entry1 is the bootstrap_method_attr_index
+	// idEntry.AddrVal.entry2 is the name_and_type_index for the CallSite
+	bsmIndex := int(idEntry.AddrVal.entry1)
+	natIndex := int(idEntry.AddrVal.entry2)
+
+	// Get the Bootstrap Method info from the class attributes
+	klass := MethAreaFetch(fr.ClName)
+	if klass == nil {
+		return nil, fmt.Errorf("ResolveCallSite: could not find class %s", fr.ClName)
+	}
+
+	// Resolve the NameAndType (method name and type for the CallSite)
+	// natIndex points to NameAndType entry
+	methName, methType := GetNATfieldsFromCPindex(cp, natIndex)
+	if methName == "" || methType == "" {
+		return nil, fmt.Errorf("ResolveCallSite: could not resolve NameAndType entry at index %d", natIndex)
+	}
+
+	// Resolve the Bootstrap Method Handle
+	// bsm.MethodRef is an index into the Constant Pool (MethodHandle)
+	bsm := cp.Bootstraps[bsmIndex]
+	if globals.TraceClass {
+		trace.Trace(fmt.Sprintf("ResolveCallSite: BSM index=%d, MethodRef=%d, ArgCount=%d",
+			bsmIndex, bsm.MethodRef, len(bsm.Args)))
+	}
+
+	bsmHandle, err := ResolveMethodHandle(cp, int(bsm.MethodRef), fr)
+	if err != nil {
+		return nil, err
+	}
+
+	// 5. Resolve Static Arguments
+	// bsm.Args is a list of indices into the Constant Pool.
+	// These must be resolved to Java objects (String, Class, MethodType, MethodHandle, int, long, etc.)
+	// ...
+
+	// 6. Invoke the Bootstrap Method
+	// This is the critical step: executing the BSM to get the CallSite object.
+	// ...
+
+	_ = bsmHandle // suppress unused var error for now
+	_ = natIndex
+
+	return nil, fmt.Errorf("ResolveCallSite: implementation pending")
+}
+
 // ResolveMethodHandle resolves a MethodHandle constant pool entry into a runtime representation.
 // This corresponds to the JVM's resolution of a CONSTANT_MethodHandle_info structure.
 //
@@ -288,8 +342,8 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	}
 
 	// 2. Get java.lang.Class object for the defining class.
-	defClassObj, err := getClassObj("L"+className+";", fr) // <<< where elkins 455 test bombs
-	// defClassObj, err := getClassObj(className) // <<< where elkins 455 test bombs
+	// defClassObj, err := getClassObj("L"+className+";", fr) // <<< where elkins 455 test bombs
+	defClassObj, err := getClassObj(className, fr) // <<< where elkins 455 test bombs
 	if err != nil {
 		return nil, fmt.Errorf("resolveMethodHandleEntry: could not get Class object for %s: %w", className, err)
 	}
@@ -363,60 +417,6 @@ func ResolveMethodType(cp *CPool, index int, fr *frames.Frame) (*object.Object, 
 
 	// 2. Create the MethodType object using the helper
 	return getMethodTypeObject(descriptor, fr)
-}
-
-// ResolveCallSite is the high-level function called by the INVOKEDYNAMIC instruction.
-// It coordinates the resolution of the bootstrap method and the creation of the CallSite.
-func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, error) {
-	// index is the index into the constant pool for the CONSTANT_InvokeDynamic_info entry
-
-	// Fetch the InvokeDynamic entry (it was previously validated in codeCheck.go)
-	idEntry := FetchCPentry(cp, index)
-
-	// idEntry.AddrVal.entry1 is the bootstrap_method_attr_index
-	// idEntry.AddrVal.entry2 is the name_and_type_index for the CallSite
-	bsmIndex := int(idEntry.AddrVal.entry1)
-	natIndex := int(idEntry.AddrVal.entry2)
-
-	// Get the Bootstrap Method info from the class attributes
-	klass := MethAreaFetch(fr.ClName)
-	if klass == nil {
-		return nil, fmt.Errorf("ResolveCallSite: could not find class %s", fr.ClName)
-	}
-
-	// Resolve the NameAndType (method name and type for the CallSite)
-	// natIndex points to NameAndType entry
-	methName, methType := GetNATfieldsFromCPindex(cp, natIndex)
-	if methName == "" || methType == "" {
-		return nil, fmt.Errorf("ResolveCallSite: could not resolve NameAndType entry at index %d", natIndex)
-	}
-
-	// Resolve the Bootstrap Method Handle
-	// bsm.MethodRef is an index into the Constant Pool (MethodHandle)
-	bsm := cp.Bootstraps[bsmIndex]
-	if globals.TraceClass {
-		trace.Trace(fmt.Sprintf("ResolveCallSite: BSM index=%d, MethodRef=%d, ArgCount=%d",
-			bsmIndex, bsm.MethodRef, len(bsm.Args)))
-	}
-
-	bsmHandle, err := ResolveMethodHandle(cp, int(bsm.MethodRef), fr)
-	if err != nil {
-		return nil, err
-	}
-
-	// 5. Resolve Static Arguments
-	// bsm.Args is a list of indices into the Constant Pool.
-	// These must be resolved to Java objects (String, Class, MethodType, MethodHandle, int, long, etc.)
-	// ...
-
-	// 6. Invoke the Bootstrap Method
-	// This is the critical step: executing the BSM to get the CallSite object.
-	// ...
-
-	_ = bsmHandle // suppress unused var error for now
-	_ = natIndex
-
-	return nil, fmt.Errorf("ResolveCallSite: implementation pending")
 }
 
 // getMethodTypeObject creates a java.lang.invoke.MethodType object from a descriptor string.
