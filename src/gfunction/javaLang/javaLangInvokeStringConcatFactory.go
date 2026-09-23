@@ -14,7 +14,7 @@ func Load_Lang_Invoke_StringConcatFactory() {
 	ghelpers.MethodSignatures["java/lang/invoke/StringConcatFactory.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapClass,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
 	ghelpers.MethodSignatures["java/lang/invoke/StringConcatFactory.makeConcat(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"] =
