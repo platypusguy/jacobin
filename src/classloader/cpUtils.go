@@ -219,6 +219,7 @@ func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, stri
 	// multiple Java threads share this class's constant pool, so they must be
 	// lock-protected to avoid observing a torn/incorrect CpEntry.
 
+	// The mutex is defined as sync.RWMutex. We want to share reading with other threads.
 	CP.Mutex.RLock()
 	defer CP.Mutex.RUnlock()
 
@@ -276,6 +277,7 @@ func GetNATfieldsFromCPindex(CP *CPool, cpIndex int) (name, signature string) {
 	// resolved methods, and multiple Java threads can call this function for
 	// the same constant-pool entries at the same time.
 
+	// The mutex is defined as sync.RWMutex. We want to share reading with other threads.
 	CP.Mutex.RLock()
 	defer CP.Mutex.RUnlock()
 
