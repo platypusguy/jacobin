@@ -9,6 +9,7 @@ package classloader
 import (
 	"jacobin/src/frames"
 	"jacobin/src/globals"
+	"jacobin/src/stringPool"
 	"jacobin/src/types"
 	"math"
 	"testing"
@@ -61,6 +62,131 @@ func TestMeInfoFromMethRefValid(t *testing.T) {
 		t.Errorf("Expect to get a method: <init>()V, got %s%s", s2, s2)
 	}
 
+}
+
+func TestMeInfoFromMethRefCached(t *testing.T) {
+	globals.InitGlobals("test")
+
+	err := Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestMeInfoFromMethRefCached")
+	}
+	LoadBaseClasses()
+
+	className := "java/lang/TestClass"
+	methName := "testMethod"
+	methType := "()V"
+
+	mte := MTentry{
+		MethClass: stringPool.GetStringIndex(&className),
+		MethName:  stringPool.GetStringIndex(&methName),
+		MethType:  stringPool.GetStringIndex(&methType),
+	}
+
+	CP := CPool{}
+	CP.CachedMethods = []MTentry{mte}
+	CP.CpIndex = make([]CpEntry, 2)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = CpEntry{Type: CachedMeth, Slot: 0}
+
+	cls, mth, typ, fqn := GetMethInfoFromCPmethref(&CP, 1)
+	if cls != className {
+		t.Errorf("Expected class name '%s', got '%s'", className, cls)
+	}
+	if mth != methName {
+		t.Errorf("Expected method name '%s', got '%s'", methName, mth)
+	}
+	if typ != methType {
+		t.Errorf("Expected method type '%s', got '%s'", methType, typ)
+	}
+	expectedFQN := className + "." + methName + methType
+	if fqn != expectedFQN {
+		t.Errorf("Expected FQN '%s', got '%s'", expectedFQN, fqn)
+	}
+}
+
+func TestMeInfoFromInterfaceRefValid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	err := Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestMeInfoFromInterfaceRefValid")
+	}
+	LoadBaseClasses()
+
+	CP := CPool{}
+	CP.CpIndex = make([]CpEntry, 10)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = CpEntry{Type: Interface, Slot: 0}
+
+	CP.InterfaceRefs = make([]InterfaceRefEntry, 1)
+	CP.InterfaceRefs[0] = InterfaceRefEntry{ClassIndex: 2, NameAndType: 3}
+
+	CP.CpIndex[2] = CpEntry{Type: ClassRef, Slot: 0}
+	CP.ClassRefs = make([]uint32, 1)
+	CP.ClassRefs[0] = types.StringPoolObjectIndex
+
+	CP.CpIndex[3] = CpEntry{Type: NameAndType, Slot: 0}
+	CP.NameAndTypes = make([]NameAndTypeEntry, 1)
+	CP.NameAndTypes[0] = NameAndTypeEntry{
+		NameIndex: 4,
+		DescIndex: 5,
+	}
+
+	CP.CpIndex[4] = CpEntry{Type: UTF8, Slot: 0}
+	CP.Utf8Refs = make([]string, 2)
+	CP.Utf8Refs[0] = "interfaceMethod"
+
+	CP.CpIndex[5] = CpEntry{Type: UTF8, Slot: 1}
+	CP.Utf8Refs[1] = "(I)V"
+
+	cls, mth, typ := GetMethInfoFromCPinterfaceRef(&CP, 1)
+	if cls != "java/lang/Object" {
+		t.Errorf("Expected class name 'java/lang/Object', got '%s'", cls)
+	}
+	if mth != "interfaceMethod" {
+		t.Errorf("Expected method name 'interfaceMethod', got '%s'", mth)
+	}
+	if typ != "(I)V" {
+		t.Errorf("Expected method type '(I)V', got '%s'", typ)
+	}
+}
+
+func TestMeInfoFromInterfaceRefCached(t *testing.T) {
+	globals.InitGlobals("test")
+
+	err := Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestMeInfoFromInterfaceRefCached")
+	}
+	LoadBaseClasses()
+
+	className := "java/lang/TestInterface"
+	methName := "cachedInterfaceMethod"
+	methType := "(Ljava/lang/String;)I"
+
+	mte := MTentry{
+		MethClass: stringPool.GetStringIndex(&className),
+		MethName:  stringPool.GetStringIndex(&methName),
+		MethType:  stringPool.GetStringIndex(&methType),
+	}
+
+	CP := CPool{}
+	CP.CachedMethods = []MTentry{mte}
+	CP.CpIndex = make([]CpEntry, 2)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = CpEntry{Type: CachedMeth, Slot: 0}
+
+	cls, mth, typ := GetMethInfoFromCPinterfaceRef(&CP, 1)
+	if cls != className {
+		t.Errorf("Expected class name '%s', got '%s'", className, cls)
+	}
+	if mth != methName {
+		t.Errorf("Expected method name '%s', got '%s'", methName, mth)
+	}
+	if typ != methType {
+		t.Errorf("Expected method type '%s', got '%s'", methType, typ)
+	}
 }
 
 func TestGetClassNameFromCPclassref(t *testing.T) {

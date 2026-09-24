@@ -125,20 +125,18 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 			// prepare the static fields, by inserting them w/ default values in Statics table
 			// See (https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.2)
 			if fld.IsStatic {
-				_, ok := statics.QueryStatic(classname, fldName)
-				if !ok { // not yet stored in the statics table
-					var fldValue any
-					fldType := []byte(k.Data.CP.Utf8Refs[fld.Desc])
-					switch fldType[0] {
-					case 'B', 'C', 'S', 'I', 'J', 'Z':
-						fldValue = int64(0)
-					case 'F', 'D':
-						fldValue = float64(0.00)
-					case 'L', '[':
-						fldValue = object.Null
-					}
-					statics.AddStatic(classname+"."+fldName, statics.Static{Type: string(fldType[0]), Value: fldValue})
+				var fldValue any
+				fldType := []byte(k.Data.CP.Utf8Refs[fld.Desc])
+				switch fldType[0] {
+				case 'B', 'C', 'S', 'I', 'J', 'Z':
+					fldValue = int64(0)
+				case 'F', 'D':
+					fldValue = float64(0.00)
+				case 'L', '[':
+					fldValue = object.Null
 				}
+				statics.AddStaticIfAbsent(classname+"."+fldName,
+					statics.Static{Type: string(fldType[0]), Value: fldValue})
 			}
 		} // loop through the fields if any
 		goto runInitializer

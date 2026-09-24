@@ -12,15 +12,11 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/globals"
 	"jacobin/src/types"
-	"jacobin/src/util"
 	"os"
 	"runtime/debug"
 	"strings"
 	"sync"
-	"testing"
 )
-
-const flagTraceStatics = false
 
 // Statics is a fast-lookup map of static variables and functions. The int64 value
 // contains the index into the statics array where the entry is stored.
@@ -56,24 +52,36 @@ type Static struct {
 	Value any
 }
 
-// AddStatic adds a static field to the Statics table using a mutex
+// AddStatic adds or replaces a static field to the Statics table using a mutex
 // name: className.fieldName
+// Returns nil if successful, otherwise an error.
 func AddStatic(name string, s Static) error {
-	staticsMutex.Lock()
-	defer staticsMutex.Unlock()
-
 	if name == "" {
 		errMsg := fmt.Sprintf("AddStatic: Attempting to add static entry with a nil name, type=%s, value=%v", s.Type, s.Value)
 		globals.GetGlobalRef().FuncThrowException(excNames.InvalidTypeException, errMsg)
 		return errors.New(errMsg)
 	}
+
+	staticsMutex.Lock()
 	Statics[name] = s
-	if flagTraceStatics && !util.IsFilePartOfJDK(&name) {
-		if !testing.Testing() {
-			_, _ = fmt.Fprintf(os.Stderr, ">>>trace>>>AddStatic: Adding static entry with name=%s, value=%v\n", name, s.Value)
-		}
-	}
+	staticsMutex.Unlock()
+
 	return nil
+}
+
+// AddStaticIfAbsent adds a static field to the Statics table if and only if the field is a new entry.
+// Existing entries are not replaced like in function AddStatic.
+// This function prevents a late thread from overwriting a live static variable with an initial value.
+// name: className.fieldName
+// Returns true if the entry was added, false if it already existed.
+func AddStaticIfAbsent(name string, s Static) bool {
+	staticsMutex.Lock()
+	defer staticsMutex.Unlock()
+	if _, ok := Statics[name]; ok {
+		return false
+	}
+	Statics[name] = s
+	return true
 }
 
 // PreloadStatics preloads static fields from java.lang.String and other
@@ -137,15 +145,12 @@ func LoadStaticsString() {
 // If successful, return the field value and a nil error;
 // Else (error), return errors.New(errMsg).
 func GetStaticValue(className string, fieldName string) any {
-	staticsMutex.RLock()
-	defer staticsMutex.RUnlock()
-
-	var retValue any
-
 	staticName := className + "." + fieldName
 
-	// was this static field previously loaded? Is so, get its location and move on.
+	staticsMutex.RLock()
 	prevLoaded, ok := Statics[staticName]
+	staticsMutex.RUnlock()
+
 	if !ok {
 		// An error is returned only in test mode.
 		// In non-test mode, the exception is thrown and the JVM shuts down.
@@ -156,25 +161,22 @@ func GetStaticValue(className string, fieldName string) any {
 		return errors.New(errMsg)
 	}
 
-	// Field types bool, byte, and int need conversion to int64.
+	// Field types bool, byte, JavaByte, int32, and int need conversion to int64.
 	// The other types are OK as is.
-	switch prevLoaded.Value.(type) {
+	switch v := prevLoaded.Value.(type) {
 	case bool:
-		value := prevLoaded.Value.(bool)
-		retValue = types.ConvertGoBoolToJavaBool(value)
+		return types.ConvertGoBoolToJavaBool(v)
 	case byte:
-		retValue = int64(prevLoaded.Value.(byte))
+		return int64(v)
 	case types.JavaByte:
-		retValue = int64(prevLoaded.Value.(types.JavaByte))
+		return int64(v)
 	case int32:
-		retValue = int64(prevLoaded.Value.(int32))
+		return int64(v)
 	case int:
-		retValue = int64(prevLoaded.Value.(int))
+		return int64(v)
 	default:
-		retValue = prevLoaded.Value
+		return v
 	}
-
-	return retValue
 }
 
 // Query a static value.
