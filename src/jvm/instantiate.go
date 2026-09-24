@@ -137,7 +137,8 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 					case 'L', '[':
 						fldValue = object.Null
 					}
-					statics.AddStatic(classname+"."+fldName, statics.Static{Type: string(fldType[0]), Value: fldValue})
+					statics.AddStaticIfAbsent(classname+"."+fldName,
+						statics.Static{Type: string(fldType[0]), Value: fldValue})
 				}
 			}
 		} // loop through the fields if any
