@@ -71,6 +71,7 @@ func AddStatic(name string, s Static) error {
 
 // AddStaticIfAbsent adds a static field to the Statics table if and only if the field is a new entry.
 // Existing entries are not replaced like in function AddStatic.
+// This function prevents a late thread from overwriting a live static variable with an initial value.
 // name: className.fieldName
 // Returns true if the entry was added, false if it already existed.
 func AddStaticIfAbsent(name string, s Static) bool {
