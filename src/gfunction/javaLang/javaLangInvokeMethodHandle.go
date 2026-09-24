@@ -8,6 +8,7 @@ package javaLang
 
 import (
 	"fmt"
+	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
@@ -21,7 +22,7 @@ func Load_Lang_Invoke_MethodHandle() {
 
 	// not called by a public API, used internally only
 	ghelpers.MethodSignatures["java/lang/invoke/MethodHandle.initMHobject()Ljava/lang/invoke/MethodHandle;"] =
-		ghelpers.GMeth{ParamSlots: 5, GFunction: createMethodHandleObject}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: createMethodHandleObject}
 }
 
 // Internal representation of java.lang.invoke.MethodHandle
@@ -82,30 +83,37 @@ func createRawMethodHandleObject() *object.Object {
 // func createMethodHandleObject accepts
 // for a method: classObj, methName, methType *object.Object, refKind int64, callerClass *object.Object)
 // for a field: classObj, fieldName, fieldType *object.Object, refKind int64, callerClass *object.Object)
-func createMethodHandleObject(params []interface{}) interface{} {
+func createMethodHandleObject(params []any) any {
 	if params == nil {
-		errMsg := fmt.Sprintf("mhType(): Invalid params array passed in")
+		errMsg := fmt.Sprintf("createMethodHandleObject(): Invalid params array passed in")
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	if len(params) != 5 {
-		errMsg := fmt.Sprintf("mhType(): Expected 1 parameter, got %d", len(params))
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("createMethodHandleObject: Expected 1 parameter, got %d", len(params))
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	spec, ok := params[0].(classloader.MethodHandleSpec)
+	if !ok {
+		errMsg := fmt.Sprintf("createMethodHandleObject: Invalid parameter type, expected MethodHandleSpec")
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	mho := createRawMethodHandleObject()
-	mho.FieldTable["Kind"] = object.Field{Ftype: types.Int, Fvalue: params[0]}
-	mho.FieldTable["RefClass"] = object.Field{Ftype: types.Ref, Fvalue: params[1]}
-	mho.FieldTable["RefName"] = object.Field{Ftype: types.Ref, Fvalue: params[2]}
-	mho.FieldTable["RefDescriptor"] = object.Field{Ftype: types.Ref, Fvalue: params[3]}
+	mho.FieldTable["Kind"] = object.Field{Ftype: types.Int, Fvalue: spec.Kind}
+	mho.FieldTable["RefClass"] = object.Field{Ftype: types.Ref, Fvalue: spec.DefClass}
+	mho.FieldTable["RefName"] = object.Field{Ftype: types.Ref, Fvalue: spec.Name}
+	mho.FieldTable["RefDescriptor"] = object.Field{Ftype: types.Ref, Fvalue: spec.MethodType}
 	mho.FieldTable["DirectMethod"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 	mho.FieldTable["IsVarArgs"] = object.Field{Ftype: types.Bool, Fvalue: false}
-	mho.FieldTable["type"] = object.Field{Ftype: types.Ref, Fvalue: params[4]}
+	mho.FieldTable["type"] = object.Field{Ftype: types.Ref, Fvalue: spec.MethodType}
+	// $target (the executable MTentry payload) is injected by the caller in
+	// classloader after this returns; it stays nil here.
 	return mho
 }
 
 // type returns the type of the method handle as a MethodType object
-func mhType(params []interface{}) interface{} {
+func mhType(params []any) any {
 	if params == nil {
 		errMsg := fmt.Sprintf("mhType(): Invalid params array passed in")
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)

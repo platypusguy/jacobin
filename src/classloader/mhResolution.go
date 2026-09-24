@@ -17,6 +17,15 @@ import (
 	"strings"
 )
 
+// MethodHandleSpec is used to pass MethodHandle resolution parameters to gfunctions.
+type MethodHandleSpec struct {
+	Kind        int64 // 1-9, the REF_* kind
+	DefClass    *object.Object
+	Name        *object.Object // java/lang/String
+	MethodType  *object.Object // java/lang/invoke/MethodType (or field type)
+	CallerClass *object.Object
+}
+
 // ResolveCallSite is the high-level function called by the INVOKEDYNAMIC instruction.
 // It coordinates the resolution of the bootstrap method and the creation of the CallSite.
 func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, error) {
@@ -343,7 +352,7 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 
 	// 2. Get java.lang.Class object for the defining class.
 	// defClassObj, err := getClassObj("L"+className+";", fr) // <<< where elkins 455 test bombs
-	defClassObj, err := getClassObj(className, fr) // <<< where elkins 455 test bombs
+	defClassObj, err := getClassObj(className, fr)
 	if err != nil {
 		return nil, fmt.Errorf("resolveMethodHandleEntry: could not get Class object for %s: %w", className, err)
 	}
@@ -367,16 +376,16 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	// This is an internal API for the VM to create method handles
 	// without going through the full MethodHandles.Lookup security checks.
 
-	params := []interface{}{
-		defClassObj,
-		methodNameObj,
-		methodTypeObj,
-		int64(refKind),
-		callerClassObj,
+	params := MethodHandleSpec{
+		Kind:        int64(refKind),
+		DefClass:    defClassObj,
+		Name:        methodNameObj,
+		MethodType:  methodTypeObj,
+		CallerClass: callerClassObj, // TODO: use for checking access checks
 	}
 
 	gfuncName := "java/lang/invoke/MethodHandle.initMHobject()Ljava/lang/invoke/MethodHandle;"
-	result := globals.GetGlobalRef().FuncInvokeGFunction(gfuncName, params)
+	result := globals.GetGlobalRef().FuncInvokeGFunction(gfuncName, []any{params})
 
 	var mho *object.Object // method handle object
 	switch result.(type) {
@@ -425,9 +434,8 @@ func getMethodTypeObject(descriptor string, fr *frames.Frame) (*object.Object, e
 	descriptorObj := object.StringObjectFromGoString(descriptor)
 
 	// The class loader is used to resolve class names in the descriptor.
-	// TODO: Pass the correct class loader from the frame/context. For now, we
-	// pass nil, which corresponds to the bootstrap class loader.
-	params := []interface{}{descriptorObj, nil}
+	// TFor now, we pass nil, which corresponds to the bootstrap class loader.
+	params := []any{descriptorObj, nil}
 
 	// We invoke the gfunction for java.lang.invoke.MethodType.fromMethodDescriptorString
 	result := globals.GetGlobalRef().FuncInvokeGFunction(
