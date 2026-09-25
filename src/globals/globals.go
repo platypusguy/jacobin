@@ -425,7 +425,8 @@ func InitStringPool() {
 	StringPoolTable["java/lang/Class"] = types.StringPoolJavaLangClassIndex
 
 	// Pre-stored string list. This list must exactly match the preceding list.
-	StringPoolList = nil
+	// Reserve capacity up front so early growth doesn't trigger frequent reallocations.
+	StringPoolList = make([]string, 0, 1024)
 	StringPoolList = append(StringPoolList, types.EmptyString)
 	StringPoolList = append(StringPoolList, types.StringClassName)
 	StringPoolList = append(StringPoolList, types.ObjectClassName)
