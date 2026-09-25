@@ -2183,67 +2183,59 @@ func doReturn(fr *frames.Frame, _ int64) int {
 func doGetStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
+
+	// Read every CP slice we need under one RLock, copy out the values,
+	// and release before doing anything else (no nested locking).
 	CP.Mutex.RLock()
 	CPentry := CP.CpIndex[CPslot] // value is checked in codeCheck.go
+	field := CP.FieldRefs[CPentry.Slot]
 	CP.Mutex.RUnlock()
 
-	// get the field entry
-	field := CP.FieldRefs[CPentry.Slot]
 	className := field.ClName
 	fieldName := field.FldName
 	if globals.TraceInst {
 		EmitTraceFieldID("GETSTATIC", className+"."+fieldName)
 	}
 
-	// was this static field previously loaded? Is so, get its location and move on.
-	prevLoaded, ok := statics.QueryStatic(className, field.FldName)
-	if !ok { // if the field is not already loaded, then
-		// the class has not been instantiated, so instantiate the class
-		_, err := InstantiateClass(className, fr.FrameStack)
-		if err == nil {
-			prevLoaded, ok = statics.QueryStatic(className, field.FldName)
-		} else {
+	// Was this static field previously loaded? If so, get its location and move on.
+	prevLoaded, ok := statics.QueryStatic(className, fieldName)
+	if !ok {
+		// The class has not been initialized yet, so instantiate it.
+		// InstantiateClass must serialize per-class initialization (JVMS 5.5).
+		if _, err := InstantiateClass(className, fr.FrameStack); err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
-			status := exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr)
-			if status != exceptions.Caught {
+			if exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr) != exceptions.Caught {
 				return ERROR_OCCURRED // applies only if in test
 			}
 			return RESUME_HERE // caught
 		}
+		prevLoaded, ok = statics.QueryStatic(className, fieldName)
 	}
 
-	// if the field can't be found even after instantiating the
+	// If the field can't be found even after instantiating the
 	// containing class, something is wrong so get out of here.
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s"+
-			"\n", className+"."+fieldName, className)
-		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
-		if status != exceptions.Caught {
+		errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s.%s in class %s\n",
+			className, fieldName, className)
+		if exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr) != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
 		}
 		return RESUME_HERE // caught
 	}
 
-	switch prevLoaded.Value.(type) {
+	// Normalize into locals and push. Never write back into the shared
+	// static entry: that mutation races with concurrent GETSTATIC/PUTSTATIC.
+	switch v := prevLoaded.Value.(type) {
 	case bool:
-		// a boolean, which might
-		// be stored as a boolean, a byte (in an array), or int64
-		// We want all forms normalized to int64
-		value := prevLoaded.Value.(bool)
-		prevLoaded.Value =
-			types.ConvertGoBoolToJavaBool(value)
-		push(fr, prevLoaded.Value)
+		push(fr, types.ConvertGoBoolToJavaBool(v))
 	case byte:
-		value := prevLoaded.Value.(byte)
-		prevLoaded.Value = int64(value)
-		push(fr, prevLoaded.Value)
+		push(fr, int64(v))
 	case int:
-		value := prevLoaded.Value.(int)
-		push(fr, int64(value))
+		push(fr, int64(v))
 	default:
-		push(fr, prevLoaded.Value)
+		push(fr, v)
 	}
 
 	return 3 // 2 for the CP slot + 1 for the next bytecode
@@ -2253,54 +2245,40 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 func doPutStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 	CP := fr.CP.(*classloader.CPool)
+
 	CP.Mutex.RLock()
 	CPentry := CP.CpIndex[CPslot] // value is checked in codeCheck.go
+	field := CP.FieldRefs[CPentry.Slot]
 	CP.Mutex.RUnlock()
 
-	// get the field entry
-	field := CP.FieldRefs[CPentry.Slot]
 	className := field.ClName
-	fieldName := field.FldName
-	fieldName = className + "." + fieldName
+	fldName := field.FldName
+	fieldName := className + "." + fldName
 	if globals.TraceInst {
 		EmitTraceFieldID("PUTSTATIC", fieldName)
 	}
 
-	// was this static field previously loaded? Is so, get its location and move on.
-	prevLoaded, ok := statics.QueryStatic(className, field.FldName)
-	if !ok { // if field is not already loaded, then
+	prevLoaded, ok := statics.QueryStatic(className, fldName)
+	if !ok {
 		if globals.TraceInst {
-			msg := fmt.Sprintf("doPutStatic: Field was not previously loaded: %s", fieldName)
-			trace.Trace(msg)
+			trace.Trace(fmt.Sprintf("doPutStatic: Field was not previously loaded: %s", fieldName))
 		}
-		// the class has not been instantiated, so
-		// instantiate the class
-		_, err := InstantiateClass(className, fr.FrameStack)
-		if err == nil {
-			if globals.TraceInst {
-				msg := fmt.Sprintf("doPutStatic: Loaded class %s", className)
-				trace.Trace(msg)
-			}
-			prevLoaded, ok = statics.QueryStatic(className, field.FldName)
-		} else {
+		if _, err := InstantiateClass(className, fr.FrameStack); err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
-			trace.Error(errMsg)
+			trace.Error(fmt.Sprintf("PUTSTATIC: could not load class %s", className))
 			return ERROR_OCCURRED
 		}
-	} else {
 		if globals.TraceInst {
-			msg := fmt.Sprintf("doPutStatic: Field was previously loaded: %s", fieldName)
-			trace.Trace(msg)
+			trace.Trace(fmt.Sprintf("doPutStatic: Loaded class %s", className))
 		}
+		prevLoaded, ok = statics.QueryStatic(className, fldName)
+	} else if globals.TraceInst {
+		trace.Trace(fmt.Sprintf("doPutStatic: Field was previously loaded: %s", fieldName))
 	}
 
-	// if the field can't be found even after instantiating the
-	// containing class, something is wrong so get out of here.
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s.%s", className, fieldName)
-		trace.Error(errMsg)
+		trace.Error(fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName))
 		return ERROR_OCCURRED
 	}
 
@@ -2618,6 +2596,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	shouldCacheMeth = false
 	if globals.CacheMeths { // this is the optimized and default path
 		if entry.Type == classloader.CachedMeth {
+			className, methodName, methodType, fqn = classloader.GetMethInfoFromCPmethref(CP, CPslot)
 			CP.Mutex.RLock()
 			mtEntry = CP.CachedMethods[entry.Slot]
 			CP.Mutex.RUnlock()
@@ -2639,7 +2618,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		// When a class implements an interface and inherits default methods (or doesn't override them),
 		// the compiler generates INVOKEVIRTUAL
 		klass := classloader.MethAreaFetch(className)
-		if len(klass.Data.Interfaces) > 0 {
+		if klass != nil && len(klass.Data.Interfaces) > 0 {
 			for i := 0; i < len(klass.Data.Interfaces); i++ {
 				index := uint32(klass.Data.Interfaces[i])
 				interfaceName := *stringPool.GetStringPointer(index)
@@ -2674,11 +2653,14 @@ processMTentry:
 		mtEntry.MethName = stringPool.GetStringIndex(&methodName)
 		mtEntry.MethType = stringPool.GetStringIndex(&methodType)
 		if globals.CacheMeths && shouldCacheMeth {
-			CP.Mutex.Lock() // update the CP with the cached method
-			CP.CachedMethods = append(CP.CachedMethods, mtEntry)
-			CP.CpIndex[CPslot] = classloader.CpEntry{
-				Type: classloader.CachedMeth,
-				Slot: uint16(len(CP.CachedMethods) - 1)}
+			CP.Mutex.Lock()
+			if CP.CpIndex[CPslot].Type != classloader.CachedMeth { // someone else may have won the race
+				CP.CachedMethods = append(CP.CachedMethods, mtEntry)
+				CP.CpIndex[CPslot] = classloader.CpEntry{
+					Type: classloader.CachedMeth,
+					Slot: uint16(len(CP.CachedMethods) - 1),
+				}
+			}
 			CP.Mutex.Unlock()
 			shouldCacheMeth = false
 		}
