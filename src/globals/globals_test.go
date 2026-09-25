@@ -7,7 +7,9 @@
 package globals
 
 import (
+	"container/list"
 	"io"
+	"jacobin/src/types"
 	"os"
 	"path/filepath"
 	"strings"
@@ -308,3 +310,230 @@ func TestGetJDKversionScannerError(t *testing.T) {
 		t.Errorf("Expected empty JAVA_VERSION for scanner error, got '%s'", version)
 	}
 }
+
+func TestInitClasspathNoEnv(t *testing.T) {
+	origClasspath := os.Getenv("CLASSPATH")
+	_ = os.Unsetenv("CLASSPATH")
+	defer os.Setenv("CLASSPATH", origClasspath)
+
+	InitGlobals("test")
+	InitClasspath()
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("os.Getwd() failed: %v", err)
+	}
+	gl := GetGlobalRef()
+	if gl.ClasspathRaw != wd {
+		t.Errorf("Expected ClasspathRaw to be current directory '%s', got: '%s'", wd, gl.ClasspathRaw)
+	}
+	if len(gl.Classpath) == 0 || gl.Classpath[0] != wd {
+		t.Errorf("Expected Classpath[0] to be current directory '%s', got: %v", wd, gl.Classpath)
+	}
+}
+
+func TestInitArrayAddressList(t *testing.T) {
+	l := InitArrayAddressList()
+	if l == nil {
+		t.Errorf("Expected InitArrayAddressList to return a non-nil list")
+	}
+	if l.Len() != 0 {
+		t.Errorf("Expected a newly initialized list to have length 0, got: %d", l.Len())
+	}
+}
+
+func TestInitStringPool(t *testing.T) {
+	InitStringPool()
+
+	if StringPoolTable[""] != 0 {
+		t.Errorf("Expected empty string to map to index 0, got: %d", StringPoolTable[""])
+	}
+	if StringPoolTable["java/lang/String"] != types.StringPoolStringIndex {
+		t.Errorf("Expected 'java/lang/String' to map to %d, got: %d",
+			types.StringPoolStringIndex, StringPoolTable["java/lang/String"])
+	}
+	if StringPoolTable["java/lang/Object"] != types.StringPoolObjectIndex {
+		t.Errorf("Expected 'java/lang/Object' to map to %d, got: %d",
+			types.StringPoolObjectIndex, StringPoolTable["java/lang/Object"])
+	}
+	if len(StringPoolList) != 5 {
+		t.Errorf("Expected StringPoolList to have 5 pre-stored entries, got: %d", len(StringPoolList))
+	}
+	if StringPoolNext != uint32(len(StringPoolList)) {
+		t.Errorf("Expected StringPoolNext to equal len(StringPoolList) (%d), got: %d",
+			len(StringPoolList), StringPoolNext)
+	}
+}
+
+func TestGetCharsetName(t *testing.T) {
+	InitGlobals("test")
+	gl := GetGlobalRef()
+	gl.FileEncoding = "UTF-8"
+	if GetCharsetName() != "UTF-8" {
+		t.Errorf("Expected GetCharsetName() to return 'UTF-8', got: '%s'", GetCharsetName())
+	}
+}
+
+func TestSortCaseInsensitive(t *testing.T) {
+	slice := []string{"banana", "Apple", "cherry", "apple", "Banana"}
+	SortCaseInsensitive(&slice)
+
+	expectedOrder := []string{"Apple", "apple", "banana", "Banana", "cherry"}
+	for i, v := range slice {
+		if !strings.EqualFold(v, expectedOrder[i]) {
+			t.Errorf("SortCaseInsensitive: unexpected order at index %d: got '%s', expected case-insensitive match for '%s'",
+				i, v, expectedOrder[i])
+		}
+	}
+
+	// verify overall case-insensitive ordering is non-decreasing
+	for i := 1; i < len(slice); i++ {
+		if strings.ToLower(slice[i-1]) > strings.ToLower(slice[i]) {
+			t.Errorf("SortCaseInsensitive: slice not sorted case-insensitively: '%s' before '%s'",
+				slice[i-1], slice[i])
+		}
+	}
+}
+
+func TestCleanupPath(t *testing.T) {
+	result := cleanupPath("a/b/c")
+	expected := filepath.FromSlash("a/b/c")
+	if result != expected {
+		t.Errorf("Expected cleanupPath('a/b/c') to return '%s', got: '%s'", expected, result)
+	}
+}
+
+func TestGetOSVersion(t *testing.T) {
+	version := getOSVersion()
+	if version == "" {
+		t.Errorf("Expected getOSVersion() to return a non-empty string")
+	}
+}
+
+func TestFakeInstantiateClass(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	obj, err := fakeInstantiateClass("java/lang/Object", list.New())
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if obj != nil {
+		t.Errorf("Expected fakeInstantiateClass to return a nil object, got: %v", obj)
+	}
+	if err == nil {
+		t.Errorf("Expected fakeInstantiateClass to return a non-nil error")
+	}
+	if !strings.Contains(string(msg), "InstantiateClass") {
+		t.Errorf("Expected stderr output to mention 'InstantiateClass', got: %s", string(msg))
+	}
+}
+
+func TestFakeMinimalAbort(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	fakeMinimalAbort(1, "test message")
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if !strings.Contains(string(msg), "MinimalAbort") {
+		t.Errorf("Expected stderr output to mention 'MinimalAbort', got: %s", string(msg))
+	}
+}
+
+func TestFakeRunThread(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	fakeRunThread(nil)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if !strings.Contains(string(msg), "RunThread") {
+		t.Errorf("Expected stderr output to mention 'RunThread', got: %s", string(msg))
+	}
+}
+
+func TestFakeRunJavaFromG(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	fakeRunJavaFromG(list.New(), "cls", "meth", "()V")
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if !strings.Contains(string(msg), "RunJavaFromG") {
+		t.Errorf("Expected stderr output to mention 'RunJavaFromG', got: %s", string(msg))
+	}
+}
+
+func TestFakeThrowEx(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	result := fakeThrowEx(1, "test message")
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if result != false {
+		t.Errorf("Expected fakeThrowEx to return false, got: %v", result)
+	}
+	if !strings.Contains(string(msg), "ThrowEx") {
+		t.Errorf("Expected stderr output to mention 'ThrowEx', got: %s", string(msg))
+	}
+}
+
+func TestFakeInvokeGFunction(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	result := fakeInvokeGFunction("someFunc", nil)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if result != nil {
+		t.Errorf("Expected fakeInvokeGFunction to return nil, got: %v", result)
+	}
+	if !strings.Contains(string(msg), "InvokeGFunction") {
+		t.Errorf("Expected stderr output to mention 'InvokeGFunction', got: %s", string(msg))
+	}
+}
+
+func TestFakeGoStringFromStringObject(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	result := fakeGoStringFromStringObject(nil)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if result != "" {
+		t.Errorf("Expected fakeGoStringFromStringObject to return empty string, got: %s", result)
+	}
+	if !strings.Contains(string(msg), "GoStringFromStringObject") {
+		t.Errorf("Expected stderr output to mention 'GoStringFromStringObject', got: %s", string(msg))
+	}
+}
+
