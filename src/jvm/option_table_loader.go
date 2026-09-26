@@ -362,9 +362,12 @@ func enableTrace(pos int, argValue string, gl *globals.Globals) (int, error) {
 			globals.TraceInit = true
 		case "inst":
 			globals.TraceInst = true
+		case "stats":
+			globals.TraceStats = true
 		case "verbose":
 			globals.TraceVerbose = true
 			globals.TraceInst = true
+			globals.TraceStats = true
 		default:
 			return 0, fmt.Errorf("unknown -trace option: %s", array[i])
 		}

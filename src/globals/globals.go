@@ -130,6 +130,7 @@ var TraceCloadi bool
 var TraceCodeCheck bool
 var TraceInit bool
 var TraceInst bool
+var TraceStats bool
 var TraceVerbose bool
 
 // ----- String Pool
@@ -195,10 +196,11 @@ func InitGlobals(progName string) *Globals {
 	CacheMeths = true
 
 	// ----- Tracing flags
-	TraceInit = false
-	TraceCloadi = false
-	TraceInst = false
 	TraceClass = false
+	TraceCloadi = false
+	TraceInit = false
+	TraceInst = false
+	TraceStats = false
 	TraceVerbose = false
 
 	// ----- String Pool and other values

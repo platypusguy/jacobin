@@ -12,6 +12,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/prof"
 	"jacobin/src/statics"
+	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"os"
 )
@@ -45,6 +46,13 @@ func Exit(errorCondition ExitStatus) int {
 	if globals.TraceVerbose {
 		msg := fmt.Sprintf("shutdown.Exit(%d) requested", errorCondition)
 		trace.Trace(msg)
+		trace.Trace(fmt.Sprintf("\nString pool: %d entries\n", stringPool.GetStringPoolSize()))
+		statics.DumpStatics("exit.Exit", statics.SelectUser, "")
+	}
+
+	if globals.TraceStats && !globals.TraceVerbose {
+		trace.Trace(fmt.Sprintf("\nString pool: %d entries\n", stringPool.GetStringPoolSize()))
+		// trace.Trace(fmt.Sprintf("Classloader: %d classes loaded", classloader.MethAreaSize()))
 	}
 
 	if errorCondition == TEST_OK {
