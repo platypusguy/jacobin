@@ -152,8 +152,6 @@ func GetStaticValue(className string, fieldName string) any {
 	staticsMutex.RUnlock()
 
 	if !ok {
-		// An error is returned only in test mode.
-		// In non-test mode, the exception is thrown and the JVM shuts down.
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GetStaticValue: could not find static: %s", staticName)
@@ -161,22 +159,7 @@ func GetStaticValue(className string, fieldName string) any {
 		return errors.New(errMsg)
 	}
 
-	// Field types bool, byte, JavaByte, int32, and int need conversion to int64.
-	// The other types are OK as is.
-	switch v := prevLoaded.Value.(type) {
-	case bool:
-		return types.ConvertGoBoolToJavaBool(v)
-	case byte:
-		return int64(v)
-	case types.JavaByte:
-		return int64(v)
-	case int32:
-		return int64(v)
-	case int:
-		return int64(v)
-	default:
-		return v
-	}
+	return NormalizeForStack(prevLoaded.Value)
 }
 
 // Query a static value.
@@ -283,4 +266,25 @@ func DumpStatics(from string, selection int64, className string) {
 		_, _ = fmt.Fprintf(os.Stderr, "%-40s   %s %s\n", key, st.Type, value)
 	}
 	_, _ = fmt.Fprintln(os.Stderr, "===== DumpStatics END")
+}
+
+// NormalizeForStack converts a static field's stored value into the widened
+// form expected on the operand stack / by callers like GetStaticValue.
+// bool, byte, JavaByte, int32, and int are all normalized to int64; every
+// other type (float64, *object.Object, etc.) is returned unchanged.
+func NormalizeForStack(v any) any {
+	switch t := v.(type) {
+	case bool:
+		return types.ConvertGoBoolToJavaBool(t)
+	case byte:
+		return int64(t)
+	case types.JavaByte:
+		return int64(t)
+	case int32:
+		return int64(t)
+	case int:
+		return int64(t)
+	default:
+		return v
+	}
 }
