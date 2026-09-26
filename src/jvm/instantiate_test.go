@@ -17,7 +17,10 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 // Arrays are preloaded, so this should only confirm the presence of the class
@@ -468,5 +471,195 @@ func TestLoadClassJavaLangObject(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Got unexpected error from loadThisClass: %s", err.Error())
+	}
+}
+
+func registerDummyKlass(t *testing.T, classname string) {
+	t.Helper()
+	classloader.MTable = make(map[string]classloader.MTentry)
+	if err := classloader.Init(); err != nil {
+		t.Fatalf("classloader.Init() failed: %s", err.Error())
+	}
+	classloader.LoadBaseClasses()
+	classloader.MethAreaInsert(classname, &classloader.Klass{
+		Data: &classloader.ClData{Name: classname},
+	})
+}
+
+// doStaticDefaults() must not overwrite a final static's compile-time
+// constant value (from the ConstantValue attribute) with a generic
+// type-default. javac typically emits no <clinit> PUTSTATIC for these
+// fields, so this is the only place the real value is ever installed.
+func TestDoStaticDefaultsHonorsConstValue(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+	classloader.InitMethodArea()
+	statics.PreloadStatics()
+
+	classname := "test/ConstValueClass"
+	k := &classloader.Klass{Data: &classloader.ClData{}}
+	k.Data.CP.Utf8Refs = []string{types.Int, "constIntField", types.Int, "plainIntField"}
+	k.Data.Fields = []classloader.Field{
+		{Desc: 0, Name: 1, IsStatic: true, ConstValue: int64(42)},
+		{Desc: 2, Name: 3, IsStatic: true}, // no ConstValue: should get the type default
+	}
+
+	doStaticDefaults(k, classname)
+
+	constVal, present := statics.QueryStatic(classname, "constIntField")
+	if !present {
+		t.Fatalf("Expected static field %s.constIntField to be present", classname)
+	}
+	if constVal.Value != int64(42) {
+		t.Errorf("Expected ConstValue 42 to be preserved, got %v", constVal.Value)
+	}
+
+	plainVal, present := statics.QueryStatic(classname, "plainIntField")
+	if !present {
+		t.Fatalf("Expected static field %s.plainIntField to be present", classname)
+	}
+	if plainVal.Value != int64(0) {
+		t.Errorf("Expected type-default 0 for field with no ConstValue, got %v", plainVal.Value)
+	}
+}
+
+// ensureInitialized must run initFn exactly once even when many goroutines
+// call it concurrently for the same class.
+func TestEnsureInitializedRunsOnce(t *testing.T) {
+	globals.InitGlobals("test")
+
+	classname := "test/ConcurrentInitClass"
+	registerDummyKlass(t, "test/ConcurrentInitClass")
+	fs := frames.CreateFrameStack()
+
+	var runCount int32
+	const goroutines = 50
+
+	var wg sync.WaitGroup
+	errs := make([]error, goroutines)
+	for i := 0; i < goroutines; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			errs[idx] = ensureInitialized(classname, fs, func() error {
+				atomic.AddInt32(&runCount, 1)
+				time.Sleep(10 * time.Millisecond) // widen the race window
+				return nil
+			})
+		}(i)
+	}
+	wg.Wait()
+
+	for i, err := range errs {
+		if err != nil {
+			t.Errorf("goroutine %d: unexpected error: %s", i, err.Error())
+		}
+	}
+	if runCount != 1 {
+		t.Errorf("Expected initFn to run exactly once, ran %d times", runCount)
+	}
+}
+
+// ensureInitialized must let the initializing goroutine re-enter (e.g. from
+// its own <clinit> constructing an instance of the class being initialized)
+// without deadlocking, and must not run initFn a second time for that thread.
+func TestEnsureInitializedReentrant(t *testing.T) {
+	globals.InitGlobals("test")
+
+	classname := "test/ReentrantInitClass"
+	registerDummyKlass(t, "test/ConcurrentInitClass")
+	fs := frames.CreateFrameStack()
+
+	var outerRuns, innerRuns int32
+	done := make(chan error, 1)
+	go func() {
+		done <- ensureInitialized(classname, fs, func() error {
+			atomic.AddInt32(&outerRuns, 1)
+			// Simulate <clinit> re-entering, e.g. constructing an instance
+			// of the class it's still initializing.
+			return ensureInitialized(classname, fs, func() error {
+				atomic.AddInt32(&innerRuns, 1)
+				return nil
+			})
+		})
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err.Error())
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("ensureInitialized deadlocked on re-entrant call")
+	}
+
+	if outerRuns != 1 {
+		t.Errorf("Expected outer initFn to run once, ran %d times", outerRuns)
+	}
+	if innerRuns != 0 {
+		t.Errorf("Expected inner (re-entrant) initFn to be skipped, ran %d times", innerRuns)
+	}
+}
+
+// A goroutine with a different frame stack must wait for the initializing
+// goroutine to finish, then see it as done rather than re-running initFn.
+func TestEnsureInitializedWaiterSeesCompletion(t *testing.T) {
+	globals.InitGlobals("test")
+	classloader.InitMethodArea()
+
+	classname := "test/WaiterInitClass"
+	registerDummyKlass(t, classname)
+	fsOwner := frames.CreateFrameStack()
+	fsWaiter := frames.CreateFrameStack()
+
+	var runCount int32
+	ownerStarted := make(chan struct{})
+	release := make(chan struct{})
+
+	ownerDone := make(chan error, 1)
+	go func() {
+		ownerDone <- ensureInitialized(classname, fsOwner, func() error {
+			atomic.AddInt32(&runCount, 1)
+			close(ownerStarted) // signals initInProgress is definitely held by us
+			<-release
+			return nil
+		})
+	}()
+
+	<-ownerStarted // guarantees the owner has won initNone->initInProgress
+
+	waiterDone := make(chan error, 1)
+	go func() {
+		waiterDone <- ensureInitialized(classname, fsWaiter, func() error {
+			atomic.AddInt32(&runCount, 1) // should never run
+			return nil
+		})
+	}()
+
+	// Best-effort: give the waiter time to reach initCond.Wait() before we
+	// let the owner finish. ensureInitialized has no hook to observe this
+	// directly, so this is a generous sleep rather than a hard guarantee.
+	time.Sleep(200 * time.Millisecond)
+	close(release)
+
+	select {
+	case err := <-ownerDone:
+		if err != nil {
+			t.Errorf("owner: unexpected error: %s", err.Error())
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("owner call did not complete")
+	}
+	select {
+	case err := <-waiterDone:
+		if err != nil {
+			t.Errorf("waiter: unexpected error: %s", err.Error())
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("waiter call did not complete — possibly missed the broadcast")
+	}
+
+	if runCount != 1 {
+		t.Errorf("Expected initFn to run exactly once, ran %d times", runCount)
 	}
 }
