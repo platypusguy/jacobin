@@ -414,10 +414,14 @@ func fakeInvokeGFunction(name string, args []any) any {
 }
 
 func InitStringPool() {
+	// a small program uses about 30K string pool entries (class and method names from JDK libs, etc.)
+	// so we start with that many +10K for the program to create. At 40K strings, the
+	// next reallocation of the string pool will occur at 53K entries.
+	var stringPoolInitialCapacity = 40_000
 
 	StringPoolLock.Lock()
 	defer StringPoolLock.Unlock()
-	StringPoolTable = make(StringPoolTable_t)
+	StringPoolTable = make(StringPoolTable_t, stringPoolInitialCapacity)
 	// Prestored values: 0 = nil, 1 = java/lang/String, 2 = java/lang/Object,
 	// 3 = java/lang/Thread, 4 = java/lang/Class
 	StringPoolTable[""] = 0
@@ -427,8 +431,7 @@ func InitStringPool() {
 	StringPoolTable["java/lang/Class"] = types.StringPoolJavaLangClassIndex
 
 	// Pre-stored string list. This list must exactly match the preceding list.
-	// Reserve capacity up front so early growth doesn't trigger frequent reallocations.
-	StringPoolList = make([]string, 0, 1024)
+	StringPoolList = make([]string, 0, stringPoolInitialCapacity)
 	StringPoolList = append(StringPoolList, types.EmptyString)
 	StringPoolList = append(StringPoolList, types.StringClassName)
 	StringPoolList = append(StringPoolList, types.ObjectClassName)
