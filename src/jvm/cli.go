@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-5 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-6 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -162,7 +162,6 @@ func getOptionRootAndArgs(option string) (string, string, error) {
 
 	// Return the option root and the embedded arg value (might have embedded colons or semicolons).
 	return option[:argMarker], option[argMarker+1:], nil
-
 }
 
 // you can set JVM options using the three environment variables that are
@@ -232,6 +231,7 @@ Jacobin-specific options:
                           * cloadi - classloader initialization
                           * init - process initilization
                           * inst - bytecode interpreter trace
+                          * stats - JVM stats printed at end of program run
                           * verbose - inst, class, and more details of the interpreter
     -JJ:galt              Do not use this unless you are a Jacobin developer! 
 	-XX:-cacheMethods     Disable method caching `
