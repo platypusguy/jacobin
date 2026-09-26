@@ -972,6 +972,7 @@ func TestGetFieldObjectWrapsArray(t *testing.T) {
 // GETSTATIC: Get a static field's value (here, an int)
 func TestGetStaticInt(t *testing.T) {
 	globals.InitGlobals("test")
+	classloader.InitMethodArea()
 
 	// Create a new frame for the GETSTATIC opcode
 	f := newFrame(opcodes.GETSTATIC)
@@ -1031,6 +1032,14 @@ func TestGetStaticInt(t *testing.T) {
 // GETSTATIC: value is a boolean -> normalized to Java boolean (int64 0/1)
 func TestGetStaticBoolNormalization(t *testing.T) {
 	globals.InitGlobals("test")
+	trace.Init()
+	classloader.InitMethodArea()
+
+	classloader.MTable = make(map[string]classloader.MTentry)
+	if err := classloader.Init(); err != nil {
+		t.Fatalf("classloader.Init() failed: %s", err.Error())
+	}
+	classloader.LoadBaseClasses()
 
 	f := newFrame(opcodes.GETSTATIC)
 	f.Meth = append(f.Meth, 0x00, 0x01) // CP index 1
@@ -1049,6 +1058,14 @@ func TestGetStaticBoolNormalization(t *testing.T) {
 
 	// Preload static with Go bool so doGetStatic hits the bool type path
 	_ = statics.AddStatic("TestClass.boolField", statics.Static{Type: types.Bool, Value: true})
+
+	objectName := types.ObjectClassName
+	classloader.MethAreaInsert("TestClass", &classloader.Klass{
+		Data: &classloader.ClData{
+			Name:            "TestClass",
+			SuperclassIndex: stringPool.GetStringIndex(&objectName),
+		},
+	})
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(f)
@@ -2184,7 +2201,7 @@ func TestNewIfnonnullFallThrough(t *testing.T) {
 func TestNewIfnull(t *testing.T) {
 	f := newFrame(opcodes.IFNULL)
 	var oAddr *object.Object
-	oAddr = nil     // note either nil or object.Null will give same result
+	oAddr = nil    // note either nil or object.Null will give same result
 	push(f, oAddr) // pushed null, so jump should be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2

@@ -83,6 +83,16 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 			}
 		}
 
+		// Guard against running <clinit> twice: if this class was already
+		// initialized independently (e.g. touched directly before being
+		// reached again here as a superclass in someone else's chain),
+		// skip it. This mirrors the ClInit filter the empty-chain rebuild
+		// path above already applies when it builds its own list.
+		if classK.Data.ClInit == types.ClInitRun {
+			continue
+		}
+
+		// Have not yet run <clinit> so do it now.
 		me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
 		if err == nil {
 			if me.MethName == 0 {
