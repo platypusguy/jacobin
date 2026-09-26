@@ -250,6 +250,121 @@ func TestInitializePrimitiveWrappers_SkipsMissingClass(t *testing.T) {
 	}
 }
 
+// TestRunInitializationBlock_DoubleClinitGuard verifies that calling
+// runInitializationBlock twice for the same class only runs its <clinit>
+// once. A shared counter incremented inside the native <clinit> gfunction
+// must end up at 1, not 2.
+func TestRunInitializationBlock_DoubleClinitGuard(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+	classloader.InitMethodArea()
+	classloader.MTable = make(map[string]classloader.MTentry)
+
+	counter := 0
+	className := "test/DoubleClinitGuard"
+	k := makeTestKlass(className, types.ObjectClassName)
+	classloader.MethAreaInsert(className, k)
+
+	registerClinit(className, 'G', ghelpers.GMeth{
+		GFunction: func(_ []any) any {
+			counter++
+			return nil
+		},
+	})
+
+	fs := frames.CreateFrameStack()
+	f := frames.CreateFrame(1)
+	f.ClName = className
+	_ = frames.PushFrame(fs, f)
+
+	// Mirrors the real call sites (e.g. INVOKESTATIC in interpreter.go), which
+	// only call runInitializationBlock when ClInit hasn't run yet.
+	clinitGuard := func() error {
+		if k.Data.ClInit == types.ClInitNotRun {
+			return runInitializationBlock(k, nil, fs)
+		}
+		return nil
+	}
+
+	// First call should run <clinit> and increment the counter.
+	if err := clinitGuard(); err != nil {
+		t.Fatalf("first call: expected nil error, got %v", err)
+	}
+
+	// Second call should be a no-op because ClInit is now ClInitRun.
+	if err := clinitGuard(); err != nil {
+		t.Fatalf("second call: expected nil error, got %v", err)
+	}
+
+	if counter != 1 {
+		t.Errorf("expected <clinit> to run exactly once, counter=%d", counter)
+	}
+	if k.Data.ClInit != types.ClInitRun {
+		t.Errorf("expected ClInit=ClInitRun, got %v", k.Data.ClInit)
+	}
+}
+
+// TestRunInitializationBlock_TwoClasses_ClinitGuard verifies the guard
+// works correctly across a superclass chain of two classes: running the
+// chain twice (e.g. once directly on the subclass, then again after the
+// superclass was independently reached) must still only run each class's
+// <clinit> exactly once, for a total counter value of 2 (one per class),
+// not 4.
+func TestRunInitializationBlock_TwoClasses_ClinitGuard(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+	classloader.InitMethodArea()
+	classloader.MTable = make(map[string]classloader.MTentry)
+
+	counter := 0
+	base := makeTestKlass("test/GuardBase", types.ObjectClassName)
+	sub := makeTestKlass("test/GuardSub", "test/GuardBase")
+
+	classloader.MethAreaInsert("test/GuardBase", base)
+	classloader.MethAreaInsert("test/GuardSub", sub)
+
+	incrementer := func(_ []any) any {
+		counter++
+		return nil
+	}
+	registerClinit("test/GuardBase", 'G', ghelpers.GMeth{GFunction: incrementer})
+	registerClinit("test/GuardSub", 'G', ghelpers.GMeth{GFunction: incrementer})
+
+	fs := frames.CreateFrameStack()
+	f := frames.CreateFrame(1)
+	f.ClName = "test/GuardSub"
+	_ = frames.PushFrame(fs, f)
+
+	// Mirrors the real call sites (e.g. INVOKESTATIC in interpreter.go), which
+	// only call runInitializationBlock when ClInit hasn't run yet.
+	clinitGuard := func() error {
+		if sub.Data.ClInit == types.ClInitNotRun {
+			return runInitializationBlock(sub, nil, fs)
+		}
+		return nil
+	}
+
+	// First run: builds the superclass chain and runs both <clinit>s.
+	if err := clinitGuard(); err != nil {
+		t.Fatalf("first call: expected nil error, got %v", err)
+	}
+
+	// Second run: both classes are now ClInitRun, so neither should re-run.
+	if err := clinitGuard(); err != nil {
+		t.Fatalf("second call: expected nil error, got %v", err)
+	}
+
+	if counter != 2 {
+		t.Errorf("expected each class's <clinit> to run exactly once (total 2), counter=%d", counter)
+	}
+	if base.Data.ClInit != types.ClInitRun {
+		t.Errorf("expected base class ClInit=ClInitRun, got %v", base.Data.ClInit)
+	}
+	if sub.Data.ClInit != types.ClInitRun {
+		t.Errorf("expected sub class ClInit=ClInitRun, got %v", sub.Data.ClInit)
+	}
+}
+
 func TestInitializePrimitiveWrappers_InvokesAndMarksRun(t *testing.T) {
 	globals.InitGlobals("test")
 	trace.Init()
