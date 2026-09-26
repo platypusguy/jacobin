@@ -2198,11 +2198,12 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 	}
 
 	// Was this static field previously loaded? If so, get its location and move on.
+	// Otherwise ensure the class is loaded and initialized (JVMS 5.5) before
+	// touching its statics. InitializeClass is idempotent and safe under
+	// concurrent callers.
 	prevLoaded, ok := statics.QueryStatic(className, fieldName)
 	if !ok {
-		// The class has not been initialized yet, so instantiate it.
-		// InstantiateClass must serialize per-class initialization (JVMS 5.5).
-		if _, err := InstantiateClass(className, fr.FrameStack); err != nil {
+		if err := InitializeClass(className, fr.FrameStack); err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
 			if exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr) != exceptions.Caught {
@@ -2213,7 +2214,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		prevLoaded, ok = statics.QueryStatic(className, fieldName)
 	}
 
-	// If the field can't be found even after instantiating the
+	// If the field can't be found even after initializing the
 	// containing class, something is wrong so get out of here.
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -2225,18 +2226,9 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
-	// Normalize into locals and push. Never write back into the shared
-	// static entry: that mutation races with concurrent GETSTATIC/PUTSTATIC.
-	switch v := prevLoaded.Value.(type) {
-	case bool:
-		push(fr, types.ConvertGoBoolToJavaBool(v))
-	case byte:
-		push(fr, int64(v))
-	case int:
-		push(fr, int64(v))
-	default:
-		push(fr, v)
-	}
+	// Never write back into the shared static entry: that mutation races
+	// with concurrent GETSTATIC/PUTSTATIC.
+	push(fr, statics.NormalizeForStack(prevLoaded.Value))
 
 	return 3 // 2 for the CP slot + 1 for the next bytecode
 }
@@ -2258,12 +2250,16 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		EmitTraceFieldID("PUTSTATIC", fieldName)
 	}
 
+	// Was this static field previously loaded? If so, get its location and move on.
+	// Otherwise ensure the class is loaded and initialized (JVMS 5.5) before
+	// touching its statics. InitializeClass is idempotent and safe under
+	// concurrent callers.
 	prevLoaded, ok := statics.QueryStatic(className, fldName)
 	if !ok {
 		if globals.TraceInst {
 			trace.Trace(fmt.Sprintf("doPutStatic: Field was not previously loaded: %s", fieldName))
 		}
-		if _, err := InstantiateClass(className, fr.FrameStack); err != nil {
+		if err := InitializeClass(className, fr.FrameStack); err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			trace.Error(fmt.Sprintf("PUTSTATIC: could not load class %s", className))
 			return ERROR_OCCURRED
@@ -3416,12 +3412,17 @@ func doInvokedynamic(fr *frames.Frame, _ int64) int {
 func doNew(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
-	CPentry := CP.CpIndex[CPslot] // codeCheck's checkNew() ensures CP entry is a ClassRef or Interface
 
-	// the classref/interface ref points to a UTF8 record with the name of the class to instantiate
+	CP.Mutex.RLock()
+	CPentry := CP.CpIndex[CPslot] // codeCheck's checkNew() ensures CP entry is a ClassRef or Interface
+	var nameStringPoolIndex uint32
+	if CPentry.Type == classloader.ClassRef {
+		nameStringPoolIndex = CP.ClassRefs[CPentry.Slot]
+	}
+	CP.Mutex.RUnlock()
+
 	var className string
 	if CPentry.Type == classloader.ClassRef {
-		nameStringPoolIndex := CP.ClassRefs[CPentry.Slot]
 		className = *stringPool.GetStringPointer(nameStringPoolIndex)
 	}
 
