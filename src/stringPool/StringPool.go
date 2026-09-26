@@ -95,18 +95,19 @@ func GetStringIndex(arg *string) uint32 {
 	return index
 }
 
-// GetStringPointer retrieves a pointer to the string at the index into the string pool slice
+// GetStringPointer retrieves a pointer to a copy of the string at the index into the string pool slice.
+// A copy is returned (rather than a pointer into the pool's backing array) so that the caller's pointer
+// remains valid even if a concurrent GetStringIndex() call causes the pool's slice to be reallocated.
 // Returns nil on index out of range (which is the only possible error)
 func GetStringPointer(index uint32) *string {
-	globals.StringPoolLock.Lock()
+	globals.StringPoolLock.RLock()
+	defer globals.StringPoolLock.RUnlock()
 
 	if index < globals.StringPoolNext {
-		strPtr := &globals.StringPoolList[index]
-		globals.StringPoolLock.Unlock()
-		return strPtr
+		str := globals.StringPoolList[index]
+		return &str
 	}
 
-	globals.StringPoolLock.Unlock()
 	return nil
 }
 
