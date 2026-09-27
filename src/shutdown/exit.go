@@ -47,13 +47,12 @@ func Exit(errorCondition ExitStatus) int {
 	if globals.TraceVerbose {
 		msg := fmt.Sprintf("shutdown.Exit(%d) requested", errorCondition)
 		trace.Trace(msg)
-		trace.Trace(fmt.Sprintf("\nString pool: %d entries\n", stringPool.GetStringPoolSize()))
+		traceStats()
 		statics.DumpStatics("exit.Exit", statics.SelectUser, "")
 	}
 
 	if globals.TraceStats && !globals.TraceVerbose {
-		trace.Trace(fmt.Sprintf("\nString pool: %d entries\n", stringPool.GetStringPoolSize()))
-		trace.Trace(fmt.Sprintf("Classloader: %d classes loaded", classloader.MethAreaSize()))
+		traceStats()
 	}
 
 	if errorCondition == TEST_OK {
@@ -73,4 +72,10 @@ func Exit(errorCondition ExitStatus) int {
 	prof.ExitToOS(errorCondition)
 
 	return 0 // required by go
+}
+
+func traceStats() {
+	trace.Trace(fmt.Sprintf("\nString pool: %d entries\n", stringPool.GetStringPoolSize()))
+	trace.Trace(fmt.Sprintf("Classloader: %d classes loaded\n", classloader.MethAreaSize()))
+	trace.Trace(fmt.Sprintf("Statics Table: %d static entries\n", len(statics.Statics)))
 }
