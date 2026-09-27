@@ -47,12 +47,12 @@ func Exit(errorCondition ExitStatus) int {
 	if globals.TraceVerbose {
 		msg := fmt.Sprintf("shutdown.Exit(%d) requested", errorCondition)
 		trace.Trace(msg)
-		traceStats()
+		showStats()
 		statics.DumpStatics("exit.Exit", statics.SelectUser, "")
 	}
 
 	if globals.TraceStats && !globals.TraceVerbose {
-		traceStats()
+		showStats()
 	}
 
 	if errorCondition == TEST_OK {
@@ -74,8 +74,10 @@ func Exit(errorCondition ExitStatus) int {
 	return 0 // required by go
 }
 
-func traceStats() {
-	trace.Trace(fmt.Sprintf("\nString pool: %d entries\n", stringPool.GetStringPoolSize()))
-	trace.Trace(fmt.Sprintf("Classloader: %d classes loaded\n", classloader.MethAreaSize()))
-	trace.Trace(fmt.Sprintf("Statics Table: %d static entries\n", len(statics.Statics)))
+// showStats prints statistics about the JVM to stderr. We don't use trace.Trace() because
+// it prints execution time, which is not useful here and disrupts formatting.
+func showStats() {
+	_, _ = fmt.Fprintf(os.Stderr, "\nString pool:   %6d entries\n", stringPool.GetStringPoolSize())
+	_, _ = fmt.Fprintf(os.Stderr, "Classloader:   %6d classes loaded\n", classloader.MethAreaSize())
+	_, _ = fmt.Fprintf(os.Stderr, "Statics Table: %6d statics accessed\n", len(statics.Statics))
 }
