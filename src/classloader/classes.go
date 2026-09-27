@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-5 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-6 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -20,9 +20,9 @@ import (
 
 // the definition of the class as it's stored in the method area
 type Klass struct {
-	Status      byte // I=Initializing,F=formatChecked,V=verified,L=linked,N=instantiated
 	Loader      string
 	Data        *ClData
+	Status      byte // I=Initializing,F=formatChecked,V=verified,L=linked,N=instantiated
 	CodeChecked bool // has the code been checked for this class?
 	Resolved    bool // has the CP been resolved for this class?
 }
@@ -89,14 +89,14 @@ type AccessFlags struct {
 // Likewise certain fields needed there (counts) are not used here.
 
 type Field struct {
-	AccessFlags int
 	NameStr     string
-	Name        uint16      // index of the UTF-8 entry in the CP
-	Desc        uint16      // index of the UTF-8 entry in the CP
-	DescStr     string      // the type of the field, as a string (using Desc) JACOBIN-720
-	IsStatic    bool        // is the field static?
-	ConstValue  interface{} // if static and has constant value, it's stored here.
-	Attributes  []Attr      // all attributes for this field other than ConstantValue
+	DescStr     string // the type of the field, as a string (using Desc) JACOBIN-720
+	Attributes  []Attr // all attributes for this field other than ConstantValue
+	ConstValue  any    // if static and has constant value, it's stored here.
+	AccessFlags int
+	Name        uint16 // index of the UTF-8 entry in the CP
+	Desc        uint16 // index of the UTF-8 entry in the CP
+	IsStatic    bool   // is the field static?
 }
 
 // the methods of the class, including the constructors
@@ -246,7 +246,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		if err != nil {
 			if methName == "main" {
 				// the starting className is always loaded, so if main() isn't found
-				// something is seriously wrong, so show the specificerror and shutdown.
+				// something is seriously wrong, so show the specific error and exit the JVM.
 				noMainError(origClassName)
 				// noMainError() calls shutdown.Exit(). However, in test mode, shutdown.Exit() doesn't exit,
 				// so the following error return is needed to cover the test cases.
@@ -254,10 +254,10 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			} else {
 				errMsg := fmt.Sprintf("FetchMethodAndCP: LoadClassFromNameOnly for %s failed: %s",
 					className, err.Error())
+				if globals.GetGlobalRef().JacobinName == "test" {
+					return MTentry{}, errors.New(errMsg) // dummy return needed for tests
+				}
 				globals.GetGlobalRef().FuncThrowException(excNames.ClassNotLoadedException, errMsg)
-				// trace.Error(errMsg)
-				// shutdown.Exit(shutdown.JVM_EXCEPTION)
-				return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 			}
 		}
 	}
@@ -294,8 +294,6 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		}
 
 		globals.GetGlobalRef().FuncThrowException(excNames.WrongMethodTypeException, errMsg)
-		// trace.Error(errMsg)
-		// shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
 	// --- at this point, the method is not in the MTable ---
@@ -307,19 +305,19 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	err := WaitForClassStatus(className)
 	if err != nil {
 		errMsg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
+		if globals.GetGlobalRef().JacobinName == "test" {
+			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
+		}
 		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotLoadedException, errMsg)
-		// trace.Error(errMsg)
-		// shutdown.Exit(shutdown.JVM_EXCEPTION)
-		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 	}
 
 	k := MethAreaFetch(className)
 	if k == nil {
 		errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class %s", className)
+		if globals.GetGlobalRef().JacobinName == "test" {
+			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
+		}
 		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
-		// trace.Error(errMsg)
-		// shutdown.Exit(shutdown.JVM_EXCEPTION)
-		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 	}
 
 	// the class, k, has been found, so check the method table for the method. Then return the
@@ -394,10 +392,10 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		k = MethAreaFetch(className)
 		if k == nil {
 			errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find superclass %s", className)
+			if globals.GetGlobalRef().JacobinName == "test" {
+				return MTentry{}, errors.New(errMsg) // dummy return needed for tests
+			}
 			globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
-			// trace.Error(errMsg)
-			// shutdown.Exit(shutdown.JVM_EXCEPTION)
-			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
 
 		// Search for the method in the class method table.
@@ -428,17 +426,16 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			methodEntry.MethType = stringPool.GetStringIndex(&methType)
 			AddEntry(&MTable, methFQN, methodEntry)
 			return methodEntry, nil
-		} else {
-
-			// if we've ascended to Object and don't have the method, it ain't here (error).
-			if className != types.ObjectClassName {
-				goto superclassLoop
-			} else {
-				errMsg := fmt.Sprintf("FetchMethodAndCP: Neither %s nor its superclasses contain method %s",
-					origClassName, methName)
-				return MTentry{}, errors.New(errMsg)
-			}
 		}
+
+		if className != types.ObjectClassName { // are we at Object? If not, loop again.
+			goto superclassLoop
+		}
+
+		// if we've ascended to Object and don't have the method, it ain't here, so show error.
+		errMsg := fmt.Sprintf("FetchMethodAndCP: Neither %s nor its superclasses contain method %s",
+			origClassName, methName)
+		return MTentry{}, errors.New(errMsg)
 	}
 }
 
@@ -448,8 +445,6 @@ func noMainError(className string) {
 		"Error: main() method not found in class %s\n"+
 			"Please define the main method as:\n"+
 			"   public static void main(String[] args)", className)
-	// trace.Error(errMsg)
-	// shutdown.Exit(shutdown.APP_EXCEPTION)
 	globals.GetGlobalRef().FuncThrowException(excNames.NoSuchMethodError, errMsg)
 }
 
