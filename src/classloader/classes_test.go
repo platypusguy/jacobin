@@ -190,19 +190,19 @@ func TestFetchMethodAndCP_MTableHit_InvalidType(t *testing.T) {
 
 	// Capture stderr for the error message (FetchMethodAndCP logs and returns an error)
 	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
+	_, w, _ := os.Pipe()
 	os.Stderr = w
 
 	_, err := FetchMethodAndCP(klassName, "qux", "()V")
 	_ = w.Close()
-	msg, _ := io.ReadAll(r)
+	// msg, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	if err == nil {
 		t.Fatalf("expected error for invalid MType, got none")
 	}
-	errMsg := string(msg)
-	if !strings.Contains(errMsg, "methEntry.MType is neither J nor G") {
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "methEntry.Mtype is neither J nor G") {
 		t.Fatalf("unexpected stderr: %s", errMsg)
 	}
 }

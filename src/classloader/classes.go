@@ -9,8 +9,9 @@ package classloader
 import (
 	"errors"
 	"fmt"
+	"jacobin/src/excNames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
-	"jacobin/src/shutdown"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
@@ -253,8 +254,9 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			} else {
 				errMsg := fmt.Sprintf("FetchMethodAndCP: LoadClassFromNameOnly for %s failed: %s",
 					className, err.Error())
-				trace.Error(errMsg)
-				shutdown.Exit(shutdown.JVM_EXCEPTION)
+				globals.GetGlobalRef().FuncThrowException(excNames.ClassNotLoadedException, errMsg)
+				// trace.Error(errMsg)
+				// shutdown.Exit(shutdown.JVM_EXCEPTION)
 				return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 			}
 		}
@@ -285,10 +287,15 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 				MethType:  stringPool.GetStringIndex(&methType),
 			}, nil
 		}
-		errMsg := fmt.Sprintf("FetchMethodAndCP: methEntry.Meth != nil BUT methEntry.MType is neither J nor G for %s", methFQN)
-		trace.Error(errMsg)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
-		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
+
+		errMsg := fmt.Sprintf("FetchMethodAndCP: methEntry.Mtype is neither J nor G for %s", methFQN)
+		if globals.GetGlobalRef().JacobinName == "test" {
+			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
+		}
+
+		globals.GetGlobalRef().FuncThrowException(excNames.WrongMethodTypeException, errMsg)
+		// trace.Error(errMsg)
+		// shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
 	// --- at this point, the method is not in the MTable ---
@@ -300,16 +307,18 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	err := WaitForClassStatus(className)
 	if err != nil {
 		errMsg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
-		trace.Error(errMsg)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotLoadedException, errMsg)
+		// trace.Error(errMsg)
+		// shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 	}
 
 	k := MethAreaFetch(className)
 	if k == nil {
 		errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class %s", className)
-		trace.Error(errMsg)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
+		// trace.Error(errMsg)
+		// shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 	}
 
@@ -385,8 +394,9 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		k = MethAreaFetch(className)
 		if k == nil {
 			errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find superclass %s", className)
-			trace.Error(errMsg)
-			shutdown.Exit(shutdown.JVM_EXCEPTION)
+			globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
+			// trace.Error(errMsg)
+			// shutdown.Exit(shutdown.JVM_EXCEPTION)
 			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
 
@@ -438,8 +448,9 @@ func noMainError(className string) {
 		"Error: main() method not found in class %s\n"+
 			"Please define the main method as:\n"+
 			"   public static void main(String[] args)", className)
-	trace.Error(errMsg)
-	shutdown.Exit(shutdown.APP_EXCEPTION)
+	// trace.Error(errMsg)
+	// shutdown.Exit(shutdown.APP_EXCEPTION)
+	globals.GetGlobalRef().FuncThrowException(excNames.NoSuchMethodError, errMsg)
 }
 
 // FetchUTF8stringFromCPEntryNumber fetches the UTF8 string using the CP entry number
