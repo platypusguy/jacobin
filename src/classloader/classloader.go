@@ -13,7 +13,6 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
-	"jacobin/src/shutdown"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
@@ -213,8 +212,9 @@ func LoadBaseClasses() {
 	err := WalkBaseJmod()
 	if err != nil {
 		errMsg := fmt.Sprintf("LoadBaseClasses: Error loading jmod file classes %s, err: %v", jmodFilePath, err)
-		trace.Error(errMsg)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		globals.GetGlobalRef().FuncThrowException(excNames.NoSuchMethodError, errMsg)
+		// trace.Error(errMsg)
+		// shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
 	if globals.TraceCloadi {
@@ -257,7 +257,8 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 		MethAreaInsert(name, &eKI)
 		err := LoadClassFromNameOnly(util.ConvertToPlatformPathSeparators(name))
 		if err != nil {
-			shutdown.Exit(shutdown.JVM_EXCEPTION)
+			errMsg := fmt.Sprintf("LoadClassFromNameOnly(): Error loading class %s, err: %v", name, err)
+			globals.GetGlobalRef().FuncThrowException(excNames.ClassNotLoadedException, errMsg)
 		}
 	}
 	globals.LoaderWg.Done()

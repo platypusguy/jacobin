@@ -12,8 +12,8 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"fmt"
+	"jacobin/src/excNames"
 	"jacobin/src/globals"
-	"jacobin/src/shutdown"
 	"jacobin/src/trace"
 	"os"
 	"path/filepath"
@@ -53,8 +53,7 @@ func JmodMapFetch(className string) string {
 	jmodMapMutex.Unlock() // Immediately unlock.
 	if jmodMapSize == 0 {
 		errMsg := fmt.Sprintf("JmodMapFetch: JMODMAP size = 0 detected when key=%s", className)
-		trace.Error(errMsg)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		globals.GetGlobalRef().FuncThrowException(excNames.ExecutionException, errMsg)
 	}
 	jmodFile := JMODMAP[className+".class"]
 	return jmodFile

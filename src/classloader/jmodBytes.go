@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2023-6 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -12,8 +12,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"jacobin/src/excNames"
 	"jacobin/src/globals"
-	"jacobin/src/shutdown"
 	"jacobin/src/trace"
 	"os"
 )
@@ -34,16 +34,14 @@ func GetBaseJmodBytes() {
 	global.JmodBaseBytes, err = os.ReadFile(jmodBasePath)
 	if err != nil {
 		errMsg := fmt.Sprintf("GetBaseJmodBytes: os.ReadFile(%s) failed, err: %v", jmodBasePath, err)
-		trace.Error(errMsg)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		globals.GetGlobalRef().FuncThrowException(excNames.IOException, errMsg)
 	}
 
 	// Validate the file's magic number
 	fileMagicNumber := binary.BigEndian.Uint16(global.JmodBaseBytes[:2])
 	if fileMagicNumber != ExpectedMagicNumber {
 		errMsg := fmt.Sprintf("GetBaseJmodBytes: fileMagicNumber != ExpectedMagicNumber in jmod file %s, err: %v", jmodBasePath, err)
-		trace.Error(errMsg)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		globals.GetGlobalRef().FuncThrowException(excNames.DataFormatException, errMsg)
 	}
 
 	if globals.TraceCloadi {
@@ -65,7 +63,7 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 	jmodPath := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + jmodFileName
 	classFileName := "classes/" + className + ".class"
 
-	//fmt.Printf("DEBUG GetClassBytes: jmod=%s, class=%s\n", jmodFileName, className)
+	// fmt.Printf("DEBUG GetClassBytes: jmod=%s, class=%s\n", jmodFileName, className)
 	if jmodFileName == BaseJmodFileName {
 		// Already loaded in JmodBaseBytes during classloader initialisation
 		// Skip over the jmod header so that it is recognized as a ZIP file
@@ -92,11 +90,10 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 		// Skip over the jmod header so that it is recognized as a ZIP file
 		ioReader = bytes.NewReader(jmodBytes[4:])
 		newReaderLength = int64(len(jmodBytes) - 4)
-
 	}
 
 	// Prepare the reader for the zip archive
-	//fmt.Printf("DEBUG GetClassBytes: zip.NewReader newReaderLength=%d\n", newReaderLength)
+	// fmt.Printf("DEBUG GetClassBytes: zip.NewReader newReaderLength=%d\n", newReaderLength)
 	zipReader, err := zip.NewReader(ioReader, newReaderLength)
 	if err != nil {
 		errMsg := fmt.Sprintf("GetClassBytes: zip.NewReader(%s) failed, err: %v", jmodPath, err)
@@ -122,5 +119,4 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 
 	// Success!
 	return classBytes, nil
-
 }

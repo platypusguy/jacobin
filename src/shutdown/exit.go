@@ -8,6 +8,7 @@ package shutdown
 
 import (
 	"fmt"
+	"jacobin/src/classloader"
 	"jacobin/src/config"
 	"jacobin/src/globals"
 	"jacobin/src/prof"
@@ -52,7 +53,7 @@ func Exit(errorCondition ExitStatus) int {
 
 	if globals.TraceStats && !globals.TraceVerbose {
 		trace.Trace(fmt.Sprintf("\nString pool: %d entries\n", stringPool.GetStringPoolSize()))
-		// trace.Trace(fmt.Sprintf("Classloader: %d classes loaded", classloader.MethAreaSize()))
+		trace.Trace(fmt.Sprintf("Classloader: %d classes loaded", classloader.MethAreaSize()))
 	}
 
 	if errorCondition == TEST_OK {
