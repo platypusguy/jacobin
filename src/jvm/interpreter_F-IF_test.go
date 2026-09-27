@@ -818,8 +818,8 @@ func TestGetFieldStringIndex(t *testing.T) {
 	fs.PushFront(f)
 	interpret(fs)
 
-	ret := pop(f).(*string)
-	if ret == nil || *ret != s {
+	ret := pop(f).(*object.Object)
+	if ret == nil || object.GoStringFromStringObject(ret) != s {
 		t.Errorf("GETFIELD StringIndex: expected %q, got %#v", s, ret)
 	}
 	if f.TOS != -1 {
