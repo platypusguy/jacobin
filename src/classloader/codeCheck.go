@@ -422,7 +422,7 @@ var CheckTable = [256]BytecodeFunc{
 	CheckInvokeinterface, // INVOKEINTERFACE 0xB9
 	CheckInvokedynamic,   // INVOKEDYNAMIC   0xBA
 	CheckNew,             // NEW             0xBB
-	Return2,              // NEWARRAY        0xBC
+	CheckNewArray,        // NEWARRAY        0xBC
 	CheckAnewarray,       // ANEWARRAY       0xBD
 	Return1,              // ARRAYLENGTH     0xBE
 	Return1,              // ATHROW          0xBF
@@ -585,7 +585,7 @@ func CheckAconstnull() int {
 	return 1
 }
 
-// ANEWARRAY 0x1C Create a new array of reference type elements
+// ANEWARRAY 0xBD Create a new array of reference type elements
 func CheckAnewarray() int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
@@ -601,7 +601,7 @@ func CheckAnewarray() int {
 		return ERROR_OCCURRED
 	}
 
-	// no change to StackEntries
+	StackEntries += 1 // for the dimension of the array
 
 	return 3
 }
@@ -1113,6 +1113,18 @@ func CheckNew() int {
 	return 3
 }
 
+// NEWARRAY 0xBC Create a 1-dimensional array
+func CheckNewArray() int {
+	// check that the index points to a field reference in the CP
+	CPslot := int(Code[PC+1])
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	StackEntries += 1 // for the dimension of the array
+	return 2
+}
+
 // POP
 func CheckPop() int {
 	StackEntries -= 1
@@ -1204,6 +1216,9 @@ func CheckMultianewarray() int {
 	if dimensions == 0 {
 		return ERROR_OCCURRED
 	}
+
+	// we pop off as many ints from the stack as there are dimensions
+	StackEntries -= int(dimensions)
 
 	return 4
 }
