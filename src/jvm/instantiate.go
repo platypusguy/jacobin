@@ -365,7 +365,9 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 	switch string(fieldToAdd.Ftype[0]) {
 	case types.Ref, types.Array: // it's a reference
 		fieldToAdd.Fvalue = nil
-	case types.Byte, types.Char, types.Int, types.Long, types.Short, types.Bool:
+	case types.Byte:
+		fieldToAdd.Fvalue = types.JavaByte(0)
+	case types.Char, types.Int, types.Long, types.Short, types.Bool:
 		fieldToAdd.Fvalue = int64(0)
 	case types.Double, types.Float:
 		fieldToAdd.Fvalue = 0.0
