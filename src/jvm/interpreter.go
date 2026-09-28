@@ -2362,11 +2362,13 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 func doGetfield(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
+	CP.Mutex.RLock()
 	fieldEntry := CP.CpIndex[CPslot]
 	// we check that the pointed-to CP entry is a field reference in codeCheck.go
 
 	// Get field name.
 	fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
+	CP.Mutex.RUnlock()
 	fieldName := fullFieldEntry.FldName
 	if globals.TraceVerbose {
 		EmitTraceFieldID("GETFIELD", fieldName)
@@ -2416,7 +2418,9 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 
 	fieldType = objField.Ftype
 	if fieldType == types.StringIndex {
-		fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
+		// JACOBIN-976
+		// Deleted: fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32)) // sets fieldValue to type *string (Go)
+		fieldValue = object.StringObjectFromPoolIndex(objField.Fvalue.(uint32))
 	} else if fieldType == types.StringClassRef {
 		// if the field type is String pointer and value is a byte array, convert it to a string
 		switch objField.Fvalue.(type) {
@@ -2433,6 +2437,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return ERROR_OCCURRED // applies only if in test
 			}
+			return RESUME_HERE
 		}
 	} else if types.IsArray(fieldType) {
 		// if the field type is an array, other than a string, convert it to an object
@@ -2484,7 +2489,14 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 func doPutfield(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
+
+	// Read every CP slice we need under one RLock, copy out the values,
+	// and release before doing anything else (no nested locking).
+	CP.Mutex.RLock()
 	fieldEntry := CP.CpIndex[CPslot]
+	fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
+	CP.Mutex.RUnlock()
+	fieldName := fullFieldEntry.FldName
 
 	value := pop(fr) // the value we're placing in the field
 	ref := pop(fr)   // reference to the object we're updating
@@ -2501,6 +2513,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
 		}
+		return RESUME_HERE // caught
 	}
 
 	// Get Object struct.
@@ -2516,9 +2529,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 			o, ok := v.FieldTable["value"]
 			v.ThMutex.RUnlock()
 			if ok && strings.HasPrefix(o.Ftype, types.Array) {
-				v.ThMutex.RLock()
-				value = v.FieldTable["value"].Fvalue
-				v.ThMutex.RUnlock()
+				value = o.Fvalue // o is already a consistent copy from the read above
 			}
 		}
 	}
@@ -2527,53 +2538,60 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 	obj.ThMutex.RLock()
 	fieldTableLen := len(obj.FieldTable)
 	obj.ThMutex.RUnlock()
-	if fieldTableLen != 0 {
-		fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
-		fieldName := fullFieldEntry.FldName
-		if globals.TraceVerbose {
-			EmitTraceFieldID("PUTFIELD", fieldName)
+	if fieldTableLen == 0 {
+		errMsg := fmt.Sprintf("PUTFIELD: Empty field table in object of class %s trying for field %s",
+			object.GoStringFromStringPoolIndex(obj.KlassName), fieldName)
+		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURRED // applies only if in test
 		}
-
-		obj.ThMutex.RLock()
-		objField, ok := obj.FieldTable[fieldName]
-		obj.ThMutex.RUnlock()
-		if !ok {
-			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s is not present in object of class %s",
-				fieldName, object.GoStringFromStringPoolIndex(obj.KlassName))
-			status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-
-		// PUTFIELD is not used to update statics. That's for PUTSTATIC to do.
-		if strings.HasPrefix(objField.Ftype, types.Static) {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "PUTFIELD: invalid attempt to update a static variable"
-			status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-
-		switch objField.Ftype {
-		case types.Byte:
-			objField.Fvalue = int64(int8(uint8(value.(int64))))
-		case types.Int:
-			objField.Fvalue = int64(int32(uint32(value.(int64))))
-		case types.Long:
-			objField.Fvalue = value.(int64)
-		case types.Short:
-			objField.Fvalue = int64(int16(uint16(value.(int64))))
-		default:
-			objField.Fvalue = value
-		}
-		obj.ThMutex.Lock()
-		obj.FieldTable[fieldName] = objField
-		obj.ThMutex.Unlock()
+		return RESUME_HERE // caught
 	}
+
+	if globals.TraceVerbose {
+		EmitTraceFieldID("PUTFIELD", fieldName)
+	}
+
+	obj.ThMutex.RLock()
+	objField, ok := obj.FieldTable[fieldName]
+	obj.ThMutex.RUnlock()
+	if !ok {
+		errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s is not present in object of class %s",
+			fieldName, object.GoStringFromStringPoolIndex(obj.KlassName))
+		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURRED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	// PUTFIELD is not used to update statics. That's for PUTSTATIC to do.
+	if strings.HasPrefix(objField.Ftype, types.Static) {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "PUTFIELD: invalid attempt to update a static variable"
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURRED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	switch objField.Ftype {
+	case types.Byte:
+		objField.Fvalue = int64(int8(uint8(value.(int64))))
+	case types.Int:
+		objField.Fvalue = int64(int32(uint32(value.(int64))))
+	case types.Long:
+		objField.Fvalue = value.(int64)
+	case types.Short:
+		objField.Fvalue = int64(int16(uint16(value.(int64))))
+	default:
+		objField.Fvalue = value
+	}
+	obj.ThMutex.Lock()
+	obj.FieldTable[fieldName] = objField
+	obj.ThMutex.Unlock()
+
 	return 3 // 2 for CPslot + 1 for next bytecode
 }
 
@@ -3479,6 +3497,7 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 
 	refTypeSlot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
+	CP.Mutex.RLock()
 	refType := CP.CpIndex[refTypeSlot] // codeCheck's checkAnewarray() ensures CP entry is a ClassRef or Interface
 
 	var refTypeName = ""
@@ -3486,6 +3505,7 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 		refNameStringPoolIndex := CP.ClassRefs[refType.Slot]
 		refTypeName = *stringPool.GetStringPointer(refNameStringPoolIndex)
 	}
+	CP.Mutex.RUnlock()
 
 	arrayPtr := object.Make1DimRefArray(refTypeName, size)
 	g := globals.GetGlobalRef()
@@ -4120,9 +4140,11 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	// as in: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.3.2-200
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // point to CP entry
 	CP := fr.CP.(*classloader.CPool)
+	CP.Mutex.RLock()
 	CPentry := CP.CpIndex[CPslot]
 	arrayDescStringPoolIndex := CP.ClassRefs[CPentry.Slot]
 	arrayDesc = *stringPool.GetStringPointer(arrayDescStringPoolIndex)
+	CP.Mutex.RUnlock()
 
 	var rawArrayType uint8
 	for i := 0; i < len(arrayDesc); i++ {
@@ -4189,13 +4211,16 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 		dimSizes[i] = pop(fr).(int64)
 	}
 
-	// A dimension of zero ends the dimensions, so we check
-	// and cut off the dimensions below and includingthe 0-sized
-	// one. Because this is almost certainly an error, we also
-	// issue a warning.
+	// A dimension of zero means every dimension after it collapses to a
+	// single empty array (per JLS: new T[3][0][5] allocates a 3-element
+	// outer array whose elements are each an empty array; the trailing
+	// [5] is never separately allocated). So we keep dimensions up to
+	// and including the zero-sized one, and drop everything after it.
+	// Because this is almost certainly unintentional on the caller's part,
+	// we also issue a warning.
 	for i := range dimSizes {
 		if dimSizes[i] == 0 {
-			dimSizes = dimSizes[i+1:] // lop off the prev dims
+			dimSizes = dimSizes[:i+1] // keep dims up to and including the zero-sized one
 			trace.Error("MULTIANEWARRAY: Multidimensional array with one dimension of size 0 encountered.")
 			break
 		}
