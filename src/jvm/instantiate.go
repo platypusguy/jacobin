@@ -167,7 +167,9 @@ func doStaticDefaults(k *classloader.Klass, classname string) {
 			fldValue = fld.ConstValue
 		} else {
 			switch fldType[0] {
-			case 'B', 'C', 'S', 'I', 'J', 'Z':
+			case 'B':
+				fldValue = int8(0)
+			case 'C', 'S', 'I', 'J', 'Z':
 				fldValue = int64(0)
 			case 'F', 'D':
 				fldValue = float64(0.00)
