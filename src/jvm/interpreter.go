@@ -4191,7 +4191,7 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	// in the dimsizes slice.
 	dimensionCount := int(fr.Meth[fr.PC+3])
 
-	if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
+	if dimensionCount > 3 { // TODO: explore arrays of > 4-255 dimensions
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := "MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions"
 		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
@@ -4209,6 +4209,17 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	// dimenion.
 	for i := dimensionCount - 1; i >= 0; i-- {
 		dimSizes[i] = pop(fr).(int64)
+	}
+
+	for j := range dimSizes {
+		if dimSizes[j] < 0 {
+			errMsg := fmt.Sprintf("MULTIANEWARRAY: invalid array dimension: %d", dimSizes[j])
+			status := exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
+		}
 	}
 
 	// A dimension of zero means every dimension after it collapses to a
