@@ -1011,6 +1011,16 @@ func TestGetStaticInt(t *testing.T) {
 	_ = statics.AddStatic("TestClass.staticField",
 		statics.Static{Type: types.Int, Value: int64(42)})
 
+	// Register a minimal class mirror so InitializeClass (called by
+	// doGetStatic per JVMS 5.5) can load/initialize "TestClass" successfully.
+	objectName := types.ObjectClassName
+	classloader.MethAreaInsert("TestClass", &classloader.Klass{
+		Data: &classloader.ClData{
+			Name:            "TestClass",
+			SuperclassIndex: stringPool.GetStringIndex(&objectName),
+		},
+	})
+
 	// Push the frame onto the frame stack
 
 	fs := frames.CreateFrameStack()

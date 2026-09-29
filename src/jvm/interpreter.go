@@ -2179,13 +2179,15 @@ func doReturn(fr *frames.Frame, _ int64) int {
 // 0xB2 GETSTATIC
 // statics are stored in the minimal java/lang/Class mirror of the loaded class
 // so we get that mirror from the statics table (using the class name), then
-// get its table of static fields, and finally read the value there (using a lock)
+// get its table of static fields, and finally read the value there.
 func doGetStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 
 	// Read every CP slice we need under one RLock, copy out the values,
-	// and release before doing anything else (no nested locking).
+	// and release before doing anything else (no nested locking). Both
+	// CpIndex and FieldRefs are guarded by CP.Mutex, so both reads must
+	// happen inside the same critical section.
 	CP.Mutex.RLock()
 	CPentry := CP.CpIndex[CPslot] // value is checked in codeCheck.go
 	field := CP.FieldRefs[CPentry.Slot]
@@ -2197,25 +2199,32 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		EmitTraceFieldID("GETSTATIC", className+"."+fieldName)
 	}
 
-	// Was this static field previously loaded? If so, get its location and move on.
-	// Otherwise ensure the class is loaded and initialized (JVMS 5.5) before
-	// touching its statics. InitializeClass is idempotent and safe under
-	// concurrent callers.
-	prevLoaded, ok := statics.QueryStatic(className, fieldName)
-	if !ok {
-		if err := InitializeClass(className, fr.FrameStack); err != nil {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
-			if exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr) != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
+	// Always go through InitializeClass (JVMS 5.5), even if the static is
+	// already present in the Statics table. Static defaults are installed
+	// before <clinit> runs, so a successful QueryStatic does NOT mean the
+	// class is fully initialized: another thread may still be inside
+	// <clinit>, and this thread must wait for it rather than read a
+	// default or half-initialized value.
+	//
+	// InitializeClass is idempotent and safe under concurrent callers:
+	//   - already initialized: one atomic load, no locks (fast path)
+	//   - being initialized by another thread: blocks until it finishes
+	//   - being initialized by this thread (a nested GETSTATIC inside
+	//     <clinit>): returns immediately, as the JVMS requires
+	if err := InitializeClass(className, fr.FrameStack); err != nil {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
+		if exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr) != exceptions.Caught {
+			return ERROR_OCCURRED // applies only if in test
 		}
-		prevLoaded, ok = statics.QueryStatic(className, fieldName)
+		return RESUME_HERE // caught
 	}
 
-	// If the field can't be found even after initializing the
-	// containing class, something is wrong so get out of here.
+	// With initialization guaranteed complete (or in progress on this
+	// thread), the statics lookup now answers only one question: does
+	// this field exist? QueryStatic returns a copy taken under the
+	// statics lock, so prevLoaded is private to this goroutine.
+	prevLoaded, ok := statics.QueryStatic(className, fieldName)
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s.%s in class %s\n",
@@ -2226,8 +2235,11 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
-	// Never write back into the shared static entry: that mutation races
-	// with concurrent GETSTATIC/PUTSTATIC.
+	// The operand stack has a uniform 64-bit width: bool, byte (int8),
+	// JavaByte, int32, and int are all widened to int64 here. Other types
+	// (float64, *object.Object, ...) pass through unchanged. The stored
+	// static is never modified: a write-back would race with concurrent
+	// GETSTATIC/PUTSTATIC.
 	push(fr, statics.NormalizeForStack(prevLoaded.Value))
 
 	return 3 // 2 for the CP slot + 1 for the next bytecode

@@ -58,9 +58,38 @@ var (
 	initCond  = sync.NewCond(&initMu)
 )
 
+/*
+getClassInit
+
+Two paths: Fast and Slow.
+
+Fast path: sync.Map.Load takes only the key, so a class that's already in the table
+(the overwhelming majority of calls, once the program has run for any length of time)
+costs nothing but a map lookup — no heap allocation.
+
+Slow path: The class has never been seen before. sync.Map.LoadOrStore takes its value argument as `any`,
+so Go must evaluate (and heap-allocate) &classInit{} before the call can even happen,
+whether the entry turns out to already exist.
+
+Doing that unconditionally on every call — as the old single-LoadOrStore version did — meant that
+every already-initialized class paid for a throwaway allocation on every GETSTATIC/PUTSTATIC/NEW.
+Falling through to LoadOrStore only on an actual Load miss confines that cost to the rare first-touch case.
+
+Note:
+Two goroutines can both miss the Fast path for the same new class and both reach the Slow path concurrently.
+Since sync.Map.LoadOrStore is atomic, only one of the two freshly allocated &classInit{} values is actually stored.
+The loser's allocation is simply discarded, a one-time cost, not a per-call cost since
+the next call will execute the Fast path.
+*/
 func getClassInit(name string) *classInit {
-	v, _ := initTable.LoadOrStore(name, &classInit{})
-	return v.(*classInit)
+	/* Fast path */
+	if value, ok := initTable.Load(name); ok {
+		return value.(*classInit)
+	}
+
+	/* Slow path */
+	value, _ := initTable.LoadOrStore(name, &classInit{})
+	return value.(*classInit)
 }
 
 // ensureInitialized implements the JVMS 5.5 procedure: exactly one thread runs
