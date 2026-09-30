@@ -2291,11 +2291,15 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 	return 3 // 2 for the CP slot + 1 for the next bytecode
 }
 
-// 0xB3 PUTSTATIC
+// 0xB3 PUTSTATIC store a value into a static field
 func doPutStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 	CP := fr.CP.(*classloader.CPool)
 
+	// Read every CP slice we need under one RLock, copy out the values,
+	// and release before doing anything else (no nested locking). Both
+	// CpIndex and FieldRefs are guarded by CP.Mutex, so both reads must
+	// happen inside the same critical section.
 	CP.Mutex.RLock()
 	CPentry := CP.CpIndex[CPslot] // value is checked in codeCheck.go
 	field := CP.FieldRefs[CPentry.Slot]
@@ -2308,28 +2312,35 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		EmitTraceFieldID("PUTSTATIC", fieldName)
 	}
 
-	// Was this static field previously loaded? If so, get its location and move on.
-	// Otherwise ensure the class is loaded and initialized (JVMS 5.5) before
-	// touching its statics. InitializeClass is idempotent and safe under
-	// concurrent callers.
-	prevLoaded, ok := statics.QueryStatic(className, fldName)
-	if !ok {
-		if globals.TraceInst {
-			trace.Trace(fmt.Sprintf("doPutStatic: Field was not previously loaded: %s", fieldName))
-		}
-		if err := InitializeClass(className, fr.FrameStack); err != nil {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			trace.Error(fmt.Sprintf("PUTSTATIC: could not load class %s", className))
-			return ERROR_OCCURRED
-		}
-		if globals.TraceInst {
-			trace.Trace(fmt.Sprintf("doPutStatic: Loaded class %s", className))
-		}
-		prevLoaded, ok = statics.QueryStatic(className, fldName)
-	} else if globals.TraceInst {
-		trace.Trace(fmt.Sprintf("doPutStatic: Field was previously loaded: %s", fieldName))
+	// Always go through InitializeClass (JVMS 5.5), even if the static is
+	// already present in the Statics table. Static defaults are installed
+	// before <clinit> runs, so a successful QueryStatic does NOT mean the
+	// class is fully initialized: another thread may still be inside
+	// <clinit>, and this thread must wait for it rather than write into a
+	// field that <clinit> hasn't finished setting up (or that <clinit>
+	// will overwrite right after this store completes).
+	//
+	// InitializeClass is idempotent and safe under concurrent callers:
+	//   - already initialized: one atomic load, no locks (fast path)
+	//   - being initialized by another thread: blocks until it finishes
+	//   - being initialized by this thread (a nested PUTSTATIC inside
+	//     <clinit>): returns immediately, as the JVMS requires
+	if err := InitializeClass(className, fr.FrameStack); err != nil {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		trace.Error(fmt.Sprintf("PUTSTATIC: could not load class %s", className))
+		return ERROR_OCCURRED
 	}
 
+	// With initialization guaranteed complete (or in progress on this
+	// thread), the statics lookup now answers only one question: does
+	// this field exist, and what's its declared type? QueryStatic returns
+	// a copy taken under the statics lock, so prevLoaded is private to
+	// this goroutine. prevLoaded.Value itself is discarded here — PUTSTATIC
+	// is about to overwrite it — only prevLoaded.Type is used below.
+	prevLoaded, ok := statics.QueryStatic(className, fldName)
+	if globals.TraceInst && ok {
+		trace.Trace(fmt.Sprintf("doPutStatic: Field found: %s", fieldName))
+	}
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		trace.Error(fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName))
@@ -2352,6 +2363,8 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			Value: value,
 		})
 	case types.Byte:
+		// Narrow back down to int8 range for storage, even though the
+		// value arrives widened from the uniform 64-bit operand stack.
 		var value int64
 		v := pop(fr)
 		switch v.(type) { // could be passed a byte or an integral type for a value
