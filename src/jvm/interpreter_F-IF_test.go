@@ -1093,6 +1093,14 @@ func TestGetStaticBoolNormalization(t *testing.T) {
 // GETSTATIC: value is a byte -> promoted to int64
 func TestGetStaticBytePromotion(t *testing.T) {
 	globals.InitGlobals("test")
+	classloader.InitMethodArea()
+	objectName := types.ObjectClassName
+	classloader.MethAreaInsert("TestClass", &classloader.Klass{
+		Data: &classloader.ClData{
+			Name:            "TestClass",
+			SuperclassIndex: stringPool.GetStringIndex(&objectName),
+		},
+	})
 
 	f := newFrame(opcodes.GETSTATIC)
 	f.Meth = append(f.Meth, 0x00, 0x01)
@@ -1127,6 +1135,14 @@ func TestGetStaticBytePromotion(t *testing.T) {
 // GETSTATIC: default path in type switch (e.g., already int64 value)
 func TestGetStaticDefaultPathInt64(t *testing.T) {
 	globals.InitGlobals("test")
+	classloader.InitMethodArea()
+	objectName := types.ObjectClassName
+	classloader.MethAreaInsert("TestClass", &classloader.Klass{
+		Data: &classloader.ClData{
+			Name:            "TestClass",
+			SuperclassIndex: stringPool.GetStringIndex(&objectName),
+		},
+	})
 
 	f := newFrame(opcodes.GETSTATIC)
 	f.Meth = append(f.Meth, 0x00, 0x01)
