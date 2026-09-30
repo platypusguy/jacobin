@@ -177,7 +177,7 @@ func TestCreateFieldPrimitiveAndRefTypes(t *testing.T) {
 	}{
 		{types.Ref, types.Ref, nil},
 		{types.Array, types.Array, nil},
-		{types.Byte, types.Byte, int64(0)},
+		{types.Byte, types.Byte, types.JavaByte(0)},
 		{types.Char, types.Char, int64(0)},
 		{types.Int, types.Int, int64(0)},
 		{types.Long, types.Long, int64(0)},
