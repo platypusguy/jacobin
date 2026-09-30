@@ -1094,7 +1094,7 @@ func TestPopWithTracing(t *testing.T) {
 	push(f, int64(0))
 
 	fs := frames.CreateFrameStack()
-	fs.PushFront(f)         // push the new frame
+	fs.PushFront(f)          // push the new frame
 	globals.TraceInst = true // turn on tracing
 	interpret(fs)
 
@@ -1259,7 +1259,7 @@ func TestPop2WithTrace(t *testing.T) {
 	push(f, int64(10)) // lconst_1 : Push long constant
 
 	fs := frames.CreateFrameStack()
-	fs.PushFront(f)         // push the new frame
+	fs.PushFront(f)          // push the new frame
 	globals.TraceInst = true // turn on tracing
 	interpret(fs)
 
@@ -2834,7 +2834,7 @@ func TestInvalidInstruction(t *testing.T) {
 	f := newFrame(252) // an invalid bytecode
 
 	fs := frames.CreateFrameStack()
-	fs.PushFront(f)          // push the new frame
+	fs.PushFront(f)           // push the new frame
 	globals.TraceInst = false // turn off tracing
 	interpret(fs)
 
@@ -2845,7 +2845,7 @@ func TestInvalidInstruction(t *testing.T) {
 
 	msg := string(out[:])
 
-	if !strings.Contains(msg, "Invalid bytecode") {
+	if !strings.Contains(msg, "java.lang.ClassFormatError") {
 		t.Errorf("Error message for invalid bytecode not as expected, got: %s", msg)
 	}
 }

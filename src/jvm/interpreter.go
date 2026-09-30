@@ -47,7 +47,7 @@ var mtrdebug = false // set to true to enable debug output for MONITORENTER and 
 
 type BytecodeFunc func(*frames.Frame, int64) int
 
-var DispatchTable = [203]BytecodeFunc{
+var DispatchTable = [256]BytecodeFunc{
 	doNothing,         // NOP             0x00
 	doAconstNull,      // ACONST_NULL     0x01
 	doIconstM1,        // ICONST_M1       0x02
@@ -251,6 +251,59 @@ var DispatchTable = [203]BytecodeFunc{
 	doGotow,           // GOTO_W          0xC8
 	doJsrw,            // JSR_W           0xC9
 	doWarninvalid,     // BREAKPOINT      0xCA not implemented, generates warning, not exception
+	invalidBytecode,   // 0xCB Remaining bytecodes (thru 0xFF) are invalid in a class file. codeCheck should catch these.
+	invalidBytecode,   // 0xCC
+	invalidBytecode,   // 0xCD
+	invalidBytecode,   // 0xCE
+	invalidBytecode,   // 0xCF
+	invalidBytecode,   // 0xD0
+	invalidBytecode,   // 0xD1
+	invalidBytecode,   // 0xD2
+	invalidBytecode,   // 0xD3
+	invalidBytecode,   // 0xD4
+	invalidBytecode,   // 0xD5
+	invalidBytecode,   // 0xD6
+	invalidBytecode,   // 0xD7
+	invalidBytecode,   // 0xD8
+	invalidBytecode,   // 0xD9
+	invalidBytecode,   // 0xDA
+	invalidBytecode,   // 0xDB
+	invalidBytecode,   // 0xDC
+	invalidBytecode,   // 0xDD
+	invalidBytecode,   // 0xDE
+	invalidBytecode,   // 0xDF
+	invalidBytecode,   // 0xE0
+	invalidBytecode,   // 0xE1
+	invalidBytecode,   // 0xE2
+	invalidBytecode,   // 0xE3
+	invalidBytecode,   // 0xE4
+	invalidBytecode,   // 0xE5
+	invalidBytecode,   // 0xE6
+	invalidBytecode,   // 0xE7
+	invalidBytecode,   // 0xE8
+	invalidBytecode,   // 0xE9
+	invalidBytecode,   // 0xEA
+	invalidBytecode,   // 0xEB
+	invalidBytecode,   // 0xEC
+	invalidBytecode,   // 0xED
+	invalidBytecode,   // 0xEE
+	invalidBytecode,   // 0xEF
+	invalidBytecode,   // 0xF0
+	invalidBytecode,   // 0xF1
+	invalidBytecode,   // 0xF2
+	invalidBytecode,   // 0xF3
+	invalidBytecode,   // 0xF4
+	invalidBytecode,   // 0xF5
+	invalidBytecode,   // 0xF6
+	invalidBytecode,   // 0xF7
+	invalidBytecode,   // 0xF8
+	invalidBytecode,   // 0xF9
+	invalidBytecode,   // 0xFA
+	invalidBytecode,   // 0xFB
+	invalidBytecode,   // 0xFC
+	invalidBytecode,   // 0xFD
+	invalidBytecode,   // 0xFE
+	invalidBytecode,   // 0xFF
 }
 
 // initializeDispatchTable initializes a few bytecodes that call interpret(). If they were
@@ -336,8 +389,9 @@ func interpret(fs *list.List) {
 		return shutdown.OK
 	}()
 
+	countDown := GOSCHED_COUNTDOWN // to enable other threads to execute
+
 	// the main bytecode interpreter loop
-	countDown := GOSCHED_COUNTDOWN
 	for fr.PC < len(fr.Meth) {
 		if globals.TraceInst {
 			traceInfo := EmitTraceData(fr)
@@ -349,34 +403,26 @@ func interpret(fs *list.List) {
 			countDown = GOSCHED_COUNTDOWN
 			runtime.Gosched()
 		}
+
 		opcode := fr.Meth[fr.PC]
-		if opcode <= maxBytecode {
-			ret := DispatchTable[opcode](fr, 0)
-			if ret < SPECIAL_CASE && ret != 0 {
-				fr.PC += ret
-			} else {
-				switch ret {
-				case 0:
-					// exiting will either end program or call this function
-					// again for the frame at the top of the frame stack
-					return
-				case ERROR_OCCURRED: // occurs only in tests
-					fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
-					return
-				case RESUME_HERE: // continue processing from the present fr.PC
-					// This primarily occurs when an exception is caught. The catch resets
-					// the PC to the catch code to execute. So, we don't need any update to
-					// the PC. However, we have to refresh the current frame b/c the
-					// exception will refresh the topmost frame with any exception handling
-					fr = fs.Front().Value.(*frames.Frame)
-				}
-			}
+		ret := DispatchTable[opcode](fr, 0)
+		if ret < SPECIAL_CASE && ret != 0 {
+			fr.PC += ret
 		} else {
-			errMsg := fmt.Sprintf("Invalid bytecode: %d", opcode)
-			status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
-			if status != exceptions.Caught { // will only happen in test
-				globals.InitGlobals("test")
+			switch ret {
+			case 0:
+				// exiting will either end program or call this function
+				// again for the frame at the top of the frame stack
 				return
+			case ERROR_OCCURRED: // occurs only in tests
+				fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
+				return
+			case RESUME_HERE: // continue processing from the present fr.PC
+				// This primarily occurs when an exception is caught. The catch resets
+				// the PC to the catch code to execute. So, we don't need any update to
+				// the PC. However, we have to refresh the current frame b/c the
+				// exception will refresh the topmost frame with any exception handling
+				fr = fs.Front().Value.(*frames.Frame)
 			}
 		}
 	}
@@ -4319,6 +4365,13 @@ func notImplemented(fr *frames.Frame, _ int64) int {
 	opcodeName := opcodes.BytecodeNames[opcode]
 	errMsg := fmt.Sprintf("bytecode %s not implemented at present", opcodeName)
 	_ = exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+	return ERROR_OCCURRED
+}
+
+func invalidBytecode(fr *frames.Frame, _ int64) int {
+	opcode := fr.Meth[fr.PC]
+	errMsg := fmt.Sprintf("bytecode %d is invalid in class file", opcode)
+	_ = exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
 	return ERROR_OCCURRED
 }
 
