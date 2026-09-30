@@ -1111,6 +1111,17 @@ func TestGetStaticBytePromotion(t *testing.T) {
 
 	_ = statics.AddStatic("TestClass.byteField", statics.Static{Type: types.Byte, Value: byte(7)})
 
+	// Register a minimal class mirror so InitializeClass (called by
+	// doGetStatic per JVMS 5.5) can load/initialize "TestClass" successfully.
+	classloader.InitMethodArea()
+	objectName := types.ObjectClassName
+	classloader.MethAreaInsert("TestClass", &classloader.Klass{
+		Data: &classloader.ClData{
+			Name:            "TestClass",
+			SuperclassIndex: stringPool.GetStringIndex(&objectName),
+		},
+	})
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(f)
 	interpret(fs)
@@ -1144,6 +1155,17 @@ func TestGetStaticDefaultPathInt64(t *testing.T) {
 	f.CP = &CP
 
 	_ = statics.AddStatic("TestClass.i64Field", statics.Static{Type: types.Long, Value: int64(99)})
+
+	// Register a minimal class mirror so InitializeClass (called by
+	// doGetStatic per JVMS 5.5) can load/initialize "TestClass" successfully.
+	classloader.InitMethodArea()
+	objectName := types.ObjectClassName
+	classloader.MethAreaInsert("TestClass", &classloader.Klass{
+		Data: &classloader.ClData{
+			Name:            "TestClass",
+			SuperclassIndex: stringPool.GetStringIndex(&objectName),
+		},
+	})
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(f)
