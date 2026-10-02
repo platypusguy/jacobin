@@ -499,9 +499,14 @@ func TestInvokeVirtual_StaleDispatchCache_B(t *testing.T) {
 		return fs
 	}
 
-	// --- Demonstrate the stale-cache bug: dispatchCache was never cleared, so this
-	// call reuses TestInvokeVirtual_StaleDispatchCache_A's cached (successful) result
-	// instead of resolving StaleDispatchClassB.run()V, which is abstract.
+	// --- Demonstrate the stale-cache bug (best-effort): if a stale dispatchCache entry
+	// from a previous test happens to collide with this call's dispatchKey, this call may
+	// wrongly "succeed" instead of resolving StaleDispatchClassB.run()V, which is abstract.
+	// This collision is only guaranteed when this test runs immediately after
+	// TestInvokeVirtual_StaleDispatchCache_A in the same process; running this test alone,
+	// with -shuffle=on, or after changes to string-pool interning order means no stale entry
+	// exists and the call correctly raises AbstractMethodError on the first try. So we only
+	// log the outcome here and don't fail the test based on it.
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -513,12 +518,14 @@ func TestInvokeVirtual_StaleDispatchCache_B(t *testing.T) {
 	os.Stderr = normalStderr
 
 	if strings.Contains(string(staleMsg), "AbstractMethodError") {
-		t.Fatalf("expected the stale dispatchCache entry to mask the AbstractMethodError, "+
-			"but it was correctly raised: %s", string(staleMsg))
+		t.Logf("no stale dispatchCache entry masked the AbstractMethodError (this is fine): %s", string(staleMsg))
+	} else {
+		t.Logf("stale dispatchCache entry masked the AbstractMethodError as expected when run after _A: %s", string(staleMsg))
 	}
 
 	// --- Now clear the memoized dispatch results and retry: the call must now resolve
-	// StaleDispatchClassB.run()V correctly and raise AbstractMethodError.
+	// StaleDispatchClassB.run()V correctly and raise AbstractMethodError, regardless of
+	// whether a stale entry existed before.
 	ResetDispatchCaches()
 
 	normalStderr = os.Stderr
