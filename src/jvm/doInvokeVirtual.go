@@ -40,74 +40,6 @@ var (
 	argSlotsCache sync.Map // method descriptor string -> int
 )
 
-// argSlots returns the number of parameters in a method descriptor, receiver
-// excluded: one per entry returned by util.ParseIncomingParamsFromMethTypeString.
-// The result is memoized so the hot path does not allocate a slice just to take len().
-func argSlots(methodType string) int {
-	if v, ok := argSlotsCache.Load(methodType); ok {
-		return v.(int)
-	}
-	n := len(util.ParseIncomingParamsFromMethTypeString(methodType))
-	argSlotsCache.Store(methodType, n)
-	return n
-}
-
-// throwInvokeVirtual records the Go stack, throws excType with msg in frame fr,
-// and returns the interpreter return code: RESUME_HERE if a Java handler caught
-// the exception, otherwise ERROR_OCCURRED (the uncaught case applies only in tests).
-// NOTE: if the excNames constants are not plain ints, change the type of excType.
-func throwInvokeVirtual(fr *frames.Frame, excType int, msg string) int {
-	globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-	if exceptions.ThrowEx(excType, msg, fr) != exceptions.Caught {
-		return ERROR_OCCURRED // applies only if in test
-	}
-	return RESUME_HERE // caught
-}
-
-// resolveDeclaredVirtual resolves the method named by the CP methodref. It looks in
-// the method table, then the class and its superclasses, then the interfaces
-// (a class can inherit default methods without overriding them).
-// On success ok is true. On failure the NoSuchMethodError has already been thrown,
-// rc holds the interpreter return code, and ok is false.
-func resolveDeclaredVirtual(fr *frames.Frame, CP *classloader.CPool, CPslot int) (
-	mt classloader.MTentry, className, methodName, methodType string, rc int, ok bool) {
-
-	var fqn string
-	className, methodName, methodType, fqn = classloader.GetMethInfoFromCPmethref(CP, CPslot)
-
-	mt = classloader.GetMtableEntry(className + "." + methodName + methodType)
-	if mt.Meth == nil { // not in the method table: search the class and its superclasses
-		var err error
-		mt, err = classloader.FetchMethodAndCP(className, methodName, methodType)
-		if err != nil {
-			mt = classloader.MTentry{} // an error means not found, whatever was returned
-		}
-	}
-
-	if mt.Meth == nil { // not in the superclasses: check the interfaces
-		klass := classloader.MethAreaFetch(className)
-		if klass != nil {
-			for _, ifIdx := range klass.Data.Interfaces {
-				interfaceName := *stringPool.GetStringPointer(uint32(ifIdx))
-				found, err := locateInterfaceMeth(klass, fr, className, interfaceName, methodName, methodType)
-				if err == nil && found.Meth != nil {
-					mt = found
-					break
-				}
-			}
-		}
-	}
-
-	// One not-found check for every path. Previously it ran only when the class had
-	// interfaces, so a class without any returned ERROR_OCCURRED with no exception.
-	if mt.Meth == nil {
-		// JVMS 5.4.3.3: a failed method resolution is a NoSuchMethodError.
-		rc = throwInvokeVirtual(fr, excNames.NoSuchMethodError, "INVOKEVIRTUAL: Class method not found: "+fqn)
-		return mt, className, methodName, methodType, rc, false
-	}
-	return mt, className, methodName, methodType, 0, true
-}
-
 // 0xB6 INVOKEVIRTUAL
 //
 // Two resolution steps happen, and both are cached:
@@ -208,6 +140,74 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	fr.PC += 3                         // 2 for the CP slot operand, plus 1 to move past the opcode
 	fr.FrameStack.PushFront(nextFrame) // push the new frame; the next interpreter loop runs it
 	return 0
+}
+
+// argSlots returns the number of parameters in a method descriptor, receiver
+// excluded: one per entry returned by util.ParseIncomingParamsFromMethTypeString.
+// The result is memoized so the hot path does not allocate a slice just to take len().
+func argSlots(methodType string) int {
+	if v, ok := argSlotsCache.Load(methodType); ok {
+		return v.(int)
+	}
+	n := len(util.ParseIncomingParamsFromMethTypeString(methodType))
+	argSlotsCache.Store(methodType, n)
+	return n
+}
+
+// throwInvokeVirtual records the Go stack, throws excType with msg in frame fr,
+// and returns the interpreter return code: RESUME_HERE if a Java handler caught
+// the exception, otherwise ERROR_OCCURRED (the uncaught case applies only in tests).
+// NOTE: if the excNames constants are not plain ints, change the type of excType.
+func throwInvokeVirtual(fr *frames.Frame, excType int, msg string) int {
+	globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+	if exceptions.ThrowEx(excType, msg, fr) != exceptions.Caught {
+		return ERROR_OCCURRED // applies only if in test
+	}
+	return RESUME_HERE // caught
+}
+
+// resolveDeclaredVirtual resolves the method named by the CP methodref. It looks in
+// the method table, then the class and its superclasses, then the interfaces
+// (a class can inherit default methods without overriding them).
+// On success ok is true. On failure the NoSuchMethodError has already been thrown,
+// rc holds the interpreter return code, and ok is false.
+func resolveDeclaredVirtual(fr *frames.Frame, CP *classloader.CPool, CPslot int) (
+	mt classloader.MTentry, className, methodName, methodType string, rc int, ok bool) {
+
+	var fqn string
+	className, methodName, methodType, fqn = classloader.GetMethInfoFromCPmethref(CP, CPslot)
+
+	mt = classloader.GetMtableEntry(className + "." + methodName + methodType)
+	if mt.Meth == nil { // not in the method table: search the class and its superclasses
+		var err error
+		mt, err = classloader.FetchMethodAndCP(className, methodName, methodType)
+		if err != nil {
+			mt = classloader.MTentry{} // an error means not found, whatever was returned
+		}
+	}
+
+	if mt.Meth == nil { // not in the superclasses: check the interfaces
+		klass := classloader.MethAreaFetch(className)
+		if klass != nil {
+			for _, ifIdx := range klass.Data.Interfaces {
+				interfaceName := *stringPool.GetStringPointer(uint32(ifIdx))
+				found, err := locateInterfaceMeth(klass, fr, className, interfaceName, methodName, methodType)
+				if err == nil && found.Meth != nil {
+					mt = found
+					break
+				}
+			}
+		}
+	}
+
+	// One not-found check for every path. Previously it ran only when the class had
+	// interfaces, so a class without any returned ERROR_OCCURRED with no exception.
+	if mt.Meth == nil {
+		// JVMS 5.4.3.3: a failed method resolution is a NoSuchMethodError.
+		rc = throwInvokeVirtual(fr, excNames.NoSuchMethodError, "INVOKEVIRTUAL: Class method not found: "+fqn)
+		return mt, className, methodName, methodType, rc, false
+	}
+	return mt, className, methodName, methodType, 0, true
 }
 
 // resolveReceiverMethod is the slow path of step 2. It runs once per

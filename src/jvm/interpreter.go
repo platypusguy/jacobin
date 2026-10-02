@@ -231,7 +231,7 @@ var DispatchTable = [256]BytecodeFunc{
 	doGetfield,        // GETFIELD        0xB4
 	doPutfield,        // PUTFIELD        0xB5
 	doInvokeVirtual,   // INVOKEVIRTUAL   0xB6
-	doInvokespecial,   // INVOKESPECIAL   0xB7
+	doInvokeSpecial,   // INVOKESPECIAL   0xB7
 	nil,               // INVOKESTATIC    0xB8 initialized in initializeDispatchTable()
 	doInvokeinterface, // INVOKEINTERFACE 0xB9
 	doInvokedynamic,   // INVOKEDYNAMIC   0xBA
@@ -313,7 +313,7 @@ var DispatchTable = [256]BytecodeFunc{
 func initializeDispatchTable() {
 	DispatchTable[opcodes.GETSTATIC] = doGetStatic
 	DispatchTable[opcodes.PUTSTATIC] = doPutStatic
-	DispatchTable[opcodes.INVOKESTATIC] = doInvokestatic
+	DispatchTable[opcodes.INVOKESTATIC] = doInvokeStatic
 	DispatchTable[opcodes.NEW] = doNew
 }
 
@@ -337,7 +337,7 @@ const ( // result values from bytecode interpretation
 // RunJavaThread() loop goes to the top of the frame stack and calls
 // interpret() on the frame found there, if any.
 func interpret(fs *list.List) {
-	const maxBytecode = byte(len(DispatchTable) - 1)
+	// UNUSED: const maxBytecode = byte(len(DispatchTable) - 1)
 	if DispatchTable[opcodes.NEW] == nil { // test whether the table is fully initialized
 		initializeDispatchTable()
 	}
@@ -2832,112 +2832,8 @@ func invokeVirtualGfunction(fr *frames.Frame,
 	return 3 // 2 for CP slot + 1 for next bytecode
 }
 
-// OxB7 INVOKESPECIAL
-func doInvokespecial(fr *frames.Frame, _ int64) int {
-	var className, methodName, methodType, fqn string
-
-	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	CP := fr.CP.(*classloader.CPool)
-
-	// This CP entry can be concurrently written (as a CachedMeth) by
-	// doInvokevirtual/doInvokestatic running in other threads that share
-	// this same class's constant pool, so the read must be lock-protected
-	// to avoid a data race that can yield a torn/incorrect CpEntry.
-	CP.Mutex.RLock()
-	entry := CP.CpIndex[CPslot]
-	CP.Mutex.RUnlock()
-	if entry.Type == classloader.Interface {
-		className, methodName, methodType =
-			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
-	} else {
-		className, methodName, methodType, fqn = // fqn is the fully qualified name of the method
-			classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	}
-
-	mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
-	if err != nil || mtEntry.Meth == nil {
-		// TODO: search the classpath and retry
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := "INVOKESPECIAL: Class method not found: " + fqn
-		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
-		}
-		return RESUME_HERE // caught
-	}
-
-	if mtEntry.MType == 'G' { // it's a golang method
-		// get the parameters/args, if any, off the stack
-		gmethData := mtEntry.Meth.(ghelpers.GMeth)
-		paramCount := gmethData.ParamSlots
-		var params []any
-		for i := 0; i < paramCount; i++ {
-			// This is not problematic because the params count in the gfunction definition
-			// counts slots, rather than items, so doubles and longs are listed as two slots.
-			params = append(params, pop(fr))
-		}
-
-		// now get the objectRef (the object whose method we're invoking)
-		objRef := pop(fr).(*object.Object)
-		params = append(params, objRef)
-
-		if globals.TraceInst {
-			infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
-			trace.Trace(infoMsg)
-		}
-
-		ret := gfunction.RunGfunction(
-			mtEntry, fr.FrameStack, &params, true, globals.TraceInst)
-		if ret != nil {
-			switch ret.(type) {
-			case error:
-				if globals.GetGlobalRef().JacobinName == "test" {
-					return ERROR_OCCURRED
-				}
-				if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-					return RESUME_HERE // resume at the present PC, which points to the exception code
-				}
-			default: // if it's not an error, then it's a legitimate return value, which we simply push
-				push(fr, ret)
-			}
-			// any exception will already have been handled.
-		}
-		return 3 // 2 for CP slot + 1 for next bytecode
-	}
-
-	if mtEntry.MType == 'J' {
-		// The arguments are correctly handled in createAndInitNewFrame()
-		m := mtEntry.Meth.(classloader.JmEntry)
-		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
-			// Native code
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKESPECIAL: Native method requested: " + fqn
-			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-		fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, fr)
-		if err != nil {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKESPECIAL: Error creating frame in: " + fqn
-			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-
-		fr.PC += 3                    // point to the next bytecode for when we return from the invoked method.
-		fr.FrameStack.PushFront(fram) // push the new frame
-		return 0
-	}
-	return ERROR_OCCURRED // in theory, unreachable
-}
-
 // 0xB8 INVOKESTATIC
-func doInvokestatic(fr *frames.Frame, _ int64) int {
+func doInvokeStatic(fr *frames.Frame, _ int64) int {
 	var className, methodName, methodType, fqn string
 	var mtEntry classloader.MTentry
 	var shouldCacheMeth bool
