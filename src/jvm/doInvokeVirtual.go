@@ -142,6 +142,13 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	return 0
 }
 
+// ResetDispatchCaches drops every memoized dispatch result. It must be called whenever
+// the string pool or the method area is re-initialized (e.g., in test setup).
+func ResetDispatchCaches() {
+	dispatchCache.Clear()
+	argSlotsCache.Clear()
+}
+
 // argSlots returns the number of parameters in a method descriptor, receiver
 // excluded: one per entry returned by util.ParseIncomingParamsFromMethTypeString.
 // The result is memoized so the hot path does not allocate a slice just to take len().
