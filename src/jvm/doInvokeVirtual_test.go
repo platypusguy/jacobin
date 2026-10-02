@@ -25,7 +25,7 @@ import (
 
 // helper: build a minimal CP with a single MethodRef entry pointing at
 // className.methodName.methodType, plus the surrounding ClassRef/NameAndType/UTF8 entries.
-func buildInvokeVirtualCP(className, methodName, methodType string) *classloader.CPool {
+func buildInvokeVirtualCP(t *testing.T, className, methodName, methodType string) *classloader.CPool {
 	CP := &classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
@@ -48,7 +48,11 @@ func buildInvokeVirtualCP(className, methodName, methodType string) *classloader
 	CP.Utf8Refs[0] = methodName
 	CP.Utf8Refs[1] = methodType
 
-	classloader.ResolveCPmethRefs(CP)
+	err := classloader.ResolveCPmethRefs(CP)
+	if err != nil {
+		fqn := className + "." + methodName + methodType
+		t.Fatalf("buildInvokeVirtualCP: FQN: %s, error: %v", fqn, err)
+	}
 	return CP
 }
 
@@ -115,7 +119,7 @@ func TestDoInvokeVirtual_MethodNotFound(t *testing.T) {
 	f := newFrame(opcodes.INVOKEVIRTUAL)
 	f.Meth = append(f.Meth, 0x00, 0x01)
 
-	CP := buildInvokeVirtualCP("jacobin/src/test/Object", "noSuchVirtualMethodAtAll", "()V")
+	CP := buildInvokeVirtualCP(t, "jacobin/src/test/Object", "noSuchVirtualMethodAtAll", "()V")
 	f.CP = CP
 
 	className := "jacobin/src/test/Object"
@@ -163,7 +167,7 @@ func TestDoInvokeVirtual_NativeMethod(t *testing.T) {
 	f := newFrame(opcodes.INVOKEVIRTUAL)
 	f.Meth = append(f.Meth, 0x00, 0x01)
 
-	CP := buildInvokeVirtualCP("jacobin/src/test/Object", methName, methType)
+	CP := buildInvokeVirtualCP(t, "jacobin/src/test/Object", methName, methType)
 	f.CP = CP
 
 	className := "jacobin/src/test/Object"
@@ -211,7 +215,7 @@ func TestDoInvokeVirtual_AbstractMethod(t *testing.T) {
 	f := newFrame(opcodes.INVOKEVIRTUAL)
 	f.Meth = append(f.Meth, 0x00, 0x01)
 
-	CP := buildInvokeVirtualCP("jacobin/src/test/Object", methName, methType)
+	CP := buildInvokeVirtualCP(t, "jacobin/src/test/Object", methName, methType)
 	f.CP = CP
 
 	className := "jacobin/src/test/Object"
@@ -262,7 +266,7 @@ func TestDoInvokeVirtual_SuccessfulJMethod(t *testing.T) {
 	f := newFrame(opcodes.INVOKEVIRTUAL)
 	f.Meth = append(f.Meth, 0x00, 0x01)
 
-	CP := buildInvokeVirtualCP("jacobin/src/test/Object", methName, methType)
+	CP := buildInvokeVirtualCP(t, "jacobin/src/test/Object", methName, methType)
 	f.CP = CP
 
 	className := "jacobin/src/test/Object"
@@ -314,7 +318,7 @@ func TestDoInvokeVirtual_NullObjectRef(t *testing.T) {
 	f := newFrame(opcodes.INVOKEVIRTUAL)
 	f.Meth = append(f.Meth, 0x00, 0x01)
 
-	CP := buildInvokeVirtualCP("jacobin/src/test/Object", methName, methType)
+	CP := buildInvokeVirtualCP(t, "jacobin/src/test/Object", methName, methType)
 	f.CP = CP
 
 	// push a nil reference, instead of a valid *object.Object
@@ -365,7 +369,7 @@ func TestDoInvokeVirtual_CachedMethFastPath(t *testing.T) {
 	f := newFrame(opcodes.INVOKEVIRTUAL)
 	f.Meth = append(f.Meth, 0x00, 0x01)
 
-	CP := buildInvokeVirtualCP("jacobin/src/test/Object", methName, methType)
+	CP := buildInvokeVirtualCP(t, "jacobin/src/test/Object", methName, methType)
 
 	// Pre-populate the CachedMethods slot and mark CP.CpIndex[1] as CachedMeth,
 	// simulating a previous resolution for this call site.
@@ -433,7 +437,7 @@ func TestInvokeVirtual_StaleDispatchCache_A(t *testing.T) {
 	f := newFrame(opcodes.INVOKEVIRTUAL)
 	f.Meth = append(f.Meth, 0x00, 0x01)
 
-	CP := buildInvokeVirtualCP(className, methName, methType)
+	CP := buildInvokeVirtualCP(t, className, methName, methType)
 	f.CP = CP
 
 	push(f, object.MakeEmptyObjectWithClassName(&className))
@@ -487,7 +491,7 @@ func TestInvokeVirtual_StaleDispatchCache_B(t *testing.T) {
 	buildFrame := func() *list.List {
 		f := newFrame(opcodes.INVOKEVIRTUAL)
 		f.Meth = append(f.Meth, 0x00, 0x01)
-		CP := buildInvokeVirtualCP(className, methName, methType)
+		CP := buildInvokeVirtualCP(t, className, methName, methType)
 		f.CP = CP
 		push(f, object.MakeEmptyObjectWithClassName(&className))
 		fs := frames.CreateFrameStack()
@@ -548,4 +552,3 @@ func TestArgSlots(t *testing.T) {
 		t.Errorf("Expected 2 arg slots for (II)V on cached call, got %d", n)
 	}
 }
-
