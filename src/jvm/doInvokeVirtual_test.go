@@ -548,3 +548,4 @@ func TestArgSlots(t *testing.T) {
 		t.Errorf("Expected 2 arg slots for (II)V on cached call, got %d", n)
 	}
 }
+
