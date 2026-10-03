@@ -231,10 +231,10 @@ var DispatchTable = [256]BytecodeFunc{
 	doGetfield,        // GETFIELD        0xB4
 	doPutfield,        // PUTFIELD        0xB5
 	doInvokeVirtual,   // INVOKEVIRTUAL   0xB6
-	doInvokespecial,   // INVOKESPECIAL   0xB7
+	doInvokeSpecial,   // INVOKESPECIAL   0xB7
 	nil,               // INVOKESTATIC    0xB8 initialized in initializeDispatchTable()
-	doInvokeinterface, // INVOKEINTERFACE 0xB9
-	doInvokedynamic,   // INVOKEDYNAMIC   0xBA
+	doInvokeInterface, // INVOKEINTERFACE 0xB9
+	doInvokeDynamic,   // INVOKEDYNAMIC   0xBA
 	nil,               // NEW             0xBB initialized in initializeDispatchTable()
 	doNewarray,        // NEWARRAY        0xBC
 	doAnewarray,       // ANEWARRAY       0xBD
@@ -313,7 +313,7 @@ var DispatchTable = [256]BytecodeFunc{
 func initializeDispatchTable() {
 	DispatchTable[opcodes.GETSTATIC] = doGetStatic
 	DispatchTable[opcodes.PUTSTATIC] = doPutStatic
-	DispatchTable[opcodes.INVOKESTATIC] = doInvokestatic
+	DispatchTable[opcodes.INVOKESTATIC] = doInvokeStatic
 	DispatchTable[opcodes.NEW] = doNew
 }
 
@@ -337,7 +337,7 @@ const ( // result values from bytecode interpretation
 // RunJavaThread() loop goes to the top of the frame stack and calls
 // interpret() on the frame found there, if any.
 func interpret(fs *list.List) {
-	const maxBytecode = byte(len(DispatchTable) - 1)
+	// UNUSED: const maxBytecode = byte(len(DispatchTable) - 1)
 	if DispatchTable[opcodes.NEW] == nil { // test whether the table is fully initialized
 		initializeDispatchTable()
 	}
@@ -2666,206 +2666,6 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 	return 3 // 2 for CPslot + 1 for next bytecode
 }
 
-// 0xB6 INVOKEVIRTUAL
-func doInvokeVirtual(fr *frames.Frame, _ int64) int {
-	var className, methodName, methodType, fqn string
-	var mtEntry classloader.MTentry
-	var shouldCacheMeth bool
-	var err error
-	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	CP := fr.CP.(*classloader.CPool)                                // codeCheck.go ensures that CPslot is a valid index to a methodRef
-	CP.Mutex.RLock()
-	entry := CP.CpIndex[CPslot]
-	CP.Mutex.RUnlock()
-
-	shouldCacheMeth = false
-	if globals.CacheMeths { // this is the optimized and default path
-		if entry.Type == classloader.CachedMeth {
-			className, methodName, methodType, fqn = classloader.GetMethInfoFromCPmethref(CP, CPslot)
-			CP.Mutex.RLock()
-			mtEntry = CP.CachedMethods[entry.Slot]
-			CP.Mutex.RUnlock()
-			goto processMTentry
-		} else { // it's our first time running this method, mark the method for caching
-			shouldCacheMeth = true // and proceed with standard method lookup
-		}
-	}
-
-	// Get the method table entry for the FQN indicated in CP.
-	className, methodName, methodType, fqn = classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	mtEntry = classloader.GetMtableEntry(className + "." + methodName + methodType)
-	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
-		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
-	}
-
-	// Not found after a class-superclass search. Check the interfaces.
-	if err != nil || mtEntry.Meth == nil { // the method is not in the superclasses, so check interfaces.
-		// When a class implements an interface and inherits default methods (or doesn't override them),
-		// the compiler generates INVOKEVIRTUAL
-		klass := classloader.MethAreaFetch(className)
-		if klass != nil && len(klass.Data.Interfaces) > 0 {
-			for i := 0; i < len(klass.Data.Interfaces); i++ {
-				index := uint32(klass.Data.Interfaces[i])
-				interfaceName := *stringPool.GetStringPointer(index)
-				mtEntry, err = locateInterfaceMeth(klass, fr, className, interfaceName, methodName, methodType)
-				if mtEntry.Meth != nil {
-					// found a match.
-					break
-				}
-			} // end of search of interfaces if method has any
-
-			// Any matches in the interfaces?
-			if err != nil || mtEntry.Meth == nil {
-				// method was not found in interfaces, so throw an exception
-				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKEVIRTUAL: Class method not found: " + fqn
-				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
-				if status != exceptions.Caught {
-					return ERROR_OCCURRED // applies only if in test
-				}
-				return RESUME_HERE // caught
-			}
-		}
-	}
-
-	// if we got here, we have a method to call in mtEntry.Meth
-
-processMTentry:
-	// if this is the first time calling this method and we're using cached methods,
-	// then cache this mtEntry
-	if (globals.CacheMeths && shouldCacheMeth) || !globals.CacheMeths {
-		mtEntry.MethClass = stringPool.GetStringIndex(&className)
-		mtEntry.MethName = stringPool.GetStringIndex(&methodName)
-		mtEntry.MethType = stringPool.GetStringIndex(&methodType)
-		if globals.CacheMeths && shouldCacheMeth {
-			CP.Mutex.Lock()
-			if CP.CpIndex[CPslot].Type != classloader.CachedMeth { // someone else may have won the race
-				CP.CachedMethods = append(CP.CachedMethods, mtEntry)
-				CP.CpIndex[CPslot] = classloader.CpEntry{
-					Type: classloader.CachedMeth,
-					Slot: uint16(len(CP.CachedMethods) - 1),
-				}
-			}
-			CP.Mutex.Unlock()
-			shouldCacheMeth = false
-		}
-	}
-
-	if globals.CacheMeths {
-		className = *stringPool.GetStringPointer(mtEntry.MethClass)
-		methodName = *stringPool.GetStringPointer(mtEntry.MethName)
-		methodType = *stringPool.GetStringPointer(mtEntry.MethType)
-	}
-
-	// if we have a gFunction (that is, one implemented in golang, rather than Java),
-	// then follow the JVM spec and push the objectRef and the parameters to the function
-	// as parameters. Consult:
-	// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-6.html#jvms-6.5.invokevirtual
-
-	if mtEntry.MType == 'G' { // so we have a golang function
-		return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
-	}
-
-	// 	To resolve a J method (i.e., a Java method) for invokevirtual:
-	//  - If it's a native Java function (written in C/C++), Jacobin does not support it.
-	//  - Get the reference object from the stack.
-	// 	- Try searching the reference object class and its superclass chain.
-	// 	- If the method is not found, try the reference object class's interface hierarchy (JVM spec 5.4.3.4).
-	if mtEntry.MType == 'J' { // it's a Java function
-		m := mtEntry.Meth.(classloader.JmEntry)
-		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
-			// Native code
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Native method requested: " + fqn
-			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-
-		// The run-time class object is on the stack, below the method arguments.
-		// To locate it, get the number of arguments for the method.
-		nslots := len(util.ParseIncomingParamsFromMethTypeString(methodType))
-
-		// Extract the reference object from the stack.
-		refObj, ok := fr.OpStack[fr.TOS-nslots].(*object.Object)
-		if !ok {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Stack reference object is nil"
-			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-
-		// Get the reference object class name.
-		clNameIdx := refObj.KlassName
-		className = *(stringPool.GetStringPointer(clNameIdx))
-
-		// === Method resolution ===
-		// First, try superclass resolution.
-		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
-		if err != nil || mtEntry.Meth == nil {
-			// That did not succeed. So, try for an interface default method.
-			var ret any
-			ret, mtEntry = searchForDefaultInterfaceFunction(className, methodName, methodType)
-			if ret == nil {
-				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
-				status := exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, fr)
-				if status != exceptions.Caught {
-					return ERROR_OCCURRED // applies only if in test
-				}
-				return RESUME_HERE // caught
-			}
-
-			// Found an interface default method.
-			className = ret.(string)
-		}
-
-		// Resolve to a G function?
-		if mtEntry.MType == 'G' {
-			return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
-		}
-
-		// It's a J function. Get its JmEntry.
-		m = mtEntry.Meth.(classloader.JmEntry)
-		fqn = className + "." + methodName + methodType
-
-		// If an empty code segment, that's an error. It's probably abstract or an interface.
-		// In this case, flag it as an AbstractMethodError.
-		if len(m.Code) == 0 {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: J class method code is empty: " + fqn
-			status := exceptions.ThrowEx(excNames.AbstractMethodError, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-
-		// Create the next frame to execute.
-		nextFrame, err := createAndInitNewFrame(
-			className, methodName, methodType, &m, true, fr)
-		if err != nil {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Error creating frame in: " + fqn
-			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-
-		fr.PC += 3                         // 2 for PC slot, move to next bytecode before exiting
-		fr.FrameStack.PushFront(nextFrame) // push the new frame, it'll be run by the next interpreter loop
-		return 0
-	}
-	return ERROR_OCCURRED // in theory, unreachable
-}
-
 // searchForDefaultInterfaceFunction searches for a default method in all interfaces
 // implemented by className (and their superinterfaces), following JVM rules.
 //
@@ -2883,7 +2683,7 @@ processMTentry:
 // Note: this function is similar in many aspects to locateInterfaceMeth() in run.go.
 // The two functions might eventually be integrated into one.
 func searchForDefaultInterfaceFunction(
-	className, methodName, methodType string,
+	fr *frames.Frame, className, methodName, methodType string,
 ) (any, classloader.MTentry) {
 
 	var mtEntry classloader.MTentry
@@ -2895,12 +2695,12 @@ func searchForDefaultInterfaceFunction(
 		return nil, mtEntry
 	}
 
-	// Track visited interfaces to prevent infinite loops
-	visited := make(map[string]bool)
-
-	// Recursive helper to search an interface and its superinterfaces
-	var searchInterface func(intfName string) (string, classloader.MTentry)
-	searchInterface = func(intfName string) (string, classloader.MTentry) {
+	// Recursive helper to search an interface and its superinterfaces.
+	// visited is passed in fresh for every top-level search so that
+	// interfaces shared by different branches (diamond inheritance of
+	// default methods) are not incorrectly skipped.
+	var searchInterface func(intfName string, visited map[string]bool) (string, classloader.MTentry)
+	searchInterface = func(intfName string, visited map[string]bool) (string, classloader.MTentry) {
 		if visited[intfName] {
 			return "", classloader.MTentry{}
 		}
@@ -2925,7 +2725,7 @@ func searchForDefaultInterfaceFunction(
 		// Step 3b: Recurse into superinterfaces
 		for _, idx := range intfClass.Data.Interfaces {
 			superIntfName := *stringPool.GetStringPointer(uint32(idx))
-			if resName, resMT := searchInterface(superIntfName); resName != "" {
+			if resName, resMT := searchInterface(superIntfName, visited); resName != "" {
 				return resName, resMT
 			}
 		}
@@ -2942,7 +2742,7 @@ func searchForDefaultInterfaceFunction(
 	// Search all interfaces directly implemented by this class
 	for _, idx := range klass.Data.Interfaces {
 		intfName := *stringPool.GetStringPointer(uint32(idx))
-		if resName, resMT := searchInterface(intfName); resName != "" {
+		if resName, resMT := searchInterface(intfName, make(map[string]bool)); resName != "" {
 			candidates = append(candidates, struct {
 				intf string
 				mt   classloader.MTentry
@@ -2950,18 +2750,42 @@ func searchForDefaultInterfaceFunction(
 		}
 	}
 
+	// De-duplicate candidates by the interface that actually declares the
+	// default method. In diamond-inheritance cases (e.g. a class implements
+	// two interfaces that both extend a common super-interface and neither
+	// overrides the default method), the search above will find the *same*
+	// declaring interface via more than one directly-implemented interface.
+	// That is not a genuine conflict per JVMS 5.4.3.3 -- only distinct
+	// declaring interfaces providing competing default methods are ambiguous.
+	if len(candidates) > 1 {
+		seen := make(map[string]bool, len(candidates))
+		deduped := candidates[:0:0]
+		for _, c := range candidates {
+			if !seen[c.intf] {
+				seen[c.intf] = true
+				deduped = append(deduped, c)
+			}
+		}
+		candidates = deduped
+	}
+
 	// JVM rule: handle multiple candidates
 	if len(candidates) > 1 {
 		// Conflict detected: multiple default methods with same signature
 		errMsg := "INVOKEVIRTUAL: Ambiguous default method for " + className + "." + methodName + methodType
-		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, nil)
-		if status != exceptions.Caught {
-			// Only relevant in test; return empty
-			return nil, classloader.MTentry{}
+		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, fr)
+		// The exception has already been thrown here (and either caught, in which
+		// case execution should resume in the catch block, or it was uncaught, in
+		// which case the interpreter loop must stop). Either way, the caller must
+		// not attempt any further resolution or throw a second exception for the
+		// same bytecode, so we signal "already handled" via defaultMethodException.
+		if status == exceptions.Caught {
+			return defaultMethodException(RESUME_HERE), classloader.MTentry{}
 		}
+		return defaultMethodException(ERROR_OCCURRED), classloader.MTentry{}
 	}
 
-	// Return the most-specific default method (first found)
+	// Return the default method (unambiguous single candidate)
 	if len(candidates) == 1 {
 		return candidates[0].intf, candidates[0].mt
 	}
@@ -2970,174 +2794,14 @@ func searchForDefaultInterfaceFunction(
 	return nil, mtEntry
 }
 
-// Execute an INVOKEVIRTUAL G function.
-func invokeVirtualGfunction(fr *frames.Frame,
-	mtEntry classloader.MTentry,
-	className, methodName, methodType string) int {
-
-	// Parameter array for G function.
-	var params []any
-
-	// Append the parameters/args off the stack to params.
-	gmethData := mtEntry.Meth.(ghelpers.GMeth)
-	paramCount := gmethData.ParamSlots
-	for i := 0; i < paramCount; i++ {
-		params = append(params, pop(fr))
-	}
-
-	// now get the objectRef (the object whose method we're invoking)
-	popped := pop(fr)
-	params = append(params, popped)
-
-	// DYNAMIC DISPATCH for G-functions:
-	// Check if the object's actual class has an override for this G-function.
-	if objRef, ok := popped.(*object.Object); ok {
-		objClassName := *(stringPool.GetStringPointer(objRef.KlassName))
-		if objClassName != className {
-			// Try to find a more specific G-function registration.
-			specificFQN := objClassName + "." + methodName + methodType
-			if specificGmeth, ok := ghelpers.MethodSignatures[specificFQN]; ok {
-				// We found a more specific G-function. Use it instead.
-				mtEntry = classloader.MTentry{
-					Meth:  specificGmeth,
-					MType: 'G',
-				}
-				className = objClassName
-			}
-		}
-	}
-
-	if globals.TraceInst {
-		infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
-		trace.Trace(infoMsg)
-	}
-
-	// Execute the G function.
-	ret := gfunction.RunGfunction(
-		mtEntry, fr.FrameStack, &params, true, globals.TraceInst)
-	if ret != nil {
-		switch ret.(type) {
-		case error: // only occurs in testing
-			if globals.GetGlobalRef().JacobinName == "test" {
-				return ERROR_OCCURRED
-			}
-			if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-				return RESUME_HERE // caught
-			}
-		default: // if it's not an error, then it's a legitimate return value, which we simply push
-			push(fr, ret)
-		}
-		// any exception will already have been handled.
-	}
-	return 3 // 2 for CP slot + 1 for next bytecode
-}
-
-// OxB7 INVOKESPECIAL
-func doInvokespecial(fr *frames.Frame, _ int64) int {
-	var className, methodName, methodType, fqn string
-
-	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	CP := fr.CP.(*classloader.CPool)
-
-	// This CP entry can be concurrently written (as a CachedMeth) by
-	// doInvokevirtual/doInvokestatic running in other threads that share
-	// this same class's constant pool, so the read must be lock-protected
-	// to avoid a data race that can yield a torn/incorrect CpEntry.
-	CP.Mutex.RLock()
-	entry := CP.CpIndex[CPslot]
-	CP.Mutex.RUnlock()
-	if entry.Type == classloader.Interface {
-		className, methodName, methodType =
-			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
-	} else {
-		className, methodName, methodType, fqn = // fqn is the fully qualified name of the method
-			classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	}
-
-	mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
-	if err != nil || mtEntry.Meth == nil {
-		// TODO: search the classpath and retry
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := "INVOKESPECIAL: Class method not found: " + fqn
-		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
-		}
-		return RESUME_HERE // caught
-	}
-
-	if mtEntry.MType == 'G' { // it's a golang method
-		// get the parameters/args, if any, off the stack
-		gmethData := mtEntry.Meth.(ghelpers.GMeth)
-		paramCount := gmethData.ParamSlots
-		var params []any
-		for i := 0; i < paramCount; i++ {
-			// This is not problematic because the params count in the gfunction definition
-			// counts slots, rather than items, so doubles and longs are listed as two slots.
-			params = append(params, pop(fr))
-		}
-
-		// now get the objectRef (the object whose method we're invoking)
-		objRef := pop(fr).(*object.Object)
-		params = append(params, objRef)
-
-		if globals.TraceInst {
-			infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
-			trace.Trace(infoMsg)
-		}
-
-		ret := gfunction.RunGfunction(
-			mtEntry, fr.FrameStack, &params, true, globals.TraceInst)
-		if ret != nil {
-			switch ret.(type) {
-			case error:
-				if globals.GetGlobalRef().JacobinName == "test" {
-					return ERROR_OCCURRED
-				}
-				if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-					return RESUME_HERE // resume at the present PC, which points to the exception code
-				}
-			default: // if it's not an error, then it's a legitimate return value, which we simply push
-				push(fr, ret)
-			}
-			// any exception will already have been handled.
-		}
-		return 3 // 2 for CP slot + 1 for next bytecode
-	}
-
-	if mtEntry.MType == 'J' {
-		// The arguments are correctly handled in createAndInitNewFrame()
-		m := mtEntry.Meth.(classloader.JmEntry)
-		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
-			// Native code
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKESPECIAL: Native method requested: " + fqn
-			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-		fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, fr)
-		if err != nil {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKESPECIAL: Error creating frame in: " + fqn
-			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-
-		fr.PC += 3                    // point to the next bytecode for when we return from the invoked method.
-		fr.FrameStack.PushFront(fram) // push the new frame
-		return 0
-	}
-	return ERROR_OCCURRED // in theory, unreachable
-}
+// defaultMethodException wraps an interpreter return code (RESUME_HERE or
+// ERROR_OCCURRED) so that searchForDefaultInterfaceFunction's caller can
+// distinguish "an exception was already thrown, just return this code" from
+// "no default method was found, go ahead and throw NoSuchMethodError".
+type defaultMethodException int
 
 // 0xB8 INVOKESTATIC
-func doInvokestatic(fr *frames.Frame, _ int64) int {
+func doInvokeStatic(fr *frames.Frame, _ int64) int {
 	var className, methodName, methodType, fqn string
 	var mtEntry classloader.MTentry
 	var shouldCacheMeth bool
@@ -3177,7 +2841,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		// TODO: search the classpath and retry
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := "INVOKESTATIC: Class method not found: " + fqn
-		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
+		status := exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, fr)
 		if status != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
 		}
@@ -3307,7 +2971,7 @@ processMTentry: // at this point, we have the mtEntry
 }
 
 // 0xB9 INVOKEINTERFACE
-func doInvokeinterface(fr *frames.Frame, _ int64) int {
+func doInvokeInterface(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	count := fr.Meth[fr.PC+3]
 	zeroByte := fr.Meth[fr.PC+4]
@@ -3478,7 +3142,7 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 }
 
 // 0xBA INVOKEDYNAMIC
-func doInvokedynamic(fr *frames.Frame, _ int64) int {
+func doInvokeDynamic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 
 	// the components of the InvokeDynamic entry are validated by codeCheck prior to getting here
