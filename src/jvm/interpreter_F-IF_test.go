@@ -1011,6 +1011,16 @@ func TestGetStaticInt(t *testing.T) {
 	_ = statics.AddStatic("TestClass.staticField",
 		statics.Static{Type: types.Int, Value: int64(42)})
 
+	// Register a minimal class mirror so InitializeClass (called by
+	// doGetStatic per JVMS 5.5) can load/initialize "TestClass" successfully.
+	objectName := types.ObjectClassName
+	classloader.MethAreaInsert("TestClass", &classloader.Klass{
+		Data: &classloader.ClData{
+			Name:            "TestClass",
+			SuperclassIndex: stringPool.GetStringIndex(&objectName),
+		},
+	})
+
 	// Push the frame onto the frame stack
 
 	fs := frames.CreateFrameStack()
@@ -1084,6 +1094,18 @@ func TestGetStaticBoolNormalization(t *testing.T) {
 func TestGetStaticBytePromotion(t *testing.T) {
 	globals.InitGlobals("test")
 
+	// Register a minimal class mirror so InitializeClass (called by
+	// doGetStatic per JVMS 5.5) can load/initialize "TestClass" successfully.
+	classloader.InitMethodArea()
+	objectName := types.ObjectClassName
+	classloader.MethAreaInsert("TestClass", &classloader.Klass{
+		Data: &classloader.ClData{
+			Name:            "TestClass",
+			SuperclassIndex: stringPool.GetStringIndex(&objectName),
+		},
+	})
+
+
 	f := newFrame(opcodes.GETSTATIC)
 	f.Meth = append(f.Meth, 0x00, 0x01)
 
@@ -1117,6 +1139,18 @@ func TestGetStaticBytePromotion(t *testing.T) {
 // GETSTATIC: default path in type switch (e.g., already int64 value)
 func TestGetStaticDefaultPathInt64(t *testing.T) {
 	globals.InitGlobals("test")
+	
+	// Register a minimal class mirror so InitializeClass (called by
+	// doGetStatic per JVMS 5.5) can load/initialize "TestClass" successfully.
+	classloader.InitMethodArea()
+	objectName := types.ObjectClassName
+	classloader.MethAreaInsert("TestClass", &classloader.Klass{
+		Data: &classloader.ClData{
+			Name:            "TestClass",
+			SuperclassIndex: stringPool.GetStringIndex(&objectName),
+		},
+	})
+
 
 	f := newFrame(opcodes.GETSTATIC)
 	f.Meth = append(f.Meth, 0x00, 0x01)
