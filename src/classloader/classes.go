@@ -386,7 +386,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 				MethName:  stringPool.GetStringIndex(&methName),
 				MethType:  stringPool.GetStringIndex(&methType),
 			}, nil
-		}
+		} // impossible for it to be != nil and a gfunction as all gfunctions are pre-loaded
 
 		// Get the method area of the class.
 		k = MethAreaFetch(className)
