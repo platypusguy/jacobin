@@ -40,9 +40,10 @@ func doInvokeStatic(fr *frames.Frame, _ int64) int {
 			mtEntry = CP.CachedMethods[entry.Slot]
 			CP.Mutex.RUnlock()
 			goto processMTentry // don't check if ClInit has been run b/c this must be the 2nd (or later) run of this method
-		} else { // it's our first time running this method, mark the method for caching
-			shouldCacheMeth = true // and proceed with standard method lookup
 		}
+		// it's our first time running this method, mark the method for caching
+		shouldCacheMeth = true // and proceed with standard method lookup
+
 	}
 
 	if entry.Type == classloader.Interface {
@@ -64,12 +65,12 @@ func doInvokeStatic(fr *frames.Frame, _ int64) int {
 			return ERROR_OCCURRED // applies only if in test
 		}
 		return RESUME_HERE // caught
-	} else {
-		if mtEntry.MethClass == 0 { // true in the case of a Gfunction
-			mtEntry.MethClass = stringPool.GetStringIndex(&className)
-			mtEntry.MethName = stringPool.GetStringIndex(&methodName)
-			mtEntry.MethType = stringPool.GetStringIndex(&methodType)
-		}
+	}
+
+	if mtEntry.MethClass == 0 { // true in the case of a Gfunction
+		mtEntry.MethClass = stringPool.GetStringIndex(&className)
+		mtEntry.MethName = stringPool.GetStringIndex(&methodName)
+		mtEntry.MethType = stringPool.GetStringIndex(&methodType)
 	}
 
 	// before we can run the method, we need to either instantiate the class and/or
@@ -103,7 +104,7 @@ processMTentry: // at this point, we have the mtEntry
 		methodType = *stringPool.GetStringPointer(mtEntry.MethType)
 	}
 
-	// if this is the first time calling this method and we're using cached methods,
+	// if this is the first time calling this method, and we're using cached methods,
 	// then cache this mtEntry
 	if globals.CacheMeths && shouldCacheMeth {
 		CP.Mutex.Lock() // update the CP with the cached method
@@ -117,6 +118,7 @@ processMTentry: // at this point, we have the mtEntry
 		shouldCacheMeth = false
 	}
 
+	// MType should be 'G' or 'J'.
 	if mtEntry.MType == 'G' {
 		gmethData := mtEntry.Meth.(ghelpers.GMeth)
 		paramCount := gmethData.ParamSlots
@@ -156,7 +158,9 @@ processMTentry: // at this point, we have the mtEntry
 		}
 		return 3
 		// any exception will already have been handled.
-	} else if mtEntry.MType == 'J' {
+	}
+
+	if mtEntry.MType == 'J' {
 		m := mtEntry.Meth.(classloader.JmEntry)
 		if m.AccessFlags&classloader.ACC_STATIC == 0 {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -187,7 +191,7 @@ processMTentry: // at this point, we have the mtEntry
 			return RESUME_HERE // caught
 		}
 
-		fram, err := createAndInitNewFrame(
+		frame, err := createAndInitNewFrame(
 			className, methodName, methodType, &m, false, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -201,8 +205,10 @@ processMTentry: // at this point, we have the mtEntry
 		}
 
 		fr.PC += 3                    // 2 == initial PC advance in this bytecode + 1 for next bytecode
-		fr.FrameStack.PushFront(fram) // push the new frame
+		fr.FrameStack.PushFront(frame) // push the new frame
 		return 0
 	}
-	return ERROR_OCCURRED // in theory, unreachable code
+
+	// Invalid MType. In theory, the following is unreachable code.
+	return ERROR_OCCURRED
 }
