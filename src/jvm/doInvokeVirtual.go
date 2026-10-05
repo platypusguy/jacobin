@@ -96,13 +96,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			// Any matches in the interfaces?
 			if err != nil || mtEntry.Meth == nil {
 				// method was not found in interfaces, so throw an exception
-				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKEVIRTUAL: Class method not found: " + fqn
-				status := exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, fr)
-				if status != exceptions.Caught {
-					return ERROR_OCCURRED // applies only if in test
-				}
-				return RESUME_HERE // caught
+				return throwInvokevirtualException(fr, excNames.NoSuchMethodError, "Class method not found: "+fqn)
 			}
 		}
 	}
@@ -143,7 +137,7 @@ processMTentry:
 	// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-6.html#jvms-6.5.invokevirtual
 
 	if mtEntry.MType == 'G' { // so we have a golang function
-		return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
+		return invokevirtualGfunction(fr, mtEntry, className, methodName, methodType)
 	}
 
 	// 	To resolve a J method (i.e., a Java method) for invokevirtual:
@@ -154,15 +148,9 @@ processMTentry:
 	//  - If still not found, use the present mtEntry.
 	if mtEntry.MType == 'J' { // it's a Java function
 		m := mtEntry.Meth.(classloader.JmEntry)
-		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
-			// Native code
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Native method requested: " + fqn
-			status := exceptions.ThrowEx(excNames.UnsatisfiedLinkError, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
+		if m.AccessFlags&classloader.ACC_NATIVE > 0 { // it's native code
+			return throwInvokevirtualException(fr, excNames.UnsatisfiedLinkError,
+				"Native method requested: "+fqn)
 		}
 
 		// The run-time class object is on the stack, below the method arguments.
@@ -172,24 +160,14 @@ processMTentry:
 		// Extract the reference object from the stack.
 		refObjSlot := fr.TOS - nslots
 		if refObjSlot < 0 || refObjSlot >= len(fr.OpStack) {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Operand stack underflow locating reference object"
-			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
+			return throwInvokevirtualException(fr, excNames.NullPointerException,
+				"Operand stack underflow locating reference object")
 		}
 
 		refObj, ok := fr.OpStack[refObjSlot].(*object.Object)
 		if !ok {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Stack reference object is nil"
-			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
+			return throwInvokevirtualException(fr, excNames.ClassCastException,
+				"Stack reference object is nil")
 		}
 
 		// Get the reference object class name.
@@ -210,13 +188,8 @@ processMTentry:
 				return int(code)
 			}
 			if ret == nil {
-				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
-				status := exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, fr)
-				if status != exceptions.Caught {
-					return ERROR_OCCURRED // applies only if in test
-				}
-				return RESUME_HERE // caught
+				return throwInvokevirtualException(fr, excNames.NoSuchMethodError,
+					"Class method not found: "+fqn)
 			}
 
 			// Found an interface default method.
@@ -225,7 +198,7 @@ processMTentry:
 
 		// Resolve to a G function?
 		if mtEntry.MType == 'G' {
-			return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
+			return invokevirtualGfunction(fr, mtEntry, className, methodName, methodType)
 		}
 
 		// It's a J function. Get its JmEntry.
@@ -235,26 +208,16 @@ processMTentry:
 		// If an empty code segment, that's an error. It's probably abstract or an interface.
 		// In this case, flag it as an AbstractMethodError.
 		if len(m.Code) == 0 {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: J class method code is empty: " + fqn
-			status := exceptions.ThrowEx(excNames.AbstractMethodError, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
+			return throwInvokevirtualException(fr, excNames.AbstractMethodError,
+				"Empty code segment: "+fqn)
 		}
 
 		// Create the next frame to execute.
 		nextFrame, err := createAndInitNewFrame(
 			className, methodName, methodType, &m, true, fr)
 		if err != nil {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Error creating frame in: " + fqn
-			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
+			return throwInvokevirtualException(fr, excNames.InvalidStackFrameException,
+				"Error creating frame in: "+fqn)
 		}
 
 		fr.PC += 3                         // 2 for PC slot, move to next bytecode before exiting
@@ -264,8 +227,8 @@ processMTentry:
 	return ERROR_OCCURRED // in theory, unreachable
 }
 
-// Execute an INVOKEVIRTUAL G function.
-func invokeVirtualGfunction(fr *frames.Frame,
+// invoke a G function.
+func invokevirtualGfunction(fr *frames.Frame,
 	mtEntry classloader.MTentry,
 	className, methodName, methodType string) int {
 
@@ -324,4 +287,15 @@ func invokeVirtualGfunction(fr *frames.Frame,
 		// any exception will already have been handled.
 	}
 	return 3 // 2 for CP slot + 1 for next bytecode
+}
+
+// throwInvokevirtualException records the Go stack, throws excType with msg in frame fr,
+// and returns the interpreter return code: RESUME_HERE if a Java handler caught
+// the exception, otherwise ERROR_OCCURRED (the uncaught case applies only in tests).
+func throwInvokevirtualException(fr *frames.Frame, excType int, msg string) int {
+	globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+	if exceptions.ThrowEx(excType, "INVOKEVIRTUAL: "+msg, fr) != exceptions.Caught {
+		return ERROR_OCCURRED // applies only if in test
+	}
+	return RESUME_HERE // caught
 }

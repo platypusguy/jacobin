@@ -204,7 +204,7 @@ func TestDoInvokeVirtual_AbstractMethod(t *testing.T) {
 	os.Stderr = normalStderr
 
 	errMsg := string(msg)
-	if !strings.Contains(errMsg, "INVOKEVIRTUAL: J class method code is empty") {
+	if !strings.Contains(errMsg, "INVOKEVIRTUAL: Empty code segment") {
 		t.Errorf("Expected AbstractMethodError, got: %s", errMsg)
 	}
 }
