@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"fmt"
+	"jacobin/src/excNames"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -534,8 +535,10 @@ func ResolveStaticArgument(cp *CPool, index int, fr *frames.Frame) (*object.Obje
 	case IS_FLOAT64:
 		// TODO: box primitives (float64 -> java.lang.Float or Double)
 		return nil, fmt.Errorf("ResolveStaticArgument: IS_FLOAT64 not implemented")
-	case IS_STRUCT_ADDR:
-		return CPe.AddrVal, nil
+	case IS_STRUCT_ADDR: // <<< is this ever used?
+		globals.GetGlobalRef().FuncThrowException(excNames.InternalError, "IS_STRUCT_ADDR occurred in ResolveStaticArgument in mhResolution.go")
+		return nil, fmt.Errorf("ResolveStaticArgument: IS_STRUCT_ADDR not implemented")
+		// return CPe.AddrVal, nil
 	case IS_STRING_ADDR:
 		mutf8 := util.DecodeModifiedUTF8([]byte(*CPe.StringVal))
 		return object.StringObjectFromGoString(string(mutf8)), nil
