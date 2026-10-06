@@ -8,7 +8,6 @@ package classloader
 
 import (
 	"fmt"
-	"jacobin/src/excNames"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -523,37 +522,65 @@ func getClassObj(descriptor string, fr *frames.Frame) (*object.Object, error) {
 
 }
 
-// ResolveStaticArgument resolves a constant pool entry (used as a static argument for BSM)
-// into a Java object representation.
+// ResolveStaticArgument resolves a constant pool entry (used as a static argument
+// for a bootstrap method) into a Java object.
+//
+// Per JVMS 4.7.23, a bootstrap argument must be a CONSTANT_String, CONSTANT_Class,
+// CONSTANT_Integer, CONSTANT_Long, CONSTANT_Float, CONSTANT_Double,
+// CONSTANT_MethodHandle, or CONSTANT_MethodType entry. Per the java.lang.invoke
+// specification, each resolves to a live object before the BSM is invoked:
+//
+//	CP entry type         -> Java object
+//	CONSTANT_String       -> java.lang.String
+//	CONSTANT_Class        -> java.lang.Class (resolved, as if by ldc)
+//	CONSTANT_Integer      -> java.lang.Integer (boxed)
+//	CONSTANT_Long         -> java.lang.Long (boxed)
+//	CONSTANT_Float        -> java.lang.Float (boxed)
+//	CONSTANT_Double       -> java.lang.Double (boxed)
+//	CONSTANT_MethodHandle -> java.lang.invoke.MethodHandle
+//	CONSTANT_MethodType   -> java.lang.invoke.MethodType
 func ResolveStaticArgument(cp *CPool, index int, fr *frames.Frame) (*object.Object, error) {
 	CPe := FetchCPentry(cp, index)
+	if CPe.EntryType == 0 { // Dummy = 0; FetchCPentry also returns 0 for a bad index
+		return nil, fmt.Errorf("ResolveStaticArgument: invalid CP index %d", index)
+	}
 
-	switch CPe.RetType {
-	case IS_INT64:
-		// TODO: box primitives (int64 -> java.lang.Integer or Long)
-		return nil, fmt.Errorf("ResolveStaticArgument: IS_INT64 not implemented")
-	case IS_FLOAT64:
-		// TODO: box primitives (float64 -> java.lang.Float or Double)
-		return nil, fmt.Errorf("ResolveStaticArgument: IS_FLOAT64 not implemented")
-	case IS_STRUCT_ADDR: // <<< is this ever used?
-		globals.GetGlobalRef().FuncThrowException(excNames.InternalError, "IS_STRUCT_ADDR occurred in ResolveStaticArgument in mhResolution.go")
-		return nil, fmt.Errorf("ResolveStaticArgument: IS_STRUCT_ADDR not implemented")
-		// return CPe.AddrVal, nil
-	case IS_STRING_ADDR:
+	switch CPe.EntryType {
+	case IntConst: // CONSTANT_Integer -> box to java.lang.Integer
+		return object.MakePrimitiveObject("java/lang/Integer", types.Int, CPe.IntVal), nil
+	case LongConst: // CONSTANT_Long -> box to java.lang.Long
+		return object.MakePrimitiveObject("java/lang/Long", types.Long, CPe.IntVal), nil
+	case FloatConst: // CONSTANT_Float -> box to java.lang.Float
+		return object.MakePrimitiveObject("java/lang/Float", types.Float, CPe.FloatVal), nil
+	case DoubleConst: // CONSTANT_Double -> box to java.lang.Double
+		return object.MakePrimitiveObject("java/lang/Double", types.Double, CPe.FloatVal), nil
+	case StringConst: // CONSTANT_String -> java.lang.String
+		// Utf8Refs holds raw Modified UTF-8 bytes (see cpParser.go), so it
+		// must be decoded here. Same logic as the IS_STRING_ADDR case of ldc.
 		mutf8 := util.DecodeModifiedUTF8([]byte(*CPe.StringVal))
 		return object.StringObjectFromGoString(string(mutf8)), nil
-	case IS_CLASS_REF:
+	case ClassRef: // CONSTANT_Class -> java.lang.Class, resolved as if by ldc
+		// This matches ldc semantics in the interpreter: the class is loaded
+		// (resolved) but NOT initialized -- a class literal does not run
+		// <clinit> (JVMS 5.5).
+		// NOTE: array class descriptors (e.g. "[Ljava/lang/String;") are not
+		// supported here yet; LoadClassFromNameOnly rejects them.
 		className := *CPe.StringVal
-		if LoadClassFromNameOnly(className) != nil {
-			return nil, fmt.Errorf("ResolveStaticArgument: Could not load class %s", className)
+		if err := LoadClassFromNameOnly(className); err != nil {
+			return nil, fmt.Errorf("ResolveStaticArgument: could not load class %s: %w", className, err)
 		}
 		cl := MethAreaFetch(className)
+		if cl == nil {
+			return nil, fmt.Errorf("ResolveStaticArgument: class %s loaded but not present in method area", className)
+		}
 		return cl.Data.ClassObject, nil
-	case IS_METHOD_TYPE:
+	case MethodType: // CONSTANT_MethodType -> java.lang.invoke.MethodType
 		return ResolveMethodType(cp, index, fr)
-	case IS_METHOD_HANDLE:
+	case MethodHandle: // CONSTANT_MethodHandle -> java.lang.invoke.MethodHandle
 		return ResolveMethodHandle(cp, index, fr)
 	default:
-		return nil, fmt.Errorf("ResolveStaticArgument: unsupported type %d", CPe.RetType)
+		return nil, fmt.Errorf(
+			"ResolveStaticArgument: CP entry at index %d has type %d, which is not a valid bootstrap static argument (JVMS 4.7.23)",
+			index, CPe.EntryType)
 	}
 }
