@@ -78,6 +78,8 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 		staticArgs[i] = staticArg
 	}
 
+	// 5a. Prepare the arguments for passing to the boostrap method
+
 	// 6. Invoke the Bootstrap Method
 	// This is the critical step: executing the BSM to get the CallSite object.
 	// ...
