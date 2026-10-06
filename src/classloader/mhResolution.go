@@ -14,6 +14,7 @@ import (
 	"jacobin/src/statics"
 	"jacobin/src/trace"
 	"jacobin/src/types"
+	"jacobin/src/util"
 	"strings"
 )
 
@@ -68,7 +69,14 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 	// 5. Resolve Static Arguments
 	// bsm.Args is a list of indices into the Constant Pool.
 	// These must be resolved to Java objects (String, Class, MethodType, MethodHandle, int, long, etc.)
-	// ...
+	staticArgs := make([]*object.Object, len(bsm.Args))
+	for i, argIndex := range bsm.Args {
+		staticArg, err := ResolveStaticArgument(cp, int(argIndex), fr)
+		if err != nil {
+			return nil, fmt.Errorf("ResolveCallSite: error resolving static argument at index %d: %w", argIndex, err)
+		}
+		staticArgs[i] = staticArg
+	}
 
 	// 6. Invoke the Bootstrap Method
 	// This is the critical step: executing the BSM to get the CallSite object.
@@ -76,6 +84,7 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 
 	_ = bsmHandle // suppress unused var error for now
 	_ = natIndex
+	_ = staticArgs
 
 	return nil, fmt.Errorf("ResolveCallSite: implementation pending")
 }
@@ -511,4 +520,37 @@ func getClassObj(descriptor string, fr *frames.Frame) (*object.Object, error) {
 	// The G function returned an error. Ignore returned GErrBlk.
 	return nil, fmt.Errorf("getClassObj: Class.forName failed for '%s', err: ClassNotFoundException", forNameArg)
 
+}
+
+// ResolveStaticArgument resolves a constant pool entry (used as a static argument for BSM)
+// into a Java object representation.
+func ResolveStaticArgument(cp *CPool, index int, fr *frames.Frame) (*object.Object, error) {
+	CPe := FetchCPentry(cp, index)
+
+	switch CPe.RetType {
+	case IS_INT64:
+		// TODO: box primitives (int64 -> java.lang.Integer or Long)
+		return nil, fmt.Errorf("ResolveStaticArgument: IS_INT64 not implemented")
+	case IS_FLOAT64:
+		// TODO: box primitives (float64 -> java.lang.Float or Double)
+		return nil, fmt.Errorf("ResolveStaticArgument: IS_FLOAT64 not implemented")
+	case IS_STRUCT_ADDR:
+		return CPe.AddrVal, nil
+	case IS_STRING_ADDR:
+		mutf8 := util.DecodeModifiedUTF8([]byte(*CPe.StringVal))
+		return object.StringObjectFromGoString(string(mutf8)), nil
+	case IS_CLASS_REF:
+		className := *CPe.StringVal
+		if LoadClassFromNameOnly(className) != nil {
+			return nil, fmt.Errorf("ResolveStaticArgument: Could not load class %s", className)
+		}
+		cl := MethAreaFetch(className)
+		return cl.Data.ClassObject, nil
+	case IS_METHOD_TYPE:
+		return ResolveMethodType(cp, index, fr)
+	case IS_METHOD_HANDLE:
+		return ResolveMethodHandle(cp, index, fr)
+	default:
+		return nil, fmt.Errorf("ResolveStaticArgument: unsupported type %d", CPe.RetType)
+	}
 }

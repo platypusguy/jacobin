@@ -36,6 +36,8 @@ var IS_FLOAT64 = 2
 var IS_INT64 = 3
 var IS_STRING_ADDR = 4
 var IS_CLASS_REF = 5
+var IS_METHOD_TYPE = 6
+var IS_METHOD_HANDLE = 7
 
 // Utility routines for runtime operations
 
