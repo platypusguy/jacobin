@@ -16,6 +16,7 @@ import (
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"os"
+	"runtime"
 )
 
 // The various flags that can be passed to the exit() function, reflecting
@@ -79,5 +80,15 @@ func Exit(errorCondition ExitStatus) int {
 func showStats() {
 	_, _ = fmt.Fprintf(os.Stderr, "\nString pool:   %6d entries\n", stringPool.GetStringPoolSize())
 	_, _ = fmt.Fprintf(os.Stderr, "Classloader:   %6d classes loaded\n", classloader.MethAreaSize())
-	_, _ = fmt.Fprintf(os.Stderr, "Statics Table: %6d statics accessed\n", len(statics.Statics))
+	_, _ = fmt.Fprintf(os.Stderr, "Statics Table: %6d statics accessed\n\n", len(statics.Statics))
+
+	// Read full memory statistics
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	// Memory currently in use by live data on the heap
+	_, _ = fmt.Fprintf(os.Stderr, "Heap memory presently in use: %4d MB\n", m.Alloc/1024/1024)
+
+	// Total memory requested and reserved from the OS
+	_, _ = fmt.Fprintf(os.Stderr, "Total allocated memory:       %4d MB\n", m.Sys/1024/1024)
 }
