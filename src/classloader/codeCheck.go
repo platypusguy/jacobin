@@ -1014,6 +1014,9 @@ func CheckInvokevirtual() int {
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
+
+	// TODO: figure out how many parameters (+ the this reference) are on
+	// the op stack for this function and make sure that the stack is at least that big.
 	return 3
 }
 
