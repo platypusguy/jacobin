@@ -11,7 +11,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"jacobin/src/excNames"
-	"jacobin/src/exceptions"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/trace"
@@ -181,7 +180,8 @@ func Invoke(whichFunc string, params []any) any {
 	_, ret := MethodSignatures[whichFunc]
 	if !ret {
 		errMsg := fmt.Sprintf("Invoke: G function %s not found", whichFunc)
-		exceptions.ThrowExNil(excNames.NoSuchMethodException, errMsg)
+		//exceptions.ThrowExNil(excNames.NoSuchMethodException, errMsg)
+		return GetGErrBlk(excNames.NoSuchMethodException, errMsg)
 	}
 	return MethodSignatures[whichFunc].GFunction(params)
 }
