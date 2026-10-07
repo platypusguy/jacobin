@@ -189,7 +189,7 @@ func fill(self *object.Object) interface{} {
 
 	n := ghelpers.Invoke(method, []interface{}{in, bufWrapper, pos, int64(len(buf)) - pos})
 
-	if errBlk, ok := n.(ghelpers.GErrBlk); ok {
+	if errBlk, ok := n.(*ghelpers.GErrBlk); ok {
 		return errBlk
 	}
 
@@ -214,7 +214,7 @@ func BufferedInputStreamRead(params []interface{}) interface{} {
 
 	if pos >= count {
 		res := fill(self)
-		if err, ok := res.(ghelpers.GErrBlk); ok {
+		if err, ok := res.(*ghelpers.GErrBlk); ok {
 			return err
 		}
 		pos = self.FieldTable["pos"].Fvalue.(int64)
@@ -259,7 +259,7 @@ func BufferedInputStreamReadRange(params []interface{}) interface{} {
 		avail := self.FieldTable["count"].Fvalue.(int64) - self.FieldTable["pos"].Fvalue.(int64)
 		if avail <= 0 {
 			res := fill(self)
-			if err, ok := res.(ghelpers.GErrBlk); ok {
+			if err, ok := res.(*ghelpers.GErrBlk); ok {
 				return err
 			}
 			avail = self.FieldTable["count"].Fvalue.(int64) - self.FieldTable["pos"].Fvalue.(int64)
@@ -300,7 +300,11 @@ func BufferedInputStreamReadRange(params []interface{}) interface{} {
 		}
 		inClassName := stringPool.GetStringPointer(in.KlassName)
 		method := fmt.Sprintf("%s.available()I", *inClassName)
-		inAvail := ghelpers.Invoke(method, []interface{}{in}).(int64)
+		res := ghelpers.Invoke(method, []interface{}{in})
+		if errBlk, ok := res.(*ghelpers.GErrBlk); ok {
+			return errBlk
+		}
+		inAvail := res.(int64)
 		if inAvail <= 0 {
 			return totalRead
 		}
@@ -318,7 +322,11 @@ func BufferedInputStreamAvailable(params []interface{}) interface{} {
 
 	inClassName := stringPool.GetStringPointer(in.KlassName)
 	method := fmt.Sprintf("%s.available()I", *inClassName)
-	inAvail := ghelpers.Invoke(method, []interface{}{in}).(int64)
+	res := ghelpers.Invoke(method, []interface{}{in})
+	if errBlk, ok := res.(*ghelpers.GErrBlk); ok {
+		return errBlk
+	}
+	inAvail := res.(int64)
 
 	return avail + inAvail
 }
@@ -348,7 +356,7 @@ func BufferedInputStreamSkip(params []interface{}) interface{} {
 		}
 
 		res := fill(self)
-		if err, ok := res.(ghelpers.GErrBlk); ok {
+		if err, ok := res.(*ghelpers.GErrBlk); ok {
 			return err
 		}
 		avail = self.FieldTable["count"].Fvalue.(int64) - self.FieldTable["pos"].Fvalue.(int64)
@@ -397,7 +405,10 @@ func BufferedInputStreamClose(params []interface{}) interface{} {
 			in := inField.Fvalue.(*object.Object)
 			inClassName := stringPool.GetStringPointer(in.KlassName)
 			method := fmt.Sprintf("%s.close()V", *inClassName)
-			ghelpers.Invoke(method, []interface{}{in})
+			res := ghelpers.Invoke(method, []interface{}{in})
+			if errBlk, ok := res.(*ghelpers.GErrBlk); ok {
+				return errBlk
+			}
 			self.FieldTable["in"] = object.Field{Ftype: "Ljava/io/InputStream;", Fvalue: nil}
 		}
 	}
