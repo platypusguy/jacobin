@@ -12,6 +12,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
+	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"jacobin/src/util"
@@ -78,17 +79,119 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 		staticArgs[i] = staticArg
 	}
 
-	// 5a. Prepare the arguments for passing to the boostrap method
+	// 5a. Marshal the arguments for the bootstrap method.
+	// Per JVMS 5.4.3.6, the BSM is invoked with a Lookup object for the caller
+	// class, the call site name, the call site MethodType, then the resolved
+	// static arguments in order.
+	bsmArgs, err := marshalBSMArgs(fr, methName, methType, staticArgs)
+	if err != nil {
+		return nil, err
+	}
 
-	// 6. Invoke the Bootstrap Method
-	// This is the critical step: executing the BSM to get the CallSite object.
-	// ...
+	// 6. Invoke the Bootstrap Method to obtain the CallSite object.
+	return invokeBSM(cp, bsm, bsmHandle, bsmArgs)
+}
 
-	_ = bsmHandle // suppress unused var error for now
-	_ = natIndex
-	_ = staticArgs
+// marshalBSMArgs assembles the argument list for bootstrap method invocation.
+func marshalBSMArgs(fr *frames.Frame, methName, methType string, staticArgs []*object.Object) ([]any, error) {
+	// arg 0: a Lookup object bound to the caller class (for caller-sensitive BSMs).
+	callerClassObj, err := getClassObj("L"+fr.ClName+";", fr)
+	if err != nil {
+		return nil, fmt.Errorf("marshalBSMArgs: could not get Class object for caller %s: %w", fr.ClName, err)
+	}
 
-	return nil, fmt.Errorf("ResolveCallSite: implementation pending")
+	// arg 1: the call site name.
+	nameObj := object.StringObjectFromGoString(methName)
+
+	// arg 2: the call site type as a MethodType object.
+	typeObj, err := getMethodTypeObject(methType, fr)
+	if err != nil {
+		return nil, fmt.Errorf("marshalBSMArgs: %w", err)
+	}
+
+	// args 3+: the resolved static arguments, in order.
+	params := make([]any, 0, 3+len(staticArgs))
+	params = append(params, makeLookupObject(callerClassObj), nameObj, typeObj)
+	for _, sa := range staticArgs {
+		params = append(params, sa)
+	}
+	return params, nil
+}
+
+// makeLookupObject creates a minimal java.lang.invoke.MethodHandles$Lookup object
+// bound to the caller class. Jacobin does not yet implement the Lookup API; this
+// object exists so bootstrap methods receive the caller context JVMS 5.4.3.6 requires.
+func makeLookupObject(callerClassObj *object.Object) *object.Object {
+	lookupClassName := "java/lang/invoke/MethodHandles$Lookup"
+	lookupObj := object.MakeEmptyObjectWithClassName(&lookupClassName)
+	lookupObj.FieldTable["lookupClass"] = object.Field{Ftype: types.Ref, Fvalue: callerClassObj}
+	return lookupObj
+}
+
+// invokeBSM invokes the bootstrap method handle with the marshaled arguments and
+// returns the resulting CallSite object.
+//
+// The handle's $target field holds the executable MTentry. Only BSMs backed by
+// gfunctions (MType == 'G') are supported: a BSM implemented as a Java method would
+// require re-entering the interpreter, which is not available from the classloader.
+// (All of Jacobin's current BSMs -- StringConcatFactory -- are gfunctions.)
+func invokeBSM(cp *CPool, bsm BootstrapMethod, bsmHandle *object.Object, params []any) (*object.Object, error) {
+	// Per JVMS 4.7.23, the BSM handle should be kind 6 (invokeStatic) or 8 (newInvokeSpecial).
+	kindField, ok := bsmHandle.FieldTable["Kind"]
+	kind, kindOk := kindField.Fvalue.(int64)
+	if !ok || !kindOk || (kind != 6 && kind != 8) {
+		return nil, fmt.Errorf("invokeBSM: bootstrap method handle has unexpected kind %v", kindField.Fvalue)
+	}
+
+	// Reconstruct the BSM's fully-qualified name from the constant pool for the
+	// gfunction invocation: MethodHandle entry -> refIndex -> MethodRef entry.
+	mhCpe := FetchCPentry(cp, int(bsm.MethodRef))
+	if mhCpe.EntryType != MethodHandle {
+		return nil, fmt.Errorf("invokeBSM: CP entry at %d is not a MethodHandle", bsm.MethodRef)
+	}
+	bsmClass, bsmName, bsmSig, _ := GetMethInfoFromCPmethref(cp, int(mhCpe.AddrVal.entry2))
+	bsmFQN := bsmClass + "." + bsmName + bsmSig
+
+	// The executable payload must be a gfunction (see doc comment above).
+	targetField, ok := bsmHandle.FieldTable["$target"]
+	if !ok {
+		return nil, fmt.Errorf("invokeBSM: method handle has no $target")
+	}
+	mtEntry, ok := targetField.Fvalue.(MTentry)
+	if !ok {
+		return nil, fmt.Errorf("invokeBSM: method handle $target is not an MTentry")
+	}
+	if mtEntry.MType != 'G' {
+		return nil, fmt.Errorf("invokeBSM: bootstrap methods implemented in Java are not yet supported (MType=%c)", mtEntry.MType)
+	}
+
+	result := globals.GetGlobalRef().FuncInvokeGFunction(bsmFQN, params)
+	switch r := result.(type) {
+	case *object.Object:
+		// Per the java.lang.invoke specification, the BSM must return a
+		// non-null CallSite.
+		if r == nil || object.IsNull(r) {
+			return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned null", bsmFQN)
+		}
+		if className := stringPool.GetStringPointer(r.KlassName); className == nil ||
+			*className != "java/lang/invoke/CallSite" {
+			return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned %v, not a CallSite",
+				bsmFQN, klassNameOf(r))
+		}
+		return r, nil
+	case nil:
+		return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned nil", bsmFQN)
+	default:
+		return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned unexpected type %T", bsmFQN, result)
+	}
+}
+
+// klassNameOf is a small helper for error messages.
+func klassNameOf(obj *object.Object) string {
+	if p := stringPool.GetStringPointer(obj.KlassName); p != nil {
+		return *p
+	}
+	return "<?>"
 }
 
 // ResolveMethodHandle resolves a MethodHandle constant pool entry into a runtime representation.
@@ -556,7 +659,7 @@ func ResolveStaticArgument(cp *CPool, index int, fr *frames.Frame) (*object.Obje
 		return object.MakePrimitiveObject("java/lang/Float", types.Float, CPe.FloatVal), nil
 	case DoubleConst: // CONSTANT_Double -> box to java.lang.Double
 		return object.MakePrimitiveObject("java/lang/Double", types.Double, CPe.FloatVal), nil
-	case StringConst: // CONSTANT_String -> java.lang.String
+	case StringConst, UTF8: // CONSTANT_String -> java.lang.String
 		// Utf8Refs holds raw Modified UTF-8 bytes (see cpParser.go), so it
 		// must be decoded here. Same logic as the IS_STRING_ADDR case of ldc.
 		mutf8 := util.DecodeModifiedUTF8([]byte(*CPe.StringVal))
