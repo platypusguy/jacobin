@@ -246,12 +246,12 @@ func TestInvoke(t *testing.T) {
 	}
 
 	// Test NoSuchMethodException
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Invoke should have panicked with NoSuchMethodException")
-		}
-	}()
-	ghelpers.Invoke("non/Existent", nil)
+	res = ghelpers.Invoke("non/Existent", nil)
+	switch res.(type) {
+	case *ghelpers.GErrBlk:
+	default:
+		t.Errorf("Expected *ghelpers.GErrBlk, got %v", res)
+	}
 }
 
 func TestGetDefaultSecurityProvider(t *testing.T) {

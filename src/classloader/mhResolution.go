@@ -9,6 +9,7 @@ package classloader
 import (
 	"fmt"
 	"jacobin/src/frames"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
@@ -179,6 +180,8 @@ func invokeBSM(cp *CPool, bsm BootstrapMethod, bsmHandle *object.Object, params 
 				bsmFQN, klassNameOf(r))
 		}
 		return r, nil
+	case *ghelpers.GErrBlk:
+		return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned FErrBlk %s", bsmFQN, result.(*ghelpers.GErrBlk).ErrMsg)
 	case nil:
 		return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned nil", bsmFQN)
 	default:
