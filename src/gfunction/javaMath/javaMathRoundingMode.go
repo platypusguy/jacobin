@@ -80,7 +80,7 @@ func Load_Math_Rounding_Mode() {
 	ghelpers.MethodSignatures["java/math/RoundingMode.ordinal()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  rmodeOrdinal,
 		}
 
 	ghelpers.MethodSignatures["java/math/RoundingMode.describeConstable()Ljava/util/Optional;"] =
@@ -278,4 +278,26 @@ func rmodeEquals(params []interface{}) interface{} {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
+}
+
+// rmodeOrdinal implements RoundingMode.ordinal(): returns the position of the enum constant
+// in its declaration order (UP = 0 ... UNNECESSARY = 7).
+func rmodeOrdinal(params []interface{}) interface{} {
+	ensureRoundingModeInited()
+	if len(params) == 0 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "RoundingMode.ordinal(): missing objectRef")
+	}
+	self, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(self) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "RoundingMode.ordinal(): null objectRef")
+	}
+	fld, ok := self.FieldTable["ordinal"]
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "RoundingMode.ordinal(): missing ordinal field")
+	}
+	ordinal, ok := fld.Fvalue.(int64)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "RoundingMode.ordinal(): ordinal field is not an int")
+	}
+	return ordinal
 }
