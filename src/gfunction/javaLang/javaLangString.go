@@ -605,7 +605,7 @@ func Load_Lang_String() {
 		}
 
 	// TODO: Resolves this instance as a ConstantDesc, the result of which is the instance itself.
-	ghelpers.MethodSignatures["java/lang/String.resolveConstantDesc(Ljava/lang/invoke/MethodHandles/Lookup;)Ljava/lang/String;"] =
+	ghelpers.MethodSignatures["java/lang/String.resolveConstantDesc(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,

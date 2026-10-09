@@ -238,7 +238,7 @@ func Load_Lang_Long() {
 			GFunction:  longRemainderUnsigned,
 		}
 
-	ghelpers.MethodSignatures["java/lang/Long.resolveConstantDesc(Ljava/lang/invoke/MethodHandles/Lookup;)Ljava/lang/Long;"] =
+	ghelpers.MethodSignatures["java/lang/Long.resolveConstantDesc(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Long;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
