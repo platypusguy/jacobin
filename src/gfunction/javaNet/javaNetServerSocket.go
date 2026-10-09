@@ -141,6 +141,24 @@ func Load_Net_ServerSocket() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/net/ServerSocket.getOption(Ljava/net/SocketOption;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/net/ServerSocket.setOption(Ljava/net/SocketOption;Ljava/lang/Object;)Ljava/net/ServerSocket;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/net/ServerSocket.supportedOptions()Ljava/util/Set;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/net/ServerSocket.setSocketFactory(Ljava/net/SocketImplFactory;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,

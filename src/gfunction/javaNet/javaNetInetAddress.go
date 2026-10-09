@@ -159,6 +159,12 @@ func Load_Net_InetAddress() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/net/InetAddress.ofLiteral(Ljava/lang/String;)Ljava/net/InetAddress;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/net/InetAddress.isSiteLocalAddress()Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
