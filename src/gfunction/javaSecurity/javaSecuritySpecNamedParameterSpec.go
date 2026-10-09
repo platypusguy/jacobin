@@ -36,6 +36,12 @@ func Load_Security_Spec_NamedParameterSpec() {
 			ParamSlots: 0,
 			GFunction:  namedParameterSpecGetName,
 		}
+
+	ghelpers.MethodSignatures["java/security/spec/NamedParameterSpec.toString()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }
 
 func namedParameterSpecClinit([]interface{}) interface{} {

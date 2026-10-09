@@ -58,6 +58,41 @@ func Load_Security() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	// Security.getAlgorithms(String)
+	ghelpers.MethodSignatures["java/security/Security.getAlgorithms(Ljava/lang/String;)Ljava/util/Set;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// Security.getProviders(String)
+	ghelpers.MethodSignatures["java/security/Security.getProviders(Ljava/lang/String;)[Ljava/security/Provider;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// Security.getProviders(Map)
+	ghelpers.MethodSignatures["java/security/Security.getProviders(Ljava/util/Map;)[Ljava/security/Provider;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// Security.getProperty(String) - deprecated
+	ghelpers.MethodSignatures["java/security/Security.getProperty(Ljava/lang/String;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+
+	// Security.setProperty(String, String) - deprecated
+	ghelpers.MethodSignatures["java/security/Security.setProperty(Ljava/lang/String;Ljava/lang/String;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+
 }
 
 // ----------------------- Member Functions -----------------------

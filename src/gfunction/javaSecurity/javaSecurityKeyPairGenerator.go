@@ -54,6 +54,12 @@ func Load_KeyPairGenerator() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/security/KeyPairGeneratorSpi.initialize(Ljava/security/spec/AlgorithmParameterSpec;Ljava/security/SecureRandom;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	// ---------------------------------------------------------
 	// Public API: getInstance
 	// ---------------------------------------------------------

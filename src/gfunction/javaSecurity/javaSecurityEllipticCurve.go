@@ -45,6 +45,32 @@ func Load_EllipticCurve() {
 			ParamSlots: 0,
 			GFunction:  ellipticCurveGetB,
 		}
+
+	// Constructor with seed
+	ghelpers.MethodSignatures["java/security/spec/EllipticCurve.<init>(Ljava/security/spec/ECField;Ljava/math/BigInteger;Ljava/math/BigInteger;[B)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	// Getter for seed
+	ghelpers.MethodSignatures["java/security/spec/EllipticCurve.getSeed()[B"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/security/spec/EllipticCurve.equals(Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/security/spec/EllipticCurve.hashCode()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }
 
 // ---------------------------------------------------------

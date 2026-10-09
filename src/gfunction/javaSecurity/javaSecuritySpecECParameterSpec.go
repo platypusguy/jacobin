@@ -58,6 +58,18 @@ func Load_ECParameterSpec() {
 			ParamSlots: 0,
 			GFunction:  ecparameterSpecGetCofactor,
 		}
+
+	ghelpers.MethodSignatures["java/security/spec/ECGenParameterSpec.getName()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/security/spec/ECGenParameterSpec.toString()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }
 
 // Constructor

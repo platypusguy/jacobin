@@ -137,6 +137,30 @@ func Load_Security_Signature() {
 			ParamSlots: 3,
 			GFunction:  signatureVerifyRange,
 		}
+
+	ghelpers.MethodSignatures["java/security/Signature.getParameters()Ljava/security/AlgorithmParameters;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/security/Signature.setParameter(Ljava/security/spec/AlgorithmParameterSpec;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/security/Signature.setParameter(Ljava/lang/String;Ljava/lang/Object;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+
+	ghelpers.MethodSignatures["java/security/Signature.getParameter(Ljava/lang/String;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
 }
 
 // signatureGetInstance creates a new Signature object for the given algorithm

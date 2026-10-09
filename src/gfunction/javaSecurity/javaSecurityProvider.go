@@ -78,6 +78,12 @@ func Load_Security_Provider() {
 	ghelpers.MethodSignatures["java/security/Provider.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: securityProviderToString}
 
+	ghelpers.MethodSignatures["java/security/Provider.configure(Ljava/lang/String;)Ljava/security/Provider;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+
+	ghelpers.MethodSignatures["java/security/Provider.isConfigured()Z"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+
 	// Set up a vector so that other functions can find the one and only Security Provider.
 	ghelpers.DefaultSecurityProvider = InitDefaultSecurityProvider()
 
