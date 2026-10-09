@@ -12,6 +12,13 @@ import (
 )
 
 func Load_Nio_File_SimpleFileVisitor() {
+	ghelpers.MethodSignatures["java/nio/file/SimpleFileVisitor.<clinit>()V"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.ClinitGeneric}
+
+	// Protected no-arg constructor
+	ghelpers.MethodSignatures["java/nio/file/SimpleFileVisitor.<init>()V"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapProtected}
+
 	// preVisitDirectory(Object dir, BasicFileAttributes attrs)
 	ghelpers.MethodSignatures["java/nio/file/SimpleFileVisitor.preVisitDirectory(Ljava/lang/Object;Ljava/nio/file/attribute/BasicFileAttributes;)Ljava/nio/file/FileVisitResult;"] =
 		ghelpers.GMeth{ParamSlots: 3, GFunction: simpleFileVisitorPreVisitDirectory, NeedsContext: true}

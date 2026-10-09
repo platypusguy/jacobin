@@ -51,6 +51,30 @@ func Load_Nio_Channels_ServerSocketChannel() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/nio/channels/ServerSocketChannel.getOption(Ljava/net/SocketOption;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/nio/channels/ServerSocketChannel.supportedOptions()Ljava/util/Set;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/nio/channels/ServerSocketChannel.close()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/nio/channels/ServerSocketChannel.isOpen()Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/nio/channels/ServerSocketChannel.open()Ljava/nio/channels/ServerSocketChannel;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
