@@ -38,6 +38,7 @@ func Load_Time_Duration() {
 	ghelpers.MethodSignatures["java/time/Duration.isNegative()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationIsNegative}
 	ghelpers.MethodSignatures["java/time/Duration.isZero()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationIsZero}
 	ghelpers.MethodSignatures["java/time/Duration.minus(Ljava/time/Duration;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinus}
+	ghelpers.MethodSignatures["java/time/Duration.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 	ghelpers.MethodSignatures["java/time/Duration.minusDays(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinusDays}
 	ghelpers.MethodSignatures["java/time/Duration.minusHours(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinusHours}
 	ghelpers.MethodSignatures["java/time/Duration.minusMillis(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinusMillis}
@@ -57,6 +58,7 @@ func Load_Time_Duration() {
 	ghelpers.MethodSignatures["java/time/Duration.parse(Ljava/lang/CharSequence;)Ljava/time/Duration;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: durationParse}
 	ghelpers.MethodSignatures["java/time/Duration.plus(Ljava/time/Duration;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationPlus}
+	ghelpers.MethodSignatures["java/time/Duration.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 	ghelpers.MethodSignatures["java/time/Duration.plusDays(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationPlusDays}
 	ghelpers.MethodSignatures["java/time/Duration.plusHours(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationPlusHours}
 	ghelpers.MethodSignatures["java/time/Duration.plusMillis(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationPlusMillis}
@@ -360,7 +362,7 @@ func durationMinus(params []interface{}) interface{} {
 	other := params[1].(*object.Object)
 	s2 := other.FieldTable["seconds"].Fvalue.(int64)
 	n2 := int32(other.FieldTable["nanos"].Fvalue.(int64))
-	
+
 	negOther := createDuration(-s2, -n2)
 	// Handle -n2 being -nanosPerSecond if we were strict but n2 is always 0..999999999
 	if n2 > 0 {
@@ -368,7 +370,7 @@ func durationMinus(params []interface{}) interface{} {
 	} else {
 		negOther = createDuration(-s2, 0)
 	}
-	
+
 	return durationPlus([]interface{}{self, negOther})
 }
 
@@ -464,7 +466,7 @@ func durationMultipliedBy(params []interface{}) interface{} {
 	// Let's use float64 or big.Int for simplicity if it overflows?
 	// Actually, n * multiplicand for n < 1B and multiplicand < ~9B will not overflow int64.
 	// If it does, we can use a more robust way.
-	
+
 	// Re-calculating with potential overflow in mind
 	resNanosLong := n * multiplicand
 	secAdjustment := resNanosLong / nanosPerSecond
@@ -473,12 +475,12 @@ func durationMultipliedBy(params []interface{}) interface{} {
 		resNanosFinal += nanosPerSecond
 		secAdjustment--
 	}
-	
+
 	resSeconds, err = addExact(resSeconds, secAdjustment)
 	if err != nil {
 		return err
 	}
-	
+
 	return createDuration(resSeconds, int32(resNanosFinal))
 }
 
@@ -493,7 +495,7 @@ func durationDividedByLong(params []interface{}) interface{} {
 	}
 	s := self.FieldTable["seconds"].Fvalue.(int64)
 	n := self.FieldTable["nanos"].Fvalue.(int64)
-	
+
 	totalNanos := s*nanosPerSecond + n
 	// Check for overflow if s is large.
 	if s > 9223372036 || s < -9223372036 {
@@ -503,7 +505,7 @@ func durationDividedByLong(params []interface{}) interface{} {
 		resNanos := (remainderSeconds*nanosPerSecond + n) / divisor
 		return createDuration(resSeconds, int32(resNanos))
 	}
-	
+
 	resNanosTotal := totalNanos / divisor
 	return durationOfNanos([]interface{}{resNanosTotal})
 }
@@ -515,19 +517,19 @@ func durationDividedByDuration(params []interface{}) interface{} {
 	n1 := self.FieldTable["nanos"].Fvalue.(int64)
 	s2 := divisor.FieldTable["seconds"].Fvalue.(int64)
 	n2 := divisor.FieldTable["nanos"].Fvalue.(int64)
-	
+
 	if s2 == 0 && n2 == 0 {
 		return ghelpers.GetGErrBlk(excNames.ArithmeticException, "Division by zero")
 	}
-	
+
 	t1 := s1*nanosPerSecond + n1
 	t2 := s2*nanosPerSecond + n2
-	
+
 	if (s1 > 9223372036 || s1 < -9223372036) || (s2 > 9223372036 || s2 < -9223372036) {
 		// Use big.Int for large durations
-		return int64(float64(s1)/float64(s2)) // VERY crude approximation
+		return int64(float64(s1) / float64(s2)) // VERY crude approximation
 	}
-	
+
 	return t1 / t2
 }
 
@@ -666,7 +668,7 @@ func durationCompareTo(params []interface{}) interface{} {
 	n1 := self.FieldTable["nanos"].Fvalue.(int64)
 	s2 := other.FieldTable["seconds"].Fvalue.(int64)
 	n2 := other.FieldTable["nanos"].Fvalue.(int64)
-	
+
 	if s1 < s2 {
 		return int64(-1)
 	}
@@ -695,7 +697,7 @@ func durationEquals(params []interface{}) interface{} {
 	n1 := self.FieldTable["nanos"].Fvalue.(int64)
 	s2 := otherObj.FieldTable["seconds"].Fvalue.(int64)
 	n2 := otherObj.FieldTable["nanos"].Fvalue.(int64)
-	
+
 	if s1 == s2 && n1 == n2 {
 		return types.JavaBoolTrue
 	}
@@ -706,22 +708,22 @@ func durationHashCode(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
 	seconds := self.FieldTable["seconds"].Fvalue.(int64)
 	nanos := self.FieldTable["nanos"].Fvalue.(int64)
-	return int64(int32(seconds ^ (seconds >> 32)) + 51*int32(nanos))
+	return int64(int32(seconds^(seconds>>32)) + 51*int32(nanos))
 }
 
 func durationToString(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
 	seconds := self.FieldTable["seconds"].Fvalue.(int64)
 	nanos := self.FieldTable["nanos"].Fvalue.(int64)
-	
+
 	if seconds == 0 && nanos == 0 {
 		return object.StringObjectFromGoString("PT0S")
 	}
-	
+
 	hours := seconds / 3600
 	minutes := (seconds % 3600) / 60
 	secs := seconds % 60
-	
+
 	var sb strings.Builder
 	sb.WriteString("PT")
 	if hours != 0 {
@@ -745,7 +747,7 @@ func durationToString(params []interface{}) interface{} {
 		}
 		sb.WriteByte('S')
 	}
-	
+
 	return object.StringObjectFromGoString(sb.String())
 }
 

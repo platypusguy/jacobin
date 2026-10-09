@@ -137,6 +137,13 @@ func Load_Io_Console() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	// Returns true if the Console instance is a terminal.
+	ghelpers.MethodSignatures["java/io/Console.isTerminal()Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 }
 
 // "java/io/Console.<clinit>()V" - Initialise class Console.

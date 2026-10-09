@@ -83,6 +83,12 @@ func Load_Io_FileOutputStream() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/io/FileOutputStream.getChannel()Ljava/nio/channels/FileChannel;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 }
 
 // "java/io/FileOutputStream.<init>(Ljava/io/File;])V"

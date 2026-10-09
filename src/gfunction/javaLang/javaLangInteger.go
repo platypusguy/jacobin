@@ -239,7 +239,7 @@ func Load_Lang_Integer() {
 			GFunction:  integerRemainderUnsigned,
 		}
 
-	ghelpers.MethodSignatures["java/lang/Integer.resolveConstantDesc(Ljava/lang/invoke/MethodHandles/Lookup;)Ljava/lang/Integer;"] =
+	ghelpers.MethodSignatures["java/lang/Integer.resolveConstantDesc(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Integer;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,

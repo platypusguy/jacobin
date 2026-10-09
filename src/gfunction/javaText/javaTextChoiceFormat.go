@@ -12,6 +12,18 @@ import (
 
 func Load_Text_ChoiceFormat() {
 
+	ghelpers.MethodSignatures["java/text/ChoiceFormat.format(Ljava/lang/Object;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/ChoiceFormat.parseObject(Ljava/lang/String;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/text/ChoiceFormat.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

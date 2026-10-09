@@ -36,6 +36,7 @@ func TestLoad_Security_Interfaces_EC_Keys(t *testing.T) {
 		"java/security/interfaces/ECPrivateKey.getS()Ljava/math/BigInteger;",
 		"java/security/interfaces/ECPublicKey.getParams()Ljava/security/spec/ECParameterSpec;",
 		"java/security/interfaces/ECPublicKey.getW()Ljava/security/spec/ECPoint;",
+		"java/security/interfaces/ECKey.getParams()Ljava/security/spec/ECParameterSpec;",
 	}
 
 	for _, sig := range expectedSignatures {

@@ -70,6 +70,12 @@ func Load_Lang_Long() {
 			GFunction:  longDecode,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Long.describeConstable()Ljava/util/Optional;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Long.divideUnsigned(JJ)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
@@ -98,6 +104,24 @@ func Load_Lang_Long() {
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  longFloatValue,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.getLong(Ljava/lang/String;)Ljava/lang/Long;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.getLong(Ljava/lang/String;J)Ljava/lang/Long;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.getLong(Ljava/lang/String;Ljava/lang/Long;)Ljava/lang/Long;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Long.highestOneBit(J)J"] =
@@ -212,6 +236,12 @@ func Load_Lang_Long() {
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  longRemainderUnsigned,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Long.resolveConstantDesc(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Long;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Long.reverse(J)J"] =

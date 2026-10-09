@@ -116,9 +116,11 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaMath.Load_Math_Rounding_Mode()
 
 	// java/net/*
+	javaNet.Load_Net_DatagramSocket()
 	javaNet.Load_Net_Http_HttpClient()
 	javaNet.Load_Net_Http_HttpRequest()
 	javaNet.Load_Net_InetAddress()
+	javaNet.Load_Net_InetSocketAddress()
 	javaNet.Load_Net_ServerSocket()
 	javaNet.Load_Net_Socket()
 	javaNet.Load_Net_SocketAddress()

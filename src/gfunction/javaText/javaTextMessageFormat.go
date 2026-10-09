@@ -12,6 +12,18 @@ import (
 
 func Load_Text_MessageFormat() {
 
+	ghelpers.MethodSignatures["java/text/MessageFormat.format(Ljava/lang/Object;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/MessageFormat.parseObject(Ljava/lang/String;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/text/MessageFormat.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

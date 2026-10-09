@@ -45,6 +45,12 @@ func Load_Lang_Byte() {
 			GFunction:  byteCompareUnsigned,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Byte.compareTo(Ljava/lang/Byte;)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Byte.decode(Ljava/lang/String;)Ljava/lang/Byte;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,

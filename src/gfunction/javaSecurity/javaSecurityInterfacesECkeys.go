@@ -68,6 +68,9 @@ func Load_Security_Interfaces_EC_Keys() {
 	ghelpers.MethodSignatures["java/security/interfaces/ECPublicKey.getW()Ljava/security/spec/ECPoint;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ecPublicKeyGetW}
 
+	ghelpers.MethodSignatures["java/security/interfaces/ECKey.getParams()Ljava/security/spec/ECParameterSpec;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+
 }
 
 // === ECPrivateKey ===

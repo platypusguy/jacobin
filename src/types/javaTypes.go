@@ -136,12 +136,20 @@ type JavaBool = int64
 // type using the constraints defined in section 2.3.4 of the JVM spec,
 // with the notable difference that we're using an int64, rather than
 // Java's 32-bit int.
+//
+// ConvertJavaBoolToGoBool is just the inverse function.
 func ConvertGoBoolToJavaBool(goBool bool) int64 {
 	if goBool {
 		return JavaBoolTrue
-	} else {
-		return JavaBoolFalse
 	}
+	return JavaBoolFalse
+}
+
+func ConvertJavaBoolToGoBool(javaBool int64) bool {
+	if javaBool == JavaBoolTrue {
+		return true
+	}
+	return false
 }
 
 // Convert an int64 to a byte array in network byte order (BigEndian).

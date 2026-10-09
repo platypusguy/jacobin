@@ -290,6 +290,24 @@ func Load_Net_Socket() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/net/Socket.getOption(Ljava/net/SocketOption;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/net/Socket.setOption(Ljava/net/SocketOption;Ljava/lang/Object;)Ljava/net/Socket;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/net/Socket.supportedOptions()Ljava/util/Set;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/net/Socket.shutdownInput()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

@@ -19,6 +19,18 @@ import (
 
 func Load_Text_SimpleDateFormat() {
 
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.format(Ljava/lang/Object;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/SimpleDateFormat.parseObject(Ljava/lang/String;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/text/SimpleDateFormat.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

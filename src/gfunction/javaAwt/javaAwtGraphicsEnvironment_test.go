@@ -9,6 +9,7 @@ package javaAwt
 import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
+	"jacobin/src/types"
 	"testing"
 )
 
@@ -57,17 +58,15 @@ func TestAwtgeIsHeadless_ReflectsGlobals(t *testing.T) {
 
 	// true case
 	glob.Headless = true
-	if v, ok := awtgeIsHeadless(nil).(bool); !ok {
-		t.Fatalf("awtgeIsHeadless did not return bool when Headless=true, got %T", awtgeIsHeadless(nil))
-	} else if !v {
-		t.Fatalf("awtgeIsHeadless expected true when globals.Headless=true")
+	v := awtgeIsHeadless(nil).(int64)
+	if !types.ConvertJavaBoolToGoBool(v) {
+		t.Fatalf("awtgeIsHeadless expected true when globals.Headless=true but observed false")
 	}
 
 	// false case
 	glob.Headless = false
-	if v, ok := awtgeIsHeadless(nil).(bool); !ok {
-		t.Fatalf("awtgeIsHeadless did not return bool when Headless=false, got %T", awtgeIsHeadless(nil))
-	} else if v {
-		t.Fatalf("awtgeIsHeadless expected false when globals.Headless=false")
+	v = awtgeIsHeadless(nil).(int64)
+	if types.ConvertJavaBoolToGoBool(v) {
+		t.Fatalf("awtgeIsHeadless expected false when globals.Headless=false but observed true")
 	}
 }

@@ -43,6 +43,18 @@ func Load_Lang_Short() {
 			GFunction:  shortCompareUnsigned,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Short.compareTo(Ljava/lang/Short;)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Short.decode(Ljava/lang/String;)Ljava/lang/Short;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Short.doubleValue()D"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -59,6 +71,18 @@ func Load_Lang_Short() {
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  shortFloatValue,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Short.hashCode()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Short.hashCode(S)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Short.intValue()I"] =

@@ -43,6 +43,12 @@ func Load_ECFieldAndPoint() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ecPointGetAffineX}
 	ghelpers.MethodSignatures["java/security/spec/ECPoint.getAffineY()Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ecPointGetAffineY}
+
+	ghelpers.MethodSignatures["java/security/spec/ECPoint.equals(Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+
+	ghelpers.MethodSignatures["java/security/spec/ECPoint.hashCode()I"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 }
 
 // ---------------------------------------------------------

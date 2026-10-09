@@ -63,7 +63,7 @@ func Load_Io_OutputStreamWriter() {
 	// traps that do nothing but return an error
 	// -----------------------------------------
 
-	ghelpers.MethodSignatures["java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;Ljava/lang.String;)V"] =
+	ghelpers.MethodSignatures["java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
@@ -75,13 +75,13 @@ func Load_Io_OutputStreamWriter() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-	ghelpers.MethodSignatures["java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;Ljava/nio/charset/CharsetDecoder;)Ljava/lang.String;"] =
+	ghelpers.MethodSignatures["java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;Ljava/nio/charset/CharsetDecoder;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-	ghelpers.MethodSignatures["java/io/OutputStreamWriter.getEncoding()V"] =
+	ghelpers.MethodSignatures["java/io/OutputStreamWriter.getEncoding()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,

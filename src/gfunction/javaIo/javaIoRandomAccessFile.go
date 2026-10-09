@@ -315,6 +315,12 @@ func Load_Io_RandomAccessFile() {
 			GFunction:  rafWriteByteArrayOffset,
 		}
 
+	ghelpers.MethodSignatures["java/io/RandomAccessFile.skipBytes(I)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	// ----------------------------------------------------------
 	// initIDs - ghelpers.JustReturn
 	// This is a private function that call C native functions.
