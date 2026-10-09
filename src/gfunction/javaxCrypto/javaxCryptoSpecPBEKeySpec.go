@@ -26,6 +26,12 @@ func Load_Crypto_Spec_PBEKeySpec() {
 			GFunction:  pbeKeySpecInit,
 		}
 
+	ghelpers.MethodSignatures["javax/crypto/spec/PBEKeySpec.<init>([C[BI)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  pbeKeySpecInit,
+		}
+
 	ghelpers.MethodSignatures["javax/crypto/spec/PBEKeySpec.<init>([C[BII)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
@@ -110,6 +116,20 @@ func pbeKeySpecInit(params []any) any {
 		this.FieldTable["password"] = object.Field{Ftype: "[C", Fvalue: password}
 		this.FieldTable["salt"] = object.Field{Ftype: "[B", Fvalue: object.Null}
 		this.FieldTable["iterationCount"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
+		this.FieldTable["keyLength"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
+	} else if len(params) == 4 {
+		// PBEKeySpec(char[] password, byte[] salt, int iterationCount)
+		password := params[1]
+		salt := params[2]
+		iterationCount := params[3].(int64)
+
+		if iterationCount < 0 {
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "pbeKeySpecInit: iterationCount must be >= 0")
+		}
+
+		this.FieldTable["password"] = object.Field{Ftype: "[C", Fvalue: password}
+		this.FieldTable["salt"] = object.Field{Ftype: "[B", Fvalue: salt}
+		this.FieldTable["iterationCount"] = object.Field{Ftype: types.Int, Fvalue: iterationCount}
 		this.FieldTable["keyLength"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
 	} else if len(params) == 5 {
 		// PBEKeySpec(char[] password, byte[] salt, int iterationCount, int keyLength)

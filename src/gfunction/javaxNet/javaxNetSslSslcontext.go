@@ -155,6 +155,24 @@ func Load_Javax_Net_Ssl_SSLContext() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.engineInit([Ljavax/net/ssl/KeyManager;[Ljavax/net/ssl/TrustManager;Ljava/security/SecureRandom;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.engineGetDefaultSSLParameters()Ljavax/net/ssl/SSLParameters;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.engineGetSupportedSSLParameters()Ljavax/net/ssl/SSLParameters;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["javax/net/ssl/SSLContext.setDefault(Ljavax/net/ssl/SSLContext;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
