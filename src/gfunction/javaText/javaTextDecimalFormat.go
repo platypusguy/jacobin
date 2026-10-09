@@ -12,6 +12,18 @@ import (
 
 func Load_Text_DecimalFormat() {
 
+	ghelpers.MethodSignatures["java/text/DecimalFormat.format(Ljava/lang/Object;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/DecimalFormat.parseObject(Ljava/lang/String;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/text/DecimalFormat.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

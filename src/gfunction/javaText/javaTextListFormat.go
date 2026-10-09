@@ -12,6 +12,18 @@ import (
 
 func Load_Text_ListFormat() {
 
+	ghelpers.MethodSignatures["java/text/ListFormat.format(Ljava/lang/Object;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/ListFormat.parseObject(Ljava/lang/String;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/text/ListFormat.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

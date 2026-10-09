@@ -12,6 +12,18 @@ import (
 
 func Load_Text_NumberFormat() {
 
+	ghelpers.MethodSignatures["java/text/NumberFormat.format(Ljava/lang/Object;)Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/text/NumberFormat.parseObject(Ljava/lang/String;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/text/NumberFormat.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
