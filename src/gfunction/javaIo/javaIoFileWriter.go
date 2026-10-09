@@ -76,7 +76,7 @@ func Load_Io_FileWriter() {
 	// traps that do nothing but return an error
 	// -----------------------------------------
 
-	ghelpers.MethodSignatures["java/io/FileWriter.<init>(Ljava/io/File;Ljava/lang.String;)V"] =
+	ghelpers.MethodSignatures["java/io/FileWriter.<init>(Ljava/io/File;Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,

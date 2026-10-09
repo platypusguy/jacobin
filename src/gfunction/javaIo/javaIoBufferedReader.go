@@ -90,6 +90,12 @@ func Load_Io_BufferedReader() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/io/BufferedReader.skip(J)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 }
 
 // "java/io/BufferedReader.<init>(Ljava/io/Reader;])V"

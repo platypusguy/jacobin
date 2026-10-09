@@ -9,6 +9,7 @@ package javaAwt
 import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
+	"jacobin/src/types"
 )
 
 func Load_Awt_Graphics_Environment() {
@@ -120,5 +121,5 @@ func Load_Awt_Graphics_Environment() {
 // "java/awt/GraphicsEnvironment.isHeadless()Z"
 func awtgeIsHeadless(params []interface{}) interface{} {
 	glob := globals.GetGlobalRef()
-	return glob.Headless
+	return types.ConvertGoBoolToJavaBool(glob.Headless)
 }
