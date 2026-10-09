@@ -117,6 +117,12 @@ func Load_Math_Big_Decimal() {
 			GFunction:  bigdecimalAbs,
 		}
 
+	ghelpers.MethodSignatures[types.ClassNameBigDecimal+".abs(Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures[types.ClassNameBigDecimal+".add(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,

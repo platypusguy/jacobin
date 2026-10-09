@@ -77,6 +77,18 @@ func Load_Math_Rounding_Mode() {
 			GFunction:  rmodeName,
 		}
 
+	ghelpers.MethodSignatures["java/math/RoundingMode.ordinal()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/math/RoundingMode.describeConstable()Ljava/util/Optional;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/math/RoundingMode.notify()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

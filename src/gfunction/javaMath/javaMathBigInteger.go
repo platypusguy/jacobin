@@ -347,6 +347,18 @@ func Load_Math_Big_Integer() {
 			GFunction:  bigIntegerSqrt,
 		}
 
+	ghelpers.MethodSignatures["java/math/BigInteger.rootn(I)Ljava/math/BigInteger;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/math/BigInteger.rootnAndRemainder(I)[Ljava/math/BigInteger;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/math/BigInteger.sqrtAndRemainder()[Ljava/math/BigInteger;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
