@@ -219,6 +219,12 @@ func Load_Util_Hash_Map() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/util/HashMap.toString()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 }
 
 // Initialise a hash map object to an empty state.

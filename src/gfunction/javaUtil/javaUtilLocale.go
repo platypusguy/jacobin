@@ -72,6 +72,48 @@ func Load_Util_Locale() {
 			GFunction:  getDefaultLocale, // ignore input
 		}
 
+	// traps for not-yet-implemented Locale instance/static methods.
+
+	ghelpers.MethodSignatures["java/util/Locale.setDefault(Ljava/util/Locale;)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.setDefault(Ljava/util/Locale$Category;Ljava/util/Locale;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getAvailableLocales()[Ljava/util/Locale;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getISOCountries()[Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getISOCountries(Ljava/util/Locale$IsoCountryCode;)Ljava/util/Set;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getISOLanguages()[Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.forLanguageTag(Ljava/lang/String;)Ljava/util/Locale;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.of(Ljava/lang/String;)Ljava/util/Locale;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.of(Ljava/lang/String;Ljava/lang/String;)Ljava/util/Locale;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.of(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/Locale;"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+
+	ghelpers.MethodSignatures["java/util/Locale.getLanguage()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getCountry()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getVariant()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getScript()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getExtensionKeys()Ljava/util/Set;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getUnicodeLocaleAttributes()Ljava/util/Set;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getUnicodeLocaleKeys()Ljava/util/Set;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getExtension(C)Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getUnicodeLocaleType(Ljava/lang/String;)Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayLanguage()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayLanguage(Ljava/util/Locale;)Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayScript()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayScript(Ljava/util/Locale;)Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayCountry()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayCountry(Ljava/util/Locale;)Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayVariant()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayVariant(Ljava/util/Locale;)Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayName()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getDisplayName(Ljava/util/Locale;)Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getISO3Language()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.getISO3Country()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.toLanguageTag()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.toString()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.equals(Ljava/lang/Object;)Z"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.hashCode()I"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.clone()Ljava/lang/Object;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.hasExtensions()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Locale.stripExtensions()Ljava/util/Locale;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+
 }
 
 // "java/util/Locale.getDefault()Ljava/util/Locale;"

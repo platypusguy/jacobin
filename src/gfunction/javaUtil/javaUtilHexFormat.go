@@ -211,6 +211,24 @@ func Load_Util_HexFormat() {
 			GFunction:  hfWithUpperCase,
 		}
 
+	ghelpers.MethodSignatures["java/util/HexFormat.isUpperCase()Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/HexFormat.formatHex(Ljava/lang/StringBuilder;[B)Ljava/lang/StringBuilder;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/HexFormat.formatHex(Ljava/lang/StringBuilder;[BII)Ljava/lang/StringBuilder;"] =
+		ghelpers.GMeth{
+			ParamSlots: 4,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 }
 
 // <clinit> for class HexFormat

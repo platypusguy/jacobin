@@ -165,6 +165,58 @@ func Load_Util_Date() {
 			ParamSlots: 0,
 			GFunction:  udateToString,
 		}
+
+	// --- Deprecated / additional methods ---
+	ghelpers.MethodSignatures["java/util/Date.getYear()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+	ghelpers.MethodSignatures["java/util/Date.setYear(I)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+	ghelpers.MethodSignatures["java/util/Date.getTimezoneOffset()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+	ghelpers.MethodSignatures["java/util/Date.toGMTString()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+	ghelpers.MethodSignatures["java/util/Date.toLocaleString()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+	ghelpers.MethodSignatures["java/util/Date.UTC(IIIIII)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 6,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+	ghelpers.MethodSignatures["java/util/Date.parse(Ljava/lang/String;)J"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapDeprecated,
+		}
+	ghelpers.MethodSignatures["java/util/Date.compareTo(Ljava/util/Date;)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+	ghelpers.MethodSignatures["java/util/Date.toInstant()Ljava/time/Instant;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+	ghelpers.MethodSignatures["java/util/Date.from(Ljava/time/Instant;)Ljava/util/Date;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }
 
 // === java/util/Date minimal implementation ===

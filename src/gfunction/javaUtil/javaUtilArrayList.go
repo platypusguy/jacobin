@@ -226,6 +226,66 @@ func Load_Util_ArrayList() {
 			ParamSlots: 0,
 			GFunction:  arraylistTrimToSize,
 		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.equals(Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.hashCode()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.toString()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.getFirst()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.getLast()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.addFirst(Ljava/lang/Object;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.addLast(Ljava/lang/Object;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.removeFirst()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.removeLast()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/ArrayList.reversed()Ljava/util/List;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
 }
 
 var classNameArrayList = "java/util/ArrayList"

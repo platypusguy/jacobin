@@ -93,6 +93,30 @@ func Load_Util_List() {
 			GFunction:  listOfVarargs,
 		}
 
+	// traps for the abstract methods inherited from Collection (interface-dispatch stubs; concrete
+	// implementations such as ArrayList/LinkedList/Vector provide the real behavior).
+
+	ghelpers.MethodSignatures["java/util/List.size()I"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.isEmpty()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.contains(Ljava/lang/Object;)Z"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.add(Ljava/lang/Object;)Z"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.remove(Ljava/lang/Object;)Z"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.clear()V"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.toArray()[Ljava/lang/Object;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.toArray([Ljava/lang/Object;)[Ljava/lang/Object;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.equals(Ljava/lang/Object;)Z"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.hashCode()I"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+
+	// traps for List-specific abstract/positional-access methods.
+
+	ghelpers.MethodSignatures["java/util/List.get(I)Ljava/lang/Object;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.set(ILjava/lang/Object;)Ljava/lang/Object;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.add(ILjava/lang/Object;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.remove(I)Ljava/lang/Object;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.indexOf(Ljava/lang/Object;)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.lastIndexOf(Ljava/lang/Object;)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/List.subList(II)Ljava/util/List;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
 	// traps for functions that reference forbidden types: Collection, Consumer, ListIterator, Spliterator, UnaryOperator, Comparator.
 
 	ghelpers.MethodSignatures["java/util/List.addAll(Ljava/util/Collection;)Z"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
