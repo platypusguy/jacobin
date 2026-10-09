@@ -13,6 +13,7 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/gfunction/javaMath"
+	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/gfunction/misc"
 	"jacobin/src/object"
 	"jacobin/src/types"
@@ -404,7 +405,7 @@ func printstreamWriteFromByteArray(params []any) any {
 	}
 
 	str := object.GoStringFromJavaByteArray(jba)
-	_,_ = fmt.Fprint(writer, str)
+	_, _ = fmt.Fprint(writer, str)
 	return nil
 }
 
@@ -416,7 +417,7 @@ func PrintlnV(params []any) any {
 		errMsg := fmt.Sprintf("PrintlnV: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	_,_ = fmt.Fprintln(writer, "")
+	_, _ = fmt.Fprintln(writer, "")
 	return nil
 }
 
@@ -428,7 +429,7 @@ func PrintlnChar(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	bb := byte(params[1].(int64))
-	_,_ = fmt.Fprintln(writer, string(bb))
+	_, _ = fmt.Fprintln(writer, string(bb))
 	return nil
 }
 
@@ -610,7 +611,7 @@ func Printf(params []any) any {
 	objPtr := retval.(*object.Object)
 	str := object.GoStringFromStringObject(objPtr)
 
-	_,_ = fmt.Fprint(writer, str)
+	_, _ = fmt.Fprint(writer, str)
 
 	return params[0] // Return the PrintStream object
 }
@@ -737,6 +738,14 @@ func _printObject(params []any, newLine bool) any {
 				}
 				return res
 			}
+			if object.IsObjectClass(inObj, types.ClassNameLocale) {
+				res := javaUtil.LocaleToString([]any{inObj})
+				if strObj, ok := res.(*object.Object); ok {
+					strBuffer = object.GoStringFromStringObject(strObj)
+					break
+				}
+				return res
+			}
 			classNameSuffix := object.GetClassNameSuffix(inObj, true)
 			strBuffer = classNameSuffix + "{"
 			for name, field := range inObj.FieldTable {
@@ -744,11 +753,11 @@ func _printObject(params []any, newLine bool) any {
 			}
 			strBuffer = strBuffer[:len(strBuffer)-2] + "}"
 			if newLine {
-				_,_ = fmt.Fprintln(writer, strBuffer)
+				_, _ = fmt.Fprintln(writer, strBuffer)
 				return nil
 			}
 
-			_,_ = fmt.Fprint(writer, strBuffer)
+			_, _ = fmt.Fprint(writer, strBuffer)
 			return nil
 
 		default:
@@ -758,9 +767,9 @@ func _printObject(params []any, newLine bool) any {
 	}
 
 	if newLine {
-		_,_ = fmt.Fprintln(writer, strBuffer)
+		_, _ = fmt.Fprintln(writer, strBuffer)
 	} else {
-		_,_ = fmt.Fprint(writer, strBuffer)
+		_, _ = fmt.Fprint(writer, strBuffer)
 	}
 
 	return nil
@@ -776,7 +785,7 @@ func PrintObject(params []any) any {
 			errMsg := fmt.Sprintf("PrintObject: Expected io.Writer, observed %T", params[0])
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
-		_,_ = fmt.Fprint(writer, types.NullString)
+		_, _ = fmt.Fprint(writer, types.NullString)
 		return nil
 	}
 
@@ -799,7 +808,7 @@ func PrintlnObject(params []any) any {
 			errMsg := fmt.Sprintf("PrintlnObject: Expected io.Writer, observed %T", params[0])
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
-		_,_ = fmt.Fprintln(writer, types.NullString)
+		_, _ = fmt.Fprintln(writer, types.NullString)
 		return nil
 	}
 
@@ -850,7 +859,7 @@ func _printLinkedList(params []any, newLine bool) any {
 		// Start with the front element.
 		// Continue to the end.
 		element := llst.Front()
-		_,_ = fmt.Fprint(writer, "[")
+		_, _ = fmt.Fprint(writer, "[")
 		for ix := 0; ix < llst.Len(); ix++ {
 			strBuffer += object.StringifyAnythingGo(element.Value)
 			strBuffer += ", "
@@ -862,9 +871,9 @@ func _printLinkedList(params []any, newLine bool) any {
 	strBuffer = strBuffer[:len(strBuffer)-2] + "]"
 
 	if newLine {
-		_,_ = fmt.Fprintln(writer, strBuffer)
+		_, _ = fmt.Fprintln(writer, strBuffer)
 	} else {
-		_,_ = fmt.Fprint(writer, strBuffer)
+		_, _ = fmt.Fprint(writer, strBuffer)
 	}
 
 	return nil
