@@ -239,6 +239,18 @@ func Load_Lang_Character() {
 			GFunction:  ghelpers.TrapUnicode,
 		}
 
+	ghelpers.MethodSignatures["java/lang/Character.resolveConstantDesc(Ljava/lang/invoke/MethodHandles/Lookup;)Ljava/lang/Character;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Character.reverseBytes(C)C"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/lang/Character.toLowerCase(C)C"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
