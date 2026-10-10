@@ -145,8 +145,8 @@ func TestOutputStreamWriter_WriteStringBuffer(t *testing.T) {
 
 	strObj := object.StringObjectFromGoString("Hello")
 	// write subset: "ell"
-	if res := oswWriteStringBuffer([]interface{}{target, strObj, int64(1), int64(3)}); res != nil {
-		t.Fatalf("oswWriteStringBuffer error: %v", res)
+	if res := oswWriteString([]interface{}{target, strObj, int64(1), int64(3)}); res != nil {
+		t.Fatalf("oswWriteString error: %v", res)
 	}
 
 	bytes, err := os.ReadFile(filePath)

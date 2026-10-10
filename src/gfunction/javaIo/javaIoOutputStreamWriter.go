@@ -56,7 +56,7 @@ func Load_Io_OutputStreamWriter() {
 	ghelpers.MethodSignatures["java/io/OutputStreamWriter.write(Ljava/lang/String;II)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  oswWriteStringBuffer,
+			GFunction:  oswWriteString,
 		}
 
 	// -----------------------------------------
@@ -240,31 +240,38 @@ func oswWriteCharBuffer(params []interface{}) interface{} {
 }
 
 // "java/io/OutputStreamWriter.write(Ljava/lang/String;II)I"
-func oswWriteStringBuffer(params []interface{}) interface{} {
+// "java/io/OutputStreamWriter.write(Ljava/lang/String)I"
+func oswWriteString(params []interface{}) interface{} {
 
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[ghelpers.FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "oswWriteStringBuffer: OutputStreamWriter object lacks a ghelpers.FileHandle field"
+		errMsg := "oswWriteString: OutputStreamWriter object lacks a ghelpers.FileHandle field"
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get the parameter string byte array, offset, and length.
 	javaBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	if !ok {
-		errMsg := "oswWriteStringBuffer: Trouble with value field"
+		errMsg := "oswWriteString: Trouble with value field"
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
 	paramBytes := object.GoByteArrayFromJavaByteArray(javaBytes)
-	offset := params[2].(int64)
-	length := params[3].(int64)
+	var offset, length int64
+	if len(params) == 4 {
+		offset = params[2].(int64)
+		length = params[3].(int64)
+	} else {
+		offset = 0
+		length = int64(len(paramBytes))
+	}
 
 	// Check parameters.
 	if length == 0 {
 		return int64(0)
 	}
 	if length < 0 || offset < 0 || length > (int64(len(paramBytes))-offset) {
-		errMsg := fmt.Sprintf("oswWriteStringBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
+		errMsg := fmt.Sprintf("oswWriteString: Error in parameters: offset=%d, length=%d, char.array.length=%d",
 			offset, length, len(paramBytes))
 		return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
@@ -278,7 +285,7 @@ func oswWriteStringBuffer(params []interface{}) interface{} {
 	// Write the byte buffer.
 	_, err := osFile.Write(outBytes)
 	if err != nil {
-		errMsg := fmt.Sprintf("oswWriteStringBuffer: osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswWriteString: osFile.Write failed, reason: %s", err.Error())
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
 

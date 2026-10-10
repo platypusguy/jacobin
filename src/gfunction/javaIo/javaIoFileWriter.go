@@ -69,7 +69,13 @@ func Load_Io_FileWriter() {
 	ghelpers.MethodSignatures["java/io/FileWriter.write(Ljava/lang/String;II)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  oswWriteStringBuffer,
+			GFunction:  oswWriteString,
+		}
+
+	ghelpers.MethodSignatures["java/io/FileWriter.write(Ljava/lang/String;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  oswWriteString,
 		}
 
 	// -----------------------------------------

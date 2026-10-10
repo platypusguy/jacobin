@@ -50,7 +50,7 @@ func TestFileWriter_Write_OneChar_CharBuffer_StringBuffer(t *testing.T) {
 
 	// write(String,II)V -> write "DEF"
 	sObj := object.StringObjectFromGoString("DEF")
-	if ret := oswWriteStringBuffer([]interface{}{fw, sObj, int64(0), int64(3)}); ret != nil {
+	if ret := oswWriteString([]interface{}{fw, sObj, int64(0), int64(3)}); ret != nil {
 		t.Fatalf("write(String,II) error: %v", ret)
 	}
 
@@ -92,7 +92,7 @@ func TestFileWriter_Append_Mode(t *testing.T) {
 	if ret := initFileOutputStreamStringBoolean([]interface{}{fw2, object.StringObjectFromGoString(filePath), int64(1)}); ret != nil {
 		t.Fatalf("init (append) error: %v", ret)
 	}
-	_ = oswWriteStringBuffer([]interface{}{fw2, object.StringObjectFromGoString("YZ"), int64(0), int64(2)})
+	_ = oswWriteString([]interface{}{fw2, object.StringObjectFromGoString("YZ"), int64(0), int64(2)})
 	_ = oswClose([]interface{}{fw2})
 
 	// Verify content is "XYZ"
@@ -127,9 +127,9 @@ func TestFileWriter_Write_ParamErrors(t *testing.T) {
 		}
 	}
 
-	// oswWriteStringBuffer with invalid (offset,length)
+	// oswWriteString with invalid (offset,length)
 	sObj := object.StringObjectFromGoString("HI")
-	if res := oswWriteStringBuffer([]interface{}{fw, sObj, int64(0), int64(5)}); res == nil {
+	if res := oswWriteString([]interface{}{fw, sObj, int64(0), int64(5)}); res == nil {
 		t.Fatalf("expected error for string buffer bounds")
 	} else if geb, ok := res.(*ghelpers.GErrBlk); ok {
 		if geb.ExceptionType != excNames.IndexOutOfBoundsException {
