@@ -78,6 +78,7 @@ func Error(argMsg string) {
 		errMsg = fmt.Sprintf("Error: *** stderr failed, err: %v", err)
 		rawAbort(excNames.IOError, errMsg)
 	}
+	_ = os.Stderr.Sync()
 }
 
 // Trace as-is.
@@ -110,6 +111,7 @@ func Warning(argMsg string) {
 		errMsg = fmt.Sprintf("Error: *** stderr failed, err: %v", err)
 		rawAbort(excNames.IOError, errMsg)
 	}
+	_ = os.Stderr.Sync()
 }
 
 // Perform a minimal abort, which is a direct call to the global minimal abort function.
