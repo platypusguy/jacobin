@@ -6,6 +6,8 @@
 
 package util
 
+import "strings"
+
 // TEST
 // DecodeModifiedUTF8 decodes Modified UTF-8 null: 0xC0 0x80 → 0x00
 func DecodeModifiedUTF8(baIn []byte) []byte {
@@ -21,4 +23,13 @@ func DecodeModifiedUTF8(baIn []byte) []byte {
 		}
 	}
 	return baOut
+}
+
+// IsClassPartOfJDK accepts a classname and returns true if the classname
+// is part of the JDK distribution
+func IsClassPartOfJDK(className string) bool {
+	return strings.HasPrefix(className, "java.") ||
+		strings.HasPrefix(className, "jdk.") ||
+		strings.HasPrefix(className, "com.sun") ||
+		strings.HasPrefix(className, "sun.")
 }
