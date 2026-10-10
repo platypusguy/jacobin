@@ -28,8 +28,8 @@ func DecodeModifiedUTF8(baIn []byte) []byte {
 // IsClassPartOfJDK accepts a classname and returns true if the classname
 // is part of the JDK distribution
 func IsClassPartOfJDK(className string) bool {
-	return strings.HasPrefix(className, "java.") ||
-		strings.HasPrefix(className, "jdk.") ||
-		strings.HasPrefix(className, "com.sun") ||
-		strings.HasPrefix(className, "sun.")
+	return strings.HasPrefix(className, "java/") ||
+		strings.HasPrefix(className, "jdk/") ||
+		strings.HasPrefix(className, "com/sun") ||
+		strings.HasPrefix(className, "sun/")
 }
