@@ -268,7 +268,7 @@ func oswWriteString(params []interface{}) interface{} {
 
 	// Check parameters.
 	if length == 0 {
-		return int64(0)
+		return nil
 	}
 	if length < 0 || offset < 0 || length > (int64(len(paramBytes))-offset) {
 		errMsg := fmt.Sprintf("oswWriteString: Error in parameters: offset=%d, length=%d, char.array.length=%d",
