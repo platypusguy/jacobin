@@ -196,7 +196,7 @@ processMTentry: // at this point, we have the mtEntry
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "INVOKESTATIC: Error creating frame in: " +
-				className + "." + methodName + methodType
+				className + "." + methodName + methodType + ", err: " + err.Error()
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
 				return ERROR_OCCURRED // applies only if in test
@@ -204,7 +204,7 @@ processMTentry: // at this point, we have the mtEntry
 			return RESUME_HERE // caught
 		}
 
-		fr.PC += 3                    // 2 == initial PC advance in this bytecode + 1 for next bytecode
+		fr.PC += 3                     // 2 == initial PC advance in this bytecode + 1 for next bytecode
 		fr.FrameStack.PushFront(frame) // push the new frame
 		return 0
 	}

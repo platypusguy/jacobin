@@ -10,6 +10,12 @@ import "jacobin/src/gfunction/ghelpers"
 
 func Load_Traps_Java_Util() {
 
+	ghelpers.MethodSignatures["java/util/concurrent/BlockingQueue.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapClass,
+		}
+
 	ghelpers.MethodSignatures["java/util/concurrent/Executors.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -23,6 +29,30 @@ func Load_Traps_Java_Util() {
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/Executors.newCachedThreadPool(Ljava/util/concurrent/ThreadFactory;)Ljava/util/concurrent/ExecutorService;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/concurrent/LinkedBlockingQueue.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapClass,
+		}
+
+	ghelpers.MethodSignatures["java/util/concurrent/LinkedBlockingQueue.<init>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/concurrent/LinkedBlockingQueue.<init>(I)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/concurrent/LinkedBlockingQueue.<init>(Ljava/util/Collection;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,

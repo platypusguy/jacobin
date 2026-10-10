@@ -203,7 +203,7 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 			}
 			pos = loc
 			if klass.utf8Refs[subAttr.attrName].content == "LineNumberTable" &&
-				!util.IsFilePartOfJDK(&klass.className) {
+				!util.IsClassPartOfJDK(klass.className) {
 				buildLineNumberTable(&ca, &subAttr, methodName)
 			}
 			ca.attributes = append(ca.attributes, subAttr)

@@ -217,7 +217,7 @@ processMTentry:
 			className, methodName, methodType, &m, true, fr)
 		if err != nil {
 			return throwInvokevirtualException(fr, excNames.InvalidStackFrameException,
-				"Error creating frame in: "+fqn)
+				"Error creating frame in: "+fqn+", err: "+err.Error())
 		}
 
 		fr.PC += 3                         // 2 for PC slot, move to next bytecode before exiting

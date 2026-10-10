@@ -50,16 +50,6 @@ func ConvertToPlatformPathSeparators(pathIn string) string {
 	return pathIn
 }
 
-// IsFilePartOfJDK accepts a filename and returns true if the filename
-// is part of the JDK distribution
-func IsFilePartOfJDK(filename *string) bool {
-	str := ConvertInternalClassNameToUserFormat(*filename)
-	return strings.HasPrefix(str, "java.") ||
-		strings.HasPrefix(str, "jdk.") ||
-		strings.HasPrefix(str, "com.sun") ||
-		strings.HasPrefix(str, "sun.")
-}
-
 // SearchDirByFileExtension searches a directory and its subdirectories for
 // files with the extension. It returns a pointer to a slice of strings
 // containing the path for every qualifying file, or nil if an error has

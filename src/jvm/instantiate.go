@@ -215,7 +215,7 @@ func doStaticDefaults(k *classloader.Klass, classname string) {
 // once per class: code validity check, static-field defaults, then <clinit>.
 func initializeClass(k *classloader.Klass, classname string, superclasses []string, fs *list.List) error {
 	// (a) code check — skip for JDK classes, as before
-	if !util.IsFilePartOfJDK(&classname) {
+	if !util.IsClassPartOfJDK(classname) {
 		for _, m := range k.Data.MethodTable {
 			code := m.CodeAttr.Code
 			var err error

@@ -230,6 +230,14 @@ func createAndInitNewFrame(
 	fram.Meth = append(fram.Meth, m.Code...) // copy the method's bytecodes over
 	fram.AccessFlags = m.AccessFlags
 
+	// Check if the class is part of the JDK and if so, reaturn an error.
+	if util.IsClassPartOfJDK(fram.ClName) {
+		fqn := fram.ClName + "." + fram.MethName + fram.MethType
+		msg := fmt.Sprintf("createAndInitNewFrame: JDK library function was requested, PC: %d, FQN: %s", fram.PC, fqn)
+		trace.Warning(msg)
+		//return nil, errors.New(msg)
+	}
+
 	// pop the parameters off the present stack and put them in
 	// the new frame's locals. This is done in reverse order so
 	// that the parameters are pushed in the right order to be

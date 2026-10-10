@@ -92,6 +92,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Process()
 	javaLang.Load_Lang_Process_Builder()
 	javaLang.Load_Lang_Process_Handle_Impl()
+	javaLang.Load_Lang_Record()
 	javaLang.Load_Lang_Reflect_Modifier()
 	javaLang.Load_Lang_Runtime()
 	javaLang.Load_Lang_Runtime_SwitchBootstraps()

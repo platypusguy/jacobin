@@ -131,7 +131,7 @@ func doInvokeSpecial(fr *frames.Frame, _ int64) int {
 		fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, fr)
 		if err != nil {
 			return throwInvokeSpecial(fr, excNames.InvalidStackFrameException,
-				"INVOKESPECIAL: Error creating frame in: "+className+"."+methodName+methodType)
+				"INVOKESPECIAL: Error creating frame in: "+className+"."+methodName+methodType+", err: "+err.Error())
 		}
 
 		fr.PC += 3                    // 2 for the CP slot operand, plus 1 to move past the opcode; used when we return from the invoked method
