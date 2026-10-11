@@ -51,7 +51,9 @@ var jdkPrefixes = []string{
 	"org.ietf.jgss.",
 	"org.w3c.dom.",
 	"org.xml.sax.",
+}
 
+var jdkPrefixesJavax = []string{
 	// javax.* (JDK-owned only; excludes EE/Jakarta-era packages)
 	"javax.accessibility.",
 	"javax.annotation.processing.",
@@ -82,7 +84,9 @@ var jdkPrefixes = []string{
 	"javax.xml.transform.",
 	"javax.xml.validation.",
 	"javax.xml.xpath.",
+}
 
+var jdkPrefixesComSun = []string{
 	// com.sun.* (JDK-owned only; excludes jna, mail, jersey, xml.bind, istack, ...)
 	"com.sun.awt.",
 	"com.sun.beans.",
@@ -116,9 +120,26 @@ var jdkPrefixes = []string{
 
 func IsClassPartOfJDK(arg string) bool {
 	className := ConvertInternalClassNameToUserFormat(arg)
+
 	for _, prefix := range jdkPrefixes {
 		if strings.HasPrefix(className, prefix) {
 			return true
+		}
+	}
+
+	if strings.HasPrefix(className, "javax.") {
+		for _, prefix := range jdkPrefixesJavax {
+			if strings.HasPrefix(className, prefix) {
+				return true
+			}
+		}
+	}
+
+	if strings.HasPrefix(className, "com.sun.") {
+		for _, prefix := range jdkPrefixesComSun {
+			if strings.HasPrefix(className, prefix) {
+				return true
+			}
 		}
 	}
 	return false
