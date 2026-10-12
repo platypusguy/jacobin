@@ -25,23 +25,8 @@ func DecodeModifiedUTF8(baIn []byte) []byte {
 }
 
 // IsClassPartOfJDK accepts a classname and returns true if the classname
-// is part of the JDK distribution
-
-/*
-Claude's comments:
-Trailing dots matter. They keep com.sun.managementfoo.X from matching com.sun.management.
-Deliberately excluded javax packages: javax.annotation.* (other than processing), javax.transaction.* (other than xa),
-javax.xml.bind, javax.activation, javax.rmi.CORBA, javax.jws, javax.xml.ws,
-and everything Jakarta-era (servlet, persistence, inject, ws.rs, validation).
-Those either left the JDK in 11 or were never in it, so an app may load them from a jar.
-Overlap case: javax.xml.stream, javax.xml.parsers, etc. are also shipped by standalone API jars (stax-api, xml-apis).
-Those are the same API, so treating them as JDK is the right call.
-The com.sun list is the part to verify. I wrote it from memory of JDK 17-ish, and it varies across versions.
-Generate the authoritative set from your baseline JDK with jimage list $JAVA_HOME/lib/modules,
-take the distinct package names under com/sun/, javax/, and org/, and diff against this list.
-If you also target JDK 8, add com.sun.corba., org.omg., and javax.rmi. back in.
-*/
-
+// is part of the JDK distribution (includes packages in in early Java releases
+// that were subsequently removed, such as CORBA, etc.)
 var jdkPrefixes = []string{
 	"java.",
 	"jdk.",
@@ -50,6 +35,7 @@ var jdkPrefixes = []string{
 	// org.*
 	"org.ietf.jgss.",
 	"org.w3c.dom.",
+	"org.omg.",
 	"org.xml.sax.",
 }
 
@@ -64,7 +50,7 @@ var jdkPrefixesJavax = []string{
 	"javax.naming.",
 	"javax.net.",
 	"javax.print.",
-	"javax.rmi.ssl.",
+	"javax.rmi.",
 	"javax.script.",
 	"javax.security.auth.",
 	"javax.security.cert.",
