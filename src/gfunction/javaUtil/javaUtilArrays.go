@@ -278,11 +278,15 @@ func objectElementsEqual(a, b *object.Object) bool {
 	}
 
 	// Compare boxed primitives (same class, same underlying value) by value.
-	if a.KlassName == b.KlassName {
-		fa, okA := a.FieldTable["value"]
-		fb, okB := b.FieldTable["value"]
-		if okA && okB {
-			return fa.Fvalue == fb.Fvalue
+	switch object.GoStringFromStringPoolIndex(a.KlassName) {
+	case "java/lang/Integer", "java/lang/Long", "java/lang/Short", "java/lang/Byte",
+		"java/lang/Character", "java/lang/Boolean", "java/lang/Float", "java/lang/Double":
+		if a.KlassName == b.KlassName {
+			fa, okA := a.FieldTable["value"]
+			fb, okB := b.FieldTable["value"]
+			if okA && okB {
+				return fa.Fvalue == fb.Fvalue
+			}
 		}
 	}
 
