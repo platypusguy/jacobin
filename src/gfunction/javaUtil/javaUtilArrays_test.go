@@ -422,6 +422,50 @@ func TestArraysEquals_ObjectArrays(t *testing.T) {
 	}
 }
 
+func TestArraysEquals_DistinctEqualStringObjects(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimRefArray("Ljava/lang/Object;", 1)
+	rawArr1 := arr1.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr1[0] = object.StringObjectFromGoString("hello")
+
+	arr2 := object.Make1DimRefArray("Ljava/lang/Object;", 1)
+	rawArr2 := arr2.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr2[0] = object.StringObjectFromGoString("hello") // distinct object, same content
+
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolTrue {
+		t.Errorf("Expected true for distinct String objects with equal content")
+	}
+
+	rawArr2[0] = object.StringObjectFromGoString("world")
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for String objects with different content")
+	}
+}
+
+func TestArraysEquals_DistinctEqualBoxedIntegers(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimRefArray("Ljava/lang/Object;", 1)
+	rawArr1 := arr1.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr1[0] = object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(42))
+
+	arr2 := object.Make1DimRefArray("Ljava/lang/Object;", 1)
+	rawArr2 := arr2.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr2[0] = object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(42)) // distinct object, same value
+
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolTrue {
+		t.Errorf("Expected true for distinct boxed Integer objects with equal value")
+	}
+
+	rawArr2[0] = object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(43))
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for boxed Integer objects with different value")
+	}
+}
+
 func TestArraysEquals_NonObjectParams(t *testing.T) {
 	if utilArraysEquals([]interface{}{"not an object", "also not"}) != types.JavaBoolFalse {
 		t.Errorf("Expected false when params are not *object.Object")

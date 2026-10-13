@@ -257,8 +257,43 @@ func Load_Util_Arrays() {
 
 }
 
+// objectElementsEqual compares two *object.Object elements the way Java's
+// Arrays.equals(Object[], Object[]) would: by calling equals() on the elements.
+// For String objects (which Jacobin frequently creates as distinct instances
+// backing the same contents), compare by content. For boxed primitives
+// (Integer, Short, Long, Byte, Character, Boolean, Float, Double), compare by
+// their underlying "value" field, matching Java's boxed-type equals() semantics.
+// All other object types fall back to reference equality.
+func objectElementsEqual(a, b *object.Object) bool {
+	if a == b { // covers both nil and identical reference
+		return true
+	}
+	if a == nil || a == object.Null || b == nil || b == object.Null {
+		return false
+	}
+
+	// Compare String objects by content.
+	if object.IsStringObject(a) && object.IsStringObject(b) {
+		return object.GoStringFromStringObject(a) == object.GoStringFromStringObject(b)
+	}
+
+	// Compare boxed primitives (same class, same underlying value) by value.
+	if a.KlassName == b.KlassName {
+		fa, okA := a.FieldTable["value"]
+		fb, okB := b.FieldTable["value"]
+		if okA && okB {
+			return fa.Fvalue == fb.Fvalue
+		}
+	}
+
+	// Fallback: reference equality.
+	return false
+}
+
 // Arrays.equals(Object[] a, Object[] b) -> boolean
-// Minimal implementation that compares reference arrays element-wise by reference equality.
+// Compares reference arrays element-wise, calling equals() semantics on the
+// elements: String objects are compared by content and boxed primitives by
+// value; other object types fall back to reference equality.
 func utilArraysEquals(params []interface{}) interface{} {
 	if len(params) < 2 {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "utilArraysEquals: too few arguments")
@@ -297,7 +332,7 @@ func utilArraysEquals(params []interface{}) interface{} {
 			return types.JavaBoolFalse
 		}
 		for i := 0; i < len(a); i++ {
-			if a[i] != b[i] { // reference equality (nil handled by !=)
+			if !objectElementsEqual(a[i], b[i]) {
 				return types.JavaBoolFalse
 			}
 		}
