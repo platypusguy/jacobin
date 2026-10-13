@@ -495,7 +495,7 @@ func integerIntLongShortValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
 	ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	return int64(int32(ii))
+	return int64(int16(ii))
 }
 
 // "java/lang/Integer.parseInt(Ljava/lang/String;)I"
