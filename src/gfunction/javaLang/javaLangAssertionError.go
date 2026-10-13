@@ -52,7 +52,7 @@ func Load_Java_Lang_AssertionError() {
 
 	ghelpers.MethodSignatures["java/lang/AssertionError.<init>(J)V"] =
 		ghelpers.GMeth{
-			ParamSlots:   2,
+			ParamSlots:   1,
 			GFunction:    initAssertionErrorInt64,
 			NeedsContext: true,
 		}
@@ -66,7 +66,7 @@ func Load_Java_Lang_AssertionError() {
 
 	ghelpers.MethodSignatures["java/lang/AssertionError.<init>(D)V"] =
 		ghelpers.GMeth{
-			ParamSlots:   2,
+			ParamSlots:   1,
 			GFunction:    initAssertionErrorDouble,
 			NeedsContext: true,
 		}
