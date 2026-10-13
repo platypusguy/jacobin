@@ -397,11 +397,22 @@ func shortDecode(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.NumberFormatException, "shortDecode: String length is zero")
 	}
 
-	// Replace a leading "#" with hex base.
-	wbase := 10
-	if strings.HasPrefix(strArg, "#") {
-		wbase = 16
+	neg := false
+	if strArg[0] == '-' || strArg[0] == '+' {
+		neg = strArg[0] == '-'
 		strArg = strArg[1:]
+	}
+	wbase := 10
+	switch {
+	case strings.HasPrefix(strArg, "0x"), strings.HasPrefix(strArg, "0X"):
+		wbase, strArg = 16, strArg[2:]
+	case strings.HasPrefix(strArg, "#"):
+		wbase, strArg = 16, strArg[1:]
+	case len(strArg) > 1 && strArg[0] == '0':
+		wbase, strArg = 8, strArg[1:]
+	}
+	if neg {
+		strArg = "-" + strArg
 	}
 
 	output, err := strconv.ParseInt(strArg, wbase, 16)

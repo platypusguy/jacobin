@@ -39,7 +39,7 @@ func Load_Java_Lang_AssertionError() {
 	ghelpers.MethodSignatures["java/lang/AssertionError.<init>(C)V"] =
 		ghelpers.GMeth{
 			ParamSlots:   1,
-			GFunction:    initAssertionErrorInt64,
+			GFunction:    initAssertionErrorChar,
 			NeedsContext: true,
 		}
 
@@ -101,6 +101,16 @@ func initAssertionErrorBoolean(params []any) any {
 }
 
 // AssertionError(char): String.valueOf(char). Chars are carried as int64.
+func initAssertionErrorChar(params []any) any {
+	ii, ok := params[2].(int64)
+	if !ok {
+		return ghelpers.WrongArgType("initAssertionErrorChar", "a char argument", params[2])
+	}
+	params[2] = object.StringObjectFromGoString(string(rune(ii)))
+	return throwableInitString(params)
+}
+
+// AssertionError(I or J): String.valueOf(I or J).
 func initAssertionErrorInt64(params []any) any {
 	ii, ok := params[2].(int64)
 	if !ok {

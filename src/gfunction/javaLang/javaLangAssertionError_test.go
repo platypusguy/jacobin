@@ -205,6 +205,39 @@ func TestInitAssertionErrorInt64_WrongType(t *testing.T) {
 	}
 }
 
+func TestInitAssertionErrorChar(t *testing.T) {
+	jvmStack := setupAssertionErrorTest(t)
+	obj := newAssertionErrorObject()
+
+	ret := initAssertionErrorChar([]any{jvmStack, obj, int64('A')})
+	if ret != nil {
+		t.Errorf("initAssertionErrorChar returned non-nil: %v", ret)
+	}
+
+	dm, ok := obj.FieldTable["detailMessage"]
+	if !ok {
+		t.Fatalf("detailMessage field missing")
+	}
+	got := object.GoStringFromStringObject(dm.Fvalue.(*object.Object))
+	if got != "A" {
+		t.Errorf("expected detailMessage %q, got %q", "A", got)
+	}
+}
+
+func TestInitAssertionErrorChar_WrongType(t *testing.T) {
+	jvmStack := setupAssertionErrorTest(t)
+	obj := newAssertionErrorObject()
+
+	ret := initAssertionErrorChar([]any{jvmStack, obj, "not a char"})
+	errBlk, ok := ret.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected *ghelpers.GErrBlk, got %T: %v", ret, ret)
+	}
+	if errBlk.ErrMsg == "" {
+		t.Errorf("expected non-empty error message")
+	}
+}
+
 func TestInitAssertionErrorFloat(t *testing.T) {
 	jvmStack := setupAssertionErrorTest(t)
 	obj := newAssertionErrorObject()
