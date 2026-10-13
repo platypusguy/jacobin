@@ -178,6 +178,18 @@ func Load_Traps_Java_Io() {
 			GFunction:  ghelpers.TrapClass,
 		}
 
+	ghelpers.MethodSignatures["java/io/ObjectStreamField.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapClass,
+		}
+
+	ghelpers.MethodSignatures["java/io/ObjectStreamField.<init>(Ljava/lang/String;Ljava/lang/Class;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
 	ghelpers.MethodSignatures["java/io/PipedWriter.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

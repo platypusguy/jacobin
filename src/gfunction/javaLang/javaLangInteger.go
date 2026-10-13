@@ -146,13 +146,13 @@ func Load_Lang_Integer() {
 	ghelpers.MethodSignatures["java/lang/Integer.intValue()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  integerIntLongShortValue,
+			GFunction:  integerIntLongIntValue,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Integer.longValue()J"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  integerIntLongShortValue,
+			GFunction:  integerIntLongIntValue,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Integer.lowestOneBit(I)I"] =
@@ -270,6 +270,12 @@ func Load_Lang_Integer() {
 		}
 
 	ghelpers.MethodSignatures["java/lang/Integer.shortValue()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  integerIntLongShortValue,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Integer.shortValue()S"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  integerIntLongShortValue,
@@ -474,14 +480,22 @@ func integerFloatDoubleValue(params []interface{}) interface{} {
 	return float64(ii)
 }
 
-// "java/lang/Integer.intValue()J"
+// "java/lang/Integer.intValue()I"
 // "java/lang/Integer.longValue()J"
-// "java/lang/Integer.shortValue()J"
-func integerIntLongShortValue(params []interface{}) interface{} {
+func integerIntLongIntValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
 	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	return ii
+}
+
+// "java/lang/Integer.shortValue()I"
+// "java/lang/Integer.shortValue()S"
+func integerIntLongShortValue(params []interface{}) interface{} {
+	var ii int64
+	parmObj := params[0].(*object.Object)
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
+	return int64(int32(ii))
 }
 
 // "java/lang/Integer.parseInt(Ljava/lang/String;)I"

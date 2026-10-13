@@ -110,6 +110,8 @@ func Load_Util_Arrays() {
 	ghelpers.MethodSignatures["java/util/Arrays.equals([J[J)Z"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysEquals}
 	ghelpers.MethodSignatures["java/util/Arrays.equals([S[S)Z"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysEquals}
 	ghelpers.MethodSignatures["java/util/Arrays.equals([Z[Z)Z"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysEquals}
+	ghelpers.MethodSignatures["java/util/Arrays.equals([Ljava/lang/Object;[Ljava/lang/Object;)Z"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysEquals}
 
 	// fill
 	ghelpers.MethodSignatures["java/util/Arrays.fill([BB)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}

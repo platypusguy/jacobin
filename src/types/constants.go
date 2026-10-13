@@ -23,9 +23,8 @@ var ObjectArrayClassName = "[java/lang/Object"
 var PtrToJavaLangObject = &ObjectClassName
 var StringPoolObjectIndex = uint32(2) // points to the string pool slice for "java/lang/Object"
 
-// Constants related to "java/lang/String":
-var StringClassName = "java/lang/String"
 var StringArrayClassName = "[java/lang/String"
+var StringClassName = "java/lang/String"
 var StringClassRef = "Ljava/lang/String;"
 var StringPoolStringIndex = uint32(1) // points to the string pool slice for "java/lang/String"
 
@@ -47,6 +46,8 @@ var ClassNameProperties = "java/util/Properties"
 var ClassNameThread = "java/lang/Thread"
 var ClassNameThreadGroup = "java/lang/ThreadGroup"
 var ClassNameThreadState = "java/lang/Thread$State"
+
+const ClassNameThrowable = "java/lang/Throwable"
 
 var StringPoolThreadIndex = uint32(3)        // points to the string pool entry for "java/lang/Thread"
 var StringPoolJavaLangClassIndex = uint32(4) // points to the string entry for "java/lang/Class"

@@ -21,6 +21,7 @@ import (
 // We store the bits as a slice of uint64 in the object's FieldTable.
 
 func Load_Util_BitSet() {
+	ghelpers.MethodSignatures["java/util/BitSet.<clinit>()V"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.ClinitGeneric}
 	ghelpers.MethodSignatures["java/util/BitSet.<init>()V"] = ghelpers.GMeth{ParamSlots: 0, GFunction: bitsetInit}
 	ghelpers.MethodSignatures["java/util/BitSet.<init>(I)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: bitsetInitWithCapacity}
 	ghelpers.MethodSignatures["java/util/BitSet.and(Ljava/util/BitSet;)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: bitsetAnd}

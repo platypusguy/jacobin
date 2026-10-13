@@ -6,7 +6,9 @@
 
 package types
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestClinitStatusConstants(t *testing.T) {
 	if NoClInit != 0x00 {

@@ -4,12 +4,6 @@ import "jacobin/src/gfunction/ghelpers"
 
 func Load_Awt_Traps() {
 
-	ghelpers.MethodSignatures["java/awt/Color.initIDs()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.JustReturn,
-		}
-
 	ghelpers.MethodSignatures["java/awt/image/BufferedImage.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,

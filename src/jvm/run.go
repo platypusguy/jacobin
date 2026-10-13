@@ -234,8 +234,8 @@ func createAndInitNewFrame(
 	if util.IsClassPartOfJDK(fram.ClName) {
 		fqn := fram.ClName + "." + fram.MethName + fram.MethType
 		msg := fmt.Sprintf("createAndInitNewFrame: JDK library function was requested, PC: %d, FQN: %s", fram.PC, fqn)
-		trace.Warning(msg)
-		//return nil, errors.New(msg)
+		// No longer needed: trace.Warning(msg)
+		return nil, errors.New(msg)
 	}
 
 	// pop the parameters off the present stack and put them in

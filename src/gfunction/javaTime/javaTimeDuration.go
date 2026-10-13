@@ -36,6 +36,7 @@ func Load_Time_Duration() {
 	ghelpers.MethodSignatures["java/time/Duration.getUnits()Ljava/util/List;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 	ghelpers.MethodSignatures["java/time/Duration.hashCode()I"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationHashCode}
 	ghelpers.MethodSignatures["java/time/Duration.isNegative()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationIsNegative}
+	ghelpers.MethodSignatures["java/time/Duration.isPositive()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationIsPositive}
 	ghelpers.MethodSignatures["java/time/Duration.isZero()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationIsZero}
 	ghelpers.MethodSignatures["java/time/Duration.minus(Ljava/time/Duration;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinus}
 	ghelpers.MethodSignatures["java/time/Duration.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
@@ -207,6 +208,15 @@ func durationIsNegative(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
 	seconds := self.FieldTable["seconds"].Fvalue.(int64)
 	if seconds < 0 {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+func durationIsPositive(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	seconds := self.FieldTable["seconds"].Fvalue.(int64)
+	if seconds > 0 {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse

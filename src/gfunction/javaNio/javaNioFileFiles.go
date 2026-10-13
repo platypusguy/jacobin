@@ -363,7 +363,7 @@ func filesSize(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IOException,
 			fmt.Sprintf("Files.size: %s", err.Error()))
 	}
-	return int64(fi.Size())
+	return fi.Size()
 }
 
 func filesCreateFile(params []interface{}) interface{} {
@@ -770,7 +770,7 @@ func invokeVisitor(fs *list.List, visitor *object.Object, methodName, methodType
 			if klass == nil || klass.Data.SuperclassIndex == types.InvalidStringIndex {
 				break
 			}
-			currClass = *stringPool.GetStringPointer(uint32(klass.Data.SuperclassIndex))
+			currClass = *stringPool.GetStringPointer(klass.Data.SuperclassIndex)
 		}
 	}
 

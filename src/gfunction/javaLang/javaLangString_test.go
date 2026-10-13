@@ -1149,6 +1149,34 @@ func TestStringEndsWith(t *testing.T) {
 	if result != types.JavaBoolTrue {
 		t.Errorf("Expected true, got %v", result)
 	}
+
+	// Test case: null base string
+	params = []interface{}{
+		nil,
+		object.StringObjectFromGoString("world"),
+	}
+	result = stringEndsWith(params)
+	gErr, ok := result.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("Expected GErrBlk for null base string, got %T", result)
+	}
+	if gErr.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException, got %d", gErr.ExceptionType)
+	}
+
+	// Test case: null suffix argument
+	params = []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		nil,
+	}
+	result = stringEndsWith(params)
+	gErr, ok = result.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("Expected GErrBlk for null suffix argument, got %T", result)
+	}
+	if gErr.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException, got %d", gErr.ExceptionType)
+	}
 }
 
 func TestStringHashCode(t *testing.T) {
