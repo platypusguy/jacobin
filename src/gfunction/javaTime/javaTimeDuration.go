@@ -216,7 +216,8 @@ func durationIsNegative(params []interface{}) interface{} {
 func durationIsPositive(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
 	seconds := self.FieldTable["seconds"].Fvalue.(int64)
-	if seconds > 0 {
+	nanos := self.FieldTable["nanos"].Fvalue.(int64)
+	if seconds > 0 || (seconds == 0 && nanos > 0) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
