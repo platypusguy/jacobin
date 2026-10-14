@@ -111,7 +111,7 @@ func TestSecretKeySpecMethods(t *testing.T) {
 	algo := "HmacSHA256"
 
 	specObj := object.MakeEmptyObjectWithClassName(&className)
- specObj.FieldTable["key"] = object.Field{Ftype: types.JavaByteArray, Fvalue: key}
+	specObj.FieldTable["key"] = object.Field{Ftype: types.JavaByteArray, Fvalue: key}
 	specObj.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algo)}
 
 	// Test getAlgorithm()

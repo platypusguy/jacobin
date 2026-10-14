@@ -15,8 +15,11 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/trace"
 	"jacobin/src/types"
+	"math"
 	"math/big"
 	"os"
+	"strconv"
+	"strings"
 )
 
 // Map repository of method signatures for all G functions:
@@ -79,11 +82,6 @@ func JustReturn([]any) any {
 
 // ReturnNull returns a Java null reference.
 func ReturnNull([]any) any {
-	return object.Null
-}
-
-// ReturnNullObject returns a null object.
-func ReturnNullObject([]any) any {
 	return object.Null
 }
 
@@ -197,4 +195,58 @@ func ConvertArgsToParams(args ...any) []any {
 		params[i] = arg
 	}
 	return params
+}
+
+// JavaFloatingPointToString reproduces Float.toString / Double.toString.
+// bitSize is 32 for float and 64 for double.
+func JavaFloatingPointToString(value float64, bitSize int) string {
+	switch {
+	case math.IsNaN(value):
+		return "NaN"
+	case math.IsInf(value, 1):
+		return "Infinity"
+	case math.IsInf(value, -1):
+		return "-Infinity"
+	case value == 0:
+		if math.Signbit(value) {
+			return "-0.0"
+		}
+		return "0.0"
+	}
+
+	// Shortest round-trip digits, e.g. "-1.2345e+10".
+	scientific := strconv.FormatFloat(value, 'e', -1, bitSize)
+	sign := ""
+	if scientific[0] == '-' {
+		sign = "-"
+		scientific = scientific[1:]
+	}
+	mantissa, exponentText, _ := strings.Cut(scientific, "e")
+	exponent, _ := strconv.Atoi(exponentText)
+	digits := strings.Replace(mantissa, ".", "", 1)
+
+	magnitude := math.Abs(value)
+	if magnitude >= 1e-3 && magnitude < 1e7 {
+		// Plain decimal notation with at least one digit after the point.
+		if exponent >= 0 {
+			integerLength := exponent + 1
+			if len(digits) <= integerLength {
+				return fmt.Sprintf("%s%s%s.0", sign, digits, strings.Repeat("0", integerLength-len(digits)))
+			}
+			return fmt.Sprintf("%s%s.%s", sign, digits[:integerLength], digits[integerLength:])
+		}
+		return fmt.Sprintf("%s0.%s%s", sign, strings.Repeat("0", -exponent-1), digits)
+	}
+
+	// Computerized scientific notation: d.dddE<exponent>.
+	fraction := digits[1:]
+	if fraction == "" {
+		fraction = "0"
+	}
+	return fmt.Sprintf("%s%s.%sE%d", sign, digits[:1], fraction, exponent)
+}
+
+func WrongArgType(funcName, expected string, observed any) any {
+	errMsg := fmt.Sprintf("%s: expected %s, observed: %T", funcName, expected, observed)
+	return GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 }

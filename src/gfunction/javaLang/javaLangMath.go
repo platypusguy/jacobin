@@ -95,7 +95,9 @@ func Load_Lang_Math() {
 	ghelpers.MethodSignatures["java/lang/Math.min(JJ)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: minJJ}
 	ghelpers.MethodSignatures["java/lang/Math.multiplyExact(II)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactII}
 	ghelpers.MethodSignatures["java/lang/Math.multiplyExact(JI)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactJx}
+	ghelpers.MethodSignatures["java/lang/Math.multiplyExact(JI)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactJx}
 	ghelpers.MethodSignatures["java/lang/Math.multiplyExact(JJ)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactJx}
+	ghelpers.MethodSignatures["java/lang/Math.multiplyFull(II)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactII}
 	ghelpers.MethodSignatures["java/lang/Math.multiplyHigh(JJ)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyHighJJ}
 	ghelpers.MethodSignatures["java/lang/Math.negateExact(I)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: negateExactInt64}
 	ghelpers.MethodSignatures["java/lang/Math.negateExact(J)J"] = ghelpers.GMeth{ParamSlots: 1, GFunction: negateExactInt64}
@@ -184,7 +186,9 @@ func Load_Lang_Math() {
 	ghelpers.MethodSignatures["java/lang/StrictMath.min(JJ)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: minJJ}
 	ghelpers.MethodSignatures["java/lang/StrictMath.multiplyExact(II)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactII}
 	ghelpers.MethodSignatures["java/lang/StrictMath.multiplyExact(JI)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactJx}
+	ghelpers.MethodSignatures["java/lang/StrictMath.multiplyExact(JI)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactJx}
 	ghelpers.MethodSignatures["java/lang/StrictMath.multiplyExact(JJ)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactJx}
+	ghelpers.MethodSignatures["java/lang/StrictMath.multiplyFull(II)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyExactII}
 	ghelpers.MethodSignatures["java/lang/StrictMath.multiplyHigh(JJ)J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: multiplyHighJJ}
 	ghelpers.MethodSignatures["java/lang/StrictMath.negateExact(I)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: negateExactInt64}
 	ghelpers.MethodSignatures["java/lang/StrictMath.negateExact(J)J"] = ghelpers.GMeth{ParamSlots: 1, GFunction: negateExactInt64}

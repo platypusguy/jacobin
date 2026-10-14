@@ -292,6 +292,200 @@ func TestArraysEquals(t *testing.T) {
 	}
 }
 
+func TestArraysEquals_TooFewArguments(t *testing.T) {
+	result := utilArraysEquals([]interface{}{}).(*ghelpers.GErrBlk)
+	if result.ExceptionType != excNames.IllegalArgumentException || result.ErrMsg != "utilArraysEquals: too few arguments" {
+		t.Errorf("Expected IllegalArgumentException for too few arguments")
+	}
+}
+
+func TestArraysEquals_BothNull(t *testing.T) {
+	if utilArraysEquals([]interface{}{nil, nil}) != types.JavaBoolTrue {
+		t.Errorf("Expected true when both arrays are nil")
+	}
+}
+
+func TestArraysEquals_OneNull(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimArray(object.T_INT, 3)
+
+	if utilArraysEquals([]interface{}{arr1, nil}) != types.JavaBoolFalse {
+		t.Errorf("Expected false when one array is nil")
+	}
+	if utilArraysEquals([]interface{}{nil, arr1}) != types.JavaBoolFalse {
+		t.Errorf("Expected false when one array is nil")
+	}
+}
+
+func TestArraysEquals_ByteArrays(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimArray(object.T_BYTE, 2)
+	v1 := arr1.FieldTable["value"].Fvalue.([]types.JavaByte)
+	v1[0], v1[1] = 10, 20
+
+	arr2 := object.Make1DimArray(object.T_BYTE, 2)
+	v2 := arr2.FieldTable["value"].Fvalue.([]types.JavaByte)
+	v2[0], v2[1] = 10, 20
+
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolTrue {
+		t.Errorf("Expected true for equal byte arrays")
+	}
+
+	v2[1] = 99
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for unequal byte arrays")
+	}
+}
+
+func TestArraysEquals_FloatArrays(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimArray(object.T_FLOAT, 2)
+	v1 := arr1.FieldTable["value"].Fvalue.([]float64)
+	v1[0], v1[1] = 1.5, 2.5
+
+	arr2 := object.Make1DimArray(object.T_FLOAT, 2)
+	v2 := arr2.FieldTable["value"].Fvalue.([]float64)
+	v2[0], v2[1] = 1.5, 2.5
+
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolTrue {
+		t.Errorf("Expected true for equal float arrays")
+	}
+
+	v2[1] = 9.9
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for unequal float arrays")
+	}
+}
+
+func TestArraysEquals_DifferentLengths(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimArray(object.T_INT, 2)
+	arr2 := object.Make1DimArray(object.T_INT, 3)
+
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for arrays of different lengths")
+	}
+}
+
+func TestArraysEquals_ObjectArrays(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimRefArray("Ljava/lang/Object;", 2)
+	rawArr1 := arr1.FieldTable["value"].Fvalue.([]*object.Object)
+	s1 := object.StringObjectFromGoString("foo")
+	s2 := object.StringObjectFromGoString("bar")
+	rawArr1[0] = s1
+	rawArr1[1] = s2
+
+	arr2 := object.Make1DimRefArray("Ljava/lang/Object;", 2)
+	rawArr2 := arr2.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr2[0] = s1
+	rawArr2[1] = s2
+
+	// Equal (same references)
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolTrue {
+		t.Errorf("Expected true for equal object arrays with same references")
+	}
+
+	// Not equal (different reference)
+	rawArr2[1] = object.StringObjectFromGoString("baz")
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for object arrays with different references")
+	}
+
+	// Different lengths
+	arr3 := object.Make1DimRefArray("Ljava/lang/Object;", 1)
+	if utilArraysEquals([]interface{}{arr1, arr3}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for object arrays of different lengths")
+	}
+
+	// Both containing nil elements
+	arr4 := object.Make1DimRefArray("Ljava/lang/Object;", 2)
+	rawArr4 := arr4.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr4[0] = nil
+	rawArr4[1] = nil
+	arr5 := object.Make1DimRefArray("Ljava/lang/Object;", 2)
+	rawArr5 := arr5.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr5[0] = nil
+	rawArr5[1] = nil
+	if utilArraysEquals([]interface{}{arr4, arr5}) != types.JavaBoolTrue {
+		t.Errorf("Expected true for object arrays with matching nil elements")
+	}
+}
+
+func TestArraysEquals_DistinctEqualStringObjects(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimRefArray("Ljava/lang/Object;", 1)
+	rawArr1 := arr1.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr1[0] = object.StringObjectFromGoString("hello")
+
+	arr2 := object.Make1DimRefArray("Ljava/lang/Object;", 1)
+	rawArr2 := arr2.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr2[0] = object.StringObjectFromGoString("hello") // distinct object, same content
+
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolTrue {
+		t.Errorf("Expected true for distinct String objects with equal content")
+	}
+
+	rawArr2[0] = object.StringObjectFromGoString("world")
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for String objects with different content")
+	}
+}
+
+func TestArraysEquals_DistinctEqualBoxedIntegers(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimRefArray("Ljava/lang/Object;", 1)
+	rawArr1 := arr1.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr1[0] = object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(42))
+
+	arr2 := object.Make1DimRefArray("Ljava/lang/Object;", 1)
+	rawArr2 := arr2.FieldTable["value"].Fvalue.([]*object.Object)
+	rawArr2[0] = object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(42)) // distinct object, same value
+
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolTrue {
+		t.Errorf("Expected true for distinct boxed Integer objects with equal value")
+	}
+
+	rawArr2[0] = object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(43))
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for boxed Integer objects with different value")
+	}
+}
+
+func TestArraysEquals_NonObjectParams(t *testing.T) {
+	if utilArraysEquals([]interface{}{"not an object", "also not"}) != types.JavaBoolFalse {
+		t.Errorf("Expected false when params are not *object.Object")
+	}
+}
+
+func TestArraysEquals_MissingValueField(t *testing.T) {
+	globals.InitGlobals("test")
+
+	objA := object.MakeEmptyObject()
+	objB := object.Make1DimArray(object.T_INT, 1)
+
+	if utilArraysEquals([]interface{}{objA, objB}) != types.JavaBoolFalse {
+		t.Errorf("Expected false when one object is missing the value field")
+	}
+	if utilArraysEquals([]interface{}{objB, objA}) != types.JavaBoolFalse {
+		t.Errorf("Expected false when one object is missing the value field")
+	}
+}
+
 func TestArraysToString(t *testing.T) {
 	globals.InitGlobals("test")
 	stringPool.PreloadArrayClassesToStringPool()

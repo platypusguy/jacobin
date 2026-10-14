@@ -317,8 +317,12 @@ func Load_Lang_String() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
-	// OpenJDK JVM "java/lang/String.endsWith(Ljava/lang/String;)Z" works with the jacobin String object.
 	// Does the base string end with the specified suffix argument?
+	ghelpers.MethodSignatures["java/lang/String.endsWith(Ljava/lang/String;)Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  stringEndsWith,
+		}
 
 	// Compares this string to the specified object.
 	ghelpers.MethodSignatures["java/lang/String.equals(Ljava/lang/Object;)Z"] =

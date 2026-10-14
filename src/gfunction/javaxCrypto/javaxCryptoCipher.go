@@ -937,7 +937,7 @@ func handleInitSpec(self *object.Object, spec *object.Object, ivProvided *bool) 
 					case []byte:
 						jSalt = object.JavaByteArrayFromGoByteArray(v)
 					}
- 				pbeKeySpec.FieldTable["salt"] = object.Field{Ftype: "[B", Fvalue: object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jSalt)}
+					pbeKeySpec.FieldTable["salt"] = object.Field{Ftype: "[B", Fvalue: object.MakePrimitiveObject(types.JavaByteArray, types.JavaByteArray, jSalt)}
 					pbeKeySpec.FieldTable["iterationCount"] = object.Field{Ftype: types.Int, Fvalue: iterations}
 
 					keyLength := int64(0)
@@ -963,7 +963,7 @@ func handleInitSpec(self *object.Object, spec *object.Object, ivProvided *bool) 
 						// we signal that the IV is NOT provided so that cipherInit can extract it from the newly derived key.
 						// We also clear any existing salt-based IV to ensure extraction happens.
 						if strings.Contains(config.Name, "PBEWith") && !strings.Contains(config.Name, "Hmac") && !strings.Contains(config.Name, "HMAC") {
-   				self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.Null}
+							self.FieldTable["iv"] = object.Field{Ftype: types.JavaByteArray, Fvalue: object.Null}
 							*ivProvided = false
 						} else if strings.Contains(config.Name, "PBEWith") {
 							// For HMAC-based PBE, we use salt as IV by default (if 16 bytes).

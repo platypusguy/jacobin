@@ -7,6 +7,7 @@
 package javaLang
 
 import (
+	"fmt"
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
@@ -15,6 +16,7 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"strconv"
+	"strings"
 )
 
 func Load_Lang_Short() {
@@ -46,13 +48,13 @@ func Load_Lang_Short() {
 	ghelpers.MethodSignatures["java/lang/Short.compareTo(Ljava/lang/Short;)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  shortCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Short.decode(Ljava/lang/String;)Ljava/lang/Short;"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  shortDecode,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Short.doubleValue()D"] =
@@ -76,13 +78,13 @@ func Load_Lang_Short() {
 	ghelpers.MethodSignatures["java/lang/Short.hashCode()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  shortHashCode,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Short.hashCode(S)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  shortHashCodeStatic,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Short.intValue()I"] =
@@ -149,6 +151,12 @@ func Load_Lang_Short() {
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  shortValueOf,
+		}
+
+	ghelpers.MethodSignatures["java/lang/Short.valueOf(Ljava/lang/String;)Ljava/lang/Short;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  shortValueOfString,
 		}
 
 }
@@ -352,4 +360,79 @@ func shortToUnsignedLong(params []interface{}) interface{} {
 func shortValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
 	return object.MakePrimitiveObject("java/lang/Short", types.Short, int64Value)
+}
+
+// "java/lang/Short.valueOf(Ljava/lang/String;)Ljava/lang/Short;"
+func shortValueOfString(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	strArg := object.GoStringFromStringObject(parmObj)
+	output, err := strconv.ParseInt(strArg, 10, 16)
+	if err != nil {
+		errMsg := fmt.Sprintf("shortValueOfString: strconv.ParseInt(%s,10,16) failed, reason: %s", strArg, err.Error())
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+	return object.MakePrimitiveObject("java/lang/Short", types.Short, output)
+}
+
+// "java/lang/Short.compareTo(Ljava/lang/Short;)I"
+func shortCompareTo(params []interface{}) interface{} {
+	thisObj, ok1 := params[0].(*object.Object)
+	thatObj, ok2 := params[1].(*object.Object)
+	if !ok1 || object.IsNull(thisObj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "shortCompareTo: null receiver")
+	}
+	if !ok2 || object.IsNull(thatObj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "shortCompareTo: null argument")
+	}
+	x := int16(thisObj.FieldTable["value"].Fvalue.(int64))
+	y := int16(thatObj.FieldTable["value"].Fvalue.(int64))
+	return int64(int32(x) - int32(y))
+}
+
+// "java/lang/Short.decode(Ljava/lang/String;)Ljava/lang/Short;"
+func shortDecode(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	strArg := object.GoStringFromStringObject(parmObj)
+	if len(strArg) < 1 {
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, "shortDecode: String length is zero")
+	}
+
+	neg := false
+	if strArg[0] == '-' || strArg[0] == '+' {
+		neg = strArg[0] == '-'
+		strArg = strArg[1:]
+	}
+	wbase := 10
+	switch {
+	case strings.HasPrefix(strArg, "0x"), strings.HasPrefix(strArg, "0X"):
+		wbase, strArg = 16, strArg[2:]
+	case strings.HasPrefix(strArg, "#"):
+		wbase, strArg = 16, strArg[1:]
+	case len(strArg) > 1 && strArg[0] == '0':
+		wbase, strArg = 8, strArg[1:]
+	}
+	if neg {
+		strArg = "-" + strArg
+	}
+
+	output, err := strconv.ParseInt(strArg, wbase, 16)
+	if err != nil {
+		errMsg := fmt.Sprintf("shortDecode: strconv.ParseInt(%s,%d,16) failed, reason: %s", strArg, wbase, err.Error())
+		return ghelpers.GetGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+
+	return object.MakePrimitiveObject("java/lang/Short", types.Short, output)
+}
+
+// "java/lang/Short.hashCode()I"
+func shortHashCode(params []interface{}) interface{} {
+	shortObj := params[0].(*object.Object)
+	val := shortObj.FieldTable["value"].Fvalue.(int64)
+	return val
+}
+
+// "java/lang/Short.hashCode(S)I"
+func shortHashCodeStatic(params []interface{}) interface{} {
+	val := params[0].(int64)
+	return val
 }

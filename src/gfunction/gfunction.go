@@ -47,6 +47,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// so any methods we implement replace trapped entries.
 
 	// java/awt/*
+	javaAwt.Load_Awt_Color()
 	javaAwt.Load_Awt_Graphics_Environment()
 	javaAwt.Load_Awt_Traps()
 
@@ -81,6 +82,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Class()
 	javaLang.Load_Lang_Classloader()
 	javaLang.Load_Lang_Double()
+	javaLang.Load_Lang_Enum()
 	javaLang.Load_Lang_Float()
 	javaLang.Load_Lang_Integer()
 	javaLang.Load_Lang_Invoke_MethodHandle()
@@ -109,6 +111,10 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Throwable()
 	javaLang.Load_Lang_UTF16()
 	javaLang.Load_Lang_Void()
+	javaLang.Load_Java_Lang_AssertionError()
+	javaLang.Load_Java_Lang_Exception()
+	javaLang.Load_Java_Lang_NullPointerException()
+	javaLang.Load_Java_Lang_RuntimeException()
 
 	// java/math/*
 	javaMath.Load_Math_Big_Decimal()
@@ -206,6 +212,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_HexFormat()
 	javaUtil.Load_Util_LinkedList()
 	javaUtil.Load_Util_Locale()
+	javaUtil.Load_Util_LongSummaryStatistics()
 	javaUtil.Load_Util_Logging_ConsoleHandler()
 	javaUtil.Load_Util_Logging_FileHandler()
 	javaUtil.Load_Util_Logging_Filter()
@@ -235,6 +242,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// javax/crypto/*
 	javaxCrypto.Load_Crypto_Cipher()
+	javaxCrypto.Load_Crypto_CipherInputStream()
 	javaxCrypto.Load_Crypto_ExemptionMechanism()
 	javaxCrypto.Load_Crypto_Interfaces_DH_Keys()
 	javaxCrypto.Load_Crypto_KEM()

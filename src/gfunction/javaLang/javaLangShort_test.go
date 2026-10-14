@@ -1,6 +1,8 @@
 package javaLang
 
 import (
+	"jacobin/src/excNames"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
@@ -152,5 +154,247 @@ func TestShort_AdditionalMethods(t *testing.T) {
 	}
 	if res := shortEquals([]interface{}{s1, s3}); res != types.JavaBoolFalse {
 		t.Errorf("equals(42, 43) expected false, got %v", res)
+	}
+}
+
+func TestShortCompareTo(t *testing.T) {
+	globals.InitStringPool()
+
+	s1 := shortValueOf([]interface{}{int64(10)}).(*object.Object)
+	s2 := shortValueOf([]interface{}{int64(20)}).(*object.Object)
+	s3 := shortValueOf([]interface{}{int64(10)}).(*object.Object)
+
+	if res := shortCompareTo([]interface{}{s1, s2}).(int64); res >= 0 {
+		t.Errorf("compareTo(10, 20) expected negative, got %d", res)
+	}
+	if res := shortCompareTo([]interface{}{s2, s1}).(int64); res <= 0 {
+		t.Errorf("compareTo(20, 10) expected positive, got %d", res)
+	}
+	if res := shortCompareTo([]interface{}{s1, s3}).(int64); res != 0 {
+		t.Errorf("compareTo(10, 10) expected 0, got %d", res)
+	}
+
+	// null receiver
+	res := shortCompareTo([]interface{}{object.Null, s1})
+	gErr, ok := res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected GErrBlk for null receiver, got %T", res)
+	}
+	if gErr.ExceptionType != excNames.NullPointerException {
+		t.Errorf("expected NullPointerException, got %d", gErr.ExceptionType)
+	}
+
+	// null argument
+	res = shortCompareTo([]interface{}{s1, object.Null})
+	gErr, ok = res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected GErrBlk for null argument, got %T", res)
+	}
+	if gErr.ExceptionType != excNames.NullPointerException {
+		t.Errorf("expected NullPointerException, got %d", gErr.ExceptionType)
+	}
+}
+
+func TestShortDecode(t *testing.T) {
+	globals.InitStringPool()
+
+	// decimal
+	res := shortDecode([]interface{}{object.StringObjectFromGoString("123")})
+	obj, ok := res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != 123 {
+		t.Errorf("decode('123') expected 123, got %d", v)
+	}
+
+	// negative decimal
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("-45")})
+	obj = res.(*object.Object)
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != -45 {
+		t.Errorf("decode('-45') expected -45, got %d", v)
+	}
+
+	// "#" hex prefix
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("#1A")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for hex decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != 26 {
+		t.Errorf("decode('#1A') expected 26, got %d", v)
+	}
+
+	// empty string
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("")})
+	gErr, ok := res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected GErrBlk for empty string, got %T", res)
+	}
+	if gErr.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("expected NumberFormatException, got %d", gErr.ExceptionType)
+	}
+
+	// invalid string
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("abc")})
+	gErr, ok = res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected GErrBlk for invalid string, got %T", res)
+	}
+	if gErr.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("expected NumberFormatException, got %d", gErr.ExceptionType)
+	}
+
+	// "0x" hex prefix
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("0x1A")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for '0x' hex decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != 26 {
+		t.Errorf("decode('0x1A') expected 26, got %d", v)
+	}
+
+	// "0X" hex prefix (uppercase)
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("0X2F")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for '0X' hex decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != 47 {
+		t.Errorf("decode('0X2F') expected 47, got %d", v)
+	}
+
+	// negative hex with "0x" prefix
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("-0x1A")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for negative hex decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != -26 {
+		t.Errorf("decode('-0x1A') expected -26, got %d", v)
+	}
+
+	// negative hex with "#" prefix
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("-#1A")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for negative '#' hex decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != -26 {
+		t.Errorf("decode('-#1A') expected -26, got %d", v)
+	}
+
+	// octal string (leading 0)
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("017")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for octal decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != 15 {
+		t.Errorf("decode('017') expected 15, got %d", v)
+	}
+
+	// negative octal string
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("-017")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for negative octal decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != -15 {
+		t.Errorf("decode('-017') expected -15, got %d", v)
+	}
+
+	// explicit "+" prefix
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("+99")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for '+' prefixed decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != 99 {
+		t.Errorf("decode('+99') expected 99, got %d", v)
+	}
+
+	// zero value
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("0")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for zero decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != 0 {
+		t.Errorf("decode('0') expected 0, got %d", v)
+	}
+
+	// max short value
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("32767")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for max short decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != 32767 {
+		t.Errorf("decode('32767') expected 32767, got %d", v)
+	}
+
+	// min short value
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("-32768")})
+	obj, ok = res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object for min short decode, got %T", res)
+	}
+	if v := obj.FieldTable["value"].Fvalue.(int64); v != -32768 {
+		t.Errorf("decode('-32768') expected -32768, got %d", v)
+	}
+
+	// overflow: exceeds short range
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("32768")})
+	gErr, ok = res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected GErrBlk for overflow value, got %T", res)
+	}
+	if gErr.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("expected NumberFormatException for overflow, got %d", gErr.ExceptionType)
+	}
+
+	// overflow: negative exceeds short range
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("-32769")})
+	gErr, ok = res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected GErrBlk for negative overflow value, got %T", res)
+	}
+	if gErr.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("expected NumberFormatException for negative overflow, got %d", gErr.ExceptionType)
+	}
+
+	// malformed hex with "0x" prefix
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("0xZZ")})
+	gErr, ok = res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected GErrBlk for malformed hex, got %T", res)
+	}
+	if gErr.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("expected NumberFormatException for malformed hex, got %d", gErr.ExceptionType)
+	}
+
+	// just a sign, no digits
+	res = shortDecode([]interface{}{object.StringObjectFromGoString("-")})
+	gErr, ok = res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected GErrBlk for lone sign, got %T", res)
+	}
+	if gErr.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("expected NumberFormatException for lone sign, got %d", gErr.ExceptionType)
+	}
+}
+
+func TestShortHashCode(t *testing.T) {
+	globals.InitStringPool()
+
+	shortObj := object.MakePrimitiveObject("java/lang/Short", types.Short, int64(12345))
+	if res := shortHashCode([]interface{}{shortObj}).(int64); res != 12345 {
+		t.Errorf("hashCode() expected 12345, got %d", res)
+	}
+
+	if res := shortHashCodeStatic([]interface{}{int64(-999)}).(int64); res != -999 {
+		t.Errorf("hashCode(S) expected -999, got %d", res)
 	}
 }

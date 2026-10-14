@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-// Implementation of some of the functions in Java/util/Locale.
+// Implement some functions in Java/util/Locale.
 // Strategy: Locale = jacobin Object wrapping a Go string.
 
 func Load_Util_Locale() {

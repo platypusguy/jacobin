@@ -206,7 +206,7 @@ func ThrowableInitNull(params []interface{}) interface{} {
 	// detailMessage = null
 	thisObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassName, Fvalue: object.Null}
 	// cause = null (not strictly required elsewhere yet)
-	thisObj.FieldTable["cause"] = object.Field{Ftype: "Ljava/lang/Throwable;", Fvalue: object.Null}
+	thisObj.FieldTable["cause"] = object.Field{Ftype: types.ClassNameThrowable, Fvalue: object.Null}
 	// suppressedExceptions left unset for now; can be initialized lazily if needed
 
 	// Populate stack trace similar to fillInStackTrace()
@@ -240,7 +240,7 @@ func throwableInitString(params []interface{}) interface{} {
 	thisObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassName, Fvalue: msgObj}
 
 	// cause = null by default
-	thisObj.FieldTable["cause"] = object.Field{Ftype: "Ljava/lang/Throwable;", Fvalue: object.Null}
+	thisObj.FieldTable["cause"] = object.Field{Ftype: types.ClassNameThrowable, Fvalue: object.Null}
 
 	// Populate stack trace
 	if frameStack != nil {
