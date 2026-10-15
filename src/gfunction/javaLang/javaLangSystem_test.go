@@ -7,8 +7,10 @@
 package javaLang
 
 import (
+	"bytes"
 	"fmt"
 	"jacobin/src/classloader"
+	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/globals"
@@ -677,10 +679,12 @@ func TestClearProperty_JavaIoTmpdir(t *testing.T) {
 	}
 
 	result = SystemGetProperty(params)
-	observed = object.GoStringFromStringObject(result.(*object.Object))
-	if observed != "" {
-		t.Errorf("Expected \"\", observed %s", observed)
-		return
+	if !object.IsNull(result) {
+		observed := object.GoStringFromStringObject(result.(*object.Object))
+		if observed != "" {
+			t.Errorf("Expected null, observed %s", observed)
+			return
+		}
 	}
 
 }
@@ -711,10 +715,8 @@ func TestSetProperties(t *testing.T) {
 	propObj := object.StringObjectFromGoString("java.io.tmpdir")
 	params = []interface{}{propObj}
 	result := SystemGetProperty(params)
-	observed := object.GoStringFromStringObject(result.(*object.Object))
-	expected := ""
-	if observed != expected {
-		t.Errorf("3. Expected \"\", observed %s", observed)
+	if result != object.Null {
+		t.Errorf("Expected object.Null, observed %v", result)
 		return
 	}
 
@@ -722,8 +724,8 @@ func TestSetProperties(t *testing.T) {
 	propObj = object.StringObjectFromGoString("color")
 	params = []interface{}{propObj}
 	result = SystemGetProperty(params)
-	observed = object.GoStringFromStringObject(result.(*object.Object))
-	expected = "green"
+	observed := object.GoStringFromStringObject(result.(*object.Object))
+	expected := "green"
 	if observed != expected {
 		t.Errorf("3. Expected %s, observed %s", expected, observed)
 		return
@@ -755,5 +757,204 @@ func TestRunGc(t *testing.T) {
 	if finalGcCount <= initialGcCount {
 		t.Errorf("TestRunGc: GC Count does not reflect a run of GC. Initial: %d, Final: %d",
 			initialGcCount, finalGcCount)
+	}
+}
+
+func TestSystemGetProperty_CorrectnessAndEdgeCases(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// 1. Existing property
+	res := SystemGetProperty([]interface{}{object.StringObjectFromGoString("java.vendor")})
+	if object.IsNull(res) {
+		t.Fatalf("expected non-null for java.vendor")
+	}
+	if str := object.GoStringFromStringObject(res.(*object.Object)); str != "Jacobin" {
+		t.Errorf("expected 'Jacobin', got '%s'", str)
+	}
+
+	// 2. Non-existent property without default -> returns object.Null
+	res = SystemGetProperty([]interface{}{object.StringObjectFromGoString("non.existent.prop")})
+	if res != object.Null {
+		t.Errorf("expected object.Null for missing property, got %v", res)
+	}
+
+	// 3. Non-existent property with default -> returns default object
+	defObj := object.StringObjectFromGoString("myDefaultValue")
+	res = SystemGetProperty([]interface{}{object.StringObjectFromGoString("non.existent.prop"), defObj})
+	if res != defObj {
+		t.Errorf("expected default object %v, got %v", defObj, res)
+	}
+
+	// 4. Existing property with default -> returns existing value, not default
+	res = SystemGetProperty([]interface{}{object.StringObjectFromGoString("java.vendor"), defObj})
+	if res == defObj {
+		t.Errorf("expected existing value, but got default object")
+	}
+	if str := object.GoStringFromStringObject(res.(*object.Object)); str != "Jacobin" {
+		t.Errorf("expected 'Jacobin', got '%s'", str)
+	}
+
+	// 5. Non-existent property with null default -> returns object.Null
+	res = SystemGetProperty([]interface{}{object.StringObjectFromGoString("non.existent.prop"), object.Null})
+	if res != object.Null {
+		t.Errorf("expected object.Null when def is object.Null, got %v", res)
+	}
+	res = SystemGetProperty([]interface{}{object.StringObjectFromGoString("non.existent.prop"), nil})
+	if res != object.Null {
+		t.Errorf("expected object.Null when def is nil, got %v", res)
+	}
+
+	// 6. Nil or Null key -> NullPointerException
+	res = SystemGetProperty([]interface{}{nil})
+	if errBlk, ok := res.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("expected NullPointerException for nil key, got %v", res)
+	}
+	res = SystemGetProperty([]interface{}{object.Null})
+	if errBlk, ok := res.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("expected NullPointerException for object.Null key, got %v", res)
+	}
+	res = SystemGetProperty([]interface{}{})
+	if errBlk, ok := res.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("expected NullPointerException for empty params, got %v", res)
+	}
+
+	// 7. Empty key string -> IllegalArgumentException
+	res = SystemGetProperty([]interface{}{object.StringObjectFromGoString("")})
+	if errBlk, ok := res.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException for empty key, got %v", res)
+	}
+	res = SystemGetProperty([]interface{}{object.StringObjectFromGoString(""), defObj})
+	if errBlk, ok := res.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException for empty key with def, got %v", res)
+	}
+
+	// 8. systemGetPropertyDefault alias
+	res = systemGetPropertyDefault([]interface{}{object.StringObjectFromGoString("non.existent.prop"), defObj})
+	if res != defObj {
+		t.Errorf("expected default object from systemGetPropertyDefault, got %v", res)
+	}
+}
+
+func TestSystemSetOutAndSetErr(t *testing.T) {
+	globals.InitGlobals("test")
+	Load_Lang_System()
+
+	// Verify method registrations
+	setInSig := "java/lang/System.setIn(Ljava/io/InputStream;)V"
+	setOutSig := "java/lang/System.setOut(Ljava/io/PrintStream;)V"
+	setErrSig := "java/lang/System.setErr(Ljava/io/PrintStream;)V"
+
+	gmIn, ok := ghelpers.MethodSignatures[setInSig]
+	if !ok {
+		t.Fatalf("Method %s not found in MethodSignatures", setInSig)
+	}
+	if gmIn.ParamSlots != 1 {
+		t.Errorf("Expected ParamSlots 1 for %s, got %d", setInSig, gmIn.ParamSlots)
+	}
+
+	gmOut, ok := ghelpers.MethodSignatures[setOutSig]
+	if !ok {
+		t.Fatalf("Method %s not found in MethodSignatures", setOutSig)
+	}
+	if gmOut.ParamSlots != 1 {
+		t.Errorf("Expected ParamSlots 1 for %s, got %d", setOutSig, gmOut.ParamSlots)
+	}
+
+	gmErr, ok := ghelpers.MethodSignatures[setErrSig]
+	if !ok {
+		t.Fatalf("Method %s not found in MethodSignatures", setErrSig)
+	}
+	if gmErr.ParamSlots != 1 {
+		t.Errorf("Expected ParamSlots 1 for %s, got %d", setErrSig, gmErr.ParamSlots)
+	}
+
+	// Save original statics to restore later
+	origIn := statics.GetStaticValue("java/lang/System", "in")
+	origOut := statics.GetStaticValue("java/lang/System", "out")
+	origErr := statics.GetStaticValue("java/lang/System", "err")
+	defer func() {
+		_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "GS", Value: origIn})
+		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: origOut})
+		_ = statics.AddStatic("java/lang/System.err", statics.Static{Type: "GS", Value: origErr})
+	}()
+
+	// Test missing parameter error handling
+	res := systemSetIn([]any{})
+	if errBlk, ok := res.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("Expected IllegalArgumentException for systemSetIn with empty params, got %v", res)
+	}
+
+	res = systemSetOut([]any{})
+	if errBlk, ok := res.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("Expected IllegalArgumentException for systemSetOut with empty params, got %v", res)
+	}
+
+	res = systemSetErr([]any{})
+	if errBlk, ok := res.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("Expected IllegalArgumentException for systemSetErr with empty params, got %v", res)
+	}
+
+	// Test setting in to a new reader / object
+	bufIn := bytes.NewReader([]byte("test input"))
+	res = systemSetIn([]any{bufIn})
+	if res != nil {
+		t.Errorf("systemSetIn returned unexpected result: %v", res)
+	}
+	newIn := statics.GetStaticValue("java/lang/System", "in")
+	if newIn != bufIn {
+		t.Errorf("Expected System.in to be %v, got %v", bufIn, newIn)
+	}
+
+	// Test setting out to a new writer / object
+	bufOut := new(bytes.Buffer)
+	res = systemSetOut([]any{bufOut})
+	if res != nil {
+		t.Errorf("systemSetOut returned unexpected result: %v", res)
+	}
+	newOut := statics.GetStaticValue("java/lang/System", "out")
+	if newOut != bufOut {
+		t.Errorf("Expected System.out to be %v, got %v", bufOut, newOut)
+	}
+
+	// Test setting err to a new writer / object
+	bufErr := new(bytes.Buffer)
+	res = systemSetErr([]any{bufErr})
+	if res != nil {
+		t.Errorf("systemSetErr returned unexpected result: %v", res)
+	}
+	newErr := statics.GetStaticValue("java/lang/System", "err")
+	if newErr != bufErr {
+		t.Errorf("Expected System.err to be %v, got %v", bufErr, newErr)
+	}
+
+	// Test with *object.Object
+	isClassName := "java/io/InputStream"
+	isObj := object.MakeEmptyObjectWithClassName(&isClassName)
+
+	res = gmIn.GFunction([]any{isObj})
+	if res != nil {
+		t.Errorf("Invoking setIn via GFunction returned error: %v", res)
+	}
+	if statics.GetStaticValue("java/lang/System", "in") != isObj {
+		t.Errorf("Expected System.in to be isObj")
+	}
+
+	psClassName := "java/io/PrintStream"
+	psObj := object.MakeEmptyObjectWithClassName(&psClassName)
+
+	res = gmOut.GFunction([]any{psObj})
+	if res != nil {
+		t.Errorf("Invoking setOut via GFunction returned error: %v", res)
+	}
+	if statics.GetStaticValue("java/lang/System", "out") != psObj {
+		t.Errorf("Expected System.out to be psObj")
+	}
+
+	res = gmErr.GFunction([]any{psObj})
+	if res != nil {
+		t.Errorf("Invoking setErr via GFunction returned error: %v", res)
+	}
+	if statics.GetStaticValue("java/lang/System", "err") != psObj {
+		t.Errorf("Expected System.err to be psObj")
 	}
 }
