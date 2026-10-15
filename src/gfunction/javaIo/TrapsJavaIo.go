@@ -10,28 +10,10 @@ import "jacobin/src/gfunction/ghelpers"
 
 func Load_Traps_Java_Io() {
 
-	ghelpers.MethodSignatures["java/io/BufferedInputStream.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
-		}
-
-	ghelpers.MethodSignatures["java/io/BufferedOutputStream.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapClass,
-		}
-
 	ghelpers.MethodSignatures["java/io/BufferedWriter.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapClass,
-		}
-
-	ghelpers.MethodSignatures["java/io/ByteArrayInputStream.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
 		}
 
 	ghelpers.MethodSignatures["java/io/CharArrayReader.<clinit>()V"] =
@@ -50,42 +32,6 @@ func Load_Traps_Java_Io() {
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
-		}
-
-	ghelpers.MethodSignatures["java/io/FileDescriptor.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
-		}
-
-	ghelpers.MethodSignatures["java/io/FileSystem.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapClass,
-		}
-
-	ghelpers.MethodSignatures["java/io/FilterReader.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapClass,
-		}
-
-	ghelpers.MethodSignatures["java/io/PipedReader.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapClass,
-		}
-
-	ghelpers.MethodSignatures["java/io/StringReader.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapClass,
-		}
-
-	ghelpers.MethodSignatures["java/io/FilterOutputStream.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapClass,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileDescriptor.<clinit>()V"] =
@@ -160,6 +106,24 @@ func Load_Traps_Java_Io() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/io/FileSystem.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapClass,
+		}
+
+	ghelpers.MethodSignatures["java/io/FilterReader.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapClass,
+		}
+
+	ghelpers.MethodSignatures["java/io/FilterWriter.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapClass,
+		}
+
 	ghelpers.MethodSignatures["java/io/Flushable.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -170,12 +134,6 @@ func Load_Traps_Java_Io() {
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
-		}
-
-	ghelpers.MethodSignatures["java/io/FilterWriter.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapClass,
 		}
 
 	ghelpers.MethodSignatures["java/io/ObjectStreamField.<clinit>()V"] =
@@ -190,7 +148,19 @@ func Load_Traps_Java_Io() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/io/PipedReader.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapClass,
+		}
+
 	ghelpers.MethodSignatures["java/io/PipedWriter.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapClass,
+		}
+
+	ghelpers.MethodSignatures["java/io/StringReader.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapClass,

@@ -51,7 +51,7 @@ func Load_Lang_Process() {
 	ghelpers.MethodSignatures["java/lang/Process.getInputStream()Ljava/io/InputStream;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  processGetInputStream,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Process.getOutputStream()Ljava/io/OutputStream;"] =
@@ -260,4 +260,58 @@ func isProcessAlive(pid int) bool {
 	// On Unix, FindProcess always succeeds, so we use Signal(0) to check if the process exists.
 	err = proc.Signal(syscall.Signal(0))
 	return err == nil
+}
+
+// "java/lang/Process.getInputStream()Ljava/io/InputStream;"
+func processGetInputStream(params []any) any {
+	if len(params) < 1 || params[0] == nil || object.IsNull(params[0]) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "processGetInputStream: self is null")
+	}
+
+	self, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "processGetInputStream: self is not an object")
+	}
+
+	self.ThMutex.Lock()
+	defer self.ThMutex.Unlock()
+
+	if self.FieldTable == nil {
+		self.FieldTable = make(map[string]object.Field)
+	}
+
+	if inFld, exists := self.FieldTable["inputStream"]; exists && inFld.Fvalue != nil && !object.IsNull(inFld.Fvalue) {
+		return inFld.Fvalue
+	}
+
+	var handleVal any
+	if stdoutFld, exists := self.FieldTable["stdout"]; exists && stdoutFld.Fvalue != nil && !object.IsNull(stdoutFld.Fvalue) {
+		handleVal = stdoutFld.Fvalue
+	} else if handleFld, exists := self.FieldTable[ghelpers.FileHandle]; exists && handleFld.Fvalue != nil && !object.IsNull(handleFld.Fvalue) {
+		handleVal = handleFld.Fvalue
+	}
+
+	inClassName := "java/io/FileInputStream"
+	inObj := object.MakeEmptyObjectWithClassName(&inClassName)
+	if inObj.FieldTable == nil {
+		inObj.FieldTable = make(map[string]object.Field)
+	}
+
+	if handleVal != nil {
+		inObj.FieldTable[ghelpers.FileHandle] = object.Field{
+			Ftype:  ghelpers.FileHandle,
+			Fvalue: handleVal,
+		}
+		inObj.FieldTable[ghelpers.FilePath] = object.Field{
+			Ftype:  types.JavaByteArray,
+			Fvalue: object.JavaByteArrayFromGoString("ProcessStdout"),
+		}
+	}
+
+	self.FieldTable["inputStream"] = object.Field{
+		Ftype:  "java/io/InputStream",
+		Fvalue: inObj,
+	}
+
+	return inObj
 }
