@@ -490,3 +490,213 @@ func TestPrintStreamWriteFromByteArray(t *testing.T) {
 		t.Errorf("printstreamWriteFromByteArray with invalid object did not return GErrBlk, got %T", ret)
 	}
 }
+
+func TestPrintStreamConstructors(t *testing.T) {
+	Load_Io_PrintStream()
+
+	// Check registration of all PrintStream.<init> signatures
+	trappedSignatures := []struct {
+		sig   string
+		slots int
+	}{
+		{"java/io/PrintStream.<init>(Ljava/io/OutputStream;ZLjava/lang/String;)V", 3},
+		{"java/io/PrintStream.<init>(Ljava/io/OutputStream;ZLjava/nio/charset/Charset;)V", 3},
+		{"java/io/PrintStream.<init>(Ljava/io/File;Ljava/lang/String;)V", 2},
+		{"java/io/PrintStream.<init>(Ljava/io/File;Ljava/nio/charset/Charset;)V", 2},
+		{"java/io/PrintStream.<init>(Ljava/lang/String;Ljava/lang/String;)V", 2},
+		{"java/io/PrintStream.<init>(Ljava/lang/String;Ljava/nio/charset/Charset;)V", 2},
+	}
+
+	for _, tt := range trappedSignatures {
+		gm, ok := ghelpers.MethodSignatures[tt.sig]
+		if !ok {
+			t.Errorf("Signature %s not registered", tt.sig)
+			continue
+		}
+		if gm.ParamSlots != tt.slots {
+			t.Errorf("Signature %s ParamSlots = %d; want %d", tt.sig, gm.ParamSlots, tt.slots)
+		}
+		// Trapped constructors should return a trap block / error when invoked
+		res := gm.GFunction(nil)
+		if _, ok := res.(*ghelpers.GErrBlk); !ok {
+			t.Errorf("Signature %s did not invoke TrapFunction, returned %v", tt.sig, res)
+		}
+	}
+
+	implementedSignatures := []struct {
+		sig   string
+		slots int
+	}{
+		{"java/io/PrintStream.<init>(Ljava/io/OutputStream;)V", 1},
+		{"java/io/PrintStream.<init>(Ljava/io/OutputStream;Z)V", 2},
+		{"java/io/PrintStream.<init>(Ljava/io/File;)V", 1},
+		{"java/io/PrintStream.<init>(Ljava/lang/String;)V", 1},
+	}
+
+	for _, tt := range implementedSignatures {
+		gm, ok := ghelpers.MethodSignatures[tt.sig]
+		if !ok {
+			t.Errorf("Signature %s not registered", tt.sig)
+			continue
+		}
+		if gm.ParamSlots != tt.slots {
+			t.Errorf("Signature %s ParamSlots = %d; want %d", tt.sig, gm.ParamSlots, tt.slots)
+		}
+	}
+
+	// Test initPrintStreamOutputStream & initPrintStreamOutputStreamBoolean
+	psClassName := "java/io/PrintStream"
+	fosClassName := "java/io/FileOutputStream"
+	psObj := object.MakeEmptyObjectWithClassName(&psClassName)
+	underlying := object.MakeEmptyObjectWithClassName(&fosClassName)
+	underlying.FieldTable[ghelpers.FilePath] = object.Field{Ftype: "[B", Fvalue: []byte("/dev/null")}
+	underlying.FieldTable[ghelpers.FileHandle] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: nil}
+
+	res := initPrintStreamOutputStream([]any{psObj, underlying})
+	if res != nil {
+		t.Errorf("initPrintStreamOutputStream error: %v", res)
+	}
+	if psObj.FieldTable[ghelpers.FilePath].Fvalue == nil {
+		t.Errorf("initPrintStreamOutputStream did not copy FilePath")
+	}
+
+	// Test with null underlying OutputStream
+	res = initPrintStreamOutputStream([]any{psObj, nil})
+	if _, ok := res.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("initPrintStreamOutputStream with nil did not return GErrBlk")
+	}
+
+	psObj2 := object.MakeEmptyObjectWithClassName(&psClassName)
+	res = initPrintStreamOutputStreamBoolean([]any{psObj2, underlying, int64(1)})
+	if res != nil {
+		t.Errorf("initPrintStreamOutputStreamBoolean error: %v", res)
+	}
+	if psObj2.FieldTable[ghelpers.FilePath].Fvalue == nil {
+		t.Errorf("initPrintStreamOutputStreamBoolean did not copy FilePath")
+	}
+	if fldOut, ok := psObj2.FieldTable["out"]; !ok || fldOut.Ftype != "java/io/OutputStream" || fldOut.Fvalue != underlying {
+		t.Errorf("initPrintStreamOutputStreamBoolean out field = %+v; want Ftype java/io/OutputStream and Fvalue underlying", fldOut)
+	}
+
+	res = initPrintStreamOutputStreamBoolean([]any{psObj2, nil, int64(1)})
+	if _, ok := res.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("initPrintStreamOutputStreamBoolean with nil did not return GErrBlk")
+	}
+}
+
+func TestPrintStreamWrappingByteArrayOutputStream(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	Load_Io_PrintStream()
+	Load_Io_ByteArrayOutputStream()
+
+	baosClassName := "java/io/ByteArrayOutputStream"
+	baosObj := object.MakeEmptyObjectWithClassName(&baosClassName)
+	ByteArrayOutputStreamInit([]any{baosObj})
+
+	psClassName := "java/io/PrintStream"
+	psObj := object.MakeEmptyObjectWithClassName(&psClassName)
+
+	// new PrintStream(byteArrayOutputStream, true)
+	res := initPrintStreamOutputStreamBoolean([]any{psObj, baosObj, true})
+	if res != nil {
+		t.Fatalf("initPrintStreamOutputStreamBoolean failed: %v", res)
+	}
+
+	if fldOut, ok := psObj.FieldTable["out"]; !ok || fldOut.Ftype != "java/io/OutputStream" || fldOut.Fvalue != baosObj {
+		t.Errorf("PrintStream out field = %+v; want Ftype java/io/OutputStream and Fvalue baosObj", fldOut)
+	}
+
+	// Print formatted text and string line to PrintStream
+	fmtObj := makeStringObject("Count: %d, Message: %s")
+	intArg := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(7))
+	strArg := makeStringObject("ok")
+	argsObj := object.MakeArrayFromRawArray([]*object.Object{intArg, strArg})
+
+	Printf([]any{psObj, fmtObj, argsObj})
+	PrintlnV([]any{psObj})
+	PrintlnString([]any{psObj, makeStringObject("Second line")})
+
+	// Check ByteArrayOutputStream content
+	strResult := ByteArrayOutputStreamToString([]any{baosObj})
+	strObj, ok := strResult.(*object.Object)
+	if !ok {
+		t.Fatalf("ByteArrayOutputStreamToString returned %T; want *object.Object", strResult)
+	}
+	gotStr := object.GoStringFromStringObject(strObj)
+	expected := "Count: 7, Message: ok\nSecond line\n"
+	if gotStr != expected {
+		t.Errorf("Captured ByteArrayOutputStream output = %q; want %q", gotStr, expected)
+	}
+
+	// Also test initPrintStreamOutputStream (without boolean)
+	baosObj2 := object.MakeEmptyObjectWithClassName(&baosClassName)
+	ByteArrayOutputStreamInit([]any{baosObj2})
+	psObj2 := object.MakeEmptyObjectWithClassName(&psClassName)
+	res2 := initPrintStreamOutputStream([]any{psObj2, baosObj2})
+	if res2 != nil {
+		t.Fatalf("initPrintStreamOutputStream failed: %v", res2)
+	}
+	if fldOut, ok := psObj2.FieldTable["out"]; !ok || fldOut.Ftype != "java/io/OutputStream" || fldOut.Fvalue != baosObj2 {
+		t.Errorf("PrintStream out field = %+v; want Ftype java/io/OutputStream and Fvalue baosObj2", fldOut)
+	}
+
+	PrintlnString([]any{psObj2, makeStringObject("Direct write")})
+	strResult2 := ByteArrayOutputStreamToString([]any{baosObj2})
+	strObj2 := strResult2.(*object.Object)
+	if got := object.GoStringFromStringObject(strObj2); got != "Direct write\n" {
+		t.Errorf("Captured output = %q; want 'Direct write\\n'", got)
+	}
+}
+
+func TestPrintStreamWithObjectReceiver(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	Load_Io_PrintStream()
+
+	// Create a buffer and wrap it in an os.File or custom writer in PrintStream object
+	buf := new(bytes.Buffer)
+	psClassName := "java/io/PrintStream"
+	psObj := object.MakeEmptyObjectWithClassName(&psClassName)
+	psObj.FieldTable[ghelpers.FileHandle] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: buf}
+
+	// Test Printf with *object.Object as params[0]
+	fmtObj := makeStringObject("Hello %s %d")
+	strArg := makeStringObject("world")
+	intArg := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(42))
+
+	argsObj := object.MakeArrayFromRawArray([]*object.Object{strArg, intArg})
+
+	ret := Printf([]any{psObj, fmtObj, argsObj})
+	if ret != psObj {
+		t.Errorf("Printf should return params[0] (psObj), got %v", ret)
+	}
+	if got := buf.String(); got != "Hello world 42" {
+		t.Errorf("Printf output = %q; want 'Hello world 42'", got)
+	}
+
+	// Test PrintString, PrintlnString, PrintlnV, PrintlnLong with psObj
+	buf.Reset()
+	PrintlnString([]any{psObj, makeStringObject("Line 1")})
+	PrintString([]any{psObj, makeStringObject("Line 2")})
+	PrintlnV([]any{psObj})
+	PrintlnLong([]any{psObj, int64(99)})
+
+	expected := "Line 1\nLine 2\n99\n"
+	if got := buf.String(); got != expected {
+		t.Errorf("Print operations output = %q; want %q", got, expected)
+	}
+
+	// Test PrintFlush
+	ret = PrintFlush([]any{psObj})
+	if ret != nil {
+		t.Errorf("PrintFlush returned error: %v", ret)
+	}
+
+	// Test default to os.Stdout when psObj has no FileHandle field
+	emptyPsObj := object.MakeEmptyObjectWithClassName(&psClassName)
+	ret = Printf([]any{emptyPsObj, makeStringObject("test"), object.MakeArrayFromRawArray([]*object.Object{})})
+	if ret != emptyPsObj {
+		t.Errorf("Printf with emptyPsObj should return emptyPsObj, got %v", ret)
+	}
+}
