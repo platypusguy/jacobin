@@ -352,3 +352,72 @@ func TestThrowableInitString_SetsMessageAndStack(t *testing.T) {
 		t.Errorf("classLoaderName mismatch: %v", ste["classLoaderName"].Fvalue)
 	}
 }
+
+func TestThrowableToString(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+
+	// 1. Without detailMessage
+	cls1 := "java/lang/Throwable"
+	th1 := object.MakeEmptyObjectWithClassName(&cls1)
+	res1 := throwableToString([]interface{}{th1})
+	if resObj, ok := res1.(*object.Object); !ok {
+		t.Fatalf("throwableToString returned non-object: %v", res1)
+	} else {
+		str := object.GoStringFromStringObject(resObj)
+		if str != "java.lang.Throwable" {
+			t.Errorf("expected 'java.lang.Throwable', got '%s'", str)
+		}
+	}
+
+	// 2. With detailMessage
+	cls2 := "java/lang/NullPointerException"
+	th2 := object.MakeEmptyObjectWithClassName(&cls2)
+	th2.FieldTable["detailMessage"] = object.Field{
+		Ftype:  types.StringClassName,
+		Fvalue: object.StringObjectFromGoString("value is null"),
+	}
+	res2 := throwableToString([]interface{}{th2})
+	if resObj, ok := res2.(*object.Object); !ok {
+		t.Fatalf("throwableToString returned non-object: %v", res2)
+	} else {
+		str := object.GoStringFromStringObject(resObj)
+		if str != "java.lang.NullPointerException: value is null" {
+			t.Errorf("expected 'java.lang.NullPointerException: value is null', got '%s'", str)
+		}
+	}
+
+	// 3. With null detailMessage
+	cls3 := "java/lang/IllegalArgumentException"
+	th3 := object.MakeEmptyObjectWithClassName(&cls3)
+	th3.FieldTable["detailMessage"] = object.Field{
+		Ftype:  types.StringClassName,
+		Fvalue: object.Null,
+	}
+	res3 := throwableToString([]interface{}{th3})
+	if resObj, ok := res3.(*object.Object); !ok {
+		t.Fatalf("throwableToString returned non-object: %v", res3)
+	} else {
+		str := object.GoStringFromStringObject(resObj)
+		if str != "java.lang.IllegalArgumentException" {
+			t.Errorf("expected 'java.lang.IllegalArgumentException', got '%s'", str)
+		}
+	}
+
+	// 4. Custom exception class
+	cls4 := "com/example/MyCustomException"
+	th4 := object.MakeEmptyObjectWithClassName(&cls4)
+	th4.FieldTable["detailMessage"] = object.Field{
+		Ftype:  types.StringClassName,
+		Fvalue: object.StringObjectFromGoString("custom message"),
+	}
+	res4 := throwableToString([]interface{}{th4})
+	if resObj, ok := res4.(*object.Object); !ok {
+		t.Fatalf("throwableToString returned non-object: %v", res4)
+	} else {
+		str := object.GoStringFromStringObject(resObj)
+		if str != "com.example.MyCustomException: custom message" {
+			t.Errorf("expected 'com.example.MyCustomException: custom message', got '%s'", str)
+		}
+	}
+}

@@ -18,6 +18,7 @@ import (
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
+	"strings"
 )
 
 func Load_Lang_Throwable() {
@@ -137,7 +138,7 @@ func Load_Lang_Throwable() {
 	ghelpers.MethodSignatures["java/lang/Throwable.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  throwableToString,
 		}
 }
 
@@ -494,4 +495,31 @@ func throwableGetMessage(params []interface{}) interface{} {
 	}
 
 	return field.Fvalue.(*object.Object)
+}
+
+func throwableToString(params []interface{}) interface{} {
+	if len(params) == 0 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "throwableToString: missing this object")
+	}
+
+	thisObj, ok := params[0].(*object.Object)
+	if !ok || thisObj == nil || object.IsNull(thisObj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "throwableToString: null this object")
+	}
+
+	classNamePtr := stringPool.GetStringPointer(thisObj.KlassName)
+	className := ""
+	if classNamePtr != nil {
+		className = *classNamePtr
+	}
+	className = strings.ReplaceAll(className, "/", ".")
+
+	if field, ok := thisObj.FieldTable["detailMessage"]; ok && field.Fvalue != nil && !object.IsNull(field.Fvalue) {
+		if msgObj, ok := field.Fvalue.(*object.Object); ok && msgObj != nil && !object.IsNull(msgObj) {
+			msg := object.GoStringFromStringObject(msgObj)
+			return object.StringObjectFromGoString(className + ": " + msg)
+		}
+	}
+
+	return object.StringObjectFromGoString(className)
 }
