@@ -9,6 +9,7 @@ import (
 	"jacobin/src/types"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func Load_Io_File() {
@@ -517,28 +518,48 @@ func fileCompareTo(params []interface{}) interface{} {
 	return int64(1)
 }
 
-func fileCreateTemp(params []interface{}) interface{} {
-	// instance createTempFile(prefix,suffix) -> File in default temp dir
-	prefixObj := params[0].(*object.Object)
-	suffixObj := params[1].(*object.Object)
-	prefix := object.GoStringFromStringObject(prefixObj)
-	suffix := object.GoStringFromStringObject(suffixObj)
-	if suffix == "" {
-		suffix = ".tmp"
+func fileCreateTempHelper(prefixParam, suffixParam, dirParam interface{}) interface{} {
+	var prefix string
+	if p, ok := prefixParam.(*object.Object); ok && p != nil && !object.IsNull(p) {
+		prefix = object.GoStringFromStringObject(p)
 	}
-	f, err := os.CreateTemp("", prefix+"*")
+
+	suffix := ".tmp"
+	if s, ok := suffixParam.(*object.Object); ok && s != nil && !object.IsNull(s) {
+		suffix = object.GoStringFromStringObject(s)
+		if suffix == "" {
+			suffix = ".tmp"
+		}
+	}
+
+	var dir string
+	if d, ok := dirParam.(*object.Object); ok && d != nil && !object.IsNull(d) {
+		dir, _ = fileGetPathString(d)
+	}
+
+	if strings.ContainsAny(prefix, "/\\") {
+		dirPart := filepath.Dir(prefix)
+		prefix = filepath.Base(prefix)
+		if dir == "" {
+			dir = dirPart
+		} else {
+			dir = filepath.Join(dir, dirPart)
+		}
+	}
+
+	f, err := os.CreateTemp(dir, prefix+"*"+suffix)
 	if err != nil {
 		return object.Null
 	}
 	_ = f.Close()
-	path := f.Name()
-	if suffix != ".tmp" {
-		// rename to ensure suffix
-		newPath := path + suffix
-		_ = os.Rename(path, newPath)
-		path = newPath
+	return newFileObjectFromPath(f.Name())
+}
+
+func fileCreateTemp(params []interface{}) interface{} {
+	if len(params) < 2 {
+		return object.Null
 	}
-	return newFileObjectFromPath(path)
+	return fileCreateTempHelper(params[0], params[1], nil)
 }
 
 func fileEquals(params []interface{}) interface{} {
@@ -893,28 +914,14 @@ func fileToString(params []interface{}) interface{} {
 }
 
 func fileCreateTempWithDir(params []interface{}) interface{} {
-	prefix := object.GoStringFromStringObject(params[0].(*object.Object))
-	suffix := object.GoStringFromStringObject(params[1].(*object.Object))
-	var dir string
-	if d, ok := params[2].(*object.Object); ok && d != nil {
-		d, _ := fileGetPathString(d)
-		dir = d
-	}
-	if suffix == "" {
-		suffix = ".tmp"
-	}
-	f, err := os.CreateTemp(dir, prefix+"*")
-	if err != nil {
+	if len(params) < 2 {
 		return object.Null
 	}
-	_ = f.Close()
-	path := f.Name()
-	if suffix != ".tmp" {
-		newPath := path + suffix
-		_ = os.Rename(path, newPath)
-		path = newPath
+	var dirParam interface{}
+	if len(params) > 2 {
+		dirParam = params[2]
 	}
-	return newFileObjectFromPath(path)
+	return fileCreateTempHelper(params[0], params[1], dirParam)
 }
 
 func fileListRoots(params []interface{}) interface{} {

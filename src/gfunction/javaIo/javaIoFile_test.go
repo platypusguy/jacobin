@@ -484,16 +484,58 @@ func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 func TestJavaIoFile_CreateTemp_Instance_And_Static(t *testing.T) {
 	globals.InitStringPool()
 	dir := t.TempDir()
-	// instance createTempFile
-	base := newFileObjFromPath(t, dir)
-	obj := fileCreateTemp([]interface{}{base, object.StringObjectFromGoString("pre"), object.StringObjectFromGoString(".suf")})
-	if obj == nil {
-		t.Fatalf("instance createTempFile returned nil")
+	// static createTempFile(prefix, suffix)
+	obj := fileCreateTemp([]interface{}{object.StringObjectFromGoString("pre"), object.StringObjectFromGoString(".suf")})
+	if obj == nil || object.IsNull(obj) {
+		t.Fatalf("createTempFile returned nil/null")
 	}
-	// static createTempFile(prefix,suffix,dir)
+	fObj := obj.(*object.Object)
+	p, err := fileGetPathString(fObj)
+	if err != nil || p == "" {
+		t.Fatalf("fileGetPathString failed on created temp file")
+	}
+	defer os.Remove(p)
+	if _, statErr := os.Stat(p); statErr != nil {
+		t.Fatalf("temp file does not exist on disk: %v", statErr)
+	}
+
+	// static createTempFile(prefix, suffix, dir)
 	obj2 := fileCreateTempWithDir([]interface{}{object.StringObjectFromGoString("x"), object.StringObjectFromGoString(".log"), newFileObjFromPath(t, dir)})
-	if obj2 == nil {
-		t.Fatalf("static createTempFile returned nil")
+	if obj2 == nil || object.IsNull(obj2) {
+		t.Fatalf("static createTempFile with dir returned nil/null")
+	}
+	fObj2 := obj2.(*object.Object)
+	p2, err2 := fileGetPathString(fObj2)
+	if err2 != nil || p2 == "" {
+		t.Fatalf("fileGetPathString failed on created temp file in dir")
+	}
+	defer os.Remove(p2)
+	if _, statErr2 := os.Stat(p2); statErr2 != nil {
+		t.Fatalf("temp file in dir does not exist on disk: %v", statErr2)
+	}
+}
+
+func TestJavaIoFile_CreateTemp_RelativePrefix(t *testing.T) {
+	globals.InitStringPool()
+	prefix := "./jacotest_alloc_file."
+	suffix := "3133509"
+
+	obj := fileCreateTemp([]interface{}{object.StringObjectFromGoString(prefix), object.StringObjectFromGoString(suffix)})
+	if obj == nil || object.IsNull(obj) {
+		t.Fatalf("fileCreateTemp with relative prefix returned nil/null")
+	}
+	fObj, ok := obj.(*object.Object)
+	if !ok {
+		t.Fatalf("fileCreateTemp did not return *object.Object")
+	}
+	p, err := fileGetPathString(fObj)
+	if err != nil || p == "" {
+		t.Fatalf("fileGetPathString failed on created temp file: %v", err)
+	}
+	defer os.Remove(p)
+
+	if _, statErr := os.Stat(p); statErr != nil {
+		t.Fatalf("expected created temp file to exist at %s: %v", p, statErr)
 	}
 }
 
