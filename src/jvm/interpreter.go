@@ -32,6 +32,7 @@ import (
 	"jacobin/src/types"
 	"jacobin/src/util"
 	"math"
+	"os"
 	"reflect"
 	"runtime"
 	"runtime/debug"
@@ -2389,7 +2390,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	default:
 		// if it's not a primitive or a pointer to a class,
 		// then it should be a pointer to an object or to
-		// a loaded class
+		// a loaded class or an *os.File
 		value = pop(fr)
 		if value == nil {
 			value = object.Null
@@ -2419,6 +2420,12 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 				Type:  prevLoaded.Type,
 				Value: value,
 			})
+		case *os.File:
+			statics.AddStatic(fieldName, statics.Static{
+				Type:  prevLoaded.Type,
+				Value: value,
+			})
+
 		default:
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("PUTSTATIC: field %s.%s, type unrecognized: %T %v", className, fieldName, value, value)
