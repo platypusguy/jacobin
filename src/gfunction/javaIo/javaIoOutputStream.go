@@ -229,7 +229,7 @@ func outputStreamWriteBytesRange(params []any) any {
 	}
 
 	// Run the FQN and wait for the method to complete.
-	globals.GetGlobalRef().FuncRunJavaFromG(fs, subclassName, "write", "([BII)V", arrObj)
+	globals.GetGlobalRef().FuncRunJavaFromG(fs, subclassName, "write", "([BII)V", outputStreamObj, arrObj, offset, length)
 
 	return nil
 }
