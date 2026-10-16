@@ -693,10 +693,10 @@ func TestPrintStreamWithObjectReceiver(t *testing.T) {
 		t.Errorf("PrintFlush returned error: %v", ret)
 	}
 
-	// Test default to os.Stdout when psObj has no FileHandle field
+	// Test error when psObj has no writer or out field
 	emptyPsObj := object.MakeEmptyObjectWithClassName(&psClassName)
 	ret = Printf([]any{emptyPsObj, makeStringObject("test"), object.MakeArrayFromRawArray([]*object.Object{})})
-	if ret != emptyPsObj {
-		t.Errorf("Printf with emptyPsObj should return emptyPsObj, got %v", ret)
+	if _, isErr := ret.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Printf with emptyPsObj should return GErrBlk, got %v", ret)
 	}
 }
