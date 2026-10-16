@@ -1055,8 +1055,9 @@ func _printLinkedList(params []any, newLine bool) any {
 			} else {
 				_, _ = fmt.Fprint(writer, "[]")
 			}
+			return nil
 		}
-		_, _ = fmt.Fprint(writer, "[")
+		strBuffer = "["
 		for ix := 0; ix < llst.Len(); ix++ {
 			strBuffer += object.StringifyAnythingGo(element.Value)
 			strBuffer += ", "
