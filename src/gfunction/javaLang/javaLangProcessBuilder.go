@@ -601,6 +601,7 @@ func processBuilderStart(params []any) any {
 	envField, hasEnv := self.FieldTable["environment"]
 	self.ThMutex.RUnlock()
 	if hasEnv && envField.Fvalue != nil && !object.IsNull(envField.Fvalue) {
+		envList = []string{}
 		switch envObj := envField.Fvalue.(type) {
 		case *object.Object:
 			envObj.ThMutex.RLock()
