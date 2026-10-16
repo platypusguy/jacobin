@@ -16,8 +16,8 @@ import (
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/gfunction/misc"
 	"jacobin/src/object"
+	"jacobin/src/trace"
 	"jacobin/src/types"
-	"os"
 	"strconv"
 )
 
@@ -501,7 +501,7 @@ func getPrintStreamWriter(arg any) (io.Writer, bool) {
 	if writer, ok := arg.(io.Writer); ok {
 		return writer, true
 	}
-	if obj, ok := arg.(*object.Object); ok && obj != nil {
+	if obj, ok := arg.(*object.Object); ok && !object.IsNull(obj) {
 		if fld, ok := obj.FieldTable[ghelpers.FileHandle]; ok && fld.Fvalue != nil {
 			if writer, ok := fld.Fvalue.(io.Writer); ok {
 				return writer, true
@@ -532,8 +532,12 @@ func getPrintStreamWriter(arg any) (io.Writer, bool) {
 				return getPrintStreamWriter(childObj)
 			}
 		}
-		return os.Stdout, true
+		errMsg := fmt.Sprintf("getPrintStreamWriter: field out not found, arg type: %T", arg)
+		trace.Error(errMsg)
+		return nil, false
 	}
+	errMsg := fmt.Sprintf("getPrintStreamWriter: arg is neither io.Writer or an object, type: %T", arg)
+	trace.Error(errMsg)
 	return nil, false
 }
 
