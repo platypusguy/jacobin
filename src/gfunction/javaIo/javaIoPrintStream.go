@@ -16,6 +16,7 @@ import (
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/gfunction/misc"
 	"jacobin/src/object"
+	"jacobin/src/trace"
 	"jacobin/src/types"
 	"strconv"
 )
@@ -38,6 +39,72 @@ import (
 */
 
 func Load_Io_PrintStream() {
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.ClinitGeneric,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/io/OutputStream;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  initPrintStreamOutputStream,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/io/OutputStream;Z)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  initPrintStreamOutputStreamBoolean,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/io/OutputStream;ZLjava/lang/String;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/io/OutputStream;ZLjava/nio/charset/Charset;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/io/File;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  initPrintStreamFile,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/io/File;Ljava/lang/String;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/io/File;Ljava/nio/charset/Charset;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/lang/String;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  initPrintStreamString,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/lang/String;Ljava/lang/String;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/io/PrintStream.<init>(Ljava/lang/String;Ljava/nio/charset/Charset;)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
 
 	ghelpers.MethodSignatures["java/io/PrintStream.append(C)Ljava/io/PrintStream;"] =
 		ghelpers.GMeth{
@@ -353,15 +420,138 @@ func Load_Io_PrintStream() {
 
 }
 
+// "java/io/PrintStream.<init>(Ljava/io/OutputStream;)V"
+func initPrintStreamOutputStream(params []any) any {
+	if len(params) < 2 {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "initPrintStreamOutputStream: missing OutputStream parameter")
+	}
+	underlying, _ := params[1].(*object.Object)
+	if underlying == nil {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "initPrintStreamOutputStream: underlying OutputStream is null")
+	}
+	self, _ := params[0].(*object.Object)
+	if self == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "initPrintStreamOutputStream: self is not an object")
+	}
+
+	if self.FieldTable == nil {
+		self.FieldTable = make(map[string]object.Field)
+	}
+	self.FieldTable["out"] = object.Field{Ftype: "java/io/OutputStream", Fvalue: underlying}
+
+	if fldHandle, ok := underlying.FieldTable[ghelpers.FileHandle]; ok {
+		self.FieldTable[ghelpers.FileHandle] = fldHandle
+	}
+	if fldPath, ok := underlying.FieldTable[ghelpers.FilePath]; ok {
+		self.FieldTable[ghelpers.FilePath] = fldPath
+	}
+	return nil
+}
+
+// "java/io/PrintStream.<init>(Ljava/io/OutputStream;Z)V"
+func initPrintStreamOutputStreamBoolean(params []any) any {
+	if len(params) < 2 {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "initPrintStreamOutputStreamBoolean: missing OutputStream parameter")
+	}
+	underlying, _ := params[1].(*object.Object)
+	if underlying == nil {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "initPrintStreamOutputStreamBoolean: underlying OutputStream is null")
+	}
+	self, _ := params[0].(*object.Object)
+	if self == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "initPrintStreamOutputStreamBoolean: self is not an object")
+	}
+
+	if self.FieldTable == nil {
+		self.FieldTable = make(map[string]object.Field)
+	}
+	self.FieldTable["out"] = object.Field{Ftype: "java/io/OutputStream", Fvalue: underlying}
+
+	if len(params) > 2 {
+		if autoFlush, ok := params[2].(bool); ok {
+			self.FieldTable["autoFlush"] = object.Field{Ftype: "Z", Fvalue: autoFlush}
+		} else if autoFlushInt, ok := params[2].(int64); ok {
+			self.FieldTable["autoFlush"] = object.Field{Ftype: "Z", Fvalue: autoFlushInt != 0}
+		}
+	}
+
+	if fldHandle, ok := underlying.FieldTable[ghelpers.FileHandle]; ok {
+		self.FieldTable[ghelpers.FileHandle] = fldHandle
+	}
+	if fldPath, ok := underlying.FieldTable[ghelpers.FilePath]; ok {
+		self.FieldTable[ghelpers.FilePath] = fldPath
+	}
+	return nil
+}
+
+// "java/io/PrintStream.<init>(Ljava/io/File;)V"
+func initPrintStreamFile(params []any) any {
+	return initFileOutputStreamFile(params)
+}
+
+// "java/io/PrintStream.<init>(Ljava/lang/String;)V"
+func initPrintStreamString(params []any) any {
+	return initFileOutputStreamString(params)
+}
+
+func getPrintStreamWriter(arg any) (io.Writer, bool) {
+	if arg == nil {
+		return nil, false
+	}
+	if writer, ok := arg.(io.Writer); ok {
+		return writer, true
+	}
+	if obj, ok := arg.(*object.Object); ok && !object.IsNull(obj) {
+		if fld, ok := obj.FieldTable[ghelpers.FileHandle]; ok && fld.Fvalue != nil {
+			if writer, ok := fld.Fvalue.(io.Writer); ok {
+				return writer, true
+			}
+		}
+		if _, hasBuf := obj.FieldTable["buf"]; hasBuf {
+			if _, hasCount := obj.FieldTable["count"]; hasCount {
+				return &byteArrayOutputStreamWriter{obj: obj}, true
+			}
+		}
+		if obj.KlassName != 0 && obj.KlassName != types.InvalidStringIndex {
+			if object.GoStringFromStringPoolIndex(obj.KlassName) == "java/io/ByteArrayOutputStream" {
+				if obj.FieldTable == nil {
+					obj.FieldTable = make(map[string]object.Field)
+				}
+				if _, hasBuf := obj.FieldTable["buf"]; !hasBuf {
+					obj.FieldTable["buf"] = object.Field{Ftype: "[B", Fvalue: make([]types.JavaByte, 32)}
+					obj.FieldTable["count"] = object.Field{Ftype: "I", Fvalue: int64(0)}
+				}
+				return &byteArrayOutputStreamWriter{obj: obj}, true
+			}
+		}
+		if fld, ok := obj.FieldTable["out"]; ok && fld.Fvalue != nil {
+			if writer, ok := fld.Fvalue.(io.Writer); ok {
+				return writer, true
+			}
+			if childObj, ok := fld.Fvalue.(*object.Object); ok {
+				return getPrintStreamWriter(childObj)
+			}
+		}
+		errMsg := fmt.Sprintf("getPrintStreamWriter: field out not found, arg type: %T", arg)
+		trace.Error(errMsg)
+		return nil, false
+	}
+	errMsg := fmt.Sprintf("getPrintStreamWriter: arg is neither io.Writer or an object, type: %T", arg)
+	trace.Error(errMsg)
+	return nil, false
+}
+
 // "java/io/PrintStream.flush()V"
 func PrintFlush(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
-		errMsg := fmt.Sprintf("PrintChar: Expected io.Writer, observed %T", params[0])
+		errMsg := fmt.Sprintf("PrintFlush: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	if f, ok := writer.(interface{ Flush() error }); ok {
 		_ = f.Flush()
+	} else if f, ok := writer.(interface{ Sync() error }); ok {
+		_ = f.Sync()
 	}
 	return nil
 }
@@ -369,7 +559,7 @@ func PrintFlush(params []any) any {
 // java/io/PrintStream.write([B)V
 // java/io/PrintStream.write([BII)V
 func printstreamWriteFromByteArray(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("java/io/PrintStream.write: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -412,7 +602,7 @@ func printstreamWriteFromByteArray(params []any) any {
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline (V = void)
 // "java/io/PrintStream.println()V"
 func PrintlnV(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnV: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -423,7 +613,7 @@ func PrintlnV(params []any) any {
 
 // "java/io/PrintStream.println(C)V"
 func PrintlnChar(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnChar: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -437,7 +627,7 @@ func PrintlnChar(params []any) any {
 // "java/io/PrintStream.println(I)V"
 // "java/io/PrintStream.println(S)V"
 func PrintlnBIS(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnBIS: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -452,7 +642,7 @@ func PrintlnBIS(params []any) any {
 
 // "java/io/PrintStream.println(Z)V"
 func PrintlnBoolean(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnBoolean: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -470,7 +660,7 @@ func PrintlnBoolean(params []any) any {
 
 // "java/io/PrintStream.println(J)V"
 func PrintlnLong(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnLong: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -482,7 +672,7 @@ func PrintlnLong(params []any) any {
 
 // PrintlnDouble = java/io/Prinstream.print(double)
 func PrintlnDouble(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnDouble: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -494,7 +684,7 @@ func PrintlnDouble(params []any) any {
 
 // PrintlnFloat = java/io/Prinstream.print(float)
 func PrintlnFloat(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnFloat: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -506,7 +696,7 @@ func PrintlnFloat(params []any) any {
 
 // "java/io/PrintStream.print(C)V"
 func PrintChar(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintChar: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -520,7 +710,7 @@ func PrintChar(params []any) any {
 // "java/io/PrintStream.print(I)V"
 // "java/io/PrintStream.print(S)V"
 func PrintBIS(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintBIS: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -536,7 +726,7 @@ func PrintBIS(params []any) any {
 // PrintBoolean = java/io/Prinstream.print(boolean)
 // "java/io/PrintStream.print(Z)V"
 func PrintBoolean(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintBoolean: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -556,7 +746,7 @@ func PrintBoolean(params []any) any {
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 // "java/io/PrintStream.print(J)V"
 func PrintLong(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintLong: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -568,7 +758,7 @@ func PrintLong(params []any) any {
 
 // PrintDouble = java/io/Prinstream.print(double)
 func PrintDouble(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintDouble: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -580,7 +770,7 @@ func PrintDouble(params []any) any {
 
 // PrintFloat = java/io/Prinstream.print(float)
 func PrintFloat(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("PrintFloat: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -593,7 +783,7 @@ func PrintFloat(params []any) any {
 // Printf -- handle the variable args and then call golang's own printf function
 // "java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"
 func Printf(params []any) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("Printf: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -618,7 +808,7 @@ func Printf(params []any) any {
 
 // "java/io/PrintStream.println(Ljava/lang/String;)V"
 func _printString(params []any, newLine bool) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("_printString: Expected io.Writer, observed param count: %d, type: %T, value: %v",
 			len(params), params[0], params[0])
@@ -687,7 +877,7 @@ func PrintlnString(params []any) any {
 
 // Called by PrintObject and PrintlnObject
 func _printObject(params []any, newLine bool) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("_printObject: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -780,7 +970,7 @@ func _printObject(params []any, newLine bool) any {
 func PrintObject(params []any) any {
 	// Check for null object.
 	if params[1] == nil || object.IsNull(params[1]) {
-		writer, ok := params[0].(io.Writer)
+		writer, ok := getPrintStreamWriter(params[0])
 		if !ok {
 			errMsg := fmt.Sprintf("PrintObject: Expected io.Writer, observed %T", params[0])
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -803,7 +993,7 @@ func PrintObject(params []any) any {
 func PrintlnObject(params []any) any {
 	// Check for null object.
 	if params[1] == nil || object.IsNull(params[1]) {
-		writer, ok := params[0].(io.Writer)
+		writer, ok := getPrintStreamWriter(params[0])
 		if !ok {
 			errMsg := fmt.Sprintf("PrintlnObject: Expected io.Writer, observed %T", params[0])
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -823,7 +1013,7 @@ func PrintlnObject(params []any) any {
 
 // Print a linked list like this: [A, B, C]
 func _printLinkedList(params []any, newLine bool) any {
-	writer, ok := params[0].(io.Writer)
+	writer, ok := getPrintStreamWriter(params[0])
 	if !ok {
 		errMsg := fmt.Sprintf("_printLinkedList: Expected io.Writer, observed %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)

@@ -129,7 +129,52 @@ func ByteArrayOutputStreamInit(params []interface{}) interface{} {
 	buf := make([]types.JavaByte, size)
 	self.FieldTable["buf"] = object.Field{Ftype: "[B", Fvalue: buf}
 	self.FieldTable["count"] = object.Field{Ftype: "I", Fvalue: int64(0)}
+	self.FieldTable[ghelpers.FileHandle] = object.Field{
+		Ftype:  "Ljava/lang/Object;",
+		Fvalue: &byteArrayOutputStreamWriter{obj: self},
+	}
 
+	return nil
+}
+
+type byteArrayOutputStreamWriter struct {
+	obj *object.Object
+}
+
+func (w *byteArrayOutputStreamWriter) Write(p []byte) (n int, err error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+	w.obj.ThMutex.Lock()
+	defer w.obj.ThMutex.Unlock()
+
+	if w.obj.FieldTable == nil {
+		w.obj.FieldTable = make(map[string]object.Field)
+	}
+	if _, ok := w.obj.FieldTable["buf"]; !ok {
+		w.obj.FieldTable["buf"] = object.Field{Ftype: "[B", Fvalue: make([]types.JavaByte, 32)}
+	}
+
+	count := int64(0)
+	if countFld, ok := w.obj.FieldTable["count"]; ok && countFld.Fvalue != nil {
+		if c, ok := countFld.Fvalue.(int64); ok {
+			count = c
+		}
+	}
+	ensureCapacity(w.obj, count+int64(len(p)))
+	buf := w.obj.FieldTable["buf"].Fvalue.([]types.JavaByte)
+	for i, b := range p {
+		buf[count+int64(i)] = types.JavaByte(b)
+	}
+	w.obj.FieldTable["count"] = object.Field{Ftype: "I", Fvalue: count + int64(len(p))}
+	return len(p), nil
+}
+
+func (w *byteArrayOutputStreamWriter) Flush() error {
+	return nil
+}
+
+func (w *byteArrayOutputStreamWriter) Close() error {
 	return nil
 }
 

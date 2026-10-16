@@ -7,6 +7,7 @@
 package javaIo
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"jacobin/src/excNames"
@@ -99,13 +100,49 @@ func Load_Io_BufferedReader() {
 }
 
 // "java/io/BufferedReader.<init>(Ljava/io/Reader;])V"
-func bufferedReaderInit(params []interface{}) interface{} {
-	fld1, ok := params[1].(*object.Object).FieldTable[ghelpers.FilePath]
+func bufferedReaderInit(params []any) any {
+	if len(params) < 2 || params[0] == nil || params[1] == nil || object.IsNull(params[0]) || object.IsNull(params[1]) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "bufferedReaderInit: null parameter")
+	}
+	self, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.InvalidTypeException, "bufferedReaderInit: self is not an object")
+	}
+	readerObj, ok := params[1].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.InvalidTypeException, "bufferedReaderInit: reader parameter is not an object")
+	}
+
+	if self.FieldTable == nil {
+		self.FieldTable = make(map[string]object.Field)
+	}
+
+	if fldHandle, ok := readerObj.FieldTable[ghelpers.FileHandle]; ok && fldHandle.Fvalue != nil && !object.IsNull(fldHandle.Fvalue) {
+		self.FieldTable[ghelpers.FileHandle] = fldHandle
+		if fldPath, ok := readerObj.FieldTable[ghelpers.FilePath]; ok {
+			self.FieldTable[ghelpers.FilePath] = fldPath
+		}
+		return nil
+	}
+
+	fld1, ok := readerObj.FieldTable[ghelpers.FilePath]
 	if !ok {
 		errMsg := "Reader object lacks a ghelpers.FilePath field"
 		return ghelpers.GetGErrBlk(excNames.InvalidTypeException, errMsg)
 	}
-	inPathStr := object.GoStringFromJavaByteArray(fld1.Fvalue.([]types.JavaByte))
+	var inPathStr string
+	switch v := fld1.Fvalue.(type) {
+	case []types.JavaByte:
+		inPathStr = object.GoStringFromJavaByteArray(v)
+	case []byte:
+		inPathStr = string(v)
+	case string:
+		inPathStr = v
+	default:
+		errMsg := "Reader object has invalid ghelpers.FilePath field"
+		return ghelpers.GetGErrBlk(excNames.InvalidTypeException, errMsg)
+	}
+
 	osFile, err := os.Open(inPathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("os.Open(%s) failed, reason: %s", inPathStr, err.Error())
@@ -113,25 +150,29 @@ func bufferedReaderInit(params []interface{}) interface{} {
 	}
 
 	// Copy java/io/File path
-	fld := fld1
-	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
+	self.FieldTable[ghelpers.FilePath] = fld1
 
 	// Field ghelpers.FileHandle = Golang *os.File from os.Open
-	fld = object.Field{Ftype: types.Ref, Fvalue: osFile}
-	params[0].(*object.Object).FieldTable[ghelpers.FileHandle] = fld
+	self.FieldTable[ghelpers.FileHandle] = object.Field{Ftype: types.Ref, Fvalue: osFile}
 
 	return nil
 }
 
 // "java/io/BufferedReader.markSupported()Z"
-func bufferedReaderMarkSupported([]interface{}) interface{} {
+func bufferedReaderMarkSupported([]any) any {
 	return types.JavaBoolFalse // false
 }
 
 // "java/io/BufferedReader.readLine()Ljava/lang/String;"
-func bufferedReaderReadLine(params []interface{}) interface{} {
+func bufferedReaderReadLine(params []any) any {
+	if len(params) < 1 || params[0] == nil || object.IsNull(params[0]) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "bufferedReaderReadLine: self is null")
+	}
 	// Get BufferedReader object.
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.InvalidTypeException, "bufferedReaderReadLine: self is not an object")
+	}
 
 	// Already at EOF?
 	if ghelpers.EofGet(obj) {
@@ -139,7 +180,13 @@ func bufferedReaderReadLine(params []interface{}) interface{} {
 	}
 
 	// Get file handle.
-	osFile, ok := obj.FieldTable[ghelpers.FileHandle].Fvalue.(*os.File)
+	fldHandle, ok := obj.FieldTable[ghelpers.FileHandle]
+	if !ok || fldHandle.Fvalue == nil || object.IsNull(fldHandle.Fvalue) {
+		errMsg := "Reader object lacks a ghelpers.FileHandle field"
+		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+	}
+
+	reader, ok := fldHandle.Fvalue.(io.Reader)
 	if !ok {
 		errMsg := "Reader object lacks a ghelpers.FileHandle field"
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
@@ -150,8 +197,8 @@ func bufferedReaderReadLine(params []interface{}) interface{} {
 	var buffer []byte
 	var err error
 	for {
-		_, err = osFile.Read(byteBuf)
-		if err == io.EOF {
+		_, err = reader.Read(byteBuf)
+		if errors.Is(err, io.EOF) {
 			ghelpers.EofSet(obj, true)
 			if len(buffer) > 0 {
 				break

@@ -146,19 +146,19 @@ func Load_Lang_System() {
 	ghelpers.MethodSignatures["java/lang/System.setIn(Ljava/io/InputStream;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  systemSetIn,
 		}
 
 	ghelpers.MethodSignatures["java/lang/System.setOut(Ljava/io/PrintStream;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  systemSetOut,
 		}
 
 	ghelpers.MethodSignatures["java/lang/System.setErr(Ljava/io/PrintStream;)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  systemSetErr,
 		}
 
 	ghelpers.MethodSignatures["java/lang/System.inheritedChannel()Ljava/nio/channels/Channel;"] =
@@ -215,7 +215,7 @@ func Load_Lang_System() {
 			GFunction:  systemSetProperties,
 		}
 
-	ghelpers.MethodSignatures["java/lang/System.setProperty(Ljava/lang/String;Ljava/lang/String;)V"] =
+	ghelpers.MethodSignatures["java/lang/System.setProperty(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  systemSetProperty,
@@ -494,13 +494,19 @@ func systemClearProperty(params []interface{}) interface{} {
 }
 
 // Get a system property - high-level function.
+// Supports both getProperty(key) and getProperty(key, def).
 func SystemGetProperty(params []interface{}) interface{} {
-	if params[0] == nil {
+	if len(params) == 0 || params[0] == nil || object.IsNull(params[0]) {
 		errMsg := fmt.Sprintf("java/lang/System.SystemGetProperty(): nil property string")
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
-	propObj := params[0].(*object.Object)
+	propObj, ok := params[0].(*object.Object)
+	if !ok || propObj == nil || object.IsNull(propObj) {
+		errMsg := fmt.Sprintf("java/lang/System.SystemGetProperty(): nil property string")
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
 	propStr := object.GoStringFromStringObject(propObj)
 	if propStr == "" {
 		errMsg := fmt.Sprintf("java/lang/System.SystemGetProperty(): empty property string")
@@ -509,39 +515,22 @@ func SystemGetProperty(params []interface{}) interface{} {
 
 	value := globals.GetSystemProperty(propStr)
 	if value == "" {
-
-		if len(params) < 2 {
-			return object.Null
+		if len(params) >= 2 {
+			if params[1] == nil || object.IsNull(params[1]) {
+				return object.Null
+			}
+			return params[1]
 		}
-
-		// Use the default value.
-		defaultObj := params[1].(*object.Object)
-		value = object.GoStringFromStringObject(defaultObj)
+		return object.Null
 	}
 
 	return object.StringObjectFromGoString(value)
 }
 
 // Get a system property - high level function.
-// Get the system property, but if it's not found, returns the default value, which is passed in params[1]
+// Get the system property, but if it's not found, returns the default value, which is passed in params[1].
 func systemGetPropertyDefault(params []interface{}) interface{} {
-	if params[0] == nil {
-		errMsg := fmt.Sprintf("java/lang/System.SystemGetProperty(): nil property string")
-		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
-	}
-
-	propObj := params[0].(*object.Object)
-	propStr := object.GoStringFromStringObject(propObj)
-	if propStr == "" {
-		errMsg := fmt.Sprintf("java/lang/System.SystemGetProperty(): empty property string")
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-
-	value := globals.GetSystemProperty(propStr)
-	if value == "" {
-		return params[1].(*object.Object) // return the default value
-	}
-	return object.StringObjectFromGoString(value)
+	return SystemGetProperty(params)
 }
 
 // SystemGetProperties: Create a Properties object and set its map elements to system properties.
@@ -608,11 +597,38 @@ func systemSetProperties(params []interface{}) interface{} {
 func systemSetProperty(params []interface{}) interface{} {
 	keyObj := params[0].(*object.Object)
 	keyStr := object.GoStringFromStringObject(keyObj)
-	valueObj := params[1].(*object.Object)
-	valueStr := object.GoStringFromStringObject(valueObj)
+	newValueObj := params[1].(*object.Object)
+	newValueStr := object.GoStringFromStringObject(newValueObj)
 
-	value := globals.GetSystemProperty(keyStr)
-	globals.SetSystemProperty(keyStr, valueStr)
+	oldValue := globals.GetSystemProperty(keyStr)
+	globals.SetSystemProperty(keyStr, newValueStr)
 
-	return object.StringObjectFromGoString(value)
+	return object.StringObjectFromGoString(oldValue)
+}
+
+// "java/lang/System.setIn(Ljava/io/InputStream;)V"
+func systemSetIn(params []any) any {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "systemSetIn: missing InputStream parameter")
+	}
+	_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "GS", Value: params[0]})
+	return nil
+}
+
+// "java/lang/System.setOut(Ljava/io/PrintStream;)V"
+func systemSetOut(params []any) any {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "systemSetOut: missing PrintStream parameter")
+	}
+	_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: params[0]})
+	return nil
+}
+
+// "java/lang/System.setErr(Ljava/io/PrintStream;)V"
+func systemSetErr(params []any) any {
+	if len(params) < 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "systemSetErr: missing PrintStream parameter")
+	}
+	_ = statics.AddStatic("java/lang/System.err", statics.Static{Type: "GS", Value: params[0]})
+	return nil
 }

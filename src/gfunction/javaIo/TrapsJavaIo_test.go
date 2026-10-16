@@ -20,7 +20,7 @@ func TestLoad_Traps_Java_Io_RegistersSomeMethods(t *testing.T) {
 		fn      func([]interface{}) interface{}
 		checkFn bool
 	}{
-		{"java/io/BufferedOutputStream.<clinit>()V", 0, ghelpers.TrapClass, true},
+		{"java/io/BufferedWriter.<clinit>()V", 0, ghelpers.TrapClass, true},
 		{"java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;", 0, ghelpers.TrapFunction, true},
 		{"java/io/FileDescriptor.<clinit>()V", 0, ghelpers.TrapClass, true},
 		{"java/io/FileDescriptor.valid()Z", 0, ghelpers.TrapFunction, true},
