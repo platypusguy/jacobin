@@ -7,8 +7,10 @@
 package javaIo
 
 import (
+	"container/list"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/stringPool"
 	"os"
@@ -19,17 +21,18 @@ func TestOutputStreamMethodRegistration(t *testing.T) {
 	Load_Io_OutputStream()
 
 	expectedMethods := []struct {
-		sig   string
-		slots int
+		sig          string
+		slots        int
+		needsContext bool
 	}{
-		{"java/io/OutputStream.<clinit>()V", 0},
-		{"java/io/OutputStream.<init>()V", 0},
-		{"java/io/OutputStream.close()V", 0},
-		{"java/io/OutputStream.flush()V", 0},
-		{"java/io/OutputStream.nullOutputStream()Ljava/io/OutputStream;", 0},
-		{"java/io/OutputStream.write(I)V", 1},
-		{"java/io/OutputStream.write([B)V", 1},
-		{"java/io/OutputStream.write([BII)V", 3},
+		{"java/io/OutputStream.<clinit>()V", 0, false},
+		{"java/io/OutputStream.<init>()V", 0, false},
+		{"java/io/OutputStream.close()V", 0, false},
+		{"java/io/OutputStream.flush()V", 0, false},
+		{"java/io/OutputStream.nullOutputStream()Ljava/io/OutputStream;", 0, false},
+		{"java/io/OutputStream.write(I)V", 1, false},
+		{"java/io/OutputStream.write([B)V", 1, true},
+		{"java/io/OutputStream.write([BII)V", 3, true},
 	}
 
 	for _, expected := range expectedMethods {
@@ -41,6 +44,9 @@ func TestOutputStreamMethodRegistration(t *testing.T) {
 		if gm.ParamSlots != expected.slots {
 			t.Errorf("Expected ParamSlots %d for %s, got %d", expected.slots, expected.sig, gm.ParamSlots)
 		}
+		if gm.NeedsContext != expected.needsContext {
+			t.Errorf("Expected NeedsContext %v for %s, got %v", expected.needsContext, expected.sig, gm.NeedsContext)
+		}
 		if gm.GFunction == nil {
 			t.Errorf("Expected non-nil GFunction for %s", expected.sig)
 		}
@@ -48,6 +54,8 @@ func TestOutputStreamMethodRegistration(t *testing.T) {
 }
 
 func TestOutputStreamInitAndNullOutputStream(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
 	Load_Io_OutputStream()
 
 	// <init>()V returns nil
@@ -134,12 +142,19 @@ func TestOutputStreamWriteBytes(t *testing.T) {
 	Load_Io_OutputStream()
 	writeBytesFunc := ghelpers.MethodSignatures["java/io/OutputStream.write([B)V"].GFunction
 
+	fs := list.New()
 	outObj := &object.Object{
 		FieldTable: make(map[string]object.Field),
 	}
 
+	// Frame stack missing or invalid
+	errRes := writeBytesFunc([]any{nil, outObj, nil})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for nil frame stack, got %v", errRes)
+	}
+
 	// Null byte array parameter
-	errRes := writeBytesFunc([]any{outObj, nil})
+	errRes = writeBytesFunc([]any{fs, outObj, nil})
 	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
 		t.Errorf("Expected NullPointerException for nil byte array, got %v", errRes)
 	}
@@ -148,7 +163,7 @@ func TestOutputStreamWriteBytes(t *testing.T) {
 	badArr := &object.Object{
 		FieldTable: make(map[string]object.Field),
 	}
-	errRes = writeBytesFunc([]any{outObj, badArr})
+	errRes = writeBytesFunc([]any{fs, outObj, badArr})
 	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
 		t.Errorf("Expected NullPointerException for invalid byte array, got %v", errRes)
 	}
@@ -170,7 +185,7 @@ func TestOutputStreamWriteBytes(t *testing.T) {
 	jbytes := object.JavaByteArrayFromGoByteArray(data)
 	arrObj := object.MakeArrayFromRawArray(jbytes)
 
-	res := writeBytesFunc([]any{outObj, arrObj})
+	res := writeBytesFunc([]any{fs, outObj, arrObj})
 	if res != nil {
 		t.Errorf("Expected write([B) to return nil, got %v", res)
 	}
@@ -189,8 +204,21 @@ func TestOutputStreamWriteBytesRange(t *testing.T) {
 	Load_Io_OutputStream()
 	writeRangeFunc := ghelpers.MethodSignatures["java/io/OutputStream.write([BII)V"].GFunction
 
+	fs := list.New()
+	tmpFile, err := os.CreateTemp("", "test_outputstream_write_range")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+
 	outObj := &object.Object{
-		FieldTable: make(map[string]object.Field),
+		FieldTable: map[string]object.Field{
+			ghelpers.FileHandle: {
+				Ftype:  "Ljava/io/FileDescriptor;",
+				Fvalue: tmpFile,
+			},
+		},
 	}
 
 	data := []byte("Hello, World!")
@@ -209,31 +237,19 @@ func TestOutputStreamWriteBytesRange(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		errRes := writeRangeFunc([]any{outObj, arrObj, c.off, c.len})
+		errRes := writeRangeFunc([]any{fs, outObj, arrObj, c.off, c.len})
 		if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IndexOutOfBoundsException {
 			t.Errorf("Expected IndexOutOfBoundsException for off=%d, len=%d, got %v", c.off, c.len, errRes)
 		}
 	}
 
 	// Length 0 (no-op)
-	if res := writeRangeFunc([]any{outObj, arrObj, int64(0), int64(0)}); res != nil {
+	if res := writeRangeFunc([]any{fs, outObj, arrObj, int64(0), int64(0)}); res != nil {
 		t.Errorf("Expected nil for len=0, got %v", res)
 	}
 
 	// Subarray write to file
-	tmpFile, err := os.CreateTemp("", "test_outputstream_write_range")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
-
-	outObj.FieldTable[ghelpers.FileHandle] = object.Field{
-		Ftype:  "Ljava/io/FileDescriptor;",
-		Fvalue: tmpFile,
-	}
-
-	res := writeRangeFunc([]any{outObj, arrObj, int64(7), int64(5)})
+	res := writeRangeFunc([]any{fs, outObj, arrObj, int64(7), int64(5)})
 	if res != nil {
 		t.Errorf("Expected write([BII) to return nil, got %v", res)
 	}

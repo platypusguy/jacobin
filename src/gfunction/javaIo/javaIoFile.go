@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/trace"
 	"jacobin/src/types"
@@ -282,7 +283,7 @@ func Load_Io_File() {
 	ghelpers.MethodSignatures["java/io/File.toPath()Ljava/nio/file/Path;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  fileToPath,
 		}
 	ghelpers.MethodSignatures["java/io/File.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
@@ -928,4 +929,37 @@ func fileListRoots(params []interface{}) interface{} {
 	// Minimal: return root directory of current OS ("/" on Unix)
 	root := string(os.PathSeparator)
 	return object.MakeArrayFromRawArray([]*object.Object{newFileObjectFromPath(root)})
+}
+
+// "java/io/File.toPath()Ljava/nio/file/Path;"
+func fileToPath(params []any) any {
+	if len(params) == 0 || object.IsNull(params[0]) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "fileToPath: File object is null")
+	}
+	fileObj, ok := params[0].(*object.Object)
+	if !ok || fileObj == nil {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "fileToPath: File object is null")
+	}
+	pathStr, gerr := fileGetPathString(fileObj)
+	if gerr != nil {
+		return gerr
+	}
+	return newPathObject(pathStr)
+}
+
+func newPathObject(goPath string) *object.Object {
+	if globals.OnWindows {
+		goPath = strings.ReplaceAll(goPath, "/", `\`)
+	}
+	className := "java/nio/file/Path"
+	obj := object.MakeEmptyObjectWithClassName(&className)
+	obj.FieldTable["value"] = object.Field{
+		Ftype:  types.StringClassName,
+		Fvalue: object.StringObjectFromGoString(goPath),
+	}
+	obj.FieldTable["provider"] = object.Field{
+		Ftype:  types.FileSystemProviderType,
+		Fvalue: types.FileSystemProviderValue,
+	}
+	return obj
 }
