@@ -223,9 +223,8 @@ func outputStreamWriteBytesRange(params []any) any {
 
 	// Slower path: delegate to the subclass "write([BII)V" method.
 	subclassName := *stringPool.GetStringPointer(outputStreamObj.KlassName)
-	if subclassName == types.ClassNameOutputStream {
-		return ghelpers.GetGErrBlk(excNames.VirtualMachineError,
-			fmt.Sprintf("outputStreamWriteBytesRange: impossible situation: OutputStream subclassed itself?!"))
+	if length == 0 || subclassName == types.ClassNameOutputStream {
+		return nil // nullOutputStream or nothing to write
 	}
 
 	// Run the FQN and wait for the method to complete.
