@@ -227,8 +227,8 @@ func outputStreamWriteBytesRange(params []any) any {
 		return nil // nullOutputStream or nothing to write
 	}
 
-	// Run the FQN and wait for the method to complete.
-	globals.GetGlobalRef().FuncRunJavaFromG(fs, subclassName, "write", "([BII)V", outputStreamObj, arrObj, offset, length)
-
+	for i := offset; i < offset+length; i++ {
+		globals.GetGlobalRef().FuncRunJavaFromG(fs, subclassName, "write", "(I)V", outputStreamObj, int64(javaBytes[i]))
+	}
 	return nil
 }
