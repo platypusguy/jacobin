@@ -198,6 +198,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_Concurrent_Atomic_AtomicInteger()
 	javaUtil.Load_Util_Concurrent_Atomic_Atomic_Long()
 	javaUtil.Load_Util_Concurrent_CyclicBarrier()
+	javaUtil.Load_Util_Concurrent_Hash_Map()
 	javaUtil.Load_Util_Date()
 	javaUtil.Load_Util_Function_Supplier()
 	javaUtil.Load_Util_Iterator()

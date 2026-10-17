@@ -54,6 +54,18 @@ func Load_Util_Map() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	ghelpers.MethodSignatures["java/util/Map.entry(Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/Map$Entry;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  mapEntry,
+		}
+
+	ghelpers.MethodSignatures["java/util/Map.ofEntries([Ljava/util/Map$Entry;)Ljava/util/Map;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  mapOfEntries,
+		}
+
 	ghelpers.MethodSignatures["java/util/Map.entrySet()Ljava/util/Set;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -509,6 +521,103 @@ func mapPutIfAbsent(params []interface{}) interface{} {
 		return mapPut(params)
 	}
 	return v
+}
+
+func mapEntry(params []any) any {
+	if len(params) < 2 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "mapEntry: missing parameters")
+	}
+	if object.IsNull(params[0]) || object.IsNull(params[1]) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "mapEntry: key or value is null")
+	}
+
+	entryObj := object.MakeEmptyObjectWithClassName(new("java/util/AbstractMap$SimpleImmutableEntry"))
+	entryObj.ThMutex.Lock()
+	entryObj.FieldTable["key"] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: params[0]}
+	entryObj.FieldTable["value"] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: params[1]}
+	entryObj.ThMutex.Unlock()
+
+	return entryObj
+}
+
+func mapOfEntries(params []any) any {
+	if len(params) == 0 || object.IsNull(params[0]) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Map.ofEntries: entries array is null")
+	}
+
+	arrObj, ok := params[0].(*object.Object)
+	if !ok || arrObj == nil || object.IsNull(arrObj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Map.ofEntries: entries array is null")
+	}
+
+	arrObj.ThMutex.RLock()
+	fld, hasFld := arrObj.FieldTable["value"]
+	arrObj.ThMutex.RUnlock()
+
+	var entries []any
+	if hasFld && fld.Fvalue != nil {
+		switch s := fld.Fvalue.(type) {
+		case []*object.Object:
+			entries = make([]any, len(s))
+			for i, elem := range s {
+				entries[i] = elem
+			}
+		case []any:
+			entries = s
+		}
+	}
+
+	mapObj := object.MakeEmptyObjectWithClassName(&classNameHashMap)
+	if ret := hashmapInit([]any{mapObj}); ret != nil {
+		return ret
+	}
+
+	seenKeys := make(map[any]bool)
+	for _, entry := range entries {
+		if object.IsNull(entry) {
+			return ghelpers.GetGErrBlk(excNames.NullPointerException, "Map.ofEntries: entry is null")
+		}
+		entryObj, ok := entry.(*object.Object)
+		if !ok || entryObj == nil || object.IsNull(entryObj) {
+			return ghelpers.GetGErrBlk(excNames.NullPointerException, "Map.ofEntries: entry is null")
+		}
+
+		entryObj.ThMutex.RLock()
+		keyFld, hasKey := entryObj.FieldTable["key"]
+		valFld, hasVal := entryObj.FieldTable["value"]
+		entryObj.ThMutex.RUnlock()
+
+		if !hasKey || object.IsNull(keyFld.Fvalue) || !hasVal || object.IsNull(valFld.Fvalue) {
+			return ghelpers.GetGErrBlk(excNames.NullPointerException, "Map.ofEntries: entry key or value is null")
+		}
+
+		k := keyFld.Fvalue
+		v := valFld.Fvalue
+
+		var keyComparable any = k
+		if kObj, ok := k.(*object.Object); ok {
+			if object.IsStringObject(kObj) {
+				keyComparable = object.GoStringFromStringObject(kObj)
+			} else if kObj.FieldTable != nil {
+				if vf, ok := kObj.FieldTable[fieldNameValue]; ok {
+					keyComparable = vf.Fvalue
+				}
+			}
+		}
+
+		if seenKeys[keyComparable] {
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("Map.ofEntries: duplicate key: %v", keyComparable))
+		}
+		seenKeys[keyComparable] = true
+
+		if ret := hashmapPut([]any{mapObj, k, v}); ret != nil {
+			if errBlk, ok := ret.(*ghelpers.GErrBlk); ok {
+				return errBlk
+			}
+		}
+	}
+
+	return mapObj
 }
 
 func mapEntrySet(params []interface{}) interface{} {
