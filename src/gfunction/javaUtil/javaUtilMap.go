@@ -594,17 +594,10 @@ func mapOfEntries(params []any) any {
 		k := keyFld.Fvalue
 		v := valFld.Fvalue
 
-		var keyComparable any = k
-		if kObj, ok := k.(*object.Object); ok {
-			if object.IsStringObject(kObj) {
-				keyComparable = object.GoStringFromStringObject(kObj)
-			} else if kObj.FieldTable != nil {
-				if vf, ok := kObj.FieldTable[fieldNameValue]; ok {
-					keyComparable = vf.Fvalue
-				}
-			}
+		keyComparable, ok := _getKey(k)
+		if !ok {
+			return keyComparable
 		}
-
 		if seenKeys[keyComparable] {
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("Map.ofEntries: duplicate key: %v", keyComparable))
 		}
