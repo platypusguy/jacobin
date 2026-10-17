@@ -1,6 +1,7 @@
 package javaUtil
 
 import (
+	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -219,6 +220,8 @@ func TestMapEntry_Registration(t *testing.T) {
 	Load_Util_Map()
 
 	methods := []string{
+		"java/util/Map.entry(Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/Map$Entry;",
+		"java/util/Map.ofEntries([Ljava/util/Map$Entry;)Ljava/util/Map;",
 		"java/util/Map$Entry.getKey()Ljava/lang/Object;",
 		"java/util/Map$Entry.getValue()Ljava/lang/Object;",
 		"java/util/Map$Entry.setValue(Ljava/lang/Object;)Ljava/lang/Object;",
@@ -365,5 +368,202 @@ func TestHashMap_EntrySetKeySetInvoke(t *testing.T) {
 	sz = hashmapSize([]any{ks}).(int64)
 	if sz != 1 {
 		t.Errorf("Expected keySet size 1, got %d", sz)
+	}
+}
+
+func TestMap_Entry(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	Load_Util_Map()
+
+	// 1. Check registration
+	gm, ok := ghelpers.MethodSignatures["java/util/Map.entry(Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/Map$Entry;"]
+	if !ok {
+		t.Fatalf("Method java/util/Map.entry not registered")
+	}
+	if gm.ParamSlots != 2 {
+		t.Errorf("Expected ParamSlots 2, got %d", gm.ParamSlots)
+	}
+	if gm.GFunction == nil {
+		t.Fatalf("Expected non-nil GFunction")
+	}
+
+	// 2. Test valid entry creation via direct function
+	k := object.StringObjectFromGoString("testKey")
+	v := object.StringObjectFromGoString("testVal")
+
+	res := mapEntry([]any{k, v})
+	entryObj, ok := res.(*object.Object)
+	if !ok || entryObj == nil {
+		t.Fatalf("mapEntry returned %T, want *object.Object", res)
+	}
+
+	className := object.GoStringFromStringPoolIndex(entryObj.KlassName)
+	if className != "java/util/AbstractMap$SimpleImmutableEntry" {
+		t.Errorf("Expected class java/util/AbstractMap$SimpleImmutableEntry, got %s", className)
+	}
+
+	// Check getKey and getValue
+	gotK := mapEntryGetKey([]any{entryObj})
+	if gotK != k {
+		t.Errorf("getKey returned %v, want %v", gotK, k)
+	}
+	gotV := mapEntryGetValue([]any{entryObj})
+	if gotV != v {
+		t.Errorf("getValue returned %v, want %v", gotV, v)
+	}
+
+	// 3. Test invocation via ghelpers.Invoke
+	invRes := ghelpers.Invoke("java/util/Map.entry(Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/Map$Entry;", []any{k, v})
+	invObj, ok := invRes.(*object.Object)
+	if !ok || invObj == nil {
+		t.Fatalf("Invoke mapEntry returned %T, want *object.Object", invRes)
+	}
+	if mapEntryGetKey([]any{invObj}) != k || mapEntryGetValue([]any{invObj}) != v {
+		t.Errorf("Invoked entry has incorrect key or value")
+	}
+
+	// 4. Test error handling: missing parameters (< 2)
+	errRes := mapEntry([]any{})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("Expected IllegalArgumentException for 0 params, got %v", errRes)
+	}
+	errRes = mapEntry([]any{k})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("Expected IllegalArgumentException for 1 param, got %v", errRes)
+	}
+
+	// 5. Test error handling: null key or null value
+	errRes = mapEntry([]any{nil, v})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for nil key, got %v", errRes)
+	}
+	errRes = mapEntry([]any{k, nil})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for nil value, got %v", errRes)
+	}
+	errRes = mapEntry([]any{object.Null, v})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for Null key, got %v", errRes)
+	}
+	errRes = mapEntry([]any{k, object.Null})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for Null value, got %v", errRes)
+	}
+}
+
+func TestMap_OfEntries(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	Load_Util_Map()
+	Load_Util_Hash_Map()
+
+	// 1. Check registration
+	gm, ok := ghelpers.MethodSignatures["java/util/Map.ofEntries([Ljava/util/Map$Entry;)Ljava/util/Map;"]
+	if !ok {
+		t.Fatalf("Method java/util/Map.ofEntries not registered")
+	}
+	if gm.ParamSlots != 1 {
+		t.Errorf("Expected ParamSlots 1, got %d", gm.ParamSlots)
+	}
+	if gm.GFunction == nil {
+		t.Fatalf("Expected non-nil GFunction")
+	}
+
+	// 2. Test empty entries array
+	emptyArr := object.MakeArrayFromRawArray([]*object.Object{})
+	emptyRes := mapOfEntries([]any{emptyArr})
+	emptyMapObj, ok := emptyRes.(*object.Object)
+	if !ok || emptyMapObj == nil {
+		t.Fatalf("mapOfEntries returned %T for empty array, want *object.Object", emptyRes)
+	}
+	sz := mapSize([]any{emptyMapObj}).(int64)
+	if sz != 0 {
+		t.Errorf("Expected empty map size 0, got %d", sz)
+	}
+
+	// 3. Test non-empty entries array
+	k1 := object.StringObjectFromGoString("k1")
+	v1 := object.StringObjectFromGoString("v1")
+	k2 := object.StringObjectFromGoString("k2")
+	v2 := object.StringObjectFromGoString("v2")
+
+	e1 := mapEntry([]any{k1, v1}).(*object.Object)
+	e2 := mapEntry([]any{k2, v2}).(*object.Object)
+
+	arr := object.MakeArrayFromRawArray([]*object.Object{e1, e2})
+	res := mapOfEntries([]any{arr})
+	mapObj, ok := res.(*object.Object)
+	if !ok || mapObj == nil {
+		t.Fatalf("mapOfEntries returned %T, want *object.Object", res)
+	}
+
+	sz = mapSize([]any{mapObj}).(int64)
+	if sz != 2 {
+		t.Errorf("Expected map size 2, got %d", sz)
+	}
+
+	gotV1 := mapGet([]any{mapObj, k1})
+	if gotV1 != v1 {
+		t.Errorf("mapGet for k1 returned %v, want %v", gotV1, v1)
+	}
+	gotV2 := mapGet([]any{mapObj, k2})
+	if gotV2 != v2 {
+		t.Errorf("mapGet for k2 returned %v, want %v", gotV2, v2)
+	}
+
+	// 4. Test invocation via ghelpers.Invoke
+	invRes := ghelpers.Invoke("java/util/Map.ofEntries([Ljava/util/Map$Entry;)Ljava/util/Map;", []any{arr})
+	invMapObj, ok := invRes.(*object.Object)
+	if !ok || invMapObj == nil {
+		t.Fatalf("Invoke mapOfEntries returned %T, want *object.Object", invRes)
+	}
+	if mapSize([]any{invMapObj}).(int64) != 2 {
+		t.Errorf("Invoked map size != 2")
+	}
+
+	// 5. Test duplicate keys -> IllegalArgumentException
+	e2Dup := mapEntry([]any{k1, v2}).(*object.Object)
+	dupArr := object.MakeArrayFromRawArray([]*object.Object{e1, e2Dup})
+	dupRes := mapOfEntries([]any{dupArr})
+	if errBlk, ok := dupRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("Expected IllegalArgumentException for duplicate keys, got %v", dupRes)
+	}
+
+	// 6. Test null array / missing arguments -> NullPointerException
+	errRes := mapOfEntries([]any{})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for 0 params, got %v", errRes)
+	}
+	errRes = mapOfEntries([]any{nil})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for nil param, got %v", errRes)
+	}
+	errRes = mapOfEntries([]any{object.Null})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for Null param, got %v", errRes)
+	}
+
+	// 7. Test null entry in array -> NullPointerException
+	nullEntryArr := object.MakeArrayFromRawArray([]*object.Object{e1, nil})
+	nullRes := mapOfEntries([]any{nullEntryArr})
+	if errBlk, ok := nullRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for null entry in array, got %v", nullRes)
+	}
+
+	nullEntryArr2 := object.MakeArrayFromRawArray([]*object.Object{e1, object.Null})
+	nullRes2 := mapOfEntries([]any{nullEntryArr2})
+	if errBlk, ok := nullRes2.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for Null entry in array, got %v", nullRes2)
+	}
+
+	// 8. Test entry with null key or value -> NullPointerException
+	badEntry := object.MakeEmptyObjectWithClassName(new("java/util/AbstractMap$SimpleImmutableEntry"))
+	badEntry.FieldTable["key"] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: nil}
+	badEntry.FieldTable["value"] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: v1}
+	badArr := object.MakeArrayFromRawArray([]*object.Object{badEntry})
+	badRes := mapOfEntries([]any{badArr})
+	if errBlk, ok := badRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for entry with nil key, got %v", badRes)
 	}
 }
