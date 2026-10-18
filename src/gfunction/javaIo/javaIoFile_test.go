@@ -101,6 +101,7 @@ func TestJavaIoFile_MethodRegistration(t *testing.T) {
 		{"java/io/File.setReadOnly()Z", 0},
 		{"java/io/File.getAbsolutePath()Ljava/lang/String;", 0},
 		{"java/io/File.getCanonicalPath()Ljava/lang/String;", 0},
+		{"java/io/File.toPath()Ljava/nio/file/Path;", 0},
 	}
 	for _, c := range checks {
 		gm, ok := ghelpers.MethodSignatures[c.key]
@@ -700,5 +701,70 @@ func TestJavaIoFile_CompareTo(t *testing.T) {
 	}
 	if fileCompareTo([]interface{}{f2, f1}).(int64) <= 0 {
 		t.Fatalf("fileCompareTo: b.txt should be greater than a.txt")
+	}
+}
+
+func TestJavaIoFile_ToPath(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	Load_Io_File()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "example.txt")
+	f := newFileObjFromPath(t, path)
+
+	// Call fileToPath
+	res := fileToPath([]any{f})
+	pathObj, ok := res.(*object.Object)
+	if !ok || pathObj == nil {
+		t.Fatalf("fileToPath returned %T, want *object.Object", res)
+	}
+
+	className := object.GoStringFromStringPoolIndex(pathObj.KlassName)
+	if className != "java/nio/file/Path" {
+		t.Errorf("Path object class = %q, want java/nio/file/Path", className)
+	}
+
+	valFld, ok := pathObj.FieldTable["value"]
+	if !ok {
+		t.Fatalf("Path object missing value field")
+	}
+	strObj, ok := valFld.Fvalue.(*object.Object)
+	if !ok || strObj == nil {
+		t.Fatalf("Path value field not *object.Object")
+	}
+	gotPathStr := object.GoStringFromStringObject(strObj)
+	expectedPath := getPath(t, f)
+	if gotPathStr != expectedPath {
+		t.Errorf("Path value string = %q, want %q", gotPathStr, expectedPath)
+	}
+
+	provFld, ok := pathObj.FieldTable["provider"]
+	if !ok || provFld.Ftype != types.FileSystemProviderType || provFld.Fvalue != types.FileSystemProviderValue {
+		t.Errorf("Path provider field invalid: %+v", provFld)
+	}
+
+	// Error handling: nil / null params
+	errRes := fileToPath([]any{})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for empty params, got %v", errRes)
+	}
+
+	errRes = fileToPath([]any{nil})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for nil param, got %v", errRes)
+	}
+
+	errRes = fileToPath([]any{object.Null})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.NullPointerException {
+		t.Errorf("Expected NullPointerException for Null object, got %v", errRes)
+	}
+
+	// Error handling: File object lacks FilePath field
+	emptyFileClassName := "java/io/File"
+	emptyFile := object.MakeEmptyObjectWithClassName(&emptyFileClassName)
+	errRes = fileToPath([]any{emptyFile})
+	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IOException {
+		t.Errorf("Expected IOException for empty File object, got %v", errRes)
 	}
 }

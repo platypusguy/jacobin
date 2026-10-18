@@ -1049,7 +1049,15 @@ func _printLinkedList(params []any, newLine bool) any {
 		// Start with the front element.
 		// Continue to the end.
 		element := llst.Front()
-		_, _ = fmt.Fprint(writer, "[")
+		if element == nil {
+			if newLine {
+				_, _ = fmt.Fprintln(writer, "[]")
+			} else {
+				_, _ = fmt.Fprint(writer, "[]")
+			}
+			return nil
+		}
+		strBuffer = "["
 		for ix := 0; ix < llst.Len(); ix++ {
 			strBuffer += object.StringifyAnythingGo(element.Value)
 			strBuffer += ", "
