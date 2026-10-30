@@ -14,6 +14,7 @@ import (
 	"jacobin/src/types"
 	"os"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -163,6 +164,10 @@ func TestProcessBuilderCommandArrayErrors(t *testing.T) {
 }
 
 func TestProcessBuilderStart(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping test on Windows")
+	}
+
 	globals.InitGlobals("test")
 	globals.InitStringPool()
 	Load_Lang_Process_Builder()

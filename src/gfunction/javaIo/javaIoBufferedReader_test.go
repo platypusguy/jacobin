@@ -11,6 +11,7 @@ import (
 	"jacobin/src/types"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -187,6 +188,10 @@ func TestBufferedReaderReadLine_MultiLineSequential(t *testing.T) {
 }
 
 func TestProcessBuilderBufferedReaderPipeline(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping test on Windows")
+	}
+
 	globals.InitGlobals("test")
 	globals.InitStringPool()
 

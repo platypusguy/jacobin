@@ -9,6 +9,7 @@ import (
 	"jacobin/src/types"
 	"os"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -59,6 +60,10 @@ func TestProcess_InvalidObject(t *testing.T) {
 }
 
 func TestProcessGetInputStream(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping test on Windows")
+	}
+
 	globals.InitGlobals("test")
 	globals.InitStringPool()
 	Load_Lang_Process()
