@@ -51,3 +51,9 @@ func TrapUnicode([]interface{}) interface{} {
 		"Character Unicode method not yet implemented",
 	)
 }
+
+// TrapPreview traps preview features, which are not supported in Jacobin
+func TrapPreview([]any) interface{} {
+	errMsg := "Preview features are not supported in Jacobin"
+	return GetGErrBlk(excNames.UnsupportedClassVersionError, errMsg)
+}

@@ -7,10 +7,9 @@
 package ghelpers
 
 import (
+	"jacobin/src/excNames"
 	"strings"
 	"testing"
-
-	"jacobin/src/excNames"
 )
 
 func TestTrapFunctions_ReturnUnsupported(t *testing.T) {
@@ -33,5 +32,13 @@ func TestTrapFunctions_ReturnUnsupported(t *testing.T) {
 	// TrapProtected
 	if blk, ok := TrapProtected(nil).(*GErrBlk); !ok || blk.ExceptionType != excNames.UnsupportedOperationException || !strings.Contains(blk.ErrMsg, "TRAP:") {
 		t.Fatalf("TrapProtected expected UnsupportedOperationException with TRAP: message, got %+v", blk)
+	}
+}
+
+// Trap Preview
+func TestTrapPreview(t *testing.T) {
+	if blk, ok := TrapPreview(nil).(*GErrBlk); !ok ||
+		blk.ExceptionType != excNames.UnsupportedClassVersionError || !strings.Contains(blk.ErrMsg, "Preview features") {
+		t.Fatalf("TrapPreview expected UnsupportedClassVersionError message containing 'Preview features', got %+v", blk)
 	}
 }
