@@ -28,4 +28,23 @@ func Load_Lang_Invoke_StringConcatFactory() {
 			ParamSlots: 5,
 			GFunction:  ghelpers.TrapFunction,
 		}
+
+	ghelpers.MethodSignatures["java/lang/invoke/StringConcatFactory.makeConcatWithTemplate(Ljava/util/List;Ljava/util/List;)Ljava/lang/invoke/MethodHandle;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapPreview,
+		}
+
+	ghelpers.MethodSignatures["java/lang/invoke/StringConcatFactory.makeConcatWithTemplateCluster(Ljava/util/List;Ljava/util/List;I)Ljava/util/List;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapPreview,
+		}
+
+	ghelpers.MethodSignatures["java/lang/invoke/StringConcatFactory.makeConcatWithTemplateGetters(Ljava/util/List;Ljava/util/List;I)Ljava/lang/invoke/MethodHandle;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapPreview,
+		}
+
 }
