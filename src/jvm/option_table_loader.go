@@ -83,9 +83,12 @@ func LoadOptionsTable(Global *globals.Globals) {
 	Global.Options["--dry-run"] = dryRun
 	dryRun.Set = true
 
-	ea := globals.Option{Supported: false, Set: false, ArgStyle: 0, Action: enableAssertions}
+	ea := globals.Option{Supported: true, Set: false, ArgStyle: 0, Action: enableAssertions}
 	Global.Options["-ea"] = ea
 	Global.Options["-enableassertions"] = ea
+
+	enablePreview := globals.Option{Supported: true, Set: false, ArgStyle: 0, Action: previewFeatures}
+	Global.Options["--enable-preview"] = enablePreview // we don't currently support preview features
 
 	help := globals.Option{Supported: true, Set: false, ArgStyle: 0, Action: showHelpStderrAndExit}
 	Global.Options["-h"] = help
@@ -291,6 +294,11 @@ func getJarFilename(pos int, name string, gl *globals.Globals) (int, error) {
 func notSupported(pos int, arg string, gl *globals.Globals) (int, error) {
 	name := gl.Args[pos]
 	fmt.Fprintf(os.Stderr, "%s is not currently supported in Jacobin\n", name)
+	return pos, nil
+}
+
+func previewFeatures(pos int, arg string, gl *globals.Globals) (int, error) {
+	fmt.Fprintf(os.Stderr, "Preview features are not currently supported in Jacobin\n")
 	return pos, nil
 }
 
