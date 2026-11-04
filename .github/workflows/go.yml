@@ -6,6 +6,7 @@ on:
   push:
     paths-ignore:
       - '**.md'
+      - '**.pdf'
       - '**.py'
       - '**.txt'
       - '**.yml'
@@ -14,6 +15,7 @@ on:
   pull_request:
     paths-ignore:
       - '**.md'
+      - '**.pdf'
       - '**.py'
       - '**.txt'
       - '**.yml'
