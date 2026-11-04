@@ -1,0 +1,12 @@
+These are the java.time exception types that nearly every class throws during validation, so they have to exist before anything else can fail correctly:
+
+* DateTimeException: the base type, thrown by ChronoField.checkValidValue, ValueRange.checkValidValue, LocalDate.of(...) with a bad month or day, and so on.
+* DateTimeParseException (extends DateTimeException): thrown by DateTimeFormatter.parse and the parse methods on Duration, Period, and the local types.
+* UnsupportedTemporalTypeException (extends DateTimeException): thrown when you ask a type for a field or unit it doesn’t support, 
+  e.g. LocalDate.get(ChronoField.HOUR_OF_DAY) or Duration.get with an unsupported unit.
+* ZoneRulesException (extends DateTimeException): thrown by ZoneId.of for an unknown region ID.
+* ArithmeticException and NullPointerException: not in java.time, but Math.addExact/multiplyExact/toIntExact and Objects.requireNonNull throw them throughout.
+
+They appear first because the bottom layer (ValueRange, ChronoField) does range checks everywhere, and a test case that expects a specific exception type, message, 
+or inheritance chain can’t pass until those classes can be instantiated and thrown from your G-functions. 
+Check that DateTimeParseException can carry its extra state (parsed text and error index), since tests often inspect getParsedString() and getErrorIndex().
