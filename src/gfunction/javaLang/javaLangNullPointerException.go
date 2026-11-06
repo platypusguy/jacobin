@@ -22,7 +22,7 @@ func Load_Java_Lang_NullPointerException() {
 	ghelpers.MethodSignatures["java/lang/NullPointerException.<init>(Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots:   1,
-			GFunction:    throwableInitString,
+			GFunction:    ThrowableInitString,
 			NeedsContext: true,
 		}
 

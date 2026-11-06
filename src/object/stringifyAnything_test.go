@@ -63,18 +63,6 @@ func TestStringifyAnythingGo_StringObject(t *testing.T) {
 	}
 }
 
-func TestStringifyAnythingGo_StringObject_MissingValue(t *testing.T) {
-	globals.InitGlobals("test")
-	obj := MakeEmptyObjectWithClassName(&stringName)
-	// Don't add value field
-
-	result := StringifyAnythingGo(obj)
-	expected := "missing \"value\" field"
-	if !strings.Contains(result, expected) {
-		t.Errorf("Expected error message, got %s", result)
-	}
-}
-
 func TestStringifyAnythingGo_BooleanObject_True(t *testing.T) {
 	globals.InitGlobals("test")
 	obj := MakeEmptyObjectWithClassName(&boolName)

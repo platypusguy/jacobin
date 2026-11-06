@@ -22,7 +22,7 @@ func Load_Java_Lang_Exception() {
 	ghelpers.MethodSignatures["java/lang/Exception.<init>(Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots:   1,
-			GFunction:    throwableInitString,
+			GFunction:    ThrowableInitString,
 			NeedsContext: true,
 		}
 

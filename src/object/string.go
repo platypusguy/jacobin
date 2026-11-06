@@ -297,8 +297,25 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		str = strings.TrimSuffix(str, " ")
 		return str
 	case types.Byte, types.Char, types.Int, types.Long, types.Rune, types.Short:
-		return fmt.Sprintf("%d", fld.Fvalue.(int64))
-	case types.JavaByteArray, "Ljava/lang/String;":
+		switch fld.Fvalue.(type) {
+		case int8:
+			return fmt.Sprintf("%d", fld.Fvalue.(int8))
+		case int16:
+			return fmt.Sprintf("%d", fld.Fvalue.(int16))
+		case int32:
+			return fmt.Sprintf("%d", fld.Fvalue.(int32))
+		case int64:
+			return fmt.Sprintf("%d", fld.Fvalue.(int64))
+		case uint8:
+			return fmt.Sprintf("%d", fld.Fvalue.(uint8))
+		case uint16:
+			return fmt.Sprintf("%d", fld.Fvalue.(uint16))
+		case uint32:
+			return fmt.Sprintf("%d", fld.Fvalue.(uint32))
+		default:
+			return fmt.Sprintf("%d", fld.Fvalue.(uint64))
+		}
+	case types.JavaByteArray, types.StringClassRef, types.StringClassName:
 		switch fld.Fvalue.(type) {
 		case []byte:
 			return fmt.Sprintf("%x", fld.Fvalue.([]byte))
@@ -329,6 +346,8 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return "FileHandle"
 	case types.Ref, types.RefArray, "[Ljava/lang/Object;":
 		return GoStringFromStringPoolIndex(obj.KlassName)
+	case types.GolangString:
+		return fld.Fvalue.(string)
 	}
 
 	// None of the above!

@@ -2,9 +2,11 @@ package javaIo
 
 import (
 	"bytes"
+	"errors"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/gfunction/javaMath"
+	"jacobin/src/gfunction/javaTime"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -19,6 +21,14 @@ import (
 // Helper to create a Java String object
 func makeStringObject(s string) *object.Object {
 	return object.StringObjectFromGoString(s)
+}
+
+type failingWriter struct {
+	err error
+}
+
+func (writer failingWriter) Write([]byte) (int, error) {
+	return 0, writer.err
 }
 
 func TestPrintStreamPrintlnFunctions(t *testing.T) {
@@ -188,6 +198,8 @@ func TestPrintStreamPrintf(t *testing.T) {
 
 func TestPrintStreamPrintObject(t *testing.T) {
 	buf := new(bytes.Buffer)
+	globals.InitGlobals("test")
+	globals.InitStringPool()
 
 	// Case 1: Print(String object) - should use _printObject
 	buf.Reset()
@@ -205,7 +217,6 @@ func TestPrintStreamPrintObject(t *testing.T) {
 
 	// Case 3: Print normal object with fields
 	buf.Reset()
-	globals.InitStringPool()
 	className := "MyClass"
 	obj := object.MakeEmptyObjectWithClassName(&className)
 	obj.FieldTable = map[string]object.Field{
@@ -384,16 +395,36 @@ func TestPrintStreamBISInt8(t *testing.T) {
 
 func TestPrintStreamSpecialObjects(t *testing.T) {
 	buf := new(bytes.Buffer)
+	globals.InitGlobals("test")
 	globals.InitStringPool()
+	global := globals.GetGlobalRef()
+	originalInvoker := global.FuncInvokeGFunction
+	originalMethodSignatures := make(map[string]ghelpers.GMeth, len(ghelpers.MethodSignatures))
+	for signature, method := range ghelpers.MethodSignatures {
+		originalMethodSignatures[signature] = method
+	}
+	t.Cleanup(func() {
+		global.FuncInvokeGFunction = originalInvoker
+		ghelpers.MethodSignatures = originalMethodSignatures
+	})
 
 	// 1. BigDecimal
 	javaMath.Load_Math_Big_Decimal()
+	javaMath.Load_Math_Big_Integer()
+	javaLang.Load_Lang_Thread_State()
+	javaLang.Load_Lang_Thread()
+	global.FuncInvokeGFunction = ghelpers.Invoke
 	bdObj := object.MakeEmptyObjectWithClassName(&types.ClassNameBigDecimal)
 	ghelpers.Invoke("java/math/BigDecimal.<init>(Ljava/lang/String;)V", []interface{}{bdObj, makeStringObject("123.45")})
 	buf.Reset()
 	PrintObject([]interface{}{buf, bdObj})
 	if got := buf.String(); got != "123.45" {
 		t.Errorf("PrintObject(BigDecimal) = %q; want '123.45'", got)
+	}
+	buf.Reset()
+	PrintlnObject([]interface{}{buf, bdObj})
+	if got := buf.String(); got != "123.45\n" {
+		t.Errorf("PrintlnObject(BigDecimal) = %q; want '123.45\\n'", got)
 	}
 
 	// 2. BigInteger
@@ -404,6 +435,11 @@ func TestPrintStreamSpecialObjects(t *testing.T) {
 	PrintObject([]interface{}{buf, biObj})
 	if got := buf.String(); got != "987654321" {
 		t.Errorf("PrintObject(BigInteger) = %q; want '987654321'", got)
+	}
+	buf.Reset()
+	PrintlnObject([]interface{}{buf, biObj})
+	if got := buf.String(); got != "987654321\n" {
+		t.Errorf("PrintlnObject(BigInteger) = %q; want '987654321\\n'", got)
 	}
 
 	// 4. ThreadState (needed for Thread)
@@ -417,6 +453,11 @@ func TestPrintStreamSpecialObjects(t *testing.T) {
 	PrintObject([]interface{}{buf, tsObj})
 	if got := buf.String(); got != "RUNNABLE" {
 		t.Errorf("PrintObject(ThreadState) = %q; want 'RUNNABLE'", got)
+	}
+	buf.Reset()
+	PrintlnObject([]interface{}{buf, tsObj})
+	if got := buf.String(); got != "RUNNABLE\n" {
+		t.Errorf("PrintlnObject(ThreadState) = %q; want 'RUNNABLE\\n'", got)
 	}
 
 	// 3. Thread
@@ -442,6 +483,150 @@ func TestPrintStreamSpecialObjects(t *testing.T) {
 	got := buf.String()
 	if !strings.Contains(got, "Thread[ID=1, Name=TestThread, Priority=5, State=RUNNABLE]") {
 		t.Errorf("PrintObject(Thread) = %q; unexpected format", got)
+	}
+	buf.Reset()
+	PrintlnObject([]interface{}{buf, threadObj})
+	if got := buf.String(); got != "Thread[ID=1, Name=TestThread, Priority=5, State=RUNNABLE]\n" {
+		t.Errorf("PrintlnObject(Thread) = %q; unexpected format", got)
+	}
+}
+
+func TestPrintStreamPrintObjectWriteError(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	writeErr := errors.New("write failed")
+	for _, printFunc := range []struct {
+		name string
+		fn   func([]any) any
+	}{
+		{name: "print", fn: PrintObject},
+		{name: "println", fn: PrintlnObject},
+	} {
+		t.Run(printFunc.name, func(t *testing.T) {
+			result := printFunc.fn([]any{failingWriter{err: writeErr}, makeStringObject("value")})
+			errBlk, ok := result.(*ghelpers.GErrBlk)
+			if !ok {
+				t.Fatalf("%s returned %T, want *ghelpers.GErrBlk", printFunc.name, result)
+			}
+			if !strings.Contains(errBlk.ErrMsg, writeErr.Error()) {
+				t.Errorf("%s error = %q, want it to contain %q", printFunc.name, errBlk.ErrMsg, writeErr.Error())
+			}
+		})
+	}
+}
+
+func TestPrintStreamPrintObjectSpecialValues(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	global := globals.GetGlobalRef()
+	originalInvoker := global.FuncInvokeGFunction
+	originalMethodSignatures := make(map[string]ghelpers.GMeth, len(ghelpers.MethodSignatures))
+	for signature, method := range ghelpers.MethodSignatures {
+		originalMethodSignatures[signature] = method
+	}
+	t.Cleanup(func() {
+		global.FuncInvokeGFunction = originalInvoker
+		ghelpers.MethodSignatures = originalMethodSignatures
+	})
+
+	javaLang.Load_Lang_Thread()
+	javaLang.Load_Lang_Thread_State()
+	javaMath.Load_Math_Big_Integer()
+	javaMath.Load_Math_Big_Decimal()
+	javaTime.Load_Time_LocalDate()
+	javaTime.Load_Time_LocalTime()
+	javaTime.Load_Time_LocalDateTime()
+	javaUtil.Load_Util_Locale()
+	global.FuncInvokeGFunction = ghelpers.Invoke
+
+	bigInteger := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
+	if result := ghelpers.Invoke("java/math/BigInteger.<init>(Ljava/lang/String;)V",
+		[]any{bigInteger, makeStringObject("-9876543210")}); result != nil {
+		t.Fatalf("BigInteger constructor returned %v", result)
+	}
+
+	bigDecimal := object.MakeEmptyObjectWithClassName(&types.ClassNameBigDecimal)
+	if result := ghelpers.Invoke("java/math/BigDecimal.<init>(Ljava/lang/String;)V",
+		[]any{bigDecimal, makeStringObject("123.4500")}); result != nil {
+		t.Fatalf("BigDecimal constructor returned %v", result)
+	}
+
+	localDateTimeResult := ghelpers.Invoke("java/time/LocalDateTime.of(IIIIII)Ljava/time/LocalDateTime;",
+		[]any{int64(2026), int64(6), int64(24), int64(14), int64(30), int64(15)})
+	localDateTime, ok := localDateTimeResult.(*object.Object)
+	if !ok {
+		t.Fatalf("LocalDateTime factory returned %T, want *object.Object", localDateTimeResult)
+	}
+
+	locale := ghelpers.LocToObject(ghelpers.Loc{Language: "en", Country: "US", Script: "Latn"})
+	localeClassName := "java/util/Locale"
+	locale.KlassName = object.StringPoolIndexFromGoString(localeClassName)
+
+	thread := object.MakeEmptyObjectWithClassName(&types.ClassNameThread)
+	thread.FieldTable["ID"] = object.Field{Ftype: types.Long, Fvalue: int64(17)}
+	thread.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: makeStringObject("worker")}
+	thread.FieldTable["priority"] = object.Field{Ftype: types.Int, Fvalue: int64(7)}
+	thread.FieldTable["state"] = object.Field{Ftype: types.Int, Fvalue: int64(3)}
+
+	classObjectClassName := "java/lang/Class"
+	classObject := object.MakeEmptyObjectWithClassName(&classObjectClassName)
+	classObject.FieldTable["name"] = object.Field{
+		Ftype:  types.StringClassRef,
+		Fvalue: makeStringObject("java.lang.String"),
+	}
+
+	objectClassName := "java/lang/Object"
+	emptyObject := object.MakeEmptyObjectWithClassName(&objectClassName)
+
+	tests := []struct {
+		name  string
+		value *object.Object
+		want  string
+	}{
+		{name: "String", value: makeStringObject("string value"), want: "string value"},
+		{name: "BigInteger", value: bigInteger, want: "-9876543210"},
+		{name: "BigDecimal with scale", value: bigDecimal, want: "123.4500"},
+		{name: "LocalDateTime", value: localDateTime, want: "2026-06-24T14:30:15"},
+		{name: "Locale", value: locale, want: "en_US_#Latn"},
+		{name: "Thread", value: thread, want: "Thread[ID=17, Name=worker, Priority=7, State=WAITING]"},
+		{name: "Class", value: classObject, want: "Class{name=java.lang.String}"},
+		{name: "Object", value: emptyObject, want: "Object{}"},
+	}
+
+	states := []struct {
+		value int64
+		name  string
+	}{
+		{value: 0, name: "NEW"},
+		{value: 1, name: "RUNNABLE"},
+		{value: 2, name: "BLOCKED"},
+		{value: 3, name: "WAITING"},
+		{value: 4, name: "TIMED_WAITING"},
+		{value: 5, name: "TERMINATED"},
+	}
+	for _, state := range states {
+		tests = append(tests, struct {
+			name  string
+			value *object.Object
+			want  string
+		}{
+			name:  "Thread.State/" + state.name,
+			value: object.MakePrimitiveObject(types.ClassNameThreadState, types.Int, state.value),
+			want:  state.name,
+		})
+	}
+
+	buf := new(bytes.Buffer)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf.Reset()
+			if result := PrintObject([]any{buf, tt.value}); result != nil {
+				t.Errorf("PrintObject(%s) returned %v, want nil", tt.name, result)
+			}
+			if got := buf.String(); got != tt.want {
+				t.Errorf("PrintObject(%s) = %q, want %q", tt.name, got, tt.want)
+			}
+		})
 	}
 }
 

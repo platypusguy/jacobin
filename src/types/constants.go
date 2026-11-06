@@ -63,6 +63,7 @@ const SecurityServiceKeyPairGenerator = "KeyPairGenerator"
 const SecurityServiceAlgorithmParameters = "AlgorithmParameters"
 const SecurityServiceMessageDigest = "MessageDigest"
 
+var ClassNameChronoUnit = "java/time/temporal/ChronoUnit"
 var ClassNameDHParameterSpec = "javax/crypto/spec/DHParameterSpec"
 var ClassNameDHPublicKey = "javax/crypto/interfaces/DHPublicKey"
 var ClassNameDHPrivateKey = "javax/crypto/interfaces/DHPrivateKey"

@@ -331,6 +331,8 @@ func mapClear(params []interface{}) interface{} {
 	switch className {
 	case "java/util/HashMap":
 		return hashmapInit(params)
+	case "java/util/concurrent/ConcurrentHashMap":
+		return concurrentHashMapClear(params)
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("mapClear not supported for class %s", className))
 	}
@@ -353,6 +355,8 @@ func mapGet(params []interface{}) interface{} {
 	switch className {
 	case "java/util/HashMap":
 		return hashmapGet(params)
+	case "java/util/concurrent/ConcurrentHashMap":
+		return concurrentHashMapGet(params)
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("mapGet not supported for class %s", className))
 	}
@@ -391,6 +395,8 @@ func mapContainsKey(params []interface{}) interface{} {
 	switch className {
 	case "java/util/HashMap":
 		return hashmapContainsKey(params)
+	case "java/util/concurrent/ConcurrentHashMap":
+		return concurrentHashMapContainsKey(params)
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("mapContainsKey not supported for class %s", className))
 	}
@@ -413,6 +419,8 @@ func mapIsEmpty(params []interface{}) interface{} {
 	switch className {
 	case "java/util/HashMap":
 		return hashmapIsEmpty(params)
+	case "java/util/concurrent/ConcurrentHashMap":
+		return concurrentHashMapIsEmpty(params)
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("mapIsEmpty not supported for class %s", className))
 	}
@@ -435,6 +443,8 @@ func mapPut(params []interface{}) interface{} {
 	switch className {
 	case "java/util/HashMap":
 		return hashmapPut(params)
+	case "java/util/concurrent/ConcurrentHashMap":
+		return concurrentHashMapPut(params)
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("mapPut not supported for class %s", className))
 	}
@@ -457,6 +467,8 @@ func mapRemove(params []interface{}) interface{} {
 	switch className {
 	case "java/util/HashMap":
 		return hashmapRemove(params)
+	case "java/util/concurrent/ConcurrentHashMap":
+		return concurrentHashMapRemove(params)
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("mapRemove not supported for class %s", className))
 	}
@@ -479,6 +491,8 @@ func mapSize(params []interface{}) interface{} {
 	switch className {
 	case "java/util/HashMap":
 		return hashmapSize(params)
+	case "java/util/concurrent/ConcurrentHashMap":
+		return concurrentHashMapSize(params)
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("mapSize not supported for class %s", className))
 	}
@@ -501,6 +515,8 @@ func mapPutAll(params []interface{}) interface{} {
 	switch className {
 	case "java/util/HashMap":
 		return hashmapPutAll(params)
+	case "java/util/concurrent/ConcurrentHashMap":
+		return concurrentHashMapPutAll(params)
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("mapPutAll not supported for class %s", className))
 	}

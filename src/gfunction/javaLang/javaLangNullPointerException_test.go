@@ -107,9 +107,9 @@ func TestInitNullPointerExceptionString(t *testing.T) {
 	obj := newNullPointerExceptionObject()
 	msg := object.StringObjectFromGoString("null pointer")
 
-	ret := throwableInitString([]any{jvmStack, obj, msg})
+	ret := ThrowableInitString([]any{jvmStack, obj, msg})
 	if ret != nil {
-		t.Errorf("throwableInitString returned non-nil: %v", ret)
+		t.Errorf("ThrowableInitString returned non-nil: %v", ret)
 	}
 
 	dm, ok := obj.FieldTable["detailMessage"]

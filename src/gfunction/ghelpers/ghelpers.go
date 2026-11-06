@@ -250,3 +250,16 @@ func WrongArgType(funcName, expected string, observed any) any {
 	errMsg := fmt.Sprintf("%s: expected %s, observed: %T", funcName, expected, observed)
 	return GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 }
+
+func GetInt64Val(arg any) (int64, bool) {
+	switch value := arg.(type) {
+	case int64:
+		return value, true
+	case int32:
+		return int64(value), true
+	case int:
+		return int64(value), true
+	default:
+		return 0, false
+	}
+}
