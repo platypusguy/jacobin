@@ -10,6 +10,8 @@ mhResoution.go::jvm.resolveCallSite() does:
 
 ## How INOVKEDYNAMIC works
 
+The key overall operation (an overview I sorely wished were stated as such in all the various videos and posts about this topic): INVOKEDYNAMIC marshals data items and a method name, which are sent to a bootstrap method (BSM). The BSM is a factory of sorts that returns a method to run in the form of a method handle that is wrapped in a Callsite object. (Lambdas use this process and frequently generate on the fly a class containing the method to execute.) Once the method has been identified, it is laced into the INVOKEDYNAMIC handling logic so that subsequent execution of that INVOKEDYNAMIC instruction will call the method directly without needing to go through the BSM.
+
 INVOKEDYNAMIC (opcode 186 or 0xBA) is a 5-byte instruction for dynamic method invocation, introduced in Java 7 
 (JSR 292) to support dynamically typed languages and features like lambdas.
 
