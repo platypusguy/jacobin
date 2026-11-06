@@ -6,7 +6,6 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/gfunction/javaMath"
-	"jacobin/src/gfunction/javaTime"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -533,9 +532,9 @@ func TestPrintStreamPrintObjectSpecialValues(t *testing.T) {
 	javaLang.Load_Lang_Thread_State()
 	javaMath.Load_Math_Big_Integer()
 	javaMath.Load_Math_Big_Decimal()
-	javaTime.Load_Time_LocalDate()
-	javaTime.Load_Time_LocalTime()
-	javaTime.Load_Time_LocalDateTime()
+	//TODO javaTime.Load_Time_LocalDate()
+	//TODO javaTime.Load_Time_LocalTime()
+	//TODO javaTime.Load_Time_LocalDateTime()
 	javaUtil.Load_Util_Locale()
 	global.FuncInvokeGFunction = ghelpers.Invoke
 
