@@ -58,9 +58,9 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 		return nil, err
 	}
 
-	// 5. Resolve Static Arguments
+	// Resolve Static Arguments
 	// bsm.Args is a list of indices into the Constant Pool.
-	// These must be resolved to Java objects (String, Class, MethodType, MethodHandle, int, long, etc.)
+	// These must be resolved to Java objects
 	staticArgs := make([]*object.Object, len(bsm.Args))
 	for i, argIndex := range bsm.Args {
 		staticArg, err := ResolveStaticArgument(cp, int(argIndex), fr)
@@ -70,10 +70,10 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 		staticArgs[i] = staticArg
 	}
 
-	// 5a. Marshal the arguments for the bootstrap method.
-	// Per JVMS 5.4.3.6, the BSM is invoked with a Lookup object for the caller
-	// class, the call site name, the call site MethodType, then the resolved
-	// static arguments in order.
+	// Marshal the arguments for the bootstrap method.
+	// Per JVMS 5.4.3.6, the BSM is invoked with a Lookup object for the caller class, the call site name,
+	// the call site MethodType, then the resolved static arguments in order.
+	// The resolves arguments to the BSM are always static and if primitives, always boxed.
 	bsmArgs, err := marshalBSMArgs(fr, methName, methType, staticArgs)
 	if err != nil {
 		return nil, err
@@ -159,8 +159,7 @@ func invokeBSM(cp *CPool, bsm BootstrapMethod, bsmHandle *object.Object, params 
 	result := globals.GetGlobalRef().FuncInvokeGFunction(bsmFQN, params)
 	switch r := result.(type) {
 	case *object.Object:
-		// Per the java.lang.invoke specification, the BSM must return a
-		// non-null CallSite.
+		// Per the java.lang.invoke specification, the BSM must return a non-null CallSite object.
 		if r == nil || object.IsNull(r) {
 			return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned null", bsmFQN)
 		}
