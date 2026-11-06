@@ -16,6 +16,7 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"jacobin/src/util"
+	"strings"
 )
 
 // ResolveCallSite is the high-level function called by the INVOKEDYNAMIC instruction.
@@ -78,7 +79,7 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 		return nil, err
 	}
 
-	// 6. Invoke the Bootstrap Method to obtain the CallSite object.
+	// Invoke the Bootstrap Method to obtain the CallSite object.
 	return invokeBSM(cp, bsm, bsmHandle, bsmArgs)
 }
 
@@ -227,9 +228,14 @@ func ResolveStaticArgument(cp *CPool, index int, fr *frames.Frame) (*object.Obje
 		// This matches ldc semantics in the interpreter: the class is loaded
 		// (resolved) but NOT initialized -- a class literal does not run
 		// <clinit> (JVMS 5.5).
-		// NOTE: array class descriptors (e.g. "[Ljava/lang/String;") are not
-		// supported here yet; LoadClassFromNameOnly rejects them.
 		className := *CPe.StringVal
+		if strings.HasPrefix(className, "[") {
+			classObj, err := getClassObj(className, fr)
+			if err != nil {
+				return nil, fmt.Errorf("ResolveStaticArgument: could not resolve array class %s: %w", className, err)
+			}
+			return classObj, nil
+		}
 		if err := LoadClassFromNameOnly(className); err != nil {
 			return nil, fmt.Errorf("ResolveStaticArgument: could not load class %s: %w", className, err)
 		}

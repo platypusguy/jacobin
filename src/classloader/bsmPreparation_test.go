@@ -335,6 +335,97 @@ func TestResolveStaticArgument_ClassRef_LoadClassFails(t *testing.T) {
 	}
 }
 
+func TestResolveStaticArgument_ClassRef_ArrayType_ObjectArray(t *testing.T) {
+	setupMhResolutionTest(t)
+	className := "[Ljava/lang/String;"
+	classIdx := stringPool.GetStringIndex(&className)
+
+	cp := &CPool{}
+	cp.CpIndex = []CpEntry{
+		{Type: Dummy, Slot: 0},
+		{Type: ClassRef, Slot: 0},
+	}
+	cp.ClassRefs = []uint32{classIdx}
+
+	fr := frames.CreateFrame(1)
+	obj, err := ResolveStaticArgument(cp, 1, fr)
+	if err != nil {
+		t.Fatalf("Unexpected error resolving array class: %v", err)
+	}
+	if obj == nil {
+		t.Fatalf("Expected non-nil Class object for array class")
+	}
+}
+
+func TestResolveStaticArgument_ClassRef_ArrayType_PrimitiveArray(t *testing.T) {
+	setupMhResolutionTest(t)
+	className := "[I"
+	classIdx := stringPool.GetStringIndex(&className)
+
+	cp := &CPool{}
+	cp.CpIndex = []CpEntry{
+		{Type: Dummy, Slot: 0},
+		{Type: ClassRef, Slot: 0},
+	}
+	cp.ClassRefs = []uint32{classIdx}
+
+	fr := frames.CreateFrame(1)
+	obj, err := ResolveStaticArgument(cp, 1, fr)
+	if err != nil {
+		t.Fatalf("Unexpected error resolving primitive array class: %v", err)
+	}
+	if obj == nil {
+		t.Fatalf("Expected non-nil Class object for primitive array class")
+	}
+}
+
+func TestResolveStaticArgument_ClassRef_ArrayType_MultiDimensionalArray(t *testing.T) {
+	setupMhResolutionTest(t)
+	className := "[[Ljava/lang/Object;"
+	classIdx := stringPool.GetStringIndex(&className)
+
+	cp := &CPool{}
+	cp.CpIndex = []CpEntry{
+		{Type: Dummy, Slot: 0},
+		{Type: ClassRef, Slot: 0},
+	}
+	cp.ClassRefs = []uint32{classIdx}
+
+	fr := frames.CreateFrame(1)
+	obj, err := ResolveStaticArgument(cp, 1, fr)
+	if err != nil {
+		t.Fatalf("Unexpected error resolving multi-dimensional array class: %v", err)
+	}
+	if obj == nil {
+		t.Fatalf("Expected non-nil Class object for multi-dimensional array class")
+	}
+}
+
+func TestResolveStaticArgument_ClassRef_ArrayType_ResolutionFails(t *testing.T) {
+	setupMhResolutionTest(t)
+	globals.GetGlobalRef().FuncInvokeGFunction = func(_ string, _ []interface{}) interface{} {
+		return nil // simulate Class.forName failure
+	}
+	className := "[Lsome/InvalidClass;"
+	classIdx := stringPool.GetStringIndex(&className)
+
+	cp := &CPool{}
+	cp.CpIndex = []CpEntry{
+		{Type: Dummy, Slot: 0},
+		{Type: ClassRef, Slot: 0},
+	}
+	cp.ClassRefs = []uint32{classIdx}
+
+	fr := frames.CreateFrame(1)
+	_, err := ResolveStaticArgument(cp, 1, fr)
+	if err == nil {
+		t.Fatalf("Expected error when array class resolution fails, got nil")
+	}
+	if !strings.Contains(err.Error(), "could not resolve array class") {
+		t.Errorf("Expected error to contain 'could not resolve array class', got: %v", err)
+	}
+}
+
 func TestResolveStaticArgument_MethodType_Success(t *testing.T) {
 	setupMhResolutionTest(t)
 	descriptor := "(Ljava/lang/String;)I"
