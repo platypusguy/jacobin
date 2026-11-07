@@ -32,7 +32,7 @@ import (
 //
 // Note this is a rough first design that will surely be refined. (JACOBIN-624)
 
-func Load_jj() {
+func Load_jj()  {
 
 	ghelpers.MethodSignatures["jj._dumpStatics(Ljava/lang/String;ILjava/lang/String;)V"] =
 		ghelpers.GMeth{
