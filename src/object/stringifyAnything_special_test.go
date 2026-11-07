@@ -7,6 +7,7 @@
 package object_test
 
 import (
+	"jacobin/src/gfunction/javaTime"
 	"math/big"
 	"testing"
 
@@ -20,7 +21,6 @@ import (
 )
 
 func TestStringifyAnythingGo_SpecialObjects(t *testing.T) {
-	return
 	globals.InitGlobals("test")
 	global := globals.GetGlobalRef()
 	originalInvoker := global.FuncInvokeGFunction
@@ -35,9 +35,9 @@ func TestStringifyAnythingGo_SpecialObjects(t *testing.T) {
 
 	javaMath.Load_Math_Big_Integer()
 	javaMath.Load_Math_Big_Decimal()
-	//TODO javaTime.Load_Time_LocalDate()
-	//TODO javaTime.Load_Time_LocalTime()
-	//TODO javaTime.Load_Time_LocalDateTime()
+	javaTime.Load_Time_LocalDate()
+	javaTime.Load_Time_LocalTime()
+	javaTime.Load_Time_LocalDateTime()
 	javaLang.Load_Lang_Thread()
 	javaLang.Load_Lang_Thread_State()
 	javaUtil.Load_Util_Locale()
@@ -58,6 +58,18 @@ func TestStringifyAnythingGo_SpecialObjects(t *testing.T) {
 	if !ok {
 		t.Fatalf("LocalDateTime factory returned %T, want *object.Object", localDateTimeResult)
 	}
+	localDateResult := ghelpers.Invoke("java/time/LocalDate.of(III)Ljava/time/LocalDate;",
+		[]any{int64(2026), int64(6), int64(24)})
+	localDate, ok := localDateResult.(*object.Object)
+	if !ok {
+		t.Fatalf("LocalDate factory returned %T, want *object.Object", localDateResult)
+	}
+	localTimeResult := ghelpers.Invoke("java/time/LocalTime.of(III)Ljava/time/LocalTime;",
+		[]any{int64(14), int64(30), int64(15)})
+	localTime, ok := localTimeResult.(*object.Object)
+	if !ok {
+		t.Fatalf("LocalTime factory returned %T, want *object.Object", localTimeResult)
+	}
 
 	locale := ghelpers.LocToObject(ghelpers.Loc{Language: "en", Country: "US", Script: "Latn"})
 	localeClassName := "java/util/Locale"
@@ -77,6 +89,8 @@ func TestStringifyAnythingGo_SpecialObjects(t *testing.T) {
 		{name: "String", value: object.StringObjectFromGoString("string value"), want: "string value"},
 		{name: "BigInteger", value: bigInteger, want: "-9876543210"},
 		{name: "BigDecimal with scale", value: bigDecimal, want: "123.4500"},
+		{name: "LocalDate", value: localDate, want: "2026-06-24"},
+		{name: "LocalTime", value: localTime, want: "14:30:15"},
 		{name: "LocalDateTime", value: localDateTime, want: "2026-06-24T14:30:15"},
 		{name: "Locale", value: locale, want: "en_US_#Latn"},
 		{name: "Thread", value: thread, want: "Thread[ID=17, Name=worker, Priority=7, State=WAITING]"},
@@ -116,5 +130,15 @@ func TestStringifyAnythingGo_SpecialObjects(t *testing.T) {
 				t.Errorf("StringifyAnythingJava(Thread.State) content = %q, want %q", got, state.want)
 			}
 		})
+	}
+}
+
+func TestStringifyAnythingGo_MissingRegisteredToStringFallsBack(t *testing.T) {
+	globals.InitGlobals("test")
+	global := globals.GetGlobalRef()
+	global.FuncInvokeGFunction = ghelpers.Invoke
+	className := "example/Widget"
+	if got, want := object.StringifyAnythingGo(object.MakeEmptyObjectWithClassName(&className)), "Widget{}"; got != want {
+		t.Errorf("StringifyAnythingGo() = %q, want %q", got, want)
 	}
 }

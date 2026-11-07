@@ -9,8 +9,22 @@ package object
 import (
 	"jacobin/src/globals"
 	"jacobin/src/types"
+	"strings"
 	"testing"
 )
+
+type stringifyInvokerTestError struct {
+	message    string
+	methodMiss bool
+}
+
+func (e stringifyInvokerTestError) Error() string {
+	return e.message
+}
+
+func (e stringifyInvokerTestError) IsMethodNotFound() bool {
+	return e.methodMiss
+}
 
 func TestStringifyAnythingGo_SpecialClassDelegation(t *testing.T) {
 	globals.InitGlobals("test")
@@ -26,6 +40,11 @@ func TestStringifyAnythingGo_SpecialClassDelegation(t *testing.T) {
 		method    string
 	}{
 		{
+			name:      "big integer",
+			className: types.ClassNameBigInteger,
+			method:    "java/math/BigInteger.toString()Ljava/lang/String;",
+		},
+		{
 			name:      "local date time",
 			className: "java/time/LocalDateTime",
 			method:    "java/time/LocalDateTime.toString()Ljava/lang/String;",
@@ -39,11 +58,6 @@ func TestStringifyAnythingGo_SpecialClassDelegation(t *testing.T) {
 			name:      "big decimal",
 			className: types.ClassNameBigDecimal,
 			method:    "java/math/BigDecimal.toString()Ljava/lang/String;",
-		},
-		{
-			name:      "big integer",
-			className: types.ClassNameBigInteger,
-			method:    "java/math/BigInteger.toString()Ljava/lang/String;",
 		},
 		{
 			name:      "thread",
@@ -76,13 +90,129 @@ func TestStringifyAnythingGo_SpecialClassDelegation(t *testing.T) {
 				return StringObjectFromGoString(returnedValue)
 			}
 
-			if got := StringifyAnythingGo(receiver); got != returnedValue {
+			got := StringifyAnythingGo(receiver)
+			if got != returnedValue {
 				t.Errorf("StringifyAnythingGo() = %q, want %q", got, returnedValue)
 			}
 			if !called {
 				t.Error("global invoker was not called")
 			}
 		})
+	}
+}
+
+func TestStringifyAnythingGo_DelegatesAnyClassToString(t *testing.T) {
+	globals.InitGlobals("test")
+	global := globals.GetGlobalRef()
+	className := "example/Widget"
+	receiver := MakeEmptyObjectWithClassName(&className)
+	called := false
+	global.FuncInvokeGFunction = func(method string, args []any) any {
+		called = true
+		if want := className + ".toString()Ljava/lang/String;"; method != want {
+			t.Errorf("invoked method = %q, want %q", method, want)
+		}
+		if len(args) != 1 || args[0] != receiver {
+			t.Errorf("invoker arguments = %v, want the original receiver", args)
+		}
+		return StringObjectFromGoString("widget string")
+	}
+
+	if got, want := StringifyAnythingGo(receiver), "widget string"; got != want {
+		t.Errorf("StringifyAnythingGo() = %q, want %q", got, want)
+	}
+	if !called {
+		t.Error("global invoker was not called")
+	}
+}
+
+func TestStringifyAnythingGo_DelegationFallbackAndFailures(t *testing.T) {
+	tests := []struct {
+		name   string
+		result any
+		want   string
+	}{
+		{name: "missing method", result: stringifyInvokerTestError{message: "missing", methodMiss: true}, want: "Widget{}"},
+		{name: "nil result", result: nil, want: "Widget{}"},
+		{name: "invocation error", result: stringifyInvokerTestError{message: "failed"}, want: "*** ERROR, StringifyAnythingGo: example/Widget.toString()Ljava/lang/String; failed: failed"},
+		{name: "malformed result", result: "not a Java object", want: "*** ERROR, StringifyAnythingGo: example/Widget.toString()Ljava/lang/String; returned string, not a non-null Object"},
+		{name: "null string result", result: (*Object)(nil), want: "*** ERROR, StringifyAnythingGo: example/Widget.toString()Ljava/lang/String; returned *object.Object, not a non-null Object"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			globals.InitGlobals("test")
+			global := globals.GetGlobalRef()
+			className := "example/Widget"
+			receiver := MakeEmptyObjectWithClassName(&className)
+			global.FuncInvokeGFunction = func(string, []any) any { return tt.result }
+
+			if got := StringifyAnythingGo(receiver); got != tt.want {
+				t.Errorf("StringifyAnythingGo() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+
+	t.Run("nil invoker", func(t *testing.T) {
+		globals.InitGlobals("test")
+		global := globals.GetGlobalRef()
+		global.FuncInvokeGFunction = nil
+		className := "example/Widget"
+		if got, want := StringifyAnythingGo(MakeEmptyObjectWithClassName(&className)), "Widget{}"; got != want {
+			t.Errorf("StringifyAnythingGo() = %q, want %q", got, want)
+		}
+	})
+}
+
+func TestStringifyAnythingGo_DoesNotDispatchJavaLangObject(t *testing.T) {
+	globals.InitGlobals("test")
+	global := globals.GetGlobalRef()
+	called := false
+	global.FuncInvokeGFunction = func(string, []any) any {
+		called = true
+		return StringObjectFromGoString("unexpected")
+	}
+	className := "java/lang/Object"
+	if got, want := StringifyAnythingGo(MakeEmptyObjectWithClassName(&className)), "Object{}"; got != want {
+		t.Errorf("StringifyAnythingGo() = %q, want %q", got, want)
+	}
+	if called {
+		t.Error("java/lang/Object.toString was dispatched recursively")
+	}
+}
+
+func TestStringifyAnythingGo_PreservesStringAndArrayHandlingBeforeDispatch(t *testing.T) {
+	globals.InitGlobals("test")
+	global := globals.GetGlobalRef()
+	called := false
+	global.FuncInvokeGFunction = func(string, []any) any {
+		called = true
+		return StringObjectFromGoString("unexpected")
+	}
+	stringObj := StringObjectFromGoString("plain string")
+	if got, want := StringifyAnythingGo(stringObj), "plain string"; got != want {
+		t.Errorf("StringifyAnythingGo(String) = %q, want %q", got, want)
+	}
+	arrayClass := "[I"
+	array := MakeEmptyObjectWithClassName(&arrayClass)
+	array.FieldTable["value"] = Field{Ftype: types.IntArray, Fvalue: []int64{1, 2}}
+	if got, want := StringifyAnythingGo(array), "[1, 2]"; got != want {
+		t.Errorf("StringifyAnythingGo(array) = %q, want %q", got, want)
+	}
+	if called {
+		t.Error("String or array handling unexpectedly invoked the global callback")
+	}
+}
+
+func TestStringifyAnythingGo_InvocationErrorsAreReadable(t *testing.T) {
+	globals.InitGlobals("test")
+	global := globals.GetGlobalRef()
+	className := "example/Widget"
+	global.FuncInvokeGFunction = func(string, []any) any {
+		return stringifyInvokerTestError{message: "specific failure"}
+	}
+	if got := StringifyAnythingGo(MakeEmptyObjectWithClassName(&className)); !strings.Contains(got, "specific failure") {
+		t.Errorf("StringifyAnythingGo() = %q, want an error containing the callback failure", got)
 	}
 }
 
