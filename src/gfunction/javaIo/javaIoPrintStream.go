@@ -11,9 +11,6 @@ import (
 	"io"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
-	"jacobin/src/gfunction/javaLang"
-	"jacobin/src/gfunction/javaMath"
-	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/gfunction/misc"
 	"jacobin/src/object"
 	"jacobin/src/trace"
@@ -889,77 +886,30 @@ func _printObject(params []any, newLine bool) any {
 	if params[1] == nil || object.IsNull(params[1]) {
 		strBuffer = types.NullString
 	} else {
+
 		switch params[1].(type) {
+
 		case *object.Object:
 			inObj := params[1].(*object.Object)
-			if object.IsStringObject(inObj) {
-				strBuffer = object.GoStringFromStringObject(inObj)
-				break
-			}
-			if object.IsObjectClass(inObj, types.ClassNameBigDecimal) {
-				res := javaMath.BigdecimalToString([]any{inObj})
-				if strObj, ok := res.(*object.Object); ok {
-					strBuffer = object.GoStringFromStringObject(strObj)
-					break
-				}
-				return res
-			}
-			if object.IsObjectClass(inObj, types.ClassNameBigInteger) {
-				res := javaMath.BigIntegerToString([]any{inObj})
-				if strObj, ok := res.(*object.Object); ok {
-					strBuffer = object.GoStringFromStringObject(strObj)
-					break
-				}
-				return res
-			}
-			if object.IsObjectClass(inObj, types.ClassNameThread) {
-				res := javaLang.ThreadToString([]any{inObj})
-				if strObj, ok := res.(*object.Object); ok {
-					strBuffer = object.GoStringFromStringObject(strObj)
-					break
-				}
-				return res
-			}
-			if object.IsObjectClass(inObj, types.ClassNameThreadState) {
-				res := javaLang.ThreadStateToString([]any{inObj})
-				if strObj, ok := res.(*object.Object); ok {
-					strBuffer = object.GoStringFromStringObject(strObj)
-					break
-				}
-				return res
-			}
-			if object.IsObjectClass(inObj, types.ClassNameLocale) {
-				res := javaUtil.LocaleToString([]any{inObj})
-				if strObj, ok := res.(*object.Object); ok {
-					strBuffer = object.GoStringFromStringObject(strObj)
-					break
-				}
-				return res
-			}
-			classNameSuffix := object.GetClassNameSuffix(inObj, true)
-			strBuffer = classNameSuffix + "{"
-			for name, field := range inObj.FieldTable {
-				strBuffer += fmt.Sprintf("%s=%s, ", name, object.StringifyAnythingGo(field))
-			}
-			strBuffer = strBuffer[:len(strBuffer)-2] + "}"
-			if newLine {
-				_, _ = fmt.Fprintln(writer, strBuffer)
-				return nil
-			}
-
-			_, _ = fmt.Fprint(writer, strBuffer)
-			return nil
+			strBuffer = object.StringifyAnythingGo(inObj)
 
 		default:
 			errMsg := fmt.Sprintf("_printObject: Unsupported parameter type: %T", params[1])
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
+
 	}
 
 	if newLine {
-		_, _ = fmt.Fprintln(writer, strBuffer)
+		_, err := fmt.Fprintln(writer, strBuffer)
+		if err != nil {
+			return ghelpers.GetGErrBlk(excNames.VirtualMachineError, "_printObject: "+err.Error())
+		}
 	} else {
-		_, _ = fmt.Fprint(writer, strBuffer)
+		_, err := fmt.Fprint(writer, strBuffer)
+		if err != nil {
+			return ghelpers.GetGErrBlk(excNames.VirtualMachineError, "_printObject: "+err.Error())
+		}
 	}
 
 	return nil

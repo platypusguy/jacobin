@@ -44,6 +44,8 @@ func TestLoadJavaLangRuntimeException_RegistersMethods(t *testing.T) {
 	for _, sig := range []string{
 		"java/lang/RuntimeException.<init>()V",
 		"java/lang/RuntimeException.<init>(Ljava/lang/String;)V",
+		"java/lang/RuntimeException.<init>(Ljava/lang/String;Ljava/lang/Throwable;)V",
+		"java/lang/RuntimeException.<init>(Ljava/lang/Throwable;)V",
 	} {
 		if !ghelpers.MethodSignatures[sig].NeedsContext {
 			t.Errorf("method signature %q should need context", sig)
@@ -71,9 +73,9 @@ func TestInitRuntimeExceptionString(t *testing.T) {
 	obj := newRuntimeExceptionObject()
 	msg := object.StringObjectFromGoString("runtime failure")
 
-	ret := throwableInitString([]any{jvmStack, obj, msg})
+	ret := ThrowableInitString([]any{jvmStack, obj, msg})
 	if ret != nil {
-		t.Errorf("throwableInitString returned non-nil: %v", ret)
+		t.Errorf("ThrowableInitString returned non-nil: %v", ret)
 	}
 
 	dm, ok := obj.FieldTable["detailMessage"]

@@ -310,9 +310,9 @@ func TestThrowableInitString_SetsMessageAndStack(t *testing.T) {
 	globPtr.FuncInstantiateClass = InstantiateFillIn
 
 	// Call constructor
-	ret := throwableInitString([]interface{}{jvmStack, th, msg})
+	ret := ThrowableInitString([]interface{}{jvmStack, th, msg})
 	if ret != nil {
-		t.Errorf("throwableInitString returned non-nil: %v", ret)
+		t.Errorf("ThrowableInitString returned non-nil: %v", ret)
 	}
 
 	// Validate message stored

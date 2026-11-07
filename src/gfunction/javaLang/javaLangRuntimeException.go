@@ -22,26 +22,28 @@ func Load_Java_Lang_RuntimeException() {
 	ghelpers.MethodSignatures["java/lang/RuntimeException.<init>(Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots:   1,
-			GFunction:    throwableInitString,
+			GFunction:    ThrowableInitString,
 			NeedsContext: true,
 		}
 
 	ghelpers.MethodSignatures["java/lang/RuntimeException.<init>(Ljava/lang/String;Ljava/lang/Throwable;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
+			ParamSlots:   2,
+			GFunction:    ThrowableInitString,
+			NeedsContext: true,
 		}
 
 	ghelpers.MethodSignatures["java/lang/RuntimeException.<init>(Ljava/lang/Throwable;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			ParamSlots:   1,
+			GFunction:    ThrowableInitThrowable,
+			NeedsContext: true,
 		}
 
 	ghelpers.MethodSignatures["java/lang/RuntimeException.<init>(Ljava/lang/String;Ljava/lang/Throwable;ZZ)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 4,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  ghelpers.TrapProtected,
 		}
 
 }

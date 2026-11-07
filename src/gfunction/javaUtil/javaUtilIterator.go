@@ -91,7 +91,7 @@ func iteratorHasNext(params []interface{}) interface{} {
 		if nextNode != nil && nextNode != (*list.Element)(nil) {
 			return types.JavaBoolTrue
 		}
-	case "java/util/HashMap", "java/util/HashSet":
+	case "java/util/HashMap", "java/util/HashSet", "java/util/concurrent/ConcurrentHashMap":
 		mapKeys, ok := self.FieldTable[iteratorMapKeysField].Fvalue.([]interface{})
 		if !ok {
 			return types.JavaBoolFalse
@@ -151,7 +151,7 @@ func iteratorNext(params []interface{}) interface{} {
 		self.FieldTable[iteratorLastReturnedNodeField] = object.Field{Ftype: types.NonArrayObject, Fvalue: nextNode}
 		return val
 
-	case "java/util/HashMap", "java/util/HashSet":
+	case "java/util/HashMap", "java/util/HashSet", "java/util/concurrent/ConcurrentHashMap":
 		mapKeys, ok := self.FieldTable[iteratorMapKeysField].Fvalue.([]interface{})
 		if !ok {
 			return ghelpers.GetGErrBlk(excNames.NoSuchElementException, "iteratorNext: No more elements")
@@ -247,7 +247,7 @@ func iteratorRemove(params []interface{}) interface{} {
 		llst.Remove(lastNode)
 		self.FieldTable[iteratorLastReturnedNodeField] = object.Field{Ftype: types.NonArrayObject, Fvalue: nil}
 
-	case "java/util/HashMap", "java/util/HashSet":
+	case "java/util/HashMap", "java/util/HashSet", "java/util/concurrent/ConcurrentHashMap":
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "iteratorRemove: Not supported for maps")
 
 	default:
@@ -275,7 +275,7 @@ func NewIterator(collection *object.Object) *object.Object {
 		} else {
 			o.FieldTable[iteratorNextNodeField] = object.Field{Ftype: types.NonArrayObject, Fvalue: nil}
 		}
-	case "java/util/HashMap", "java/util/HashSet":
+	case "java/util/HashMap", "java/util/HashSet", "java/util/concurrent/ConcurrentHashMap":
 		o.FieldTable[iteratorIndexField] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
 		fld := collection.FieldTable["map"]
 		if hm, ok := fld.Fvalue.(types.DefHashMap); ok {

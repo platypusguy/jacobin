@@ -97,7 +97,7 @@ func initAssertionErrorBoolean(params []any) any {
 		return ghelpers.WrongArgType("initAssertionErrorBoolean", "a boolean argument", params[2])
 	}
 	params[2] = object.StringObjectFromGoString(strconv.FormatBool(javaBool == types.JavaBoolTrue))
-	return throwableInitString(params)
+	return ThrowableInitString(params)
 }
 
 // AssertionError(char): String.valueOf(char). Chars are carried as int64.
@@ -107,7 +107,7 @@ func initAssertionErrorChar(params []any) any {
 		return ghelpers.WrongArgType("initAssertionErrorChar", "a char argument", params[2])
 	}
 	params[2] = object.StringObjectFromGoString(string(rune(ii)))
-	return throwableInitString(params)
+	return ThrowableInitString(params)
 }
 
 // AssertionError(I or J): String.valueOf(I or J).
@@ -117,7 +117,7 @@ func initAssertionErrorInt64(params []any) any {
 		return ghelpers.WrongArgType("initAssertionErrorInt64", "an int64 argument", params[2])
 	}
 	params[2] = object.StringObjectFromGoString(strconv.Itoa(int(ii)))
-	return throwableInitString(params)
+	return ThrowableInitString(params)
 }
 
 // AssertionError(float): formatted at float32 precision, Java style.
@@ -127,7 +127,7 @@ func initAssertionErrorFloat(params []any) any {
 		return ghelpers.WrongArgType("initAssertionErrorFloat", "a float64 argument", params[2])
 	}
 	params[2] = object.StringObjectFromGoString(ghelpers.JavaFloatingPointToString(ff, 32))
-	return throwableInitString(params)
+	return ThrowableInitString(params)
 }
 
 // AssertionError(double)
@@ -137,7 +137,7 @@ func initAssertionErrorDouble(params []any) any {
 		return ghelpers.WrongArgType("initAssertionErrorDouble", "a float64 argument", params[2])
 	}
 	params[2] = object.StringObjectFromGoString(ghelpers.JavaFloatingPointToString(ff, 64))
-	return throwableInitString(params)
+	return ThrowableInitString(params)
 }
 
 // AssertionError(Object)
@@ -147,7 +147,7 @@ func initAssertionErrorObject(params []any) any {
 		return ghelpers.WrongArgType("initAssertionErrorObject", "a Java object argument", params[2])
 	}
 	params[2] = object.StringifyAnythingJava(obj)
-	return throwableInitString(params)
+	return ThrowableInitString(params)
 }
 
 // AssertionError(Object)
@@ -156,5 +156,5 @@ func initAssertionErrorString(params []any) any {
 	if !ok || obj.KlassName != types.StringPoolStringIndex {
 		return ghelpers.WrongArgType("initAssertionErrorString", "a Java String argument", params[2])
 	}
-	return throwableInitString(params)
+	return ThrowableInitString(params)
 }

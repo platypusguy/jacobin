@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"encoding/hex"
 	"fmt"
+	"jacobin/src/globals"
 	"jacobin/src/types"
 	"reflect"
 	"strconv"
@@ -46,6 +47,22 @@ func StringifyAnythingGo(arg interface{}) string {
 			if fld, ok := obj.FieldTable["value"]; ok {
 				return StringifyAnythingGo(fld)
 			}
+		}
+
+		if className == types.StringClassName {
+			return GoStringFromStringObject(obj)
+		}
+
+		if className == "java/time/LocalDateTime" ||
+			className == "java/util/Locale" ||
+			className == types.ClassNameBigDecimal ||
+			className == types.ClassNameBigInteger ||
+			className == types.ClassNameThread ||
+			className == types.ClassNameThreadState {
+			params := []any{obj}
+			method := className + ".toString()Ljava/lang/String;"
+			strObj := globals.GetGlobalRef().FuncInvokeGFunction(method, params).(*Object)
+			return GoStringFromStringObject(strObj)
 		}
 
 		classNameSuffix := GetClassNameSuffix(obj, true)
@@ -203,6 +220,9 @@ func StringifyAnythingGo(arg interface{}) string {
 			// Format a small report of the class name and the FieldTable.
 			// Concoct a string buffer formatted as: class{name1=value1, name2=value2, ...}.
 			strBuffer := classNameSuffix + "{"
+			if len(obj.FieldTable) == 0 {
+				return strBuffer + "}"
+			}
 			for name := range obj.FieldTable {
 				strBuffer += name + "=" + ObjectFieldToString(obj, name) + ", "
 			}
