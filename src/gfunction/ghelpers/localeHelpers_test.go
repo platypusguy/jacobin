@@ -294,6 +294,10 @@ func TestPlatformAndEnvironmentDefaults(t *testing.T) {
 	defer func() {
 		_ = os.Setenv("LANG", origLang)
 	}()
+	// LC_ALL and LC_MESSAGES take precedence over LANG in the resolver;
+	// clear them so the test is deterministic. t.Setenv restores the originals.
+	t.Setenv("LC_ALL", "")
+	t.Setenv("LC_MESSAGES", "")
 	_ = os.Setenv("LANG", "es_ES.UTF-8")
 
 	if got := DefaultLoc(LocaleCategoryDisplay); got != (Loc{Language: "es", Country: "ES"}) {
