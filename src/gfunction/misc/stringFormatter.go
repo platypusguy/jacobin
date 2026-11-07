@@ -5,6 +5,7 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/gfunction/javaMath"
+	//"jacobin/src/gfunction/javaTime"
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"math"
@@ -35,7 +36,7 @@ type float32Arg struct {
 	f32 float32
 }
 
-// String formatting given a format string and a slice of arguments.
+// StringFormatter - String formatting given a format string and a slice of arguments.
 // Called by sprintf, javaIoConsole.go, and javaIoPrintStream.go.
 func StringFormatter(params []interface{}) interface{} {
 	// params[0]: format string
@@ -85,49 +86,32 @@ func StringFormatter(params []interface{}) interface{} {
 	valuesIn := field.Fvalue.([]*object.Object)
 
 	// Convert input arguments but keep unknown refs for later handling
-	rawArgs := make([]interface{}, 0, len(valuesIn))
-	for ii := 0; ii < len(valuesIn); ii++ {
+	rawArgs := make([]any, 0, len(valuesIn))
+	for ii := range valuesIn {
 		obj := valuesIn[ii]
 		if obj == nil || object.IsNull(obj) {
 			rawArgs = append(rawArgs, nil)
 			continue
 		}
-		// Special-case java.util.Date: it has a "value" field of Ftype=Long
-		// (millis since epoch), but must not be unwrapped as a raw long --
-		// it needs to keep its object identity so %s can render it via its
-		// real toString() (see coerceJavaString), not as a numeric value.
-		if object.GoStringFromStringPoolIndex(obj.KlassName) == "java/util/Date" {
-			rawArgs = append(rawArgs, obj)
-			continue
-		}
-		if object.GoStringFromStringPoolIndex(obj.KlassName) == "java/math/BigInteger" {
-			fld, ok := obj.FieldTable["value"]
-			if !ok {
-				rawArgs = append(rawArgs, obj)
+
+		// Prefer handling by presence of a "value" field.
+		fld, hasValue := obj.FieldTable["value"]
+		if hasValue {
+
+			// value field: String object?
+			if fld.Ftype == types.StringClassRef || fld.Ftype == types.StringClassName {
+				var str string
+				switch fld.Fvalue.(type) {
+				case []byte:
+					str = string(fld.Fvalue.([]byte))
+				case []types.JavaByte:
+					str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+				}
+				rawArgs = append(rawArgs, str)
 				continue
 			}
-			// Underlying Go value is *big.Int in the value field
-			if bi, ok := fld.Fvalue.(*big.Int); ok {
-				rawArgs = append(rawArgs, bi)
-			} else {
-				rawArgs = append(rawArgs, obj)
-			}
-			continue
-		}
-		// Prefer handling by presence of a "value" field; fall back to BigInteger/BigDecimal detection.
-		fld, hasValue := obj.FieldTable["value"]
-		if hasValue && fld.Ftype == types.StringClassRef {
-			var str string
-			switch fld.Fvalue.(type) {
-			case []byte:
-				str = string(fld.Fvalue.([]byte))
-			case []types.JavaByte:
-				str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
-			}
-			rawArgs = append(rawArgs, str)
-			continue
-		}
-		if hasValue {
+
+			// value field: not a String object nor a reference object.
 			switch fld.Ftype {
 			case types.JavaByteArray:
 				var str string
@@ -139,13 +123,14 @@ func StringFormatter(params []interface{}) interface{} {
 				}
 				rawArgs = append(rawArgs, str)
 			case types.Bool:
-				var zz bool
-				if fld.Fvalue.(int64) == 0 {
-					zz = false
-				} else {
-					zz = true
+				switch value := fld.Fvalue.(type) {
+				case int64:
+					rawArgs = append(rawArgs, value != 0)
+				case bool:
+					rawArgs = append(rawArgs, value)
+				default:
+					rawArgs = append(rawArgs, obj)
 				}
-				rawArgs = append(rawArgs, zz)
 			case types.Char:
 				rooney := rune(fld.Fvalue.(int64))
 				rawArgs = append(rawArgs, rooney)
@@ -163,40 +148,61 @@ func StringFormatter(params []interface{}) interface{} {
 				rawArgs = append(rawArgs, intWithBits{v: fld.Fvalue.(int64), bits: 16})
 			case types.Byte:
 				rawArgs = append(rawArgs, intWithBits{v: fld.Fvalue.(int64), bits: 8})
-			default:
+			case types.Ref:
+				className := object.GoStringFromStringPoolIndex(obj.KlassName)
+				switch className {
+				case types.ClassNameBigInteger:
+					bigInt := obj.FieldTable["value"].Fvalue.(*big.Int)
+					rawArgs = append(rawArgs, bigInt)
+				//case "java/time/LocalDateTime":
+				//	strObj := javaTime.localDateTimeToString([]any{obj}).(*object.Object)
+				//	rawArgs = append(rawArgs, object.GoStringFromStringObject(strObj))
+				default:
+					rawArgs = append(rawArgs, obj)
+				}
+			default: // fld.Ftype is none of the above cases
 				// keep the full object for later processing (e.g., %s/%b/%h)
 				rawArgs = append(rawArgs, obj)
 			}
+
+			// Go pick up the next element in the valuesIn array.
 			continue
+
 		}
-		// No "value" field: detect BigDecimal by fields intVal/scale
-		if ivFld, ok := obj.FieldTable["intVal"]; ok {
-			if scFld, ok2 := obj.FieldTable["scale"]; ok2 {
-				intValObj, ok3 := ivFld.Fvalue.(*object.Object)
-				if ok3 {
-					if vFld, ok4 := intValObj.FieldTable["value"]; ok4 {
-						if unscaled, ok5 := vFld.Fvalue.(*big.Int); ok5 {
-							scale, _ := scFld.Fvalue.(int64)
-							bf := new(big.Float).SetInt(unscaled)
-							if scale != 0 {
-								den := new(big.Float).SetFloat64(math.Pow10(int(scale)))
-								bf.Quo(bf, den)
+
+		// There is no "value" field.
+		// If this object is a BigDecimal, look for the presence of fields intVal and scale.
+		className := object.GoStringFromStringPoolIndex(obj.KlassName)
+		if className == types.ClassNameBigDecimal {
+			if ivFld, ok := obj.FieldTable["intVal"]; ok {
+				if scFld, ok2 := obj.FieldTable["scale"]; ok2 {
+					intValObj, ok3 := ivFld.Fvalue.(*object.Object)
+					if ok3 {
+						if vFld, ok4 := intValObj.FieldTable["value"]; ok4 {
+							if unscaled, ok5 := vFld.Fvalue.(*big.Int); ok5 {
+								scale, _ := scFld.Fvalue.(int64)
+								bf := new(big.Float).SetInt(unscaled)
+								if scale != 0 {
+									den := new(big.Float).SetFloat64(math.Pow10(int(scale)))
+									bf.Quo(bf, den)
+								}
+								f64, _ := bf.Float64()
+								// Keep identity for hashing; provide f64 for %f via wrapper
+								rawArgs = append(rawArgs, bigDecimalArg{obj: obj, f64: f64})
+								continue
 							}
-							f64, _ := bf.Float64()
-							// Keep identity for hashing; provide f64 for %f via wrapper
-							rawArgs = append(rawArgs, bigDecimalArg{obj: obj, f64: f64})
-							continue
 						}
 					}
 				}
 			}
 		}
-		// Fallback: keep object reference
-		rawArgs = append(rawArgs, obj)
+
+		// None of the known cases worked out.
+		rawArgs = append(rawArgs, className)
 	}
 
 	// Transform Java format string and arguments to Go compatible ones
-	newFmt, newArgs := translateJavaFormat(formatString, rawArgs)
+	newFmt, newArgs := translateJavaFormat(formatString, rawArgs, valuesIn)
 
 	str := fmt.Sprintf(newFmt, newArgs...)
 	return object.StringObjectFromGoString(str)
@@ -204,7 +210,7 @@ func StringFormatter(params []interface{}) interface{} {
 
 // translateJavaFormat parses a Java String.format-style format and maps it to a Go fmt format,
 // returning the rewritten format string and adjusted argument slice.
-func translateJavaFormat(fmtJava string, rawArgs []interface{}) (string, []interface{}) {
+func translateJavaFormat(fmtJava string, rawArgs []interface{}, originalArgs []*object.Object) (string, []interface{}) {
 	var b strings.Builder
 	outArgs := make([]interface{}, 0)
 
@@ -321,7 +327,20 @@ func translateJavaFormat(fmtJava string, rawArgs []interface{}) (string, []inter
 			outArgs = append(outArgs, str)
 		case 's', 'S':
 			goConv = "s"
-			val := coerceJavaString(rawArgs, useIndex)
+			var val string
+			handled := false
+			if useIndex >= 0 && useIndex < len(originalArgs) {
+				obj := originalArgs[useIndex]
+				if obj == nil || object.IsNull(obj) {
+					val = types.NullString
+					handled = true
+				} else {
+					val, handled = object.StringifyObjectWithToString(obj)
+				}
+			}
+			if !handled {
+				val = coerceJavaString(rawArgs, useIndex)
+			}
 			if conv == 'S' {
 				val = strings.ToUpper(val)
 			}
@@ -615,12 +634,12 @@ func javaHashValue(v interface{}) uint64 {
 		if math.IsNaN(vv) {
 			bits = 0x7ff8000000000000
 		}
-		h := uint32(uint32(bits>>32) ^ uint32(bits))
+		h := uint32(bits>>32) ^ uint32(bits)
 		return uint64(h)
 	case float32Arg:
 		// Java Float.hashCode: int(Float.floatToIntBits(f)) with canonical NaN 0x7fc00000
 		f := float64(vv.f32)
-		bits := uint32(math.Float32bits(vv.f32))
+		bits := math.Float32bits(vv.f32)
 		if math.IsNaN(f) {
 			bits = 0x7fc00000
 		}
