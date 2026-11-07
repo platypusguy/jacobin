@@ -2026,7 +2026,7 @@ func localDateTimeFormat(params []any) any {
 	if len(params) < 2 || params[1] == nil || object.IsNull(params[1].(*object.Object)) {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalDateTime.format: formatter is null")
 	}
-	return localDateTimeToString(params[:1])
+	return dateTimeFormatterFormat([]any{params[1], params[0]})
 }
 
 func localDateTimeAtOffset(params []any) any {

@@ -799,3 +799,49 @@ func TestLocalDateTimeSupportedAndRange(t *testing.T) {
 		t.Error("range(DAY_OF_MONTH): expected valid ValueRange object")
 	}
 }
+
+func TestLocalTemporalFormatUsesFormatter(t *testing.T) {
+	initTestEnvironment()
+
+	tests := []struct {
+		name      string
+		format    func([]any) any
+		temporal  *object.Object
+		formatter *object.Object
+		expected  string
+	}{
+		{
+			name:      "LocalDate",
+			format:    localDateFormat,
+			temporal:  CreateLocalDate(2026, 6, 24),
+			formatter: createDateTimeFormatterObject("yyyy/MM/dd", nil, nil, nil),
+			expected:  "2026/06/24",
+		},
+		{
+			name:      "LocalTime",
+			format:    localTimeFormat,
+			temporal:  createLocalTime(14, 30, 15, 0),
+			formatter: createDateTimeFormatterObject("HH:mm", nil, nil, nil),
+			expected:  "14:30",
+		},
+		{
+			name:      "LocalDateTime",
+			format:    localDateTimeFormat,
+			temporal:  CreateLocalDateTime(CreateLocalDate(2026, 6, 24), createLocalTime(14, 30, 15, 0)),
+			formatter: createDateTimeFormatterObject("yyyy/MM/dd HH:mm", nil, nil, nil),
+			expected:  "2026/06/24 14:30",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, ok := tt.format([]any{tt.temporal, tt.formatter}).(*object.Object)
+			if !ok {
+				t.Fatalf("format returned unexpected value: %v", result)
+			}
+			if got := object.GoStringFromStringObject(result); got != tt.expected {
+				t.Errorf("format returned %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}

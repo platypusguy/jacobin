@@ -1752,7 +1752,7 @@ func localTimeFormat(params []any) any {
 	if len(params) < 2 || params[1] == nil || object.IsNull(params[1].(*object.Object)) {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalTime.format: formatter is null")
 	}
-	return localTimeToString(params[:1])
+	return dateTimeFormatterFormat([]any{params[1], params[0]})
 }
 
 func localTimeAtDate(params []any) any {

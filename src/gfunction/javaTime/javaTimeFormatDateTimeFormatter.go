@@ -701,15 +701,7 @@ func formatTemporalWithPattern(formatter *object.Object, temporal *object.Object
 	hasTime := false
 	var year, month, day, hour, minute, second, nano int64
 
-	if strings.Contains(className, "LocalDate") {
-		if y, m, d, ok := getLocalDateYMD(temporal); ok {
-			hasDate = true
-			year, month, day = y, m, d
-		}
-	} else if strings.Contains(className, "LocalTime") {
-		hasTime = true
-		hour, minute, second, nano = getLocalTimeHMSN(temporal)
-	} else if strings.Contains(className, "LocalDateTime") {
+	if strings.Contains(className, "LocalDateTime") {
 		ld := getLocalDateTimeDate(temporal)
 		lt := getLocalDateTimeTime(temporal)
 		if ld != nil {
@@ -722,6 +714,14 @@ func formatTemporalWithPattern(formatter *object.Object, temporal *object.Object
 			hasTime = true
 			hour, minute, second, nano = getLocalTimeHMSN(lt)
 		}
+	} else if strings.Contains(className, "LocalDate") {
+		if y, m, d, ok := getLocalDateYMD(temporal); ok {
+			hasDate = true
+			year, month, day = y, m, d
+		}
+	} else if strings.Contains(className, "LocalTime") {
+		hasTime = true
+		hour, minute, second, nano = getLocalTimeHMSN(temporal)
 	}
 
 	if pat == "" {
