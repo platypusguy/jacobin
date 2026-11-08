@@ -39,8 +39,8 @@ func Disable() {
 	disabled = true
 }
 
-// Trace is the principal tracing function. Note that it currently
-// writes to stderr. At some future point, this might become an option.
+// Trace is the principal tracing function. Note that it currently writes to stderr.
+// At some future point, using a different stream might be an option.
 func Trace(argMsg string) {
 	var err error
 
@@ -110,6 +110,13 @@ func Warning(argMsg string) {
 		errMsg = fmt.Sprintf("Error: *** stderr failed, err: %v", err)
 		rawAbort(excNames.IOError, errMsg)
 	}
+}
+
+// Writes string to stderr without modifying it or adding anything
+func Raw(argMsg string) {
+	mutex.Lock()
+	_, _ = fmt.Fprintf(os.Stderr, "%s\n", argMsg)
+	mutex.Unlock()
 }
 
 // Perform a minimal abort, which is a direct call to the global minimal abort function.
