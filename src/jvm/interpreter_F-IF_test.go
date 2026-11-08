@@ -590,11 +590,11 @@ func TestNewGetField(t *testing.T) {
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to fieldRef[0]
 
-	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
 	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
 		AccessFlags: 0,
 		IsStatic:    false,
@@ -604,15 +604,15 @@ func TestNewGetField(t *testing.T) {
 		FldType:     "Ljava/lang/String;",
 	}
 
-	CP.ClassRefs = make([]uint32, 1, 1)
+	CP.ClassRefs = make([]uint32, 1)
 	CP.ClassRefs[0] = 0 // classRefs are not used to access a field
 
-	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1)
 	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{
 		NameIndex: 0, // UTF8: "value"
 		DescIndex: 1} // UTF8: "Ljava/lang/String;"
 
-	CP.Utf8Refs = make([]string, 2, 2)
+	CP.Utf8Refs = make([]string, 2)
 	CP.Utf8Refs[0] = "value"
 	CP.Utf8Refs[1] = "Ljava/lang/String;"
 	f.CP = &CP
@@ -651,12 +651,12 @@ func TestNewGetFieldWithLong(t *testing.T) {
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to a fieldRef
 
 	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
 	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
 		AccessFlags: 0,
 		IsStatic:    false,
@@ -1105,7 +1105,6 @@ func TestGetStaticBytePromotion(t *testing.T) {
 		},
 	})
 
-
 	f := newFrame(opcodes.GETSTATIC)
 	f.Meth = append(f.Meth, 0x00, 0x01)
 
@@ -1139,7 +1138,7 @@ func TestGetStaticBytePromotion(t *testing.T) {
 // GETSTATIC: default path in type switch (e.g., already int64 value)
 func TestGetStaticDefaultPathInt64(t *testing.T) {
 	globals.InitGlobals("test")
-	
+
 	// Register a minimal class mirror so InitializeClass (called by
 	// doGetStatic per JVMS 5.5) can load/initialize "TestClass" successfully.
 	classloader.InitMethodArea()
@@ -1150,7 +1149,6 @@ func TestGetStaticDefaultPathInt64(t *testing.T) {
 			SuperclassIndex: stringPool.GetStringIndex(&objectName),
 		},
 	})
-
 
 	f := newFrame(opcodes.GETSTATIC)
 	f.Meth = append(f.Meth, 0x00, 0x01)
@@ -1362,7 +1360,7 @@ func TestNewI2B(t *testing.T) {
 }
 
 // I2B: convert int to Java char (16-bit value) using a negative value
-func TestNewI2Bneg(t *testing.T) { // TODO: check that this matches Java result
+func TestNewI2Bneg(t *testing.T) { // This matches the Java JDK result.
 	f := newFrame(opcodes.I2B)
 	push(f, int64(-2100))
 

@@ -17,6 +17,52 @@ import (
 	"strings"
 )
 
+type gFunctionStringError interface {
+	error
+	IsMethodNotFound() bool
+}
+
+func stringifyObjectWithToString(obj *Object, className string) (string, bool) {
+	global := globals.GetGlobalRef()
+
+	method := className + ".toString()Ljava/lang/String;"
+	if global == nil || global.FuncInvokeGFunction == nil {
+		return "", false
+	}
+
+	result := global.FuncInvokeGFunction(method, []any{obj})
+
+	if invokeErr, ok := result.(gFunctionStringError); ok {
+		if invokeErr.IsMethodNotFound() {
+			return "", false
+		}
+		return fmt.Sprintf("*** ERROR, StringifyAnythingGo: %s failed: %s", method, invokeErr.Error()), true
+	}
+	if invokeErr, ok := result.(error); ok {
+		return fmt.Sprintf("*** ERROR, StringifyAnythingGo: %s failed: %s", method, invokeErr.Error()), true
+	}
+	if result == nil {
+		return "", false
+	}
+
+	strObj, ok := result.(*Object)
+	if !ok || strObj == nil || IsNull(strObj) {
+		return fmt.Sprintf("*** ERROR, StringifyAnythingGo: %s returned %T, not a non-null Object", method, result), true
+	}
+	return GoStringFromStringObject(strObj), true
+}
+
+// StringifyObjectWithToString invokes an object's registered toString method.
+// The boolean is false when no method is available, allowing callers to retain
+// their existing fallback formatting.
+func StringifyObjectWithToString(obj *Object) (string, bool) {
+	if obj == nil || IsNull(obj) {
+		return "", false
+	}
+	className := GoStringFromStringPoolIndex(obj.KlassName)
+	return stringifyObjectWithToString(obj, className)
+}
+
 // StringifyAnythingGo: Stringify anything and return a go string to caller.
 // arg: either an *Object or a Field.
 func StringifyAnythingGo(arg interface{}) string {
@@ -53,16 +99,11 @@ func StringifyAnythingGo(arg interface{}) string {
 			return GoStringFromStringObject(obj)
 		}
 
-		if className == "java/time/LocalDateTime" ||
-			className == "java/util/Locale" ||
-			className == types.ClassNameBigDecimal ||
-			className == types.ClassNameBigInteger ||
-			className == types.ClassNameThread ||
-			className == types.ClassNameThreadState {
-			params := []any{obj}
-			method := className + ".toString()Ljava/lang/String;"
-			strObj := globals.GetGlobalRef().FuncInvokeGFunction(method, params).(*Object)
-			return GoStringFromStringObject(strObj)
+		if className != "java/lang/Object" && !strings.HasPrefix(className, "[") {
+			result, handled := stringifyObjectWithToString(obj, className)
+			if handled {
+				return result
+			}
 		}
 
 		classNameSuffix := GetClassNameSuffix(obj, true)
@@ -258,7 +299,7 @@ func StringifyAnythingGo(arg interface{}) string {
 			case int64:
 				ba1 = []byte{byte(fld.Fvalue.(int64))}
 			case byte:
-				ba1 = []byte{byte(fld.Fvalue.(byte))}
+				ba1 = []byte{fld.Fvalue.(byte)}
 			default:
 				return "*** ERROR, StringifyAnythingGo Field types.Byte: corrupted byte \"value\" field"
 			}
@@ -316,9 +357,8 @@ func StringifyAnythingGo(arg interface{}) string {
 					element = element.Next()
 				}
 				return strBuffer[:len(strBuffer)-2] + "]"
-			} else {
-				return "[]"
 			}
+			return "[]"
 		case types.MultiArray, types.Array:
 			strBuffer := "["
 			fvalue := fld.Fvalue
@@ -404,7 +444,7 @@ func StringifyAnythingGo(arg interface{}) string {
 		return StringifyAnythingGo(val.Elem().Interface())
 	}
 
-	errMsg := fmt.Sprintf("*** ERROR, StringifyAnythingGo: neither *Object nor Field, value: %T, %v", arg, arg)
+	errMsg := fmt.Sprintf("*** ERROR, StringifyAnythingGo: neither *Object nor Field nor recognized primitive, value: %T, %v", arg, arg)
 	return errMsg
 }
 

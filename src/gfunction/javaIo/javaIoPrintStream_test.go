@@ -3,14 +3,19 @@ package javaIo
 import (
 	"bytes"
 	"errors"
+	"io"
+	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/gfunction/javaMath"
+	"jacobin/src/gfunction/javaTime"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
 	"jacobin/src/types"
+	"maps"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -35,14 +40,14 @@ func TestPrintStreamPrintlnFunctions(t *testing.T) {
 
 	// println()
 	buf.Reset()
-	PrintlnV([]interface{}{buf})
+	PrintlnV([]any{buf})
 	if got := buf.String(); got != "\n" {
 		t.Errorf("PrintlnV() = %q; want newline", got)
 	}
 
 	// println(String)
 	buf.Reset()
-	PrintlnString([]interface{}{buf, makeStringObject("hello")})
+	PrintlnString([]any{buf, makeStringObject("hello")})
 	if got := buf.String(); got != "hello\n" {
 		t.Errorf("PrintlnString() = %q; want 'hello\\n'", got)
 	}
@@ -50,7 +55,7 @@ func TestPrintStreamPrintlnFunctions(t *testing.T) {
 	// println(byte), println(int), println(short) all use PrintlnBIS
 	for _, val := range []int64{65, -1, 0} {
 		buf.Reset()
-		PrintlnBIS([]interface{}{buf, val})
+		PrintlnBIS([]any{buf, val})
 		want := strconv.FormatInt(val, 10) + "\n"
 		if got := buf.String(); got != want && val != 65 {
 			// Actually, PrintlnBIS uses fmt.Fprintln on int64 so the output is a decimal string plus newline
@@ -63,40 +68,40 @@ func TestPrintStreamPrintlnFunctions(t *testing.T) {
 
 	// println(boolean)
 	buf.Reset()
-	PrintlnBoolean([]interface{}{buf, int64(1)})
+	PrintlnBoolean([]any{buf, int64(1)})
 	if got := buf.String(); got != "true\n" {
 		t.Errorf("PrintlnBoolean(true) = %q; want 'true\\n'", got)
 	}
 	buf.Reset()
-	PrintlnBoolean([]interface{}{buf, int64(0)})
+	PrintlnBoolean([]any{buf, int64(0)})
 	if got := buf.String(); got != "false\n" {
 		t.Errorf("PrintlnBoolean(false) = %q; want 'false\\n'", got)
 	}
 
 	// println(long)
 	buf.Reset()
-	PrintlnLong([]interface{}{buf, int64(1234567890)})
+	PrintlnLong([]any{buf, int64(1234567890)})
 	if got := buf.String(); got != "1234567890\n" {
 		t.Errorf("PrintlnLong() = %q; want '1234567890\\n'", got)
 	}
 
 	// println(double)
 	buf.Reset()
-	PrintlnDouble([]interface{}{buf, 3.1415926535})
+	PrintlnDouble([]any{buf, 3.1415926535})
 	if got := buf.String(); got != "3.1415926535\n" {
 		t.Errorf("PrintlnDouble() = %q; want '3.1415926535\\n'", got)
 	}
 
 	// println(float)
 	buf.Reset()
-	PrintlnFloat([]interface{}{buf, 2.71828})
+	PrintlnFloat([]any{buf, 2.71828})
 	if got := buf.String(); got != "2.71828\n" {
 		t.Errorf("PrintlnFloat() = %q; want '2.71828\\n'", got)
 	}
 
 	// println(char)
 	buf.Reset()
-	PrintlnChar([]interface{}{buf, int64('Z')})
+	PrintlnChar([]any{buf, int64('Z')})
 	if got := buf.String(); got != "Z\n" {
 		t.Errorf("PrintlnChar() = %q; want 'Z\\n'", got)
 	}
@@ -107,7 +112,7 @@ func TestPrintStreamPrintFunctions(t *testing.T) {
 
 	// print(String)
 	buf.Reset()
-	PrintString([]interface{}{buf, makeStringObject("test string")})
+	PrintString([]any{buf, makeStringObject("test string")})
 	if got := buf.String(); got != "test string" {
 		t.Errorf("PrintString() = %q; want 'test string'", got)
 	}
@@ -115,7 +120,7 @@ func TestPrintStreamPrintFunctions(t *testing.T) {
 	// print(byte), print(int), print(short) use PrintBIS
 	for _, val := range []int64{65, -2, 0} {
 		buf.Reset()
-		PrintBIS([]interface{}{buf, val})
+		PrintBIS([]any{buf, val})
 		want := strconv.FormatInt(val, 10)
 		if got := buf.String(); got != want {
 			t.Errorf("PrintBIS(%d) = %q; want %q", val, got, want)
@@ -124,40 +129,40 @@ func TestPrintStreamPrintFunctions(t *testing.T) {
 
 	// print(boolean)
 	buf.Reset()
-	PrintBoolean([]interface{}{buf, int64(1)})
+	PrintBoolean([]any{buf, int64(1)})
 	if got := buf.String(); got != "true" {
 		t.Errorf("PrintBoolean(true) = %q; want 'true'", got)
 	}
 	buf.Reset()
-	PrintBoolean([]interface{}{buf, int64(0)})
+	PrintBoolean([]any{buf, int64(0)})
 	if got := buf.String(); got != "false" {
 		t.Errorf("PrintBoolean(false) = %q; want 'false'", got)
 	}
 
 	// print(long)
 	buf.Reset()
-	PrintLong([]interface{}{buf, int64(9876543210)})
+	PrintLong([]any{buf, int64(9876543210)})
 	if got := buf.String(); got != "9876543210" {
 		t.Errorf("PrintLong() = %q; want '9876543210'", got)
 	}
 
 	// print(double)
 	buf.Reset()
-	PrintDouble([]interface{}{buf, 6.62607015})
+	PrintDouble([]any{buf, 6.62607015})
 	if got := buf.String(); got != "6.62607015" {
 		t.Errorf("PrintDouble() = %q; want '6.62607015'", got)
 	}
 
 	// print(float)
 	buf.Reset()
-	PrintFloat([]interface{}{buf, 1.41421})
+	PrintFloat([]any{buf, 1.41421})
 	if got := buf.String(); got != "1.41421" {
 		t.Errorf("PrintFloat() = %q; want '1.41421'", got)
 	}
 
 	// print(char)
 	buf.Reset()
-	PrintChar([]interface{}{buf, int64('Y')})
+	PrintChar([]any{buf, int64('Y')})
 	if got := buf.String(); got != "Y" {
 		t.Errorf("PrintChar() = %q; want 'Y'", got)
 	}
@@ -179,7 +184,7 @@ func TestPrintStreamPrintf(t *testing.T) {
 	iArr := object.MakePrimitiveObject("java/lang/Object", types.RefArray, args)
 
 	// Params: first PrintStream, then format string, then each arg separately
-	params := []interface{}{ps, fmtStr, iArr}
+	params := []any{ps, fmtStr, iArr}
 
 	// Call the Printf function under test
 	ret := Printf(params)
@@ -197,19 +202,20 @@ func TestPrintStreamPrintf(t *testing.T) {
 
 func TestPrintStreamPrintObject(t *testing.T) {
 	buf := new(bytes.Buffer)
-	globals.InitGlobals("test")
+	glob := globals.InitGlobals("test")
 	globals.InitStringPool()
+	glob.FuncInvokeGFunction = ghelpers.Invoke
 
 	// Case 1: Print(String object) - should use _printObject
 	buf.Reset()
-	PrintObject([]interface{}{buf, makeStringObject("test object string")})
+	PrintObject([]any{buf, makeStringObject("test object string")})
 	if got := buf.String(); got != "test object string" {
 		t.Errorf("PrintObject(String) = %q; want 'test object string'", got)
 	}
 
 	// Case 2: Println(String object)
 	buf.Reset()
-	PrintlnObject([]interface{}{buf, makeStringObject("hello object")})
+	PrintlnObject([]any{buf, makeStringObject("hello object")})
 	if got := buf.String(); got != "hello object\n" {
 		t.Errorf("PrintlnObject(String) = %q; want 'hello object\\n'", got)
 	}
@@ -223,7 +229,7 @@ func TestPrintStreamPrintObject(t *testing.T) {
 		"field2": {Ftype: types.Int, Fvalue: int64(456)},
 	}
 	// className suffix will be "MyClass"
-	PrintObject([]interface{}{buf, obj})
+	PrintObject([]any{buf, obj})
 	got := buf.String()
 	// field order in map is random, so we check for components
 	if !(got == "MyClass{field1=123, field2=456}" || got == "MyClass{field2=456, field1=123}") {
@@ -232,14 +238,14 @@ func TestPrintStreamPrintObject(t *testing.T) {
 
 	// Case 4: Println normal object
 	buf.Reset()
-	PrintlnObject([]interface{}{buf, obj})
+	PrintlnObject([]any{buf, obj})
 	got = buf.String()
 	if !(got == "MyClass{field1=123, field2=456}\n" || got == "MyClass{field2=456, field1=123}\n") {
 		t.Errorf("PrintlnObject(Object) = %q; unexpected format", got)
 	}
 
 	// Case 5: Error - non-io.Writer
-	ret := PrintObject([]interface{}{"not-a-writer", obj})
+	ret := PrintObject([]any{"not-a-writer", obj})
 	if _, ok := ret.(*ghelpers.GErrBlk); !ok {
 		t.Errorf("PrintObject with invalid writer did not return ghelpers.GErrBlk, got %T", ret)
 	}
@@ -247,9 +253,72 @@ func TestPrintStreamPrintObject(t *testing.T) {
 	// Case 6: Print Object that is actually a String
 	buf.Reset()
 	strObj := makeStringObject("internal string")
-	PrintObject([]interface{}{buf, strObj})
+	PrintObject([]any{buf, strObj})
 	if got := buf.String(); got != "internal string" {
 		t.Errorf("PrintObject(StringObj) = %q; want 'internal string'", got)
+	}
+}
+
+func TestPrintStreamInvalidWriterErrors(t *testing.T) {
+	globals.InitGlobals("test")
+	className := "example/InvalidWriter"
+	invalidObject := object.MakeEmptyObjectWithClassName(&className)
+	nestedObject := object.MakeEmptyObjectWithClassName(&className)
+	nestedObject.FieldTable["out"] = object.Field{Ftype: types.Ref, Fvalue: invalidObject}
+	value := makeStringObject("value")
+
+	cases := []struct {
+		name           string
+		writer         any
+		observedWriter string
+	}{
+		{name: "string", writer: "not-a-writer", observedWriter: "string"},
+		{name: "object", writer: invalidObject, observedWriter: "*object.Object"},
+		{name: "nested object", writer: nestedObject, observedWriter: "*object.Object"},
+	}
+
+	stderrReader, stderrWriter, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("creating stderr pipe: %v", err)
+	}
+	originalStderr := os.Stderr
+	os.Stderr = stderrWriter
+	defer func() {
+		os.Stderr = originalStderr
+		_ = stderrWriter.Close()
+		_ = stderrReader.Close()
+	}()
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			result := PrintObject([]any{tt.writer, value})
+			errBlk, ok := result.(*ghelpers.GErrBlk)
+			if !ok {
+				t.Fatalf("PrintObject() returned %T, want *ghelpers.GErrBlk", result)
+			}
+			if errBlk.ExceptionType != excNames.IllegalArgumentException {
+				t.Errorf("PrintObject() exception = %d, want IllegalArgumentException", errBlk.ExceptionType)
+			}
+			wantMessage := "_printObject: Expected io.Writer, observed " + tt.observedWriter
+			if !strings.Contains(errBlk.ErrMsg, wantMessage) {
+				t.Errorf("PrintObject() error = %q, want it to contain %q", errBlk.ErrMsg, wantMessage)
+			}
+		})
+	}
+
+	os.Stderr = originalStderr
+	if err := stderrWriter.Close(); err != nil {
+		t.Fatalf("closing stderr pipe writer: %v", err)
+	}
+	stderrOutput, err := io.ReadAll(stderrReader)
+	if err != nil {
+		t.Fatalf("reading captured stderr: %v", err)
+	}
+	if err := stderrReader.Close(); err != nil {
+		t.Fatalf("closing stderr pipe reader: %v", err)
+	}
+	if len(stderrOutput) != 0 {
+		t.Errorf("invalid PrintObject writers wrote to stderr: %q", stderrOutput)
 	}
 }
 
@@ -266,26 +335,26 @@ func TestPrintStreamPrintLinkedList(t *testing.T) {
 
 	// Case 1: Empty LinkedList
 	// If we don't put a "value" field, _printLinkedList should return an error
-	ret := PrintObject([]interface{}{buf, llObj})
+	ret := PrintObject([]any{buf, llObj})
 	if _, ok := ret.(*ghelpers.GErrBlk); !ok {
 		t.Errorf("PrintObject(Empty LL without value field) should return ghelpers.GErrBlk, got %T", ret)
 	}
 
 	// Correctly initialize LinkedList
-	ghelpers.Invoke("java/util/LinkedList.<init>()V", []interface{}{llObj})
+	ghelpers.Invoke("java/util/LinkedList.<init>()V", []any{llObj})
 
 	// Case 2: LinkedList with elements
-	ghelpers.Invoke("java/util/LinkedList.add(Ljava/lang/Object;)Z", []interface{}{llObj, makeStringObject("A")})
-	ghelpers.Invoke("java/util/LinkedList.add(Ljava/lang/Object;)Z", []interface{}{llObj, makeStringObject("B")})
+	ghelpers.Invoke("java/util/LinkedList.add(Ljava/lang/Object;)Z", []any{llObj, makeStringObject("A")})
+	ghelpers.Invoke("java/util/LinkedList.add(Ljava/lang/Object;)Z", []any{llObj, makeStringObject("B")})
 
 	buf.Reset()
-	PrintObject([]interface{}{buf, llObj})
+	PrintObject([]any{buf, llObj})
 	if got := buf.String(); got != "[A, B]" {
 		t.Errorf("PrintObject(LinkedList) = %q; want '[A, B]'", got)
 	}
 
 	buf.Reset()
-	PrintlnObject([]interface{}{buf, llObj})
+	PrintlnObject([]any{buf, llObj})
 	if got := buf.String(); got != "[A, B]\n" {
 		t.Errorf("PrintlnObject(LinkedList) = %q; want '[A, B]\\n'", got)
 	}
@@ -295,7 +364,7 @@ func TestPrintStreamPrintLinkedList(t *testing.T) {
 	// Actually PrintObject checks writer if params[1] is null, but if not null, it passes it to _printObject or _printLinkedList.
 	// _printLinkedList checks writer too.
 
-	ret = PrintObject([]interface{}{"not-a-writer", llObj})
+	ret = PrintObject([]any{"not-a-writer", llObj})
 	if _, ok := ret.(*ghelpers.GErrBlk); !ok {
 		t.Errorf("_printLinkedList with invalid writer did not return ghelpers.GErrBlk")
 	}
@@ -303,7 +372,7 @@ func TestPrintStreamPrintLinkedList(t *testing.T) {
 	// Case 4: null LinkedList
 	buf.Reset()
 	// To trigger null branch in _printLinkedList, we need params[1] to be *object.Object but representing Null
-	PrintObject([]interface{}{buf, object.Null})
+	PrintObject([]any{buf, object.Null})
 	// Actually PrintObject/PrintlnObject check object.IsNull(params[1]) and handle it themselves.
 	// So they only call _printLinkedList if it is NOT null and matches classNameLinkedList.
 	// This means the null branch in _printLinkedList might be unreachable via PrintObject/PrintlnObject.
@@ -316,7 +385,7 @@ func TestPrintStreamPrintObjectNull(t *testing.T) {
 
 	// print(null Object)
 	buf.Reset()
-	err := PrintObject([]interface{}{buf, nil})
+	err := PrintObject([]any{buf, nil})
 	if err != nil {
 		t.Fatalf("PrintObject with nil returned error: %v", err)
 	}
@@ -326,7 +395,7 @@ func TestPrintStreamPrintObjectNull(t *testing.T) {
 
 	// println(null Object)
 	buf.Reset()
-	err = PrintlnObject([]interface{}{buf, nil})
+	err = PrintlnObject([]any{buf, nil})
 	if err != nil {
 		t.Fatalf("PrintlnObject with nil returned error: %v", err)
 	}
@@ -341,27 +410,27 @@ func TestPrintStreamErrorCases(t *testing.T) {
 
 	tests := []struct {
 		name string
-		f    func([]interface{}) interface{}
-		args []interface{}
+		f    func([]any) any
+		args []any
 	}{
-		{"PrintlnV", PrintlnV, []interface{}{invalidWriter}},
-		{"PrintlnChar", PrintlnChar, []interface{}{invalidWriter, int64('A')}},
-		{"PrintlnBIS", PrintlnBIS, []interface{}{invalidWriter, int64(1)}},
-		{"PrintlnBoolean", PrintlnBoolean, []interface{}{invalidWriter, int64(1)}},
-		{"PrintlnLong", PrintlnLong, []interface{}{invalidWriter, int64(1)}},
-		{"PrintlnDouble", PrintlnDouble, []interface{}{invalidWriter, 1.0}},
-		{"PrintlnFloat", PrintlnFloat, []interface{}{invalidWriter, 1.0}},
-		{"PrintChar", PrintChar, []interface{}{invalidWriter, int64('A')}},
-		{"PrintBIS", PrintBIS, []interface{}{invalidWriter, int64(1)}},
-		{"PrintBoolean", PrintBoolean, []interface{}{invalidWriter, int64(1)}},
-		{"PrintLong", PrintLong, []interface{}{invalidWriter, int64(1)}},
-		{"PrintDouble", PrintDouble, []interface{}{invalidWriter, 1.0}},
-		{"PrintFloat", PrintFloat, []interface{}{invalidWriter, 1.0}},
-		{"Printf", Printf, []interface{}{invalidWriter, makeStringObject("%s"), nil}},
-		{"PrintString_Writer", PrintString, []interface{}{invalidWriter, obj}},
-		{"PrintString_Param", PrintString, []interface{}{new(bytes.Buffer), "not-an-object"}},
-		{"PrintObject_Writer", PrintObject, []interface{}{invalidWriter, obj}},
-		{"PrintlnObject_Writer", PrintlnObject, []interface{}{invalidWriter, obj}},
+		{"PrintlnV", PrintlnV, []any{invalidWriter}},
+		{"PrintlnChar", PrintlnChar, []any{invalidWriter, int64('A')}},
+		{"PrintlnBIS", PrintlnBIS, []any{invalidWriter, int64(1)}},
+		{"PrintlnBoolean", PrintlnBoolean, []any{invalidWriter, int64(1)}},
+		{"PrintlnLong", PrintlnLong, []any{invalidWriter, int64(1)}},
+		{"PrintlnDouble", PrintlnDouble, []any{invalidWriter, 1.0}},
+		{"PrintlnFloat", PrintlnFloat, []any{invalidWriter, 1.0}},
+		{"PrintChar", PrintChar, []any{invalidWriter, int64('A')}},
+		{"PrintBIS", PrintBIS, []any{invalidWriter, int64(1)}},
+		{"PrintBoolean", PrintBoolean, []any{invalidWriter, int64(1)}},
+		{"PrintLong", PrintLong, []any{invalidWriter, int64(1)}},
+		{"PrintDouble", PrintDouble, []any{invalidWriter, 1.0}},
+		{"PrintFloat", PrintFloat, []any{invalidWriter, 1.0}},
+		{"Printf", Printf, []any{invalidWriter, makeStringObject("%s"), nil}},
+		{"PrintString_Writer", PrintString, []any{invalidWriter, obj}},
+		{"PrintString_Param", PrintString, []any{new(bytes.Buffer), "not-an-object"}},
+		{"PrintObject_Writer", PrintObject, []any{invalidWriter, obj}},
+		{"PrintlnObject_Writer", PrintlnObject, []any{invalidWriter, obj}},
 	}
 
 	for _, tt := range tests {
@@ -379,14 +448,14 @@ func TestPrintStreamBISInt8(t *testing.T) {
 
 	// PrintlnBIS with int8
 	buf.Reset()
-	PrintlnBIS([]interface{}{buf, int8(42)})
+	PrintlnBIS([]any{buf, int8(42)})
 	if got := buf.String(); got != "42\n" {
 		t.Errorf("PrintlnBIS(int8(42)) = %q; want '42\\n'", got)
 	}
 
 	// PrintBIS with int8
 	buf.Reset()
-	PrintBIS([]interface{}{buf, int8(42)})
+	PrintBIS([]any{buf, int8(42)})
 	if got := buf.String(); got != "42" {
 		t.Errorf("PrintBIS(int8(42)) = %q; want '42'", got)
 	}
@@ -399,9 +468,7 @@ func TestPrintStreamSpecialObjects(t *testing.T) {
 	global := globals.GetGlobalRef()
 	originalInvoker := global.FuncInvokeGFunction
 	originalMethodSignatures := make(map[string]ghelpers.GMeth, len(ghelpers.MethodSignatures))
-	for signature, method := range ghelpers.MethodSignatures {
-		originalMethodSignatures[signature] = method
-	}
+	maps.Copy(originalMethodSignatures, ghelpers.MethodSignatures)
 	t.Cleanup(func() {
 		global.FuncInvokeGFunction = originalInvoker
 		ghelpers.MethodSignatures = originalMethodSignatures
@@ -414,14 +481,14 @@ func TestPrintStreamSpecialObjects(t *testing.T) {
 	javaLang.Load_Lang_Thread()
 	global.FuncInvokeGFunction = ghelpers.Invoke
 	bdObj := object.MakeEmptyObjectWithClassName(&types.ClassNameBigDecimal)
-	ghelpers.Invoke("java/math/BigDecimal.<init>(Ljava/lang/String;)V", []interface{}{bdObj, makeStringObject("123.45")})
+	ghelpers.Invoke("java/math/BigDecimal.<init>(Ljava/lang/String;)V", []any{bdObj, makeStringObject("123.45")})
 	buf.Reset()
-	PrintObject([]interface{}{buf, bdObj})
+	PrintObject([]any{buf, bdObj})
 	if got := buf.String(); got != "123.45" {
 		t.Errorf("PrintObject(BigDecimal) = %q; want '123.45'", got)
 	}
 	buf.Reset()
-	PrintlnObject([]interface{}{buf, bdObj})
+	PrintlnObject([]any{buf, bdObj})
 	if got := buf.String(); got != "123.45\n" {
 		t.Errorf("PrintlnObject(BigDecimal) = %q; want '123.45\\n'", got)
 	}
@@ -429,14 +496,14 @@ func TestPrintStreamSpecialObjects(t *testing.T) {
 	// 2. BigInteger
 	javaMath.Load_Math_Big_Integer()
 	biObj := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
-	ghelpers.Invoke("java/math/BigInteger.<init>(Ljava/lang/String;)V", []interface{}{biObj, makeStringObject("987654321")})
+	ghelpers.Invoke("java/math/BigInteger.<init>(Ljava/lang/String;)V", []any{biObj, makeStringObject("987654321")})
 	buf.Reset()
-	PrintObject([]interface{}{buf, biObj})
+	PrintObject([]any{buf, biObj})
 	if got := buf.String(); got != "987654321" {
 		t.Errorf("PrintObject(BigInteger) = %q; want '987654321'", got)
 	}
 	buf.Reset()
-	PrintlnObject([]interface{}{buf, biObj})
+	PrintlnObject([]any{buf, biObj})
 	if got := buf.String(); got != "987654321\n" {
 		t.Errorf("PrintlnObject(BigInteger) = %q; want '987654321\\n'", got)
 	}
@@ -449,21 +516,21 @@ func TestPrintStreamSpecialObjects(t *testing.T) {
 	tsObj.FieldTable["name"] = object.Field{Ftype: "Ljava/lang/String;", Fvalue: makeStringObject("RUNNABLE")}
 	// ThreadState is an enum, toString should return its name.
 	buf.Reset()
-	PrintObject([]interface{}{buf, tsObj})
+	PrintObject([]any{buf, tsObj})
 	if got := buf.String(); got != "RUNNABLE" {
 		t.Errorf("PrintObject(ThreadState) = %q; want 'RUNNABLE'", got)
 	}
 	buf.Reset()
-	PrintlnObject([]interface{}{buf, tsObj})
+	PrintlnObject([]any{buf, tsObj})
 	if got := buf.String(); got != "RUNNABLE\n" {
 		t.Errorf("PrintlnObject(ThreadState) = %q; want 'RUNNABLE\\n'", got)
 	}
 
 	// 3. Thread
 	javaLang.Load_Lang_Thread()
-	statics.AddStatic("java/lang/Thread.MIN_PRIORITY", statics.Static{Type: types.Int, Value: int64(1)})
-	statics.AddStatic("java/lang/Thread.MAX_PRIORITY", statics.Static{Type: types.Int, Value: int64(10)})
-	statics.AddStatic("java/lang/Thread.NORM_PRIORITY", statics.Static{Type: types.Int, Value: int64(5)})
+	_ = statics.AddStatic("java/lang/Thread.MIN_PRIORITY", statics.Static{Type: types.Int, Value: int64(1)})
+	_ = statics.AddStatic("java/lang/Thread.MAX_PRIORITY", statics.Static{Type: types.Int, Value: int64(10)})
+	_ = statics.AddStatic("java/lang/Thread.NORM_PRIORITY", statics.Static{Type: types.Int, Value: int64(5)})
 
 	threadObj := object.MakeEmptyObjectWithClassName(&types.ClassNameThread)
 	threadObj.KlassName = types.StringPoolThreadIndex
@@ -475,7 +542,7 @@ func TestPrintStreamSpecialObjects(t *testing.T) {
 	threadObj.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: int64(0)} // Unused but might be checked
 
 	buf.Reset()
-	ret := PrintObject([]interface{}{buf, threadObj})
+	ret := PrintObject([]any{buf, threadObj})
 	if errBlk, ok := ret.(*ghelpers.GErrBlk); ok {
 		t.Fatalf("PrintObject(Thread) returned error: %s", errBlk.ErrMsg)
 	}
@@ -484,7 +551,7 @@ func TestPrintStreamSpecialObjects(t *testing.T) {
 		t.Errorf("PrintObject(Thread) = %q; unexpected format", got)
 	}
 	buf.Reset()
-	PrintlnObject([]interface{}{buf, threadObj})
+	PrintlnObject([]any{buf, threadObj})
 	if got := buf.String(); got != "Thread[ID=1, Name=TestThread, Priority=5, State=RUNNABLE]\n" {
 		t.Errorf("PrintlnObject(Thread) = %q; unexpected format", got)
 	}
@@ -514,16 +581,13 @@ func TestPrintStreamPrintObjectWriteError(t *testing.T) {
 	}
 }
 
-/*** TODO remove comments
 func TestPrintStreamPrintObjectSpecialValues(t *testing.T) {
 	globals.InitGlobals("test")
 	globals.InitStringPool()
 	global := globals.GetGlobalRef()
 	originalInvoker := global.FuncInvokeGFunction
 	originalMethodSignatures := make(map[string]ghelpers.GMeth, len(ghelpers.MethodSignatures))
-	for signature, method := range ghelpers.MethodSignatures {
-		originalMethodSignatures[signature] = method
-	}
+	maps.Copy(originalMethodSignatures, ghelpers.MethodSignatures)
 	t.Cleanup(func() {
 		global.FuncInvokeGFunction = originalInvoker
 		ghelpers.MethodSignatures = originalMethodSignatures
@@ -629,21 +693,20 @@ func TestPrintStreamPrintObjectSpecialValues(t *testing.T) {
 		})
 	}
 }
-***/
 
 func TestPrintStreamPrintStringNull(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	// PrintString with null object
 	buf.Reset()
-	PrintString([]interface{}{buf, object.Null})
+	PrintString([]any{buf, object.Null})
 	if got := buf.String(); got != "null" {
 		t.Errorf("PrintString(null) = %q; want 'null'", got)
 	}
 
 	// PrintlnString with null object
 	buf.Reset()
-	PrintlnString([]interface{}{buf, object.Null})
+	PrintlnString([]any{buf, object.Null})
 	if got := buf.String(); got != "null\n" {
 		t.Errorf("PrintlnString(null) = %q; want 'null\\n'", got)
 	}
@@ -656,7 +719,7 @@ func TestPrintStreamWriteFromByteArray(t *testing.T) {
 	buf.Reset()
 	str := "Hello World"
 	strObj := makeStringObject(str)
-	ret := printstreamWriteFromByteArray([]interface{}{buf, strObj})
+	ret := printstreamWriteFromByteArray([]any{buf, strObj})
 	if ret != nil {
 		t.Errorf("printstreamWriteFromByteArray returned error: %v", ret)
 	}
@@ -665,13 +728,13 @@ func TestPrintStreamWriteFromByteArray(t *testing.T) {
 	}
 
 	// Case 2: Invalid writer
-	ret = printstreamWriteFromByteArray([]interface{}{"not-a-writer", strObj})
+	ret = printstreamWriteFromByteArray([]any{"not-a-writer", strObj})
 	if _, ok := ret.(*ghelpers.GErrBlk); !ok {
 		t.Errorf("printstreamWriteFromByteArray with invalid writer did not return GErrBlk, got %T", ret)
 	}
 
 	// Case 3: Invalid byteArrayObj
-	ret = printstreamWriteFromByteArray([]interface{}{buf, "not-an-object"})
+	ret = printstreamWriteFromByteArray([]any{buf, "not-an-object"})
 	if _, ok := ret.(*ghelpers.GErrBlk); !ok {
 		t.Errorf("printstreamWriteFromByteArray with invalid object did not return GErrBlk, got %T", ret)
 	}

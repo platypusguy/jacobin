@@ -1,7 +1,9 @@
 package misc
 
 import (
+	"errors"
 	"fmt"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/gfunction/javaMath"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -66,16 +68,137 @@ func TestStringFormatter_Hash_For_String(t *testing.T) {
 func TestStringFormatter_Object_ToString_Like(t *testing.T) {
 	globals.InitStringPool()
 	fmtObj := object.StringObjectFromGoString("obj=%s")
-	o := object.MakeEmptyObject()
-	o.KlassName = object.StringPoolIndexFromGoString("com/example/Dummy")
+	obj := object.MakeEmptyObject()
+	obj.KlassName = object.StringPoolIndexFromGoString("com/example/Dummy")
 	// ensure non-null per Jacobin's IsNull (requires at least one field)
-	o.FieldTable["_marker"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
-	argsArr := makeObjectRefArray(o)
+	obj.FieldTable["_marker"] = object.Field{Ftype: types.Int, Fvalue: int64(42)}
+	argsArr := makeObjectRefArray(obj)
 
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
-	if !strings.HasPrefix(got, "obj=null") {
+	if !strings.HasPrefix(got, "obj=com/example/Dummy") {
 		t.Fatalf("expected Dummy@..., got %q", got)
+	}
+}
+
+func TestStringFormatter_StringConversionsUseClassToString(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	global := globals.GetGlobalRef()
+	originalInvoker := global.FuncInvokeGFunction
+	t.Cleanup(func() { global.FuncInvokeGFunction = originalInvoker })
+	className := "example/Widget"
+	receiver := object.MakeEmptyObjectWithClassName(&className)
+	receiver.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: "field value"}
+	bareClassName := "example/Bare"
+	bareReceiver := object.MakeEmptyObjectWithClassName(&bareClassName)
+	bareReceiver.FieldTable["marker"] = object.Field{Ftype: types.Int, Fvalue: int64(1)}
+	boxedInteger := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(42))
+	calls := 0
+	global.FuncInvokeGFunction = func(method string, args []any) any {
+		calls++
+		if len(args) != 1 {
+			t.Errorf("invoker received %d arguments, want exactly 1", len(args))
+			return nil
+		}
+		arg, ok := args[0].(*object.Object)
+		if !ok {
+			t.Errorf("invoker receiver has type %T, want *object.Object", args[0])
+			return nil
+		}
+		wantMethod := object.GoStringFromStringPoolIndex(arg.KlassName) + ".toString()Ljava/lang/String;"
+		if method != wantMethod {
+			t.Errorf("invoked method = %q, want %q", method, wantMethod)
+		}
+		if arg != receiver && arg != bareReceiver && arg != boxedInteger {
+			t.Errorf("invoker arguments = %v, want an original argument object", args)
+		}
+		if arg == boxedInteger {
+			return object.StringObjectFromGoString("forty-two")
+		}
+		if arg == bareReceiver {
+			return object.StringObjectFromGoString("rendered Bare")
+		}
+		return object.StringObjectFromGoString("rendered Widget")
+	}
+
+	fmtObj := object.StringObjectFromGoString("%1$12.8s|%<S|%1$s|%2$s|%3$s|%2$d|%2$h")
+	out := StringFormatter([]interface{}{fmtObj, makeObjectRefArray(receiver, boxedInteger, bareReceiver)})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	if want := "    rendered|RENDERED WIDGET|rendered Widget|forty-two|rendered Bare|42|2a"; got != want {
+		t.Errorf("StringFormatter() = %q, want %q", got, want)
+	}
+	if calls != 5 {
+		t.Errorf("toString invocation count = %d, want 5", calls)
+	}
+}
+
+func TestStringFormatter_StringConversionsPreserveFallbackAndErrors(t *testing.T) {
+	t.Run("missing method uses existing fallback", func(t *testing.T) {
+		globals.InitGlobals("test")
+		globals.InitStringPool()
+		global := globals.GetGlobalRef()
+		originalInvoker := global.FuncInvokeGFunction
+		t.Cleanup(func() { global.FuncInvokeGFunction = originalInvoker })
+		global.FuncInvokeGFunction = ghelpers.Invoke
+		className := "example/Widget"
+		receiver := object.MakeEmptyObjectWithClassName(&className)
+		receiver.FieldTable["value"] = object.Field{Ftype: types.Ref, Fvalue: "field value"}
+		fmtObj := object.StringObjectFromGoString("%s")
+		out := StringFormatter([]interface{}{fmtObj, makeObjectRefArray(receiver)})
+		got := object.GoStringFromStringObject(out.(*object.Object))
+		if !strings.HasPrefix(got, "Widget@") {
+			t.Errorf("StringFormatter() = %q, want legacy Widget@... fallback", got)
+		}
+	})
+
+	t.Run("invocation failure is visible", func(t *testing.T) {
+		globals.InitGlobals("test")
+		globals.InitStringPool()
+		global := globals.GetGlobalRef()
+		originalInvoker := global.FuncInvokeGFunction
+		t.Cleanup(func() { global.FuncInvokeGFunction = originalInvoker })
+		className := "example/Widget"
+		receiver := object.MakeEmptyObjectWithClassName(&className)
+		global.FuncInvokeGFunction = func(string, []any) any { return errors.New("toString failed") }
+		fmtObj := object.StringObjectFromGoString("%s")
+		out := StringFormatter([]interface{}{fmtObj, makeObjectRefArray(receiver)})
+		got := object.GoStringFromStringObject(out.(*object.Object))
+		if !strings.Contains(got, "StringifyAnythingGo: example/Widget.toString()Ljava/lang/String; failed: toString failed") {
+			t.Errorf("StringFormatter() = %q, want toString failure details", got)
+		}
+	})
+
+	t.Run("null remains null", func(t *testing.T) {
+		globals.InitGlobals("test")
+		fmtObj := object.StringObjectFromGoString("[%s]")
+		out := StringFormatter([]interface{}{fmtObj, makeObjectRefArray(nil)})
+		if got, want := object.GoStringFromStringObject(out.(*object.Object)), "[null]"; got != want {
+			t.Errorf("StringFormatter() = %q, want %q", got, want)
+		}
+	})
+}
+
+func TestStringFormatter_StringConversionWithBooleanValueField(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	global := globals.GetGlobalRef()
+	originalInvoker := global.FuncInvokeGFunction
+	t.Cleanup(func() { global.FuncInvokeGFunction = originalInvoker })
+	className := "example/BooleanHolder"
+	receiver := object.MakeEmptyObjectWithClassName(&className)
+	receiver.FieldTable["value"] = object.Field{Ftype: types.Bool, Fvalue: true}
+	global.FuncInvokeGFunction = func(method string, args []any) any {
+		if method != className+".toString()Ljava/lang/String;" || len(args) != 1 || args[0] != receiver {
+			t.Errorf("unexpected invocation %q with arguments %v", method, args)
+		}
+		return object.StringObjectFromGoString("boolean holder")
+	}
+
+	fmtObj := object.StringObjectFromGoString("%s")
+	out := StringFormatter([]interface{}{fmtObj, makeObjectRefArray(receiver)})
+	if got, want := object.GoStringFromStringObject(out.(*object.Object)), "boolean holder"; got != want {
+		t.Errorf("StringFormatter() = %q, want %q", got, want)
 	}
 }
 
@@ -368,10 +491,12 @@ func TestStringFormatter_Char_Uppercase_C(t *testing.T) {
 }
 
 func TestStringFormatter_BigInteger_D_and_X(t *testing.T) {
+	_ = globals.InitGlobals("test")
+
 	fmtObj := object.StringObjectFromGoString("%d %x")
 	bi := javaMath.BigIntegerFromInt64(255)
 	argsArr := makeObjectRefArray(bi, bi)
-	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	out := StringFormatter([]any{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
 	expected := "255 ff"
 	if got != expected {

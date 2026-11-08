@@ -40,8 +40,9 @@ type GMeth struct {
 
 // G function error block.
 type GErrBlk struct {
-	ExceptionType int
-	ErrMsg        string
+	ExceptionType  int
+	ErrMsg         string
+	methodNotFound bool
 }
 
 // GetGErrBlk constructs a G function error block. Return a ptr to it.
@@ -50,6 +51,19 @@ func GetGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 	gErrBlk.ExceptionType = exceptionType
 	gErrBlk.ErrMsg = errMsg
 	return &gErrBlk
+}
+
+// Error returns the message in the G function error block.
+func (err *GErrBlk) Error() string {
+	if err == nil {
+		return "<nil>"
+	}
+	return err.ErrMsg
+}
+
+// IsMethodNotFound reports whether the block represents an unregistered G function.
+func (err *GErrBlk) IsMethodNotFound() bool {
+	return err != nil && err.methodNotFound
 }
 
 // File I/O and stream Field keys:
@@ -179,7 +193,7 @@ func Invoke(whichFunc string, params []any) any {
 	if !ret {
 		errMsg := fmt.Sprintf("Invoke: G function %s not found", whichFunc)
 		//exceptions.ThrowExNil(excNames.NoSuchMethodException, errMsg)
-		return GetGErrBlk(excNames.NoSuchMethodException, errMsg)
+		return &GErrBlk{ExceptionType: excNames.NoSuchMethodException, ErrMsg: errMsg, methodNotFound: true}
 	}
 	return MethodSignatures[whichFunc].GFunction(params)
 }

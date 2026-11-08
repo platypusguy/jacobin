@@ -13,7 +13,6 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/gfunction/misc"
 	"jacobin/src/object"
-	"jacobin/src/trace"
 	"jacobin/src/types"
 	"strconv"
 )
@@ -529,12 +528,8 @@ func getPrintStreamWriter(arg any) (io.Writer, bool) {
 				return getPrintStreamWriter(childObj)
 			}
 		}
-		errMsg := fmt.Sprintf("getPrintStreamWriter: field out not found, arg type: %T", arg)
-		trace.Error(errMsg)
 		return nil, false
 	}
-	errMsg := fmt.Sprintf("getPrintStreamWriter: arg is neither io.Writer or an object, type: %T", arg)
-	trace.Error(errMsg)
 	return nil, false
 }
 
