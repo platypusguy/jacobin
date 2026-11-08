@@ -7,7 +7,11 @@
 package javaLang
 
 import (
+	"fmt"
+	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/object"
+	"jacobin/src/trace"
 )
 
 func Load_Lang_Invoke_StringConcatFactory() {
@@ -26,7 +30,7 @@ func Load_Lang_Invoke_StringConcatFactory() {
 	ghelpers.MethodSignatures["java/lang/invoke/StringConcatFactory.makeConcatWithConstants(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"] =
 		ghelpers.GMeth{
 			ParamSlots: 5,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  stringConcatFactory_makeConcatWithConstants,
 		}
 
 	ghelpers.MethodSignatures["java/lang/invoke/StringConcatFactory.makeConcatWithTemplate(Ljava/util/List;Ljava/util/List;)Ljava/lang/invoke/MethodHandle;"] =
@@ -46,5 +50,19 @@ func Load_Lang_Invoke_StringConcatFactory() {
 			ParamSlots: 3,
 			GFunction:  ghelpers.TrapPreview,
 		}
+}
 
+func stringConcatFactory_makeConcatWithConstants(params []any) any {
+	if len(params) != 5 {
+		errMsg := fmt.Sprintf(
+			"stringConcatFactory_makeConcatWithConstants: incorrect number of parameters: %d (should be 5)",
+			len(params),
+		)
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.MalformedParametersException, errMsg)
+	}
+
+	trace.Raw(fmt.Sprintf("name of method: %s", object.GoStringFromStringObject(params[1].(*object.Object))))
+
+	return nil
 }

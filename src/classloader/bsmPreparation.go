@@ -170,7 +170,7 @@ func invokeBSM(cp *CPool, bsm BootstrapMethod, bsmHandle *object.Object, params 
 		}
 		return r, nil
 	case *ghelpers.GErrBlk:
-		return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned FErrBlk %s", bsmFQN, result.(*ghelpers.GErrBlk).ErrMsg)
+		return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned error %s", bsmFQN, result.(*ghelpers.GErrBlk).ErrMsg)
 	case nil:
 		return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned nil", bsmFQN)
 	default:
