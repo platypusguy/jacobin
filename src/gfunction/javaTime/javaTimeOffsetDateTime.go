@@ -726,13 +726,8 @@ func offsetDateTimeNowZone(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "OffsetDateTime.now: zone is null")
 	}
 	zoneObj := params[0].(*object.Object)
-	zoneID := getZoneIdString(zoneObj)
-	loc, err := time.LoadLocation(zoneID)
-	if err != nil {
-		loc = time.UTC
-	}
-	now := time.Now().In(loc)
-	return offsetDateTimeFromTimeAndZone(now, zoneObj)
+	now := time.Now()
+	return offsetDateTimeOfInstant(createInstant(now.Unix(), int64(now.Nanosecond())), zoneObj)
 }
 
 func offsetDateTimeNowClock(params []any) any {
