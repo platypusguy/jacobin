@@ -13,12 +13,14 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/statics"
 	"jacobin/src/types"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
-var dtFormatterInitOnce sync.Once
+var dtFormatterMutex sync.Mutex
+var dtFormatterInitialized bool = false
 
 // Standard DateTimeFormatter constants
 var (
@@ -40,7 +42,9 @@ var (
 )
 
 func initStandardFormatters() {
-	dtFormatterInitOnce.Do(func() {
+	dtFormatterMutex.Lock()
+	defer dtFormatterMutex.Unlock()
+	if !dtFormatterInitialized {
 		formatterISO_LOCAL_DATE = createDateTimeFormatterObject("yyyy-MM-dd", nil, nil, nil)
 		formatterISO_OFFSET_DATE = createDateTimeFormatterObject("yyyy-MM-ddXXX", nil, nil, nil)
 		formatterISO_DATE = createDateTimeFormatterObject("yyyy-MM-dd[XXX]", nil, nil, nil)
@@ -56,28 +60,33 @@ func initStandardFormatters() {
 		formatterISO_INSTANT = createDateTimeFormatterObject("yyyy-MM-dd'T'HH:mm:ss.SSSX", nil, nil, nil)
 		formatterBASIC_ISO_DATE = createDateTimeFormatterObject("yyyyMMdd", nil, nil, nil)
 		formatterRFC_1123_DATE_TIME = createDateTimeFormatterObject("EEE, d MMM yyyy HH:mm:ss z", nil, nil, nil)
+		dtFormatterInitialized = true
+	}
 
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_LOCAL_DATE", statics.Static{Type: types.Ref, Value: formatterISO_LOCAL_DATE})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_OFFSET_DATE", statics.Static{Type: types.Ref, Value: formatterISO_OFFSET_DATE})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_DATE", statics.Static{Type: types.Ref, Value: formatterISO_DATE})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_LOCAL_TIME", statics.Static{Type: types.Ref, Value: formatterISO_LOCAL_TIME})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_OFFSET_TIME", statics.Static{Type: types.Ref, Value: formatterISO_OFFSET_TIME})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_TIME", statics.Static{Type: types.Ref, Value: formatterISO_TIME})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_LOCAL_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterISO_LOCAL_DATE_TIME})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_OFFSET_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterISO_OFFSET_DATE_TIME})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_ZONED_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterISO_ZONED_DATE_TIME})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterISO_DATE_TIME})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_ORDINAL_DATE", statics.Static{Type: types.Ref, Value: formatterISO_ORDINAL_DATE})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_WEEK_DATE", statics.Static{Type: types.Ref, Value: formatterISO_WEEK_DATE})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_INSTANT", statics.Static{Type: types.Ref, Value: formatterISO_INSTANT})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".BASIC_ISO_DATE", statics.Static{Type: types.Ref, Value: formatterBASIC_ISO_DATE})
-		_ = statics.AddStatic(classNameDateTimeFormatter+".RFC_1123_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterRFC_1123_DATE_TIME})
-	})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_LOCAL_DATE", statics.Static{Type: types.Ref, Value: formatterISO_LOCAL_DATE})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_OFFSET_DATE", statics.Static{Type: types.Ref, Value: formatterISO_OFFSET_DATE})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_DATE", statics.Static{Type: types.Ref, Value: formatterISO_DATE})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_LOCAL_TIME", statics.Static{Type: types.Ref, Value: formatterISO_LOCAL_TIME})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_OFFSET_TIME", statics.Static{Type: types.Ref, Value: formatterISO_OFFSET_TIME})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_TIME", statics.Static{Type: types.Ref, Value: formatterISO_TIME})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_LOCAL_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterISO_LOCAL_DATE_TIME})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_OFFSET_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterISO_OFFSET_DATE_TIME})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_ZONED_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterISO_ZONED_DATE_TIME})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterISO_DATE_TIME})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_ORDINAL_DATE", statics.Static{Type: types.Ref, Value: formatterISO_ORDINAL_DATE})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_WEEK_DATE", statics.Static{Type: types.Ref, Value: formatterISO_WEEK_DATE})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".ISO_INSTANT", statics.Static{Type: types.Ref, Value: formatterISO_INSTANT})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".BASIC_ISO_DATE", statics.Static{Type: types.Ref, Value: formatterBASIC_ISO_DATE})
+	_ = statics.AddStatic(classNameDateTimeFormatter+".RFC_1123_DATE_TIME", statics.Static{Type: types.Ref, Value: formatterRFC_1123_DATE_TIME})
 }
 
 // Load_Time_Format_DateTimeFormatter registers all java/time/format/DateTimeFormatter methods.
 func Load_Time_Format_DateTimeFormatter() {
-	initStandardFormatters()
+	ghelpers.MethodSignatures["java/time/format/DateTimeFormatter.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  dateTimeFormatterClinit,
+		}
 
 	// Factories
 	ghelpers.MethodSignatures["java/time/format/DateTimeFormatter.ofPattern(Ljava/lang/String;)Ljava/time/format/DateTimeFormatter;"] =
@@ -271,6 +280,11 @@ func Load_Time_Format_DateTimeFormatter() {
 			ParamSlots: 0,
 			GFunction:  dateTimeFormatterToString,
 		}
+}
+
+func dateTimeFormatterClinit([]any) any {
+	initStandardFormatters()
+	return nil
 }
 
 // ofPattern(String pattern)
@@ -692,6 +706,194 @@ func getObjectClassName(obj *object.Object) string {
 	return object.GoStringFromStringPoolIndex(obj.KlassName)
 }
 
+func javaPatternToGoLayout(pattern string) string {
+	var result strings.Builder
+	inQuote := false
+	i := 0
+	runes := []rune(pattern)
+	n := len(runes)
+
+	for i < n {
+		ch := runes[i]
+		if ch == '\'' {
+			if i+1 < n && runes[i+1] == '\'' {
+				result.WriteByte('\'')
+				i += 2
+				continue
+			}
+			inQuote = !inQuote
+			i++
+			continue
+		}
+		if inQuote {
+			result.WriteRune(ch)
+			i++
+			continue
+		}
+
+		if ch == '[' || ch == ']' {
+			i++
+			continue
+		}
+
+		if (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') {
+			start := i
+			for i < n && runes[i] == ch {
+				i++
+			}
+			token := string(runes[start:i])
+			count := len(token)
+
+			switch ch {
+			case 'y', 'u':
+				if count == 2 {
+					result.WriteString("06")
+				} else {
+					result.WriteString("2006")
+				}
+			case 'M', 'L':
+				switch {
+				case count >= 4:
+					result.WriteString("January")
+				case count == 3:
+					result.WriteString("Jan")
+				case count == 2:
+					result.WriteString("01")
+				default:
+					result.WriteString("1")
+				}
+			case 'd':
+				if count >= 2 {
+					result.WriteString("02")
+				} else {
+					result.WriteString("2")
+				}
+			case 'H', 'k':
+				if count >= 2 {
+					result.WriteString("15")
+				} else {
+					result.WriteString("15")
+				}
+			case 'h', 'K':
+				if count >= 2 {
+					result.WriteString("03")
+				} else {
+					result.WriteString("3")
+				}
+			case 'm':
+				if count >= 2 {
+					result.WriteString("04")
+				} else {
+					result.WriteString("4")
+				}
+			case 's':
+				if count >= 2 {
+					result.WriteString("05")
+				} else {
+					result.WriteString("5")
+				}
+			case 'S':
+				switch {
+				case count >= 9:
+					result.WriteString("000000000")
+				case count >= 6:
+					result.WriteString("000000")
+				case count >= 3:
+					result.WriteString("000")
+				default:
+					result.WriteString(strings.Repeat("0", count))
+				}
+			case 'a':
+				result.WriteString("PM")
+			case 'E':
+				if count >= 4 {
+					result.WriteString("Monday")
+				} else {
+					result.WriteString("Mon")
+				}
+			case 'e', 'c':
+				if count >= 4 {
+					result.WriteString("Monday")
+				} else if count == 3 {
+					result.WriteString("Mon")
+				} else if count == 2 {
+					result.WriteString("01")
+				} else {
+					result.WriteString("1")
+				}
+			case 'X', 'x':
+				if count >= 3 {
+					result.WriteString("Z07:00")
+				} else if count == 2 {
+					result.WriteString("Z0700")
+				} else {
+					result.WriteString("Z07")
+				}
+			case 'Z':
+				if count >= 5 {
+					result.WriteString("Z07:00")
+				} else {
+					result.WriteString("-0700")
+				}
+			case 'z', 'V':
+				result.WriteString("MST")
+			default:
+				result.WriteString(token)
+			}
+		} else {
+			result.WriteRune(ch)
+			i++
+		}
+	}
+	return result.String()
+}
+
+func cleanPatternForTemporal(pat string, hasDate, hasTime, hasZone bool) string {
+	res := pat
+	if !hasZone {
+		// remove bracketed zone patterns like [XXX] or ['['VV']']
+		for {
+			start := strings.Index(res, "[")
+			if start < 0 {
+				break
+			}
+			end := strings.Index(res[start:], "]")
+			if end < 0 {
+				break
+			}
+			end += start
+			content := res[start+1 : end]
+			if strings.ContainsAny(content, "XxZzV") && !strings.ContainsAny(content, "yuMLdDEeHhkKmsS") {
+				res = res[:start] + res[end+1:]
+			} else {
+				break
+			}
+		}
+	}
+	if !hasTime {
+		for {
+			start := strings.Index(res, "[")
+			if start < 0 {
+				break
+			}
+			end := strings.Index(res[start:], "]")
+			if end < 0 {
+				break
+			}
+			end += start
+			content := res[start+1 : end]
+			if strings.ContainsAny(content, "HhkKmsSa") && !strings.ContainsAny(content, "yuMLdDEe") {
+				res = res[:start] + res[end+1:]
+			} else {
+				break
+			}
+		}
+	}
+	res = strings.ReplaceAll(res, "[", "")
+	res = strings.ReplaceAll(res, "]", "")
+	return res
+}
+
 func formatTemporalWithPattern(formatter *object.Object, temporal *object.Object) (string, error) {
 	pat := getFormatterPattern(formatter)
 	className := getObjectClassName(temporal)
@@ -699,9 +901,53 @@ func formatTemporalWithPattern(formatter *object.Object, temporal *object.Object
 	// Extract standard components from temporal if possible
 	hasDate := false
 	hasTime := false
+	hasZone := false
 	var year, month, day, hour, minute, second, nano int64
+	var offsetSec int64
 
-	if strings.Contains(className, "LocalDateTime") {
+	if strings.Contains(className, "OffsetDateTime") {
+		ldt := getOffsetDateTimeDateTime(temporal)
+		if ldt != nil {
+			ld := getLocalDateTimeDate(ldt)
+			lt := getLocalDateTimeTime(ldt)
+			if ld != nil {
+				if y, m, d, ok := getLocalDateYMD(ld); ok {
+					hasDate = true
+					year, month, day = y, m, d
+				}
+			}
+			if lt != nil {
+				hasTime = true
+				hour, minute, second, nano = getLocalTimeHMSN(lt)
+			}
+		}
+		off := getOffsetDateTimeOffset(temporal)
+		if off != nil {
+			hasZone = true
+			offsetSec = int64(getZoneOffsetTotalSeconds(off))
+		}
+	} else if strings.Contains(className, "ZonedDateTime") {
+		ldt := getZonedDateTimeLocalDateTime(temporal)
+		if ldt != nil {
+			ld := getLocalDateTimeDate(ldt)
+			lt := getLocalDateTimeTime(ldt)
+			if ld != nil {
+				if y, m, d, ok := getLocalDateYMD(ld); ok {
+					hasDate = true
+					year, month, day = y, m, d
+				}
+			}
+			if lt != nil {
+				hasTime = true
+				hour, minute, second, nano = getLocalTimeHMSN(lt)
+			}
+		}
+		off := getZonedDateTimeOffset(temporal)
+		if off != nil {
+			hasZone = true
+			offsetSec = int64(getZoneOffsetTotalSeconds(off))
+		}
+	} else if strings.Contains(className, "LocalDateTime") {
 		ld := getLocalDateTimeDate(temporal)
 		lt := getLocalDateTimeTime(temporal)
 		if ld != nil {
@@ -735,36 +981,24 @@ func formatTemporalWithPattern(formatter *object.Object, temporal *object.Object
 		return "", nil
 	}
 
-	res := pat
-	if hasDate {
-		res = strings.ReplaceAll(res, "yyyy", fmt.Sprintf("%04d", year))
-		res = strings.ReplaceAll(res, "MM", fmt.Sprintf("%02d", month))
-		res = strings.ReplaceAll(res, "dd", fmt.Sprintf("%02d", day))
-		res = strings.ReplaceAll(res, "d", fmt.Sprintf("%d", day))
-		res = strings.ReplaceAll(res, "M", fmt.Sprintf("%d", month))
-	}
-	if hasTime {
-		res = strings.ReplaceAll(res, "HH", fmt.Sprintf("%02d", hour))
-		res = strings.ReplaceAll(res, "mm", fmt.Sprintf("%02d", minute))
-		res = strings.ReplaceAll(res, "ss", fmt.Sprintf("%02d", second))
-		if nano > 0 {
-			res = strings.ReplaceAll(res, "SSS", fmt.Sprintf("%03d", nano/1000000))
-			res = strings.ReplaceAll(res, "SSSSSSSSS", fmt.Sprintf("%09d", nano))
-		} else {
-			res = strings.ReplaceAll(res, ".SSS", "")
-			res = strings.ReplaceAll(res, ".SSSSSSSSS", "")
-			res = strings.ReplaceAll(res, "SSS", "000")
-		}
-	}
-	res = strings.ReplaceAll(res, "'T'", "T")
-	res = strings.ReplaceAll(res, "[", "")
-	res = strings.ReplaceAll(res, "]", "")
-	res = strings.ReplaceAll(res, "XXX", "Z")
-	res = strings.ReplaceAll(res, "X", "Z")
-	res = strings.ReplaceAll(res, "VV", "UTC")
-	res = strings.ReplaceAll(res, "z", "UTC")
+	cleanedPat := cleanPatternForTemporal(pat, hasDate, hasTime, hasZone)
+	layout := javaPatternToGoLayout(cleanedPat)
 
-	return res, nil
+	var loc *time.Location
+	if hasZone {
+		loc = time.FixedZone("UTC", int(offsetSec))
+	} else {
+		loc = time.UTC
+	}
+
+	y := int(year)
+	if !hasDate {
+		y = 2000
+		month = 1
+		day = 1
+	}
+	t := time.Date(y, time.Month(month), int(day), int(hour), int(minute), int(second), int(nano), loc)
+	return t.Format(layout), nil
 }
 
 // parse(CharSequence text)
@@ -879,14 +1113,62 @@ func dateTimeFormatterParseUnresolved(params []any) any {
 
 func parseTextToTemporalAccessor(formatter *object.Object, text string) (*object.Object, error) {
 	text = strings.TrimSpace(text)
-	// Try ISO LocalDateTime first: 2023-11-05T08:14:00 or 2023-11-05 08:14:00
+	pat := getFormatterPattern(formatter)
+	if pat != "" {
+		cleanedPat := strings.ReplaceAll(pat, "[", "")
+		cleanedPat = strings.ReplaceAll(cleanedPat, "]", "")
+		layout := javaPatternToGoLayout(cleanedPat)
+		if t, err := time.Parse(layout, text); err == nil {
+			hasDate := strings.ContainsAny(pat, "yuMLdDEe")
+			hasTime := strings.ContainsAny(pat, "HhkKmsSa")
+			hasZone := strings.ContainsAny(pat, "XxZzV")
+
+			if hasDate && hasTime {
+				ld := CreateLocalDate(int64(t.Year()), int64(t.Month()), int64(t.Day()))
+				lt := createLocalTime(int64(t.Hour()), int64(t.Minute()), int64(t.Second()), int64(t.Nanosecond()))
+				ldt := createLocalDateTime(ld, lt)
+				if hasZone {
+					_, off := t.Zone()
+					offsetObj := createZoneOffset(int64(off))
+					return createZonedDateTime(ldt, offsetObj, offsetObj), nil
+				}
+				return ldt, nil
+			} else if hasDate {
+				return CreateLocalDate(int64(t.Year()), int64(t.Month()), int64(t.Day())), nil
+			} else if hasTime {
+				return createLocalTime(int64(t.Hour()), int64(t.Minute()), int64(t.Second()), int64(t.Nanosecond())), nil
+			} else {
+				return CreateLocalDate(int64(t.Year()), int64(t.Month()), int64(t.Day())), nil
+			}
+		}
+	}
+
+	// Try ZonedDateTime ISO string first if it has zone info
+	if strings.Contains(text, "[") || strings.HasSuffix(text, "Z") || strings.HasSuffix(text, "z") ||
+		(strings.Contains(text, "T") && (strings.Contains(text, "+") || strings.Count(text, "-") > 2)) {
+		zdtRes := parseZonedDateTimeString(text)
+		if zdtObj, ok := zdtRes.(*object.Object); ok && zdtObj != nil {
+			return zdtObj, nil
+		}
+	}
+
+	// Try ISO LocalDateTime: 2023-11-05T08:14:00 or 2023-11-05 08:14:00
 	if strings.Contains(text, "T") || (strings.Contains(text, "-") && strings.Contains(text, ":")) {
 		var year, month, day, hour, minute, second int
 		n, _ := fmt.Sscanf(text, "%d-%d-%dT%d:%d:%d", &year, &month, &day, &hour, &minute, &second)
 		if n < 5 {
 			n, _ = fmt.Sscanf(text, "%d-%d-%d %d:%d:%d", &year, &month, &day, &hour, &minute, &second)
 		}
-		if n >= 5 {
+		if n < 4 {
+			n, _ = fmt.Sscanf(text, "%d-%d-%dT%d:%d:%d", &year, &month, &day, &hour, &minute, &second)
+		}
+		if n < 4 {
+			n, _ = fmt.Sscanf(text, "%d-%d-%dT%d:%d", &year, &month, &day, &hour, &minute)
+		}
+		if n < 4 {
+			n, _ = fmt.Sscanf(text, "%d-%d-%d %d:%d", &year, &month, &day, &hour, &minute)
+		}
+		if n >= 4 {
 			ld := CreateLocalDate(int64(year), int64(month), int64(day))
 			lt := createLocalTime(int64(hour), int64(minute), int64(second), 0)
 			return createLocalDateTime(ld, lt), nil
@@ -918,6 +1200,11 @@ func parseTextToTemporalAccessor(formatter *object.Object, text string) (*object
 		if n == 3 && month >= 1 && month <= 12 && day >= 1 && day <= 31 {
 			return CreateLocalDate(int64(year), int64(month), int64(day)), nil
 		}
+	}
+
+	// Try Year integer: e.g. 2024
+	if yVal, err := strconv.ParseInt(text, 10, 64); err == nil && len(text) <= 9 {
+		return createYear(yVal), nil
 	}
 
 	// Try RFC 1123 or time.RFC1123 parsing

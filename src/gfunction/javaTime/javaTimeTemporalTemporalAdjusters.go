@@ -155,6 +155,9 @@ func Load_Time_Temporal_TemporalAdjusters() {
 }
 
 func temporalAdjustersClinit(_ []any) any {
+	temporalAdjustersMutex.Lock()
+	temporalAdjustersInitialized = false
+	temporalAdjustersMutex.Unlock()
 	ensureTemporalAdjustersInited()
 	return nil
 }

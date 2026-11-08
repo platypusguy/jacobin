@@ -89,55 +89,55 @@ func Load_Time_Format_FormatStyle() {
 
 	ghelpers.MethodSignatures["java/time/format/FormatStyle.<init>(Ljava/lang/String;I)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  formatStyleInit,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/FormatStyle.compareTo(Ljava/lang/Enum;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  formatStyleCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/FormatStyle.compareTo(Ljava/lang/Object;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  formatStyleCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/FormatStyle.compareTo(Ljava/time/format/FormatStyle;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  formatStyleCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/FormatStyle.equals(Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  formatStyleEquals,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/FormatStyle.hashCode()I"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  formatStyleHashCode,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/FormatStyle.name()Ljava/lang/String;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  formatStyleName,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/FormatStyle.ordinal()I"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  formatStyleOrdinal,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/FormatStyle.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  formatStyleToString,
 		}
 

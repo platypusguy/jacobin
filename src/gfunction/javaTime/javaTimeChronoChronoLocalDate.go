@@ -133,7 +133,7 @@ func Load_Time_Chrono_ChronoLocalDate() {
 
 	ghelpers.MethodSignatures["java/time/chrono/ChronoLocalDate.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/chrono/ChronoLocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  chronoLocalDateMinusUnit,
 		}
 
@@ -145,7 +145,7 @@ func Load_Time_Chrono_ChronoLocalDate() {
 
 	ghelpers.MethodSignatures["java/time/chrono/ChronoLocalDate.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/chrono/ChronoLocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  chronoLocalDatePlusUnit,
 		}
 
@@ -199,7 +199,7 @@ func Load_Time_Chrono_ChronoLocalDate() {
 
 	ghelpers.MethodSignatures["java/time/chrono/ChronoLocalDate.with(Ljava/time/temporal/TemporalField;J)Ljava/time/chrono/ChronoLocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  chronoLocalDateWithField,
 		}
 }
