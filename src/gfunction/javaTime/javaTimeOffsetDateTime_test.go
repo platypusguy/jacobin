@@ -13,6 +13,7 @@ import (
 	"jacobin/src/statics"
 	"jacobin/src/types"
 	"testing"
+	"time"
 )
 
 func offsetDateTimeTestInit() {
@@ -126,6 +127,29 @@ func TestOffsetDateTimeRegistration(t *testing.T) {
 		if _, ok := ghelpers.MethodSignatures[sig]; !ok {
 			t.Errorf("Missing signature: %s", sig)
 		}
+	}
+}
+
+func TestOffsetDateTimeNowWithZoneOffsetUsesOffsetForInstant(t *testing.T) {
+	offsetDateTimeTestInit()
+
+	zoneOffset := createZoneOffset(2 * 60 * 60)
+	start := time.Now().Unix()
+	result := offsetDateTimeNowZone([]any{zoneOffset})
+	end := time.Now().Unix()
+	odt, ok := result.(*object.Object)
+	if !ok {
+		t.Fatalf("offsetDateTimeNowZone returned %T, want *object.Object", result)
+	}
+
+	epochSecond := offsetDateTimeToEpochSecond([]any{odt})
+	if got := epochSecond.(int64); got < start || got > end {
+		t.Errorf("OffsetDateTime.now(ZoneOffset) epoch second = %d, want between %d and %d", got, start, end)
+	}
+
+	actualOffset := offsetDateTimeGetOffset([]any{odt}).(*object.Object)
+	if seconds, _ := getZoneOffsetTotalSecondsVal(actualOffset); seconds != 2*60*60 {
+		t.Errorf("OffsetDateTime.now(ZoneOffset) offset = %d seconds, want %d", seconds, 2*60*60)
 	}
 }
 
