@@ -65,6 +65,18 @@ func TestZoneRegionOfId(t *testing.T) {
 		t.Fatalf("ZoneRegion.ofId('Europe/London').getId() = %v, want Europe/London", getZoneIdString(obj))
 	}
 
+	// Valid standard regions: UTC, GMT, UT, Etc/GMT+1
+	for _, stdZone := range []string{"UTC", "GMT", "UT", "Etc/GMT+1"} {
+		resStd := zoneRegionOfId([]any{object.StringObjectFromGoString(stdZone), int64(1)})
+		if err, isErr := resStd.(*ghelpers.GErrBlk); isErr {
+			t.Fatalf("ZoneRegion.ofId(%q, true) error: %v", stdZone, err)
+		}
+		objStd := resStd.(*object.Object)
+		if getZoneIdString(objStd) != stdZone {
+			t.Fatalf("ZoneRegion.ofId(%q).getId() = %v, want %s", stdZone, getZoneIdString(objStd), stdZone)
+		}
+	}
+
 	// Null zoneId -> NPE
 	resNull := zoneRegionOfId([]any{object.Null, int64(1)})
 	if err, isErr := resNull.(*ghelpers.GErrBlk); !isErr {

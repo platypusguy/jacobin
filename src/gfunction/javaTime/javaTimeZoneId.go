@@ -332,23 +332,8 @@ func zoneIdOfInternal(zoneIdStr string, checkAvailable bool) any {
 	}
 
 	if checkAvailable {
-		ids, err := ghelpers.GetZoneIDs()
-		if err == nil && len(ids) > 0 {
-			found := false
-			for _, id := range ids {
-				if id == zoneIdStr {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return ghelpers.GetGErrBlk(excNames.DateTimeException, "Unknown time-zone ID: "+zoneIdStr)
-			}
-		} else {
-			// If TZDB could not be read, fallback to time.LoadLocation
-			if _, locErr := time.LoadLocation(zoneIdStr); locErr != nil {
-				return ghelpers.GetGErrBlk(excNames.DateTimeException, "Unknown time-zone ID: "+zoneIdStr)
-			}
+		if !isZoneIdAvailableInternal(zoneIdStr) {
+			return ghelpers.GetGErrBlk(excNames.DateTimeException, "Unknown time-zone ID: "+zoneIdStr)
 		}
 	}
 

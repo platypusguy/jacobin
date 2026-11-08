@@ -11,7 +11,7 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/types"
-	"time"
+	"strings"
 )
 
 var (
@@ -207,23 +207,33 @@ func zoneRegionOfId(params []any) any {
 		return err
 	}
 
+	if zoneIdStr == "UTC" || zoneIdStr == "GMT" || zoneIdStr == "UT" {
+		return createZoneRegion(zoneIdStr, createZoneRulesForOffset(createZoneOffset(0)))
+	}
+
+	for _, prefix := range []string{"UTC+", "UTC-", "GMT+", "GMT-", "UT+", "UT-"} {
+		if strings.HasPrefix(zoneIdStr, prefix) {
+			pfx := prefix[:len(prefix)-1]
+			offsetStr := zoneIdStr[len(pfx):]
+			offsetRes := zoneOffsetOf([]any{offsetStr})
+			if err, isErr := offsetRes.(*ghelpers.GErrBlk); isErr {
+				return err
+			}
+			offsetObj := offsetRes.(*object.Object)
+			totalSec := getZoneOffsetTotalSeconds(offsetObj)
+			var idStr string
+			if totalSec == 0 {
+				idStr = pfx
+			} else {
+				idStr = pfx + getZoneOffsetID(offsetObj)
+			}
+			return createZoneRegion(idStr, createZoneRulesForOffset(offsetObj))
+		}
+	}
+
 	if checkAvailable {
-		ids, err := ghelpers.GetZoneIDs()
-		if err == nil && len(ids) > 0 {
-			found := false
-			for _, id := range ids {
-				if id == zoneIdStr {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return ghelpers.GetGErrBlk(excNames.DateTimeException, "Unknown time-zone ID: "+zoneIdStr)
-			}
-		} else {
-			if _, locErr := time.LoadLocation(zoneIdStr); locErr != nil {
-				return ghelpers.GetGErrBlk(excNames.DateTimeException, "Unknown time-zone ID: "+zoneIdStr)
-			}
+		if !isZoneIdAvailableInternal(zoneIdStr) {
+			return ghelpers.GetGErrBlk(excNames.DateTimeException, "Unknown time-zone ID: "+zoneIdStr)
 		}
 	}
 
