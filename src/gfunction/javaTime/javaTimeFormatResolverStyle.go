@@ -88,55 +88,55 @@ func Load_Time_Format_ResolverStyle() {
 
 	ghelpers.MethodSignatures["java/time/format/ResolverStyle.<init>(Ljava/lang/String;I)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  resolverStyleInit,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/ResolverStyle.compareTo(Ljava/lang/Enum;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  resolverStyleCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/ResolverStyle.compareTo(Ljava/lang/Object;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  resolverStyleCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/ResolverStyle.compareTo(Ljava/time/format/ResolverStyle;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  resolverStyleCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/ResolverStyle.equals(Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  resolverStyleEquals,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/ResolverStyle.hashCode()I"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  resolverStyleHashCode,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/ResolverStyle.name()Ljava/lang/String;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  resolverStyleName,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/ResolverStyle.ordinal()I"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  resolverStyleOrdinal,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/ResolverStyle.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  resolverStyleToString,
 		}
 

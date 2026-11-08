@@ -14,32 +14,39 @@ import (
 	"jacobin/src/statics"
 	"jacobin/src/types"
 	"math"
+	"math/big"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var classNameDuration = "java/time/Duration"
+
+var (
+	durationMutex       sync.Mutex
+	durationInitialized bool
+)
 
 func Load_Time_Duration() {
 	// Static methods
 	ghelpers.MethodSignatures["java/time/Duration.<clinit>()V"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationClinit}
 	ghelpers.MethodSignatures["java/time/Duration.abs()Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationAbs}
-	ghelpers.MethodSignatures["java/time/Duration.between(Ljava/time/temporal/Temporal;Ljava/time/temporal/Temporal;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/time/Duration.between(Ljava/time/temporal/Temporal;Ljava/time/temporal/Temporal;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: durationBetween}
 	ghelpers.MethodSignatures["java/time/Duration.compareTo(Ljava/time/Duration;)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationCompareTo}
 	ghelpers.MethodSignatures["java/time/Duration.dividedBy(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationDividedByLong}
 	ghelpers.MethodSignatures["java/time/Duration.dividedBy(Ljava/time/Duration;)J"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationDividedByDuration}
 	ghelpers.MethodSignatures["java/time/Duration.equals(Ljava/lang/Object;)Z"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationEquals}
-	ghelpers.MethodSignatures["java/time/Duration.from(Ljava/time/temporal/TemporalAmount;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/time/Duration.get(Ljava/time/temporal/TemporalUnit;)J"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/time/Duration.from(Ljava/time/temporal/TemporalAmount;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationFrom}
+	ghelpers.MethodSignatures["java/time/Duration.get(Ljava/time/temporal/TemporalUnit;)J"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationGet}
 	ghelpers.MethodSignatures["java/time/Duration.getNano()I"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationGetNano}
 	ghelpers.MethodSignatures["java/time/Duration.getSeconds()J"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationGetSeconds}
-	ghelpers.MethodSignatures["java/time/Duration.getUnits()Ljava/util/List;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/time/Duration.getUnits()Ljava/util/List;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationGetUnits}
 	ghelpers.MethodSignatures["java/time/Duration.hashCode()I"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationHashCode}
 	ghelpers.MethodSignatures["java/time/Duration.isNegative()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationIsNegative}
 	ghelpers.MethodSignatures["java/time/Duration.isPositive()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationIsPositive}
 	ghelpers.MethodSignatures["java/time/Duration.isZero()Z"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationIsZero}
 	ghelpers.MethodSignatures["java/time/Duration.minus(Ljava/time/Duration;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinus}
-	ghelpers.MethodSignatures["java/time/Duration.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/time/Duration.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: durationMinusUnit}
 	ghelpers.MethodSignatures["java/time/Duration.minusDays(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinusDays}
 	ghelpers.MethodSignatures["java/time/Duration.minusHours(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinusHours}
 	ghelpers.MethodSignatures["java/time/Duration.minusMillis(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinusMillis}
@@ -48,7 +55,7 @@ func Load_Time_Duration() {
 	ghelpers.MethodSignatures["java/time/Duration.minusSeconds(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMinusSeconds}
 	ghelpers.MethodSignatures["java/time/Duration.multipliedBy(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationMultipliedBy}
 	ghelpers.MethodSignatures["java/time/Duration.negated()Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationNegated}
-	ghelpers.MethodSignatures["java/time/Duration.of(JLjava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/time/Duration.of(JLjava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: durationOf}
 	ghelpers.MethodSignatures["java/time/Duration.ofDays(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationOfDays}
 	ghelpers.MethodSignatures["java/time/Duration.ofHours(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationOfHours}
 	ghelpers.MethodSignatures["java/time/Duration.ofMillis(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationOfMillis}
@@ -59,7 +66,7 @@ func Load_Time_Duration() {
 	ghelpers.MethodSignatures["java/time/Duration.parse(Ljava/lang/CharSequence;)Ljava/time/Duration;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: durationParse}
 	ghelpers.MethodSignatures["java/time/Duration.plus(Ljava/time/Duration;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationPlus}
-	ghelpers.MethodSignatures["java/time/Duration.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/time/Duration.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 2, GFunction: durationPlusUnit}
 	ghelpers.MethodSignatures["java/time/Duration.plusDays(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationPlusDays}
 	ghelpers.MethodSignatures["java/time/Duration.plusHours(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationPlusHours}
 	ghelpers.MethodSignatures["java/time/Duration.plusMillis(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationPlusMillis}
@@ -79,11 +86,16 @@ func Load_Time_Duration() {
 	ghelpers.MethodSignatures["java/time/Duration.toSeconds()J"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationToSeconds}
 	ghelpers.MethodSignatures["java/time/Duration.toSecondsPart()I"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationToSecondsPart}
 	ghelpers.MethodSignatures["java/time/Duration.toString()Ljava/lang/String;"] = ghelpers.GMeth{ParamSlots: 0, GFunction: durationToString}
-	ghelpers.MethodSignatures["java/time/Duration.truncatedTo(Ljava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/time/Duration.truncatedTo(Ljava/time/temporal/TemporalUnit;)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationTruncatedTo}
 	ghelpers.MethodSignatures["java/time/Duration.withNanos(I)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationWithNanos}
 	ghelpers.MethodSignatures["java/time/Duration.withSeconds(J)Ljava/time/Duration;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationWithSeconds}
-	ghelpers.MethodSignatures["java/time/Duration.addTo(Ljava/time/temporal/Temporal;)Ljava/time/temporal/Temporal;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/time/Duration.subtractFrom(Ljava/time/temporal/Temporal;)Ljava/time/temporal/Temporal;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/time/Duration.addTo(Ljava/time/temporal/Temporal;)Ljava/time/temporal/Temporal;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationAddTo}
+	ghelpers.MethodSignatures["java/time/Duration.subtractFrom(Ljava/time/temporal/Temporal;)Ljava/time/temporal/Temporal;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: durationSubtractFrom}
+}
+
+// CreateDuration creates a new Duration object
+func CreateDuration(seconds int64, nanos int32) *object.Object {
+	return createDuration(seconds, nanos)
 }
 
 // Helper to create a new Duration object
@@ -92,6 +104,23 @@ func createDuration(seconds int64, nanos int32) *object.Object {
 	obj.FieldTable["seconds"] = object.Field{Ftype: types.Long, Fvalue: seconds}
 	obj.FieldTable["nanos"] = object.Field{Ftype: types.Int, Fvalue: int64(nanos)}
 	return obj
+}
+
+func getDurationSecondsNanos(dur *object.Object) (int64, int32, bool) {
+	if dur == nil || dur.FieldTable == nil {
+		return 0, 0, false
+	}
+	secFld, okSec := dur.FieldTable["seconds"]
+	nanoFld, okNano := dur.FieldTable["nanos"]
+	if !okSec || !okNano {
+		return 0, 0, false
+	}
+	sec, ok1 := getInt64Val(secFld.Fvalue)
+	nano, ok2 := getInt64Val(nanoFld.Fvalue)
+	if !ok1 || !ok2 {
+		return 0, 0, false
+	}
+	return sec, int32(nano), true
 }
 
 func addExact(a, b int64) (int64, *ghelpers.GErrBlk) {
@@ -439,9 +468,15 @@ func durationMinusDays(params []interface{}) interface{} {
 	return durationPlusDays([]interface{}{self, -daysToSub})
 }
 
-func durationMultipliedBy(params []interface{}) interface{} {
+func durationMultipliedBy(params []any) any {
+	if len(params) < 2 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.multipliedBy: self is null")
+	}
 	self := params[0].(*object.Object)
-	multiplicand := params[1].(int64)
+	multiplicand, ok := getInt64Val(params[1])
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Duration.multipliedBy: invalid multiplicand")
+	}
 	if multiplicand == 0 {
 		return createDuration(0, 0)
 	}
@@ -451,53 +486,35 @@ func durationMultipliedBy(params []interface{}) interface{} {
 	s := self.FieldTable["seconds"].Fvalue.(int64)
 	n := self.FieldTable["nanos"].Fvalue.(int64)
 
-	resSeconds, err := multiplyExact(s, multiplicand)
-	if err != nil {
-		return err
-	}
-	resNanos, err := multiplyExact(n, multiplicand)
-	if err != nil {
-		// If nano multiplication overflows, we can still calculate it using seconds
-		secAdjustment := resNanos / nanosPerSecond
-		resNanos = resNanos % nanosPerSecond
-		if resNanos < 0 {
-			resNanos += nanosPerSecond
-			secAdjustment--
-		}
-		resSeconds, err = addExact(resSeconds, secAdjustment)
-		if err != nil {
-			return err
-		}
-		return createDuration(resSeconds, int32(resNanos))
-	}
-	// The above logic for nano overflow was flawed because multiplyExact already returned err
-	// Correct way to multiply nano:
-	// n * multiplicand = (n * multiplicand / 1B) * 1B + (n * multiplicand % 1B)
-	// Since n < 1B, n * multiplicand can only overflow if multiplicand is very large.
-	// Let's use float64 or big.Int for simplicity if it overflows?
-	// Actually, n * multiplicand for n < 1B and multiplicand < ~9B will not overflow int64.
-	// If it does, we can use a more robust way.
+	b := big.NewInt(s)
+	b.Mul(b, big.NewInt(nanosPerSecond))
+	b.Add(b, big.NewInt(n))
+	b.Mul(b, big.NewInt(multiplicand))
 
-	// Re-calculating with potential overflow in mind
-	resNanosLong := n * multiplicand
-	secAdjustment := resNanosLong / nanosPerSecond
-	resNanosFinal := resNanosLong % nanosPerSecond
-	if resNanosFinal < 0 {
-		resNanosFinal += nanosPerSecond
-		secAdjustment--
-	}
+	secBig := new(big.Int).Quo(b, big.NewInt(nanosPerSecond))
+	nanoBig := new(big.Int).Rem(b, big.NewInt(nanosPerSecond))
 
-	resSeconds, err = addExact(resSeconds, secAdjustment)
-	if err != nil {
-		return err
+	if !secBig.IsInt64() {
+		return ghelpers.GetGErrBlk(excNames.ArithmeticException, "long overflow")
 	}
-
-	return createDuration(resSeconds, int32(resNanosFinal))
+	sec := secBig.Int64()
+	nano := int32(nanoBig.Int64())
+	if nano < 0 {
+		nano += nanosPerSecond
+		sec--
+	}
+	return createDuration(sec, nano)
 }
 
-func durationDividedByLong(params []interface{}) interface{} {
+func durationDividedByLong(params []any) any {
+	if len(params) < 2 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.dividedBy: self is null")
+	}
 	self := params[0].(*object.Object)
-	divisor := params[1].(int64)
+	divisor, ok := getInt64Val(params[1])
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Duration.dividedBy: invalid divisor")
+	}
 	if divisor == 0 {
 		return ghelpers.GetGErrBlk(excNames.ArithmeticException, "Division by zero")
 	}
@@ -507,21 +524,32 @@ func durationDividedByLong(params []interface{}) interface{} {
 	s := self.FieldTable["seconds"].Fvalue.(int64)
 	n := self.FieldTable["nanos"].Fvalue.(int64)
 
-	totalNanos := s*nanosPerSecond + n
-	// Check for overflow if s is large.
-	if s > 9223372036 || s < -9223372036 {
-		// Fallback to simpler but less precise? Or just do it.
-		resSeconds := s / divisor
-		remainderSeconds := s % divisor
-		resNanos := (remainderSeconds*nanosPerSecond + n) / divisor
-		return createDuration(resSeconds, int32(resNanos))
-	}
+	b := big.NewInt(s)
+	b.Mul(b, big.NewInt(nanosPerSecond))
+	b.Add(b, big.NewInt(n))
 
-	resNanosTotal := totalNanos / divisor
-	return durationOfNanos([]interface{}{resNanosTotal})
+	resNanos := new(big.Int).Quo(b, big.NewInt(divisor))
+
+	secBig := new(big.Int).Quo(resNanos, big.NewInt(nanosPerSecond))
+	nanoBig := new(big.Int).Rem(resNanos, big.NewInt(nanosPerSecond))
+
+	if !secBig.IsInt64() {
+		return ghelpers.GetGErrBlk(excNames.ArithmeticException, "long overflow")
+	}
+	sec := secBig.Int64()
+	nano := int32(nanoBig.Int64())
+	if nano < 0 {
+		nano += nanosPerSecond
+		sec--
+	}
+	return createDuration(sec, nano)
 }
 
-func durationDividedByDuration(params []interface{}) interface{} {
+func durationDividedByDuration(params []any) any {
+	if len(params) < 2 || params[0] == nil || params[1] == nil ||
+		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.dividedBy: null argument")
+	}
 	self := params[0].(*object.Object)
 	divisor := params[1].(*object.Object)
 	s1 := self.FieldTable["seconds"].Fvalue.(int64)
@@ -533,15 +561,19 @@ func durationDividedByDuration(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.ArithmeticException, "Division by zero")
 	}
 
-	t1 := s1*nanosPerSecond + n1
-	t2 := s2*nanosPerSecond + n2
+	b1 := big.NewInt(s1)
+	b1.Mul(b1, big.NewInt(nanosPerSecond))
+	b1.Add(b1, big.NewInt(n1))
 
-	if (s1 > 9223372036 || s1 < -9223372036) || (s2 > 9223372036 || s2 < -9223372036) {
-		// Use big.Int for large durations
-		return int64(float64(s1) / float64(s2)) // VERY crude approximation
+	b2 := big.NewInt(s2)
+	b2.Mul(b2, big.NewInt(nanosPerSecond))
+	b2.Add(b2, big.NewInt(n2))
+
+	if b2.Sign() == 0 {
+		return ghelpers.GetGErrBlk(excNames.ArithmeticException, "Division by zero")
 	}
-
-	return t1 / t2
+	res := new(big.Int).Quo(b1, b2)
+	return res.Int64()
 }
 
 func durationNegated(params []interface{}) interface{} {
@@ -867,4 +899,440 @@ func durationParse(params []interface{}) interface{} {
 	}
 
 	return createDuration(seconds, nanos)
+}
+
+func getInstantSecNano(inst *object.Object) (int64, int64, bool) {
+	if inst == nil || inst.FieldTable == nil {
+		return 0, 0, false
+	}
+	secFld, ok1 := inst.FieldTable["seconds"]
+	nanoFld, ok2 := inst.FieldTable["nanos"]
+	if !ok1 || !ok2 {
+		return 0, 0, false
+	}
+	sec, ok1 := getInt64Val(secFld.Fvalue)
+	nano, ok2 := getInt64Val(nanoFld.Fvalue)
+	if !ok1 || !ok2 {
+		return 0, 0, false
+	}
+	return sec, nano, true
+}
+
+// Duration.between(Temporal startInclusive, Temporal endExclusive)
+func durationBetween(params []any) any {
+	if len(params) < 2 || params[0] == nil || params[1] == nil ||
+		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.between: null argument")
+	}
+	start := params[0].(*object.Object)
+	end := params[1].(*object.Object)
+
+	startClass := object.GoStringFromStringPoolIndex(start.KlassName)
+	endClass := object.GoStringFromStringPoolIndex(end.KlassName)
+
+	// Instant
+	if strings.Contains(startClass, "Instant") && strings.Contains(endClass, "Instant") {
+		sSec, sNano, ok1 := getInstantSecNano(start)
+		eSec, eNano, ok2 := getInstantSecNano(end)
+		if ok1 && ok2 {
+			secs, err := addExact(eSec, -sSec)
+			if err != nil {
+				return err
+			}
+			nanos := eNano - sNano
+			return durationOfSecondsNanos([]any{secs, nanos})
+		}
+	}
+
+	// LocalTime
+	if strings.Contains(startClass, "LocalTime") && strings.Contains(endClass, "LocalTime") {
+		sH, sM, sS, sN := getLocalTimeHMSN(start)
+		eH, eM, eS, eN := getLocalTimeHMSN(end)
+		startNanosOfDay := sH*3600_000_000_000 + sM*60_000_000_000 + sS*1_000_000_000 + sN
+		endNanosOfDay := eH*3600_000_000_000 + eM*60_000_000_000 + eS*1_000_000_000 + eN
+		nanosDiff := endNanosOfDay - startNanosOfDay
+		return durationOfNanos([]any{nanosDiff})
+	}
+
+	// LocalDateTime
+	if strings.Contains(startClass, "LocalDateTime") && strings.Contains(endClass, "LocalDateTime") {
+		sDate := getLocalDateTimeDate(start)
+		sTime := getLocalDateTimeTime(start)
+		eDate := getLocalDateTimeDate(end)
+		eTime := getLocalDateTimeTime(end)
+		if sDate != nil && sTime != nil && eDate != nil && eTime != nil {
+			sY, sM, sD, ok1 := getLocalDateYMD(sDate)
+			eY, eM, eD, ok2 := getLocalDateYMD(eDate)
+			if ok1 && ok2 {
+				sEpochDay := ymdToEpochDay(sY, sM, sD)
+				eEpochDay := ymdToEpochDay(eY, eM, eD)
+				dayDiff := eEpochDay - sEpochDay
+				secFromDays, err := multiplyExact(dayDiff, 86400)
+				if err != nil {
+					return err
+				}
+				sH, sMin, sS, sN := getLocalTimeHMSN(sTime)
+				eH, eMin, eS, eN := getLocalTimeHMSN(eTime)
+				sSecOfDay := sH*3600 + sMin*60 + sS
+				eSecOfDay := eH*3600 + eMin*60 + eS
+				secDiff := eSecOfDay - sSecOfDay
+				totalSec, err := addExact(secFromDays, secDiff)
+				if err != nil {
+					return err
+				}
+				nanosDiff := eN - sN
+				return durationOfSecondsNanos([]any{totalSec, nanosDiff})
+			}
+		}
+	}
+
+	// ZonedDateTime / OffsetDateTime
+	var sSec, eSec int64
+	var sNano, eNano int64
+	var okInstant1, okInstant2 bool
+
+	if strings.Contains(startClass, "ZonedDateTime") {
+		if inst, ok := zonedDateTimeToInstant([]any{start}).(*object.Object); ok {
+			sSec, sNano, okInstant1 = getInstantSecNano(inst)
+		}
+	} else if strings.Contains(startClass, "OffsetDateTime") {
+		if inst, ok := offsetDateTimeToInstant([]any{start}).(*object.Object); ok {
+			sSec, sNano, okInstant1 = getInstantSecNano(inst)
+		}
+	}
+
+	if strings.Contains(endClass, "ZonedDateTime") {
+		if inst, ok := zonedDateTimeToInstant([]any{end}).(*object.Object); ok {
+			eSec, eNano, okInstant2 = getInstantSecNano(inst)
+		}
+	} else if strings.Contains(endClass, "OffsetDateTime") {
+		if inst, ok := offsetDateTimeToInstant([]any{end}).(*object.Object); ok {
+			eSec, eNano, okInstant2 = getInstantSecNano(inst)
+		}
+	}
+
+	if okInstant1 && okInstant2 {
+		secs, err := addExact(eSec, -sSec)
+		if err != nil {
+			return err
+		}
+		nanos := eNano - sNano
+		return durationOfSecondsNanos([]any{secs, nanos})
+	}
+
+	// General fallback: try start.until(end, SECONDS) and start.until(end, NANOS)
+	nanosUnit := ghelpers.CreateTemporalUnit("NANOS")
+	secsUnit := ghelpers.CreateTemporalUnit("SECONDS")
+	resNanos := temporalUntil([]any{start, end, nanosUnit})
+	if nVal, ok := getInt64Val(resNanos); ok && resNanos != nil {
+		if _, isErr := resNanos.(*ghelpers.GErrBlk); !isErr {
+			return durationOfNanos([]any{nVal})
+		}
+	}
+
+	resSecs := temporalUntil([]any{start, end, secsUnit})
+	if sVal, ok := getInt64Val(resSecs); ok && resSecs != nil {
+		if _, isErr := resSecs.(*ghelpers.GErrBlk); !isErr {
+			return durationOfSeconds([]any{sVal})
+		}
+	}
+
+	return ghelpers.GetGErrBlk(excNames.DateTimeException, "Duration.between: unable to calculate duration between temporal objects")
+}
+
+// Duration.from(TemporalAmount amount)
+func durationFrom(params []any) any {
+	if len(params) < 1 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.from: null argument")
+	}
+	amount := params[0].(*object.Object)
+	className := object.GoStringFromStringPoolIndex(amount.KlassName)
+	if className == classNameDuration {
+		return amount
+	}
+	if sec, nano, ok := getDurationSecondsNanos(amount); ok {
+		return createDuration(sec, nano)
+	}
+
+	unitsObj := temporalAmountGetUnits([]any{amount})
+	if listObj, ok := unitsObj.(*object.Object); ok {
+		if valFld, ok := listObj.FieldTable["value"]; ok {
+			if unitsList, ok := valFld.Fvalue.([]any); ok {
+				var durObj = createDuration(0, 0)
+				for _, u := range unitsList {
+					if uObj, ok := u.(*object.Object); ok {
+						val := temporalAmountGet([]any{amount, uObj})
+						if v, ok := getInt64Val(val); ok {
+							unitName := getTemporalUnitName(uObj)
+							switch unitName {
+							case "SECONDS", "Seconds":
+								durObj = durationPlusSeconds([]any{durObj, v}).(*object.Object)
+							case "NANOS", "Nanos":
+								durObj = durationPlusNanos([]any{durObj, v}).(*object.Object)
+							default:
+								return ghelpers.GetGErrBlk(excNames.DateTimeException, fmt.Sprintf("Duration.from: unsupported unit %s", unitName))
+							}
+						} else {
+							return val
+						}
+					}
+				}
+				return durObj
+			}
+		}
+	}
+
+	return ghelpers.GetGErrBlk(excNames.DateTimeException, "Duration.from: unable to obtain Duration from TemporalAmount")
+}
+
+// Duration.get(TemporalUnit unit)
+func durationGet(params []any) any {
+	if len(params) < 2 || params[0] == nil || params[1] == nil ||
+		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.get: null argument")
+	}
+	self := params[0].(*object.Object)
+	unit := params[1].(*object.Object)
+
+	unitName := getTemporalUnitName(unit)
+	switch unitName {
+	case "SECONDS", "Seconds":
+		return self.FieldTable["seconds"].Fvalue.(int64)
+	case "NANOS", "Nanos":
+		return self.FieldTable["nanos"].Fvalue.(int64)
+	default:
+		return ghelpers.GetGErrBlk(excNames.DateTimeException, fmt.Sprintf("Unsupported unit: %s", unitName))
+	}
+}
+
+// Duration.getUnits()
+func durationGetUnits(params []any) any {
+	if len(params) < 1 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.getUnits: self is null")
+	}
+	ensureChronoUnitInited()
+	secUnit := ghelpers.CreateTemporalUnit("SECONDS")
+	nanosUnit := ghelpers.CreateTemporalUnit("NANOS")
+
+	listObj := object.MakeEmptyObjectWithClassName(&classNameArrayList)
+	listObj.FieldTable["value"] = object.Field{
+		Ftype:  types.Ref,
+		Fvalue: []any{secUnit, nanosUnit},
+	}
+	return listObj
+}
+
+// Duration.of(long amount, TemporalUnit unit)
+func durationOf(params []any) any {
+	if len(params) < 2 || params[1] == nil || object.IsNull(params[1].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.of: unit is null")
+	}
+	amount, ok := getInt64Val(params[0])
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Duration.of: invalid amount")
+	}
+	unit := params[1].(*object.Object)
+	unitName := getTemporalUnitName(unit)
+
+	switch unitName {
+	case "NANOS", "Nanos":
+		return durationOfNanos([]any{amount})
+	case "MICROS", "Micros":
+		sec := amount / 1000000
+		nano := (amount % 1000000) * 1000
+		if nano < 0 {
+			nano += nanosPerSecond
+			sec--
+		}
+		return durationOfSecondsNanos([]any{sec, nano})
+	case "MILLIS", "Millis":
+		return durationOfMillis([]any{amount})
+	case "SECONDS", "Seconds":
+		return durationOfSeconds([]any{amount})
+	case "MINUTES", "Minutes":
+		return durationOfMinutes([]any{amount})
+	case "HOURS", "Hours":
+		return durationOfHours([]any{amount})
+	case "HALF_DAYS", "HalfDays":
+		secs, err := multiplyExact(amount, 43200)
+		if err != nil {
+			return err
+		}
+		return durationOfSeconds([]any{secs})
+	case "DAYS", "Days":
+		return durationOfDays([]any{amount})
+	default:
+		if durFld, exists := unit.FieldTable["duration"]; exists {
+			if durObj, ok := durFld.Fvalue.(*object.Object); ok && durObj != nil {
+				if estFld, ok := unit.FieldTable["estimated"]; ok {
+					if estVal, ok := getInt64Val(estFld.Fvalue); ok && estVal != 0 {
+						return ghelpers.GetGErrBlk(excNames.DateTimeException, "Unit must not have an estimated duration")
+					}
+				}
+				return durationMultipliedBy([]any{durObj, amount})
+			}
+		}
+		return ghelpers.GetGErrBlk(excNames.DateTimeException, fmt.Sprintf("Unsupported unit: %s", unitName))
+	}
+}
+
+// Duration.plus(long amountToAdd, TemporalUnit unit)
+func durationPlusUnit(params []any) any {
+	if len(params) < 3 || params[0] == nil || params[2] == nil ||
+		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[2].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.plus: null argument")
+	}
+	self := params[0].(*object.Object)
+	amountToAdd, ok := getInt64Val(params[1])
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Duration.plus: invalid amount")
+	}
+	unit := params[2].(*object.Object)
+	if amountToAdd == 0 {
+		return self
+	}
+	toAdd := durationOf([]any{amountToAdd, unit})
+	if err, ok := toAdd.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	return durationPlus([]any{self, toAdd})
+}
+
+// Duration.minus(long amountToSubtract, TemporalUnit unit)
+func durationMinusUnit(params []any) any {
+	if len(params) < 3 || params[0] == nil || params[2] == nil ||
+		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[2].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.minus: null argument")
+	}
+	self := params[0].(*object.Object)
+	amountToSubtract, ok := getInt64Val(params[1])
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Duration.minus: invalid amount")
+	}
+	unit := params[2].(*object.Object)
+	if amountToSubtract == math.MinInt64 {
+		p1 := durationPlusUnit([]any{self, int64(math.MaxInt64), unit})
+		if err, ok := p1.(*ghelpers.GErrBlk); ok {
+			return err
+		}
+		return durationPlusUnit([]any{p1, int64(1), unit})
+	}
+	return durationPlusUnit([]any{self, -amountToSubtract, unit})
+}
+
+// Duration.truncatedTo(TemporalUnit unit)
+func durationTruncatedTo(params []any) any {
+	if len(params) < 2 || params[0] == nil || params[1] == nil ||
+		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.truncatedTo: null argument")
+	}
+	self := params[0].(*object.Object)
+	unit := params[1].(*object.Object)
+	unitName := getTemporalUnitName(unit)
+
+	var unitNanos int64
+	switch unitName {
+	case "NANOS", "Nanos":
+		return self
+	case "MICROS", "Micros":
+		unitNanos = 1000
+	case "MILLIS", "Millis":
+		unitNanos = 1_000_000
+	case "SECONDS", "Seconds":
+		unitNanos = 1_000_000_000
+	case "MINUTES", "Minutes":
+		unitNanos = 60 * 1_000_000_000
+	case "HOURS", "Hours":
+		unitNanos = 3600 * 1_000_000_000
+	case "HALF_DAYS", "HalfDays":
+		unitNanos = 43200 * 1_000_000_000
+	case "DAYS", "Days":
+		unitNanos = 86400 * 1_000_000_000
+	default:
+		return ghelpers.GetGErrBlk(excNames.DateTimeException, fmt.Sprintf("Unit is not supported for truncation: %s", unitName))
+	}
+
+	const nanosPerDay = int64(86400 * 1_000_000_000)
+	if nanosPerDay%unitNanos != 0 {
+		return ghelpers.GetGErrBlk(excNames.DateTimeException, "Unit does not divide evenly into a day")
+	}
+
+	seconds := self.FieldTable["seconds"].Fvalue.(int64)
+	nanos := self.FieldTable["nanos"].Fvalue.(int64)
+
+	nod := (seconds%86400)*1_000_000_000 + nanos
+	resultNod := (nod / unitNanos) * unitNanos
+	return durationPlusNanos([]any{self, resultNod - nod})
+}
+
+// Duration.addTo(Temporal temporal)
+func durationAddTo(params []any) any {
+	if len(params) < 2 || params[0] == nil || params[1] == nil ||
+		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.addTo: null argument")
+	}
+	self := params[0].(*object.Object)
+	temporal := params[1].(*object.Object)
+
+	seconds := self.FieldTable["seconds"].Fvalue.(int64)
+	nanos := self.FieldTable["nanos"].Fvalue.(int64)
+
+	res := temporal
+	if seconds != 0 {
+		secUnit := ghelpers.CreateTemporalUnit("SECONDS")
+		p := temporalPlusUnit([]any{res, seconds, secUnit})
+		if err, ok := p.(*ghelpers.GErrBlk); ok {
+			return err
+		}
+		if obj, ok := p.(*object.Object); ok {
+			res = obj
+		}
+	}
+	if nanos != 0 {
+		nanoUnit := ghelpers.CreateTemporalUnit("NANOS")
+		p := temporalPlusUnit([]any{res, nanos, nanoUnit})
+		if err, ok := p.(*ghelpers.GErrBlk); ok {
+			return err
+		}
+		if obj, ok := p.(*object.Object); ok {
+			res = obj
+		}
+	}
+	return res
+}
+
+// Duration.subtractFrom(Temporal temporal)
+func durationSubtractFrom(params []any) any {
+	if len(params) < 2 || params[0] == nil || params[1] == nil ||
+		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Duration.subtractFrom: null argument")
+	}
+	self := params[0].(*object.Object)
+	temporal := params[1].(*object.Object)
+
+	seconds := self.FieldTable["seconds"].Fvalue.(int64)
+	nanos := self.FieldTable["nanos"].Fvalue.(int64)
+
+	res := temporal
+	if seconds != 0 {
+		secUnit := ghelpers.CreateTemporalUnit("SECONDS")
+		p := temporalMinusUnit([]any{res, seconds, secUnit})
+		if err, ok := p.(*ghelpers.GErrBlk); ok {
+			return err
+		}
+		if obj, ok := p.(*object.Object); ok {
+			res = obj
+		}
+	}
+	if nanos != 0 {
+		nanoUnit := ghelpers.CreateTemporalUnit("NANOS")
+		p := temporalMinusUnit([]any{res, nanos, nanoUnit})
+		if err, ok := p.(*ghelpers.GErrBlk); ok {
+			return err
+		}
+		if obj, ok := p.(*object.Object); ok {
+			res = obj
+		}
+	}
+	return res
 }

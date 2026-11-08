@@ -117,6 +117,11 @@ func getChronoUnitOrdinal(targetObject *object.Object) (int64, bool) {
 }
 
 func Load_Time_Temporal_ChronoUnit() {
+	chronoUnitMutex.Lock()
+	chronoUnitInitialized = false
+	chronoUnitMutex.Unlock()
+	ensureChronoUnitInited()
+
 	ghelpers.MethodSignatures["java/time/temporal/ChronoUnit.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -221,6 +226,9 @@ func Load_Time_Temporal_ChronoUnit() {
 }
 
 func chronoUnitClinit([]any) any {
+	chronoUnitMutex.Lock()
+	chronoUnitInitialized = false
+	chronoUnitMutex.Unlock()
 	ensureChronoUnitInited()
 	return nil
 }

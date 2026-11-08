@@ -255,7 +255,7 @@ func Load_Time_Year() {
 
 	ghelpers.MethodSignatures["java/time/Year.isLeap(J)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  yearIsLeapStatic,
 		}
 
@@ -285,13 +285,13 @@ func Load_Time_Year() {
 
 	ghelpers.MethodSignatures["java/time/Year.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/Year;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  yearMinusUnit,
 		}
 
 	ghelpers.MethodSignatures["java/time/Year.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/temporal/Temporal;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  yearMinusUnit,
 		}
 
@@ -309,7 +309,7 @@ func Load_Time_Year() {
 
 	ghelpers.MethodSignatures["java/time/Year.minusYears(J)Ljava/time/Year;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  yearMinusYears,
 		}
 
@@ -351,13 +351,13 @@ func Load_Time_Year() {
 
 	ghelpers.MethodSignatures["java/time/Year.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/Year;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  yearPlusUnit,
 		}
 
 	ghelpers.MethodSignatures["java/time/Year.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/temporal/Temporal;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  yearPlusUnit,
 		}
 
@@ -375,7 +375,7 @@ func Load_Time_Year() {
 
 	ghelpers.MethodSignatures["java/time/Year.plusYears(J)Ljava/time/Year;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  yearPlusYears,
 		}
 
@@ -417,13 +417,13 @@ func Load_Time_Year() {
 
 	ghelpers.MethodSignatures["java/time/Year.with(Ljava/time/temporal/TemporalField;J)Ljava/time/Year;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  yearWithField,
 		}
 
 	ghelpers.MethodSignatures["java/time/Year.with(Ljava/time/temporal/TemporalField;J)Ljava/time/temporal/Temporal;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  yearWithField,
 		}
 }
@@ -475,7 +475,24 @@ func yearNowClock(params []any) any {
 	if len(params) < 1 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Year.now: clock is null")
 	}
-	return createYear(int64(time.Now().Year()))
+	clock := params[0].(*object.Object)
+	instRes := clockInstant([]any{clock})
+	if err, isErr := instRes.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	zoneRes := clockGetZone([]any{clock})
+	if err, isErr := zoneRes.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	zdt := zonedDateTimeOfInstant(instRes.(*object.Object), zoneRes.(*object.Object))
+	if err, isErr := zdt.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	yVal := zonedDateTimeGetYear([]any{zdt.(*object.Object)})
+	if err, isErr := yVal.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	return createYear(yVal.(int64))
 }
 
 func yearNowZone(params []any) any {
@@ -547,7 +564,7 @@ func yearIsLeapInstance(params []any) any {
 	if !ok {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Year.isLeap: invalid instance")
 	}
-	return isLeapYearVal(year)
+	return types.ConvertGoBoolToJavaBool(isLeapYearVal(year))
 }
 
 func yearIsLeapStatic(params []any) any {
@@ -558,7 +575,7 @@ func yearIsLeapStatic(params []any) any {
 	if !ok {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Year.isLeap: invalid argument")
 	}
-	return isLeapYearVal(year)
+	return types.ConvertGoBoolToJavaBool(isLeapYearVal(year))
 }
 
 func yearIsValidMonthDay(params []any) any {
@@ -566,12 +583,12 @@ func yearIsValidMonthDay(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Year.isValidMonthDay: self is null")
 	}
 	if len(params) < 2 || params[1] == nil || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	self := params[0].(*object.Object)
 	year, ok := getYearValue(self)
 	if !ok {
-		return false
+		return types.JavaBoolFalse
 	}
 	monthDay := params[1].(*object.Object)
 	var month, day int64 = 1, 1
@@ -586,9 +603,9 @@ func yearIsValidMonthDay(params []any) any {
 		}
 	}
 	if month == 2 && day == 29 {
-		return isLeapYearVal(year)
+		return types.ConvertGoBoolToJavaBool(isLeapYearVal(year))
 	}
-	return true
+	return types.JavaBoolTrue
 }
 
 func yearLength(params []any) any {
@@ -611,16 +628,16 @@ func yearIsSupportedField(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Year.isSupported: self is null")
 	}
 	if len(params) < 2 || params[1] == nil || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 
 	fieldObj := params[1].(*object.Object)
 	fieldName := getTemporalFieldName(fieldObj)
 	switch strings.ToUpper(fieldName) {
 	case "YEAR", "YEAR_OF_ERA", "ERA":
-		return true
+		return types.JavaBoolTrue
 	default:
-		return false
+		return types.JavaBoolFalse
 	}
 }
 
@@ -629,16 +646,16 @@ func yearIsSupportedUnit(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Year.isSupported: self is null")
 	}
 	if len(params) < 2 || params[1] == nil || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 
 	unitObj := params[1].(*object.Object)
 	unitName := getTemporalUnitName(unitObj)
 	switch strings.ToUpper(unitName) {
 	case "YEARS", "DECADES", "CENTURIES", "MILLENNIA", "ERAS":
-		return true
+		return types.JavaBoolTrue
 	default:
-		return false
+		return types.JavaBoolFalse
 	}
 }
 
@@ -1201,9 +1218,9 @@ func yearIsAfter(params []any) any {
 	selfYear, okS := getYearValue(self)
 	otherYear, okO := getYearValue(other)
 	if !okS || !okO {
-		return false
+		return types.JavaBoolFalse
 	}
-	return selfYear > otherYear
+	return types.ConvertGoBoolToJavaBool(selfYear > otherYear)
 }
 
 func yearIsBefore(params []any) any {
@@ -1218,29 +1235,29 @@ func yearIsBefore(params []any) any {
 	selfYear, okS := getYearValue(self)
 	otherYear, okO := getYearValue(other)
 	if !okS || !okO {
-		return false
+		return types.JavaBoolFalse
 	}
-	return selfYear < otherYear
+	return types.ConvertGoBoolToJavaBool(selfYear < otherYear)
 }
 
 func yearEquals(params []any) any {
 	if len(params) < 2 || params[0] == nil || params[1] == nil {
-		return false
+		return types.JavaBoolFalse
 	}
 	self, okS := params[0].(*object.Object)
 	other, okO := params[1].(*object.Object)
 	if !okS || !okO || object.IsNull(self) || object.IsNull(other) {
-		return false
+		return types.JavaBoolFalse
 	}
 	if self == other {
-		return true
+		return types.JavaBoolTrue
 	}
 	selfYear, okSelf := getYearValue(self)
 	otherYear, okOther := getYearValue(other)
 	if !okSelf || !okOther {
-		return false
+		return types.JavaBoolFalse
 	}
-	return selfYear == otherYear
+	return types.ConvertGoBoolToJavaBool(selfYear == otherYear)
 }
 
 func yearHashCode(params []any) any {
@@ -1297,5 +1314,15 @@ func yearParseFormatter(params []any) any {
 	if len(params) < 2 || params[1] == nil || object.IsNull(params[1].(*object.Object)) {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Year.parse: formatter is null")
 	}
-	return yearParse([]any{params[0]})
+	textObj := params[0].(*object.Object)
+	formatterObj := params[1].(*object.Object)
+	if !object.IsStringObject(textObj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Year.parse: invalid text")
+	}
+	text := object.GoStringFromStringObject(textObj)
+	accessor, err := parseTextToTemporalAccessor(formatterObj, text)
+	if err != nil {
+		return ghelpers.GetGErrBlk(excNames.DateTimeParseException, err.Error())
+	}
+	return yearFrom([]any{accessor})
 }

@@ -12,6 +12,7 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
+	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math/big"
@@ -234,13 +235,16 @@ func TestInitBigIntegerField(t *testing.T) {
 }
 
 func TestInvoke(t *testing.T) {
-	ghelpers.MethodSignatures["test/Invoke()V"] = ghelpers.GMeth{
+	key := "test/Invoke.run()V"
+	ghelpers.MethodSignatures[key] = ghelpers.GMeth{
 		ParamSlots: 0,
 		GFunction: func(p []interface{}) interface{} {
 			return "invoked"
 		},
 	}
-	res := ghelpers.Invoke("test/Invoke()V", nil)
+	defer delete(ghelpers.MethodSignatures, key)
+
+	res := ghelpers.Invoke(key, nil)
 	if res != "invoked" {
 		t.Errorf("Expected 'invoked', got %v", res)
 	}
@@ -299,5 +303,132 @@ func TestLoadlib_InvalidKey(t *testing.T) {
 	msg := string(out[:])
 	if !strings.Contains(msg, "loadlib: at least one key was invalid") {
 		t.Errorf("Expected error message about invalid key, got: %s", msg)
+	}
+}
+
+func TestLoadlib_TracingEnabled(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	trace.Init()
+	globals.TraceInst = true
+	defer func() {
+		globals.TraceInst = false
+	}()
+
+	libMeths := make(map[string]ghelpers.GMeth)
+	key := "java/lang/Math.max(II)I"
+	libMeths[key] = ghelpers.GMeth{ParamSlots: 2, GFunction: f1}
+
+	mtbl := make(classloader.MT)
+	loadlib(&mtbl, libMeths)
+
+	mte, exists := mtbl[key]
+	if !exists {
+		t.Fatalf("expected key %q to exist in mtbl", key)
+	}
+	if mte.MType != 'G' {
+		t.Errorf("expected MType 'G', got %c", mte.MType)
+	}
+
+	className := *(stringPool.GetStringPointer(mte.MethClass))
+	methName := *(stringPool.GetStringPointer(mte.MethName))
+	methType := *(stringPool.GetStringPointer(mte.MethType))
+
+	if className != "java/lang/Math" {
+		t.Errorf("expected className 'java/lang/Math', got %q", className)
+	}
+	if methName != "max" {
+		t.Errorf("expected methName 'max', got %q", methName)
+	}
+	if methType != "(II)I" {
+		t.Errorf("expected methType '(II)I', got %q", methType)
+	}
+}
+
+func TestCheckKey_EdgeCases(t *testing.T) {
+	invalidKeys := []string{
+		"",
+		"nodotorparens",
+		"java/lang/Object",
+		"java/lang/Object.toString",
+		"java/lang/Object.toString(",
+		"java/lang/Object.toString)",
+		"java/lang/Object.toString()",
+		"java/lang/Math.abs(I)",
+		"java/lang/Math.max(II)",
+	}
+
+	for _, k := range invalidKeys {
+		if checkKey(k) {
+			t.Errorf("checkKey(%q) = true, want false", k)
+		}
+	}
+
+	validKeys := []string{
+		"java/lang/Object.<init>()V",
+		"java/lang/String.valueOf(I)Ljava/lang/String;",
+		"java/lang/Math.max(DD)D",
+		"java/time/ZoneOffset.ofTotalSeconds(I)Ljava/time/ZoneOffset;",
+		"java/time/ZoneId.of(Ljava/lang/String;)Ljava/time/ZoneId;",
+		"java/time/Instant.now()Ljava/time/Instant;",
+		"java/time/ZonedDateTime.now()Ljava/time/ZonedDateTime;",
+		"java/time/Clock.systemUTC()Ljava/time/Clock;",
+		"java/time/ZoneRegion.ofId(Ljava/lang/String;Z)Ljava/time/ZoneRegion;",
+		"java/time/zone/ZoneRulesProvider.getRules(Ljava/lang/String;Z)Ljava/time/zone/ZoneRules;",
+		"java/time/zone/ZoneOffsetTransition.of(Ljava/time/LocalDateTime;Ljava/time/ZoneOffset;Ljava/time/ZoneOffset;)Ljava/time/zone/ZoneOffsetTransition;",
+		"java/time/OffsetDateTime.now()Ljava/time/OffsetDateTime;",
+		"javax/crypto/Cipher.getInstance(Ljava/lang/String;)Ljavax/crypto/Cipher;",
+	}
+
+	for _, k := range validKeys {
+		if !checkKey(k) {
+			t.Errorf("checkKey(%q) = false, want true", k)
+		}
+	}
+}
+
+func TestMTableLoadGFunctions_Comprehensive(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	trace.Init()
+
+	classloader.MTable = make(map[string]classloader.MTentry)
+	MTableLoadGFunctions(&classloader.MTable)
+
+	expectedKeys := []string{
+		"java/lang/Object.<init>()V",
+		"java/lang/System.currentTimeMillis()J",
+		"java/lang/Math.abs(I)I",
+		"java/io/File.exists()Z",
+		"java/util/HashMap.<init>()V",
+		"java/time/ZoneOffset.ofTotalSeconds(I)Ljava/time/ZoneOffset;",
+		"java/time/ZoneId.of(Ljava/lang/String;)Ljava/time/ZoneId;",
+		"java/time/Instant.now()Ljava/time/Instant;",
+		"java/time/ZonedDateTime.now()Ljava/time/ZonedDateTime;",
+		"java/time/Clock.systemUTC()Ljava/time/Clock;",
+		"java/time/ZoneRegion.ofId(Ljava/lang/String;Z)Ljava/time/ZoneRegion;",
+		"java/time/zone/ZoneRulesProvider.getRules(Ljava/lang/String;Z)Ljava/time/zone/ZoneRules;",
+		"java/time/zone/ZoneOffsetTransition.of(Ljava/time/LocalDateTime;Ljava/time/ZoneOffset;Ljava/time/ZoneOffset;)Ljava/time/zone/ZoneOffsetTransition;",
+		"java/time/OffsetDateTime.now()Ljava/time/OffsetDateTime;",
+		"javax/crypto/Cipher.getInstance(Ljava/lang/String;)Ljavax/crypto/Cipher;",
+		"jdk/internal/misc/Unsafe.getUnsafe()Ljdk/internal/misc/Unsafe;",
+		"sun/misc/Unsafe.getUnsafe()Lsun/misc/Unsafe;",
+	}
+
+	for _, key := range expectedKeys {
+		mte, exists := classloader.MTable[key]
+		if !exists {
+			t.Errorf("expected MTable entry for %q, but not found", key)
+			continue
+		}
+		if mte.MType != 'G' {
+			t.Errorf("expected entry %q to have MType 'G', got %c", key, mte.MType)
+		}
+		gmeth, ok := mte.Meth.(ghelpers.GMeth)
+		if !ok {
+			t.Errorf("expected entry %q to have Meth of type ghelpers.GMeth, got %T", key, mte.Meth)
+		} else if gmeth.GFunction == nil {
+			t.Errorf("expected entry %q to have non-nil GFunction", key)
+		}
 	}
 }

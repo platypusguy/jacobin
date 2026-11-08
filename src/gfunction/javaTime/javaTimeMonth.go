@@ -175,30 +175,19 @@ func getChronoFieldMonthOfYear() *object.Object {
 }
 
 func parseBoolParam(val any) (bool, bool) {
-	switch v := val.(type) {
-	case bool:
-		return v, true
-	case int64:
-		return v != 0, true
-	case int32:
-		return v != 0, true
-	case int:
-		return v != 0, true
-	case uint64:
-		return v != 0, true
-	case uint32:
-		return v != 0, true
-	case uint8:
-		return v != 0, true
-	case int8:
-		return v != 0, true
-	default:
-		return false, false
+	if i, ok := getInt64Val(val); ok {
+		return i != types.JavaBoolFalse, true
 	}
+	return false, false
 }
 
 // Load_Time_Month registers all java/time/Month methods.
 func Load_Time_Month() {
+	monthMutex.Lock()
+	monthInitialized = false
+	monthMutex.Unlock()
+	ensureMonthInited()
+
 	ghelpers.MethodSignatures["java/time/Month.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -375,6 +364,9 @@ func Load_Time_Month() {
 }
 
 func monthClinit([]any) any {
+	monthMutex.Lock()
+	monthInitialized = false
+	monthMutex.Unlock()
 	ensureMonthInited()
 	return nil
 }

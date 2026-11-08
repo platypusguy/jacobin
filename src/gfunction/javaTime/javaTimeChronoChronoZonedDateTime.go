@@ -19,8 +19,6 @@ import (
 
 var (
 	classNameChronoZonedDateTimeComparator = "java/time/chrono/ChronoZonedDateTime$1"
-	classNameZoneId                        = "java/time/ZoneId"
-	classNameZoneOffset                    = "java/time/ZoneOffset"
 )
 
 // Load_Time_Chrono_ChronoZonedDateTime loads method signatures for java/time/chrono/ChronoZonedDateTime.
@@ -117,7 +115,7 @@ func Load_Time_Chrono_ChronoZonedDateTime() {
 
 	ghelpers.MethodSignatures["java/time/chrono/ChronoZonedDateTime.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/chrono/ChronoZonedDateTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3, // long (2 slots) + TemporalUnit (1 slot)
+			ParamSlots: 2, // long (2 slots) + TemporalUnit (1 slot)
 			GFunction:  chronoZonedDateTimeMinusUnit,
 		}
 
@@ -129,7 +127,7 @@ func Load_Time_Chrono_ChronoZonedDateTime() {
 
 	ghelpers.MethodSignatures["java/time/chrono/ChronoZonedDateTime.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/chrono/ChronoZonedDateTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3, // long (2 slots) + TemporalUnit (1 slot)
+			ParamSlots: 2, // long (2 slots) + TemporalUnit (1 slot)
 			GFunction:  chronoZonedDateTimePlusUnit,
 		}
 
@@ -201,7 +199,7 @@ func Load_Time_Chrono_ChronoZonedDateTime() {
 
 	ghelpers.MethodSignatures["java/time/chrono/ChronoZonedDateTime.with(Ljava/time/temporal/TemporalField;J)Ljava/time/chrono/ChronoZonedDateTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3, // field (1 slot) + long (2 slots)
+			ParamSlots: 2, // field (1 slot) + long (2 slots)
 			GFunction:  chronoZonedDateTimeWithField,
 		}
 
@@ -268,52 +266,6 @@ func getChronoZonedDateTimeZone(obj *object.Object) *object.Object {
 	return nil
 }
 
-func getZoneIdString(zoneObj *object.Object) string {
-	if zoneObj == nil || zoneObj.FieldTable == nil {
-		return "Z"
-	}
-	if idFld, ok := zoneObj.FieldTable["id"]; ok {
-		if strObj, ok := idFld.Fvalue.(*object.Object); ok {
-			return object.GoStringFromStringObject(strObj)
-		}
-		if s, ok := idFld.Fvalue.(string); ok {
-			return s
-		}
-	}
-	return "Z"
-}
-
-func createZoneOffset(totalSeconds int64) *object.Object {
-	obj := object.MakeEmptyObjectWithClassName(&classNameZoneOffset)
-	obj.FieldTable["totalSeconds"] = object.Field{Ftype: types.Int, Fvalue: totalSeconds}
-	var idStr string
-	if totalSeconds == 0 {
-		idStr = "Z"
-	} else {
-		absSec := totalSeconds
-		sign := "+"
-		if absSec < 0 {
-			sign = "-"
-			absSec = -absSec
-		}
-		hours := absSec / 3600
-		minutes := (absSec % 3600) / 60
-		secs := absSec % 60
-		if secs == 0 {
-			idStr = fmt.Sprintf("%s%02d:%02d", sign, hours, minutes)
-		} else {
-			idStr = fmt.Sprintf("%s%02d:%02d:%02d", sign, hours, minutes, secs)
-		}
-	}
-	obj.FieldTable["id"] = object.Field{Ftype: types.Ref, Fvalue: object.StringObjectFromGoString(idStr)}
-	return obj
-}
-
-func createZoneId(id string) *object.Object {
-	obj := object.MakeEmptyObjectWithClassName(&classNameZoneId)
-	obj.FieldTable["id"] = object.Field{Ftype: types.Ref, Fvalue: object.StringObjectFromGoString(id)}
-	return obj
-}
 
 func getChronoZonedDateTimeYMDHMSN(obj *object.Object) (year, month, day, hour, min, sec, nano int64) {
 	ldt := getChronoZonedDateTimeLocalDateTime(obj)
@@ -487,19 +439,19 @@ func chronoZonedDateTimeCompareTo(params []any) any {
 // boolean equals(Object obj)
 func chronoZonedDateTimeEquals(params []any) any {
 	if len(params) < 2 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	if params[1] == nil || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	self := params[0].(*object.Object)
 	other := params[1].(*object.Object)
 
 	res := chronoZonedDateTimeCompareTo([]any{self, other})
 	if cmpVal, ok := getInt64Val(res); ok {
-		return cmpVal == 0
+		return types.ConvertGoBoolToJavaBool(cmpVal == 0)
 	}
-	return false
+	return types.JavaBoolFalse
 }
 
 // chronoZonedDateTimeFormat formats this date-time using the specified formatter.
@@ -672,14 +624,14 @@ func chronoZonedDateTimeIsAfter(params []any) any {
 	ep1 := getChronoZonedDateTimeEpochSecond(self)
 	ep2 := getChronoZonedDateTimeEpochSecond(other)
 	if ep1 > ep2 {
-		return true
+		return types.JavaBoolTrue
 	} else if ep1 < ep2 {
-		return false
+		return types.JavaBoolFalse
 	}
 
 	_, _, _, _, _, _, nano1 := getChronoZonedDateTimeYMDHMSN(self)
 	_, _, _, _, _, _, nano2 := getChronoZonedDateTimeYMDHMSN(other)
-	return nano1 > nano2
+	return types.ConvertGoBoolToJavaBool(nano1 > nano2)
 }
 
 // chronoZonedDateTimeIsBefore checks if the instant of this date-time is before that of the specified date-time.
@@ -697,14 +649,14 @@ func chronoZonedDateTimeIsBefore(params []any) any {
 	ep1 := getChronoZonedDateTimeEpochSecond(self)
 	ep2 := getChronoZonedDateTimeEpochSecond(other)
 	if ep1 < ep2 {
-		return true
+		return types.JavaBoolTrue
 	} else if ep1 > ep2 {
-		return false
+		return types.JavaBoolFalse
 	}
 
 	_, _, _, _, _, _, nano1 := getChronoZonedDateTimeYMDHMSN(self)
 	_, _, _, _, _, _, nano2 := getChronoZonedDateTimeYMDHMSN(other)
-	return nano1 < nano2
+	return types.ConvertGoBoolToJavaBool(nano1 < nano2)
 }
 
 // chronoZonedDateTimeIsEqual checks if the instant of this date-time is equal to that of the specified date-time.
@@ -722,39 +674,39 @@ func chronoZonedDateTimeIsEqual(params []any) any {
 	ep1 := getChronoZonedDateTimeEpochSecond(self)
 	ep2 := getChronoZonedDateTimeEpochSecond(other)
 	if ep1 != ep2 {
-		return false
+		return types.JavaBoolFalse
 	}
 
 	_, _, _, _, _, _, nano1 := getChronoZonedDateTimeYMDHMSN(self)
 	_, _, _, _, _, _, nano2 := getChronoZonedDateTimeYMDHMSN(other)
-	return nano1 == nano2
+	return types.ConvertGoBoolToJavaBool(nano1 == nano2)
 }
 
 // chronoZonedDateTimeIsSupportedField checks if the specified field is supported.
 // boolean isSupported(TemporalField field)
 func chronoZonedDateTimeIsSupportedField(params []any) any {
 	if len(params) < 2 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	if params[1] == nil || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	field := params[1].(*object.Object)
 	fieldName := getTemporalFieldName(field)
 	if fieldName == "" {
-		return false
+		return types.JavaBoolFalse
 	}
 
 	switch fieldName {
 	case "INSTANT_SECONDS", "OFFSET_SECONDS":
-		return true
+		return types.JavaBoolTrue
 	default:
 		self := params[0].(*object.Object)
 		ldt := getChronoZonedDateTimeLocalDateTime(self)
 		if ldt != nil {
 			return chronoLocalDateTimeIsSupportedField([]any{ldt, field})
 		}
-		return true
+		return types.JavaBoolTrue
 	}
 }
 
@@ -762,23 +714,23 @@ func chronoZonedDateTimeIsSupportedField(params []any) any {
 // default boolean isSupported(TemporalUnit unit)
 func chronoZonedDateTimeIsSupportedUnit(params []any) any {
 	if len(params) < 2 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	if params[1] == nil || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	unit := params[1].(*object.Object)
 	unitName := getTemporalUnitName(unit)
 	if unitName == "" {
-		return false
+		return types.JavaBoolFalse
 	}
 
 	switch unitName {
 	case "NANOS", "MICROS", "MILLIS", "SECONDS", "MINUTES", "HOURS", "HALF_DAYS",
 		"DAYS", "WEEKS", "MONTHS", "YEARS", "DECADES", "CENTURIES", "MILLENNIA", "ERAS":
-		return true
+		return types.JavaBoolTrue
 	default:
-		return false
+		return types.JavaBoolFalse
 	}
 }
 

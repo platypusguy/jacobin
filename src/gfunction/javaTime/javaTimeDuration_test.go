@@ -7,6 +7,7 @@
 package javaTime
 
 import (
+	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -15,289 +16,425 @@ import (
 	"testing"
 )
 
-func TestDurationClinit(t *testing.T) {
+func durationTestInit() {
 	globals.InitGlobals("test")
-	durationClinit(nil)
+	durationMutex.Lock()
+	durationInitialized = false
+	durationMutex.Unlock()
+	Load_Time_Duration()
+	Load_Time_Instant()
+	Load_Time_LocalTime()
+	Load_Time_LocalDate()
+	Load_Time_LocalDateTime()
+	Load_Time_ZonedDateTime()
+	Load_Time_OffsetDateTime()
+	Load_Time_Temporal_ChronoUnit()
+	Load_Time_Temporal_TemporalUnit()
+	Load_Time_Temporal_TemporalAmount()
+}
 
-	s, ok := statics.QueryStatic("java/time/Duration", "ZERO")
-	if !ok {
-		t.Fatal("Duration.ZERO not found in statics")
+func TestDurationClinitAndFactories(t *testing.T) {
+	durationTestInit()
+
+	if res := durationClinit(nil); res != nil {
+		t.Errorf("durationClinit returned %v", res)
 	}
-	dur := s.Value.(*object.Object)
-	sec := dur.FieldTable["seconds"].Fvalue.(int64)
-	nano := dur.FieldTable["nanos"].Fvalue.(int64)
 
-	if sec != 0 || nano != 0 {
-		t.Errorf("Expected Duration.ZERO to be (0, 0), got (%d, %d)", sec, nano)
+	st, ok := statics.QueryStatic(classNameDuration, "ZERO")
+	if !ok || st.Value == nil {
+		t.Fatalf("Duration.ZERO not initialized")
+	}
+	zeroObj := st.Value.(*object.Object)
+	s, n, okSN := getDurationSecondsNanos(zeroObj)
+	if !okSN || s != 0 || n != 0 {
+		t.Errorf("Duration.ZERO = %ds %dns, want 0s 0ns", s, n)
+	}
+
+	// ofSeconds, ofSecondsNanos
+	d1 := durationOfSeconds([]any{int64(10)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(d1); s != 10 || n != 0 {
+		t.Errorf("ofSeconds(10) = %ds %dns, want 10s 0ns", s, n)
+	}
+
+	d2 := durationOfSecondsNanos([]any{int64(10), int64(500000000)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(d2); s != 10 || n != 500000000 {
+		t.Errorf("ofSecondsNanos(10, 500000000) = %ds %dns, want 10s 500000000ns", s, n)
+	}
+
+	// ofDays, ofHours, ofMinutes, ofMillis, ofNanos
+	dDays := durationOfDays([]any{int64(2)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dDays); s != 172800 {
+		t.Errorf("ofDays(2) = %ds, want 172800s", s)
+	}
+
+	dHours := durationOfHours([]any{int64(3)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dHours); s != 10800 {
+		t.Errorf("ofHours(3) = %ds, want 10800s", s)
+	}
+
+	dMins := durationOfMinutes([]any{int64(5)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dMins); s != 300 {
+		t.Errorf("ofMinutes(5) = %ds, want 300s", s)
+	}
+
+	dMillis := durationOfMillis([]any{int64(1500)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dMillis); s != 1 || n != 500000000 {
+		t.Errorf("ofMillis(1500) = %ds %dns, want 1s 500000000ns", s, n)
+	}
+
+	dNanos := durationOfNanos([]any{int64(2500000000)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dNanos); s != 2 || n != 500000000 {
+		t.Errorf("ofNanos(2500000000) = %ds %dns, want 2s 500000000ns", s, n)
+	}
+
+	// of(amount, TemporalUnit)
+	dOfSec := durationOf([]any{int64(45), ghelpers.CreateTemporalUnit("SECONDS")}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dOfSec); s != 45 {
+		t.Errorf("of(45, SECONDS) = %ds, want 45s", s)
+	}
+
+	dOfMicros := durationOf([]any{int64(1500000), ghelpers.CreateTemporalUnit("MICROS")}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dOfMicros); s != 1 || n != 500000000 {
+		t.Errorf("of(1500000, MICROS) = %ds %dns, want 1s 500000000ns", s, n)
+	}
+
+	dOfHalfDays := durationOf([]any{int64(2), ghelpers.CreateTemporalUnit("HALF_DAYS")}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dOfHalfDays); s != 86400 {
+		t.Errorf("of(2, HALF_DAYS) = %ds, want 86400s", s)
+	}
+
+	errUnit := durationOf([]any{int64(1), ghelpers.CreateTemporalUnit("YEARS")})
+	if gerr, ok := errUnit.(*ghelpers.GErrBlk); !ok || gerr.ExceptionType != excNames.DateTimeException {
+		t.Errorf("of(1, YEARS) expected DateTimeException, got %v", errUnit)
 	}
 }
 
-func TestDurationFactoriesAndAccessors(t *testing.T) {
-	globals.InitGlobals("test")
+func TestDurationBetweenAndFrom(t *testing.T) {
+	durationTestInit()
 
-	tests := []struct {
-		name     string
-		factory  func([]any) any
-		input    int64
-		expectedS int64
-		expectedN int32
-	}{
-		{"ofSeconds", durationOfSeconds, 10, 10, 0},
-		{"ofMillis", durationOfMillis, 1500, 1, 500000000},
-		{"ofNanos", durationOfNanos, 123456789, 0, 123456789},
-		{"ofMinutes", durationOfMinutes, 2, 120, 0},
-		{"ofHours", durationOfHours, 1, 3600, 0},
-		{"ofDays", durationOfDays, 1, 86400, 0},
+	// between(Instant, Instant)
+	i1 := CreateInstant(100, 200)
+	i2 := CreateInstant(110, 500)
+	dInst := durationBetween([]any{i1, i2}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dInst); s != 10 || n != 300 {
+		t.Errorf("between(Instant) = %ds %dns, want 10s 300ns", s, n)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			res := tt.factory([]any{tt.input})
-			dur, ok := res.(*object.Object)
-			if !ok {
-				t.Fatalf("Expected *object.Object, got %T", res)
-			}
-			s := dur.FieldTable["seconds"].Fvalue.(int64)
-			n := dur.FieldTable["nanos"].Fvalue.(int64)
-			if s != tt.expectedS || int32(n) != tt.expectedN {
-				t.Errorf("Expected (%d, %d), got (%d, %d)", tt.expectedS, tt.expectedN, s, n)
-			}
+	// between(LocalTime, LocalTime)
+	t1 := CreateLocalTime(10, 0, 0, 0)
+	t2 := CreateLocalTime(11, 30, 0, 0)
+	dTime := durationBetween([]any{t1, t2}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dTime); s != 5400 || n != 0 {
+		t.Errorf("between(LocalTime) = %ds %dns, want 5400s 0ns", s, n)
+	}
 
-			// Test accessors
-			secRes := durationGetSeconds([]any{dur})
-			if secRes.(int64) != tt.expectedS {
-				t.Errorf("getSeconds: expected %d, got %v", tt.expectedS, secRes)
-			}
-			nanoRes := durationGetNano([]any{dur})
-			if nanoRes.(int64) != int64(tt.expectedN) {
-				t.Errorf("getNano: expected %d, got %v", tt.expectedN, nanoRes)
-			}
-		})
+	// between(LocalDateTime, LocalDateTime)
+	dt1 := CreateLocalDateTime(CreateLocalDate(2026, 1, 1), CreateLocalTime(0, 0, 0, 0))
+	dt2 := CreateLocalDateTime(CreateLocalDate(2026, 1, 2), CreateLocalTime(1, 0, 0, 0))
+	dDT := durationBetween([]any{dt1, dt2}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dDT); s != 90000 { // 86400 + 3600
+		t.Errorf("between(LocalDateTime) = %ds, want 90000s", s)
+	}
+
+	// from(Duration)
+	dOrig := CreateDuration(123, 456)
+	dFrom := durationFrom([]any{dOrig}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dFrom); s != 123 || n != 456 {
+		t.Errorf("from(Duration) = %ds %dns, want 123s 456ns", s, n)
+	}
+
+	// from(null)
+	errNull := durationFrom([]any{nil})
+	if gerr, ok := errNull.(*ghelpers.GErrBlk); !ok || gerr.ExceptionType != excNames.NullPointerException {
+		t.Errorf("from(null) expected NullPointerException, got %v", errNull)
+	}
+}
+
+func TestDurationGettersAndQueries(t *testing.T) {
+	durationTestInit()
+
+	d := CreateDuration(3665, 123456789)
+
+	if s := durationGetSeconds([]any{d}).(int64); s != 3665 {
+		t.Errorf("getSeconds() = %d, want 3665", s)
+	}
+	if n := durationGetNano([]any{d}).(int64); n != 123456789 {
+		t.Errorf("getNano() = %d, want 123456789", n)
+	}
+
+	// get(TemporalUnit)
+	if s := durationGet([]any{d, ghelpers.CreateTemporalUnit("SECONDS")}).(int64); s != 3665 {
+		t.Errorf("get(SECONDS) = %d, want 3665", s)
+	}
+	if n := durationGet([]any{d, ghelpers.CreateTemporalUnit("NANOS")}).(int64); n != 123456789 {
+		t.Errorf("get(NANOS) = %d, want 123456789", n)
+	}
+	errUnit := durationGet([]any{d, ghelpers.CreateTemporalUnit("DAYS")})
+	if gerr, ok := errUnit.(*ghelpers.GErrBlk); !ok || gerr.ExceptionType != excNames.DateTimeException {
+		t.Errorf("get(DAYS) expected DateTimeException, got %v", errUnit)
+	}
+
+	// getUnits
+	unitsList := durationGetUnits([]any{d}).(*object.Object)
+	if valFld, ok := unitsList.FieldTable["value"]; !ok || len(valFld.Fvalue.([]any)) != 2 {
+		t.Errorf("getUnits() expected list of 2 units, got %v", unitsList)
+	}
+
+	// isZero, isNegative, isPositive
+	dZero := CreateDuration(0, 0)
+	dNeg := CreateDuration(-5, 0)
+	dPos := CreateDuration(5, 0)
+
+	if durationIsZero([]any{dZero}).(int64) != types.JavaBoolTrue {
+		t.Errorf("dZero.isZero() = false, want true")
+	}
+	if durationIsZero([]any{dPos}).(int64) != types.JavaBoolFalse {
+		t.Errorf("dPos.isZero() = true, want false")
+	}
+	if durationIsNegative([]any{dNeg}).(int64) != types.JavaBoolTrue {
+		t.Errorf("dNeg.isNegative() = false, want true")
+	}
+	if durationIsPositive([]any{dPos}).(int64) != types.JavaBoolTrue {
+		t.Errorf("dPos.isPositive() = false, want true")
 	}
 }
 
 func TestDurationArithmetic(t *testing.T) {
-	globals.InitGlobals("test")
+	durationTestInit()
 
-	d1 := createDuration(10, 500)
-	d2 := createDuration(5, 600)
+	d1 := CreateDuration(10, 500000000)
+	d2 := CreateDuration(5, 600000000)
 
-	// plus(Duration)
-	resPlus := durationPlus([]any{d1, d2})
-	durPlus := resPlus.(*object.Object)
-	if durPlus.FieldTable["seconds"].Fvalue.(int64) != 15 || durPlus.FieldTable["nanos"].Fvalue.(int64) != 1100 {
-		t.Errorf("plus: expected (15, 1100), got (%v, %v)", durPlus.FieldTable["seconds"].Fvalue, durPlus.FieldTable["nanos"].Fvalue)
+	// plus
+	dPlus := durationPlus([]any{d1, d2}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dPlus); s != 16 || n != 100000000 {
+		t.Errorf("plus = %ds %dns, want 16s 100000000ns", s, n)
 	}
 
-	// minus(Duration)
-	resMinus := durationMinus([]any{d1, d2})
-	durMinus := resMinus.(*object.Object)
-	if durMinus.FieldTable["seconds"].Fvalue.(int64) != 4 || durMinus.FieldTable["nanos"].Fvalue.(int64) != 999999900 {
-		t.Errorf("minus: expected (4, 999999900), got (%v, %v)", durMinus.FieldTable["seconds"].Fvalue, durMinus.FieldTable["nanos"].Fvalue)
+	// plus(amount, unit)
+	dPlusUnit := durationPlusUnit([]any{d1, int64(10), ghelpers.CreateTemporalUnit("SECONDS")}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dPlusUnit); s != 20 || n != 500000000 {
+		t.Errorf("plus(10, SECONDS) = %ds %dns, want 20s 500000000ns", s, n)
 	}
 
-	// multipliedBy(long)
-	resMult := durationMultipliedBy([]any{d1, int64(3)})
-	durMult := resMult.(*object.Object)
-	if durMult.FieldTable["seconds"].Fvalue.(int64) != 30 || durMult.FieldTable["nanos"].Fvalue.(int64) != 1500 {
-		t.Errorf("multipliedBy: expected (30, 1500), got (%v, %v)", durMult.FieldTable["seconds"].Fvalue, durMult.FieldTable["nanos"].Fvalue)
+	// plusDays, plusHours, plusMinutes, plusSeconds, plusMillis, plusNanos
+	dpDays := durationPlusDays([]any{d1, int64(1)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dpDays); s != 86410 {
+		t.Errorf("plusDays(1) = %ds, want 86410s", s)
+	}
+	dpHours := durationPlusHours([]any{d1, int64(1)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dpHours); s != 3610 {
+		t.Errorf("plusHours(1) = %ds, want 3610s", s)
+	}
+	dpMins := durationPlusMinutes([]any{d1, int64(1)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dpMins); s != 70 {
+		t.Errorf("plusMinutes(1) = %ds, want 70s", s)
+	}
+	dpSec := durationPlusSeconds([]any{d1, int64(5)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dpSec); s != 15 {
+		t.Errorf("plusSeconds(5) = %ds, want 15s", s)
+	}
+	dpMillis := durationPlusMillis([]any{d1, int64(600)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dpMillis); s != 11 || n != 100000000 {
+		t.Errorf("plusMillis(600) = %ds %dns, want 11s 100000000ns", s, n)
+	}
+	dpNanos := durationPlusNanos([]any{d1, int64(600000000)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dpNanos); s != 11 || n != 100000000 {
+		t.Errorf("plusNanos(600000000) = %ds %dns, want 11s 100000000ns", s, n)
 	}
 
-	// negated()
-	resNeg := durationNegated([]any{d1})
-	durNeg := resNeg.(*object.Object)
-	if durNeg.FieldTable["seconds"].Fvalue.(int64) != -11 || durNeg.FieldTable["nanos"].Fvalue.(int64) != 999999500 {
-		t.Errorf("negated: expected (-11, 999999500), got (%v, %v)", durNeg.FieldTable["seconds"].Fvalue, durNeg.FieldTable["nanos"].Fvalue)
+	// minus
+	dMinus := durationMinus([]any{dPlus, d2}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dMinus); s != 10 || n != 500000000 {
+		t.Errorf("minus = %ds %dns, want 10s 500000000ns", s, n)
 	}
 
-	// abs()
-	resAbs := durationAbs([]any{durNeg})
-	durAbs := resAbs.(*object.Object)
-	if durAbs.FieldTable["seconds"].Fvalue.(int64) != 10 || durAbs.FieldTable["nanos"].Fvalue.(int64) != 500 {
-		t.Errorf("abs: expected (10, 500), got (%v, %v)", durAbs.FieldTable["seconds"].Fvalue, durAbs.FieldTable["nanos"].Fvalue)
+	// minus(amount, unit)
+	dMinusUnit := durationMinusUnit([]any{d1, int64(5), ghelpers.CreateTemporalUnit("SECONDS")}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dMinusUnit); s != 5 || n != 500000000 {
+		t.Errorf("minus(5, SECONDS) = %ds %dns, want 5s 500000000ns", s, n)
 	}
-}
 
-func TestDurationOverflow(t *testing.T) {
-	globals.InitGlobals("test")
-
-	const maxLong = int64(9223372036854775807)
-
-	t.Run("plusSeconds overflow", func(t *testing.T) {
-		d := durationOfSeconds([]any{maxLong}).(*object.Object)
-		res := durationPlusSeconds([]any{d, int64(1)})
-		if _, ok := res.(*ghelpers.GErrBlk); ok {
-			// Success - it returned an error block
-		} else {
-			t.Errorf("Expected ArithmeticException on overflow, but got %T: %+v", res, res)
-		}
-	})
-
-	t.Run("ofDays overflow", func(t *testing.T) {
-		res := durationOfDays([]any{maxLong})
-		if _, ok := res.(*ghelpers.GErrBlk); ok {
-			// Success
-		} else {
-			t.Errorf("Expected ArithmeticException on ofDays overflow, but got %T", res)
-		}
-	})
-
-	t.Run("negated overflow", func(t *testing.T) {
-		const minLong = int64(-9223372036854775808)
-		d := durationOfSeconds([]any{minLong}).(*object.Object)
-		res := durationNegated([]any{d})
-		if _, ok := res.(*ghelpers.GErrBlk); ok {
-			// Success
-		} else {
-			t.Errorf("Expected ArithmeticException on negating MinInt64 seconds, but got %T", res)
-		}
-	})
-
-	t.Run("toNanos overflow", func(t *testing.T) {
-		d := durationOfSeconds([]any{maxLong}).(*object.Object)
-		res := durationToNanos([]any{d})
-		if _, ok := res.(*ghelpers.GErrBlk); ok {
-			// Success
-		} else {
-			t.Errorf("Expected ArithmeticException on toNanos overflow, but got %T", res)
-		}
-	})
-}
-
-func TestDurationConversions(t *testing.T) {
-	globals.InitGlobals("test")
-
-	dur := createDuration(3661, 500000000) // 1 hour, 1 minute, 1 second, 500ms
-
-	if res := durationToDays([]any{dur}); res.(int64) != 0 {
-		t.Errorf("toDays: expected 0, got %v", res)
+	// minusDays, minusHours, minusMinutes, minusSeconds, minusMillis, minusNanos
+	dmDays := durationMinusDays([]any{dpDays, int64(1)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dmDays); s != 10 {
+		t.Errorf("minusDays(1) = %ds, want 10s", s)
 	}
-	if res := durationToHours([]any{dur}); res.(int64) != 1 {
-		t.Errorf("toHours: expected 1, got %v", res)
+	dmHours := durationMinusHours([]any{dpHours, int64(1)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dmHours); s != 10 {
+		t.Errorf("minusHours(1) = %ds, want 10s", s)
 	}
-	if res := durationToMinutes([]any{dur}); res.(int64) != 61 {
-		t.Errorf("toMinutes: expected 61, got %v", res)
+	dmMins := durationMinusMinutes([]any{dpMins, int64(1)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dmMins); s != 10 {
+		t.Errorf("minusMinutes(1) = %ds, want 10s", s)
 	}
-	if res := durationToMillis([]any{dur}); res.(int64) != 3661500 {
-		t.Errorf("toMillis: expected 3661500, got %v", res)
+	dmSec := durationMinusSeconds([]any{dpSec, int64(5)}).(*object.Object)
+	if s, _, _ := getDurationSecondsNanos(dmSec); s != 10 {
+		t.Errorf("minusSeconds(5) = %ds, want 10s", s)
+	}
+	dmMillis := durationMinusMillis([]any{dpMillis, int64(600)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dmMillis); s != 10 || n != 500000000 {
+		t.Errorf("minusMillis(600) = %ds %dns, want 10s 500000000ns", s, n)
+	}
+	dmNanos := durationMinusNanos([]any{dpNanos, int64(600000000)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dmNanos); s != 10 || n != 500000000 {
+		t.Errorf("minusNanos(600000000) = %ds %dns, want 10s 500000000ns", s, n)
 	}
 }
 
-func TestDurationComparison(t *testing.T) {
-	globals.InitGlobals("test")
+func TestDurationModificationsAndTruncation(t *testing.T) {
+	durationTestInit()
 
-	d1 := createDuration(10, 500)
-	d2 := createDuration(10, 600)
-	d3 := createDuration(9, 999999999)
+	d := CreateDuration(10, 500000000)
 
-	// equals
-	if res := durationEquals([]any{d1, d1}); res.(types.JavaBool) != types.JavaBoolTrue {
-		t.Errorf("equals(d1, d1) should be true")
-	}
-	if res := durationEquals([]any{d1, d2}); res.(types.JavaBool) != types.JavaBoolFalse {
-		t.Errorf("equals(d1, d2) should be false")
+	// multipliedBy
+	dMul := durationMultipliedBy([]any{d, int64(2)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dMul); s != 21 || n != 0 {
+		t.Errorf("multipliedBy(2) = %ds %dns, want 21s 0ns", s, n)
 	}
 
-	// compareTo
-	if res := durationCompareTo([]any{d1, d2}); res.(int64) >= 0 {
-		t.Errorf("compareTo(d1, d2) should be negative, got %v", res)
-	}
-	if res := durationCompareTo([]any{d1, d3}); res.(int64) <= 0 {
-		t.Errorf("compareTo(d1, d3) should be positive, got %v", res)
-	}
-	if res := durationCompareTo([]any{d1, d1}); res.(int64) != 0 {
-		t.Errorf("compareTo(d1, d1) should be 0, got %v", res)
+	// dividedBy(long)
+	dDivL := durationDividedByLong([]any{dMul, int64(2)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dDivL); s != 10 || n != 500000000 {
+		t.Errorf("dividedBy(2) = %ds %dns, want 10s 500000000ns", s, n)
 	}
 
-	// isNegative / isZero
-	if res := durationIsNegative([]any{d1}); res.(types.JavaBool) != types.JavaBoolFalse {
-		t.Errorf("isNegative(d1) should be false")
+	// dividedBy(Duration)
+	dDivD := durationDividedByDuration([]any{dMul, d}).(int64)
+	if dDivD != 2 {
+		t.Errorf("dividedBy(d) = %d, want 2", dDivD)
 	}
-	neg := durationNegated([]any{d1}).(*object.Object)
-	if res := durationIsNegative([]any{neg}); res.(types.JavaBool) != types.JavaBoolTrue {
-		t.Errorf("isNegative(neg) should be true")
+
+	// negated & abs
+	dNeg := durationNegated([]any{d}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dNeg); s != -11 || n != 500000000 {
+		t.Errorf("negated = %ds %dns, want -11s 500000000ns", s, n)
 	}
-	zero := createDuration(0, 0)
-	if res := durationIsZero([]any{zero}); res.(types.JavaBool) != types.JavaBoolTrue {
-		t.Errorf("isZero(zero) should be true")
+	dAbs := durationAbs([]any{dNeg}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dAbs); s != 10 || n != 500000000 {
+		t.Errorf("abs = %ds %dns, want 10s 500000000ns", s, n)
+	}
+
+	// withSeconds, withNanos
+	dWS := durationWithSeconds([]any{d, int64(20)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dWS); s != 20 || n != 500000000 {
+		t.Errorf("withSeconds(20) = %ds %dns, want 20s 500000000ns", s, n)
+	}
+	dWN := durationWithNanos([]any{d, int64(100)}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dWN); s != 10 || n != 100 {
+		t.Errorf("withNanos(100) = %ds %dns, want 10s 100ns", s, n)
+	}
+
+	// truncatedTo
+	dTruncSec := durationTruncatedTo([]any{d, ghelpers.CreateTemporalUnit("SECONDS")}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dTruncSec); s != 10 || n != 0 {
+		t.Errorf("truncatedTo(SECONDS) = %ds %dns, want 10s 0ns", s, n)
+	}
+
+	dHour := CreateDuration(3665, 500000000)
+	dTruncHour := durationTruncatedTo([]any{dHour, ghelpers.CreateTemporalUnit("HOURS")}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(dTruncHour); s != 3600 || n != 0 {
+		t.Errorf("truncatedTo(HOURS) = %ds %dns, want 3600s 0ns", s, n)
 	}
 }
 
-func TestDurationStringAndParse(t *testing.T) {
-	globals.InitGlobals("test")
+func TestDurationConversionsAndParts(t *testing.T) {
+	durationTestInit()
 
-	tests := []struct {
-		input    string
-		expectedS int64
-		expectedN int32
-	}{
-		{"PT1H", 3600, 0},
-		{"PT1M", 60, 0},
-		{"PT1S", 1, 0},
-		{"PT1.5S", 1, 500000000},
-		{"PT0.000000001S", 0, 1},
-		{"-PT1S", -1, 0},
-		{"PT-1S", -1, 0},
-		{"PT-6H+3M", -6*3600 + 3*60, 0},
-		{"PT-1M-1S", -61, 0},
-		{"-PT-1M-1S", 61, 0},
-		{"P1DT1H", 86400 + 3600, 0},
+	d := CreateDuration(90065, 123456789) // 1 day, 1 hour, 1 min, 5 sec + nanos
+
+	if days := durationToDays([]any{d}).(int64); days != 1 {
+		t.Errorf("toDays() = %d, want 1", days)
+	}
+	if hours := durationToHours([]any{d}).(int64); hours != 25 {
+		t.Errorf("toHours() = %d, want 25", hours)
+	}
+	if mins := durationToMinutes([]any{d}).(int64); mins != 1501 {
+		t.Errorf("toMinutes() = %d, want 1501", mins)
+	}
+	if secs := durationToSeconds([]any{d}).(int64); secs != 90065 {
+		t.Errorf("toSeconds() = %d, want 90065", secs)
+	}
+	if millis := durationToMillis([]any{d}).(int64); millis != 90065123 {
+		t.Errorf("toMillis() = %d, want 90065123", millis)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			inputObj := object.StringObjectFromGoString(tt.input)
-			res := durationParse([]any{inputObj})
-			dur, ok := res.(*object.Object)
-			if !ok {
-				t.Fatalf("parse failed for %s: %v", tt.input, res)
-			}
-			s := dur.FieldTable["seconds"].Fvalue.(int64)
-			n := dur.FieldTable["nanos"].Fvalue.(int64)
-			if s != tt.expectedS || int32(n) != tt.expectedN {
-				t.Errorf("Parse %s: expected (%d, %d), got (%d, %d)", tt.input, tt.expectedS, tt.expectedN, s, n)
-			}
-
-			// Test toString
-			strRes := durationToString([]any{dur})
-			strObj := strRes.(*object.Object)
-			str := object.GoStringFromStringObject(strObj)
-			
-			// Re-parse the toString output and it should result in the same duration
-			res2 := durationParse([]any{strObj})
-			dur2 := res2.(*object.Object)
-			s2 := dur2.FieldTable["seconds"].Fvalue.(int64)
-			n2 := dur2.FieldTable["nanos"].Fvalue.(int64)
-			if s2 != s || n2 != n {
-				t.Errorf("ToString/Parse roundtrip failed for %s: original (%d, %d), toString %s, re-parsed (%d, %d)", tt.input, s, n, str, s2, n2)
-			}
-		})
+	// Parts
+	if dp := durationToDaysPart([]any{d}).(int64); dp != 1 {
+		t.Errorf("toDaysPart() = %d, want 1", dp)
+	}
+	if hp := durationToHoursPart([]any{d}).(int64); hp != 1 {
+		t.Errorf("toHoursPart() = %d, want 1", hp)
+	}
+	if mp := durationToMinutesPart([]any{d}).(int64); mp != 1 {
+		t.Errorf("toMinutesPart() = %d, want 1", mp)
+	}
+	if sp := durationToSecondsPart([]any{d}).(int64); sp != 5 {
+		t.Errorf("toSecondsPart() = %d, want 5", sp)
+	}
+	if mlp := durationToMillisPart([]any{d}).(int64); mlp != 123 {
+		t.Errorf("toMillisPart() = %d, want 123", mlp)
+	}
+	if np := durationToNanosPart([]any{d}).(int64); np != 123456789 {
+		t.Errorf("toNanosPart() = %d, want 123456789", np)
 	}
 }
 
-func TestDurationParts(t *testing.T) {
-	globals.InitGlobals("test")
+func TestDurationAddToSubtractFrom(t *testing.T) {
+	durationTestInit()
 
-	// 90061 seconds = 1 day (86400) + 1 hour (3600) + 1 minute (60) + 1 second (1)
-	// nanos = 123,000,000
-	dur := createDuration(90061, 123000000)
+	d := CreateDuration(3600, 0) // 1 hour
+	inst := CreateInstant(1000, 0)
 
-	if res := durationToDaysPart([]any{dur}); res.(int64) != 1 {
-		t.Errorf("toDaysPart: expected 1, got %v", res)
+	added := durationAddTo([]any{d, inst}).(*object.Object)
+	if s, _, _ := getInstantSecNano(added); s != 4600 {
+		t.Errorf("addTo(Instant) = %ds, want 4600s", s)
 	}
-	if res := durationToHoursPart([]any{dur}); res.(int64) != 1 {
-		t.Errorf("toHoursPart: expected 1, got %v", res)
+
+	subbed := durationSubtractFrom([]any{d, added}).(*object.Object)
+	if s, _, _ := getInstantSecNano(subbed); s != 1000 {
+		t.Errorf("subtractFrom(Instant) = %ds, want 1000s", s)
 	}
-	if res := durationToMinutesPart([]any{dur}); res.(int64) != 1 {
-		t.Errorf("toMinutesPart: expected 1, got %v", res)
+}
+
+func TestDurationComparisonsAndFormatting(t *testing.T) {
+	durationTestInit()
+
+	d1 := CreateDuration(10, 0)
+	d2 := CreateDuration(20, 0)
+	d3 := CreateDuration(10, 0)
+
+	if cmp := durationCompareTo([]any{d1, d2}).(int64); cmp >= 0 {
+		t.Errorf("d1.compareTo(d2) = %d, want <0", cmp)
 	}
-	if res := durationToSecondsPart([]any{dur}); res.(int64) != 1 {
-		t.Errorf("toSecondsPart: expected 1, got %v", res)
+	if cmp := durationCompareTo([]any{d2, d1}).(int64); cmp <= 0 {
+		t.Errorf("d2.compareTo(d1) = %d, want >0", cmp)
 	}
-	if res := durationToMillisPart([]any{dur}); res.(int64) != 123 {
-		t.Errorf("toMillisPart: expected 123, got %v", res)
+	if cmp := durationCompareTo([]any{d1, d3}).(int64); cmp != 0 {
+		t.Errorf("d1.compareTo(d3) = %d, want 0", cmp)
 	}
-	if res := durationToNanosPart([]any{dur}); res.(int64) != 123000000 {
-		t.Errorf("toNanosPart: expected 123000000, got %v", res)
+
+	if eq := durationEquals([]any{d1, d3}).(int64); eq != types.JavaBoolTrue {
+		t.Errorf("d1.equals(d3) = false, want true")
+	}
+	if eq := durationEquals([]any{d1, d2}).(int64); eq != types.JavaBoolFalse {
+		t.Errorf("d1.equals(d2) = true, want false")
+	}
+
+	if h1, h3 := durationHashCode([]any{d1}).(int64), durationHashCode([]any{d3}).(int64); h1 != h3 {
+		t.Errorf("hashCode mismatch: %d != %d", h1, h3)
+	}
+
+	// toString & parse
+	dStr := CreateDuration(3665, 123000000)
+	strObj := durationToString([]any{dStr}).(*object.Object)
+	str := object.GoStringFromStringObject(strObj)
+	if str != "PT1H1M5.123S" {
+		t.Errorf("toString = %q, want 'PT1H1M5.123S'", str)
+	}
+
+	parsed := durationParse([]any{object.StringObjectFromGoString("PT1H1M5.123S")}).(*object.Object)
+	if s, n, _ := getDurationSecondsNanos(parsed); s != 3665 || n != 123000000 {
+		t.Errorf("parse('PT1H1M5.123S') = %ds %dns, want 3665s 123000000ns", s, n)
 	}
 }

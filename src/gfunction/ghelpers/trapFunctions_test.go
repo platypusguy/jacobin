@@ -33,6 +33,14 @@ func TestTrapFunctions_ReturnUnsupported(t *testing.T) {
 	if blk, ok := TrapProtected(nil).(*GErrBlk); !ok || blk.ExceptionType != excNames.UnsupportedOperationException || !strings.Contains(blk.ErrMsg, "TRAP:") {
 		t.Fatalf("TrapProtected expected UnsupportedOperationException with TRAP: message, got %+v", blk)
 	}
+	// TrapKeyPairGeneration
+	if blk, ok := TrapKeyPairGeneration(nil).(*GErrBlk); !ok || blk.ExceptionType != excNames.SecurityException || !strings.Contains(blk.ErrMsg, "KeyPairGenerator") {
+		t.Fatalf("TrapKeyPairGeneration expected SecurityException with KeyPairGenerator message, got %+v", blk)
+	}
+	// TrapUnicode
+	if blk, ok := TrapUnicode(nil).(*GErrBlk); !ok || blk.ExceptionType != excNames.UnsupportedOperationException || !strings.Contains(blk.ErrMsg, "Unicode") {
+		t.Fatalf("TrapUnicode expected UnsupportedOperationException with Unicode message, got %+v", blk)
+	}
 }
 
 // Trap Preview
