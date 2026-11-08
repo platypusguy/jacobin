@@ -58,6 +58,19 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 		return nil, err
 	}
 
+	// Retrieve BSM signature to determine argument layout
+	mhCpe := FetchCPentry(cp, int(bsm.MethodRef))
+	if mhCpe.EntryType != MethodHandle {
+		return nil, fmt.Errorf("ResolveCallSite: CP entry at %d is not a MethodHandle", bsm.MethodRef)
+	}
+	refIndex := int(mhCpe.AddrVal.entry2)
+	var bsmSig string
+	if refIndex >= 1 && refIndex < len(cp.CpIndex) && cp.CpIndex[refIndex].Type == Interface {
+		_, _, bsmSig = GetMethInfoFromCPinterfaceRef(cp, refIndex)
+	} else {
+		_, _, bsmSig, _ = GetMethInfoFromCPmethref(cp, refIndex)
+	}
+
 	// Resolve Static Arguments
 	// bsm.Args is a list of indices into the Constant Pool.
 	// These must be resolved to Java objects
@@ -74,7 +87,8 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 	// Per JVMS 5.4.3.6, the BSM is invoked with a Lookup object for the caller class, the call site name,
 	// the call site MethodType, then the resolved static arguments in order.
 	// The resolves arguments to the BSM are always static and if primitives, always boxed.
-	bsmArgs, err := marshalBSMArgs(fr, methName, methType, staticArgs)
+	// When the BSM expects varargs (e.g. Object... constants), trailing static arguments are packed into an array.
+	bsmArgs, err := marshalBSMArgs(fr, methName, methType, bsmSig, staticArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +98,10 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 }
 
 // marshalBSMArgs assembles the argument list for bootstrap method invocation.
-func marshalBSMArgs(fr *frames.Frame, methName, methType string, staticArgs []*object.Object) ([]any, error) {
+// When the target bootstrap method signature expects varargs (e.g. [Ljava/lang/Object;),
+// any trailing static arguments beyond the fixed parameters are packed into an array
+// (or an empty array/slice if no extra constants exist).
+func marshalBSMArgs(fr *frames.Frame, methName, methType, bsmSig string, staticArgs []*object.Object) ([]any, error) {
 	// arg 0: a Lookup object bound to the caller class (for caller-sensitive BSMs).
 	callerClassObj, err := getClassObj("L"+fr.ClName+";", fr)
 	if err != nil {
@@ -100,7 +117,35 @@ func marshalBSMArgs(fr *frames.Frame, methName, methType string, staticArgs []*o
 		return nil, fmt.Errorf("marshalBSMArgs: %w", err)
 	}
 
-	// args 3+: the resolved static arguments, in order.
+	// Check if the BSM signature expects 5 parameters ending with [Ljava/lang/Object;
+	// e.g. StringConcatFactory.makeConcatWithConstants(Lookup, String, MethodType, String, Object...)
+	// which has descriptor (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+	if strings.Contains(bsmSig, "[Ljava/lang/Object;)") {
+		params := make([]any, 5)
+		params[0] = makeLookupObject(callerClassObj)
+		params[1] = nameObj
+		params[2] = typeObj
+
+		// Parameter 3 is the recipe string
+		if len(staticArgs) > 0 {
+			params[3] = staticArgs[0]
+		} else {
+			params[3] = object.StringObjectFromGoString("")
+		}
+
+		// Parameter 4 is Object... constants (pack staticArgs[1:] into an array/slice)
+		var extraConstants []*object.Object
+		if len(staticArgs) > 1 {
+			extraConstants = staticArgs[1:]
+		} else {
+			extraConstants = make([]*object.Object, 0)
+		}
+		params[4] = extraConstants
+
+		return params, nil
+	}
+
+	// Standard fallback for non-varargs BSMs
 	params := make([]any, 0, 3+len(staticArgs))
 	params = append(params, makeLookupObject(callerClassObj), nameObj, typeObj)
 	for _, sa := range staticArgs {
@@ -140,7 +185,13 @@ func invokeBSM(cp *CPool, bsm BootstrapMethod, bsmHandle *object.Object, params 
 	if mhCpe.EntryType != MethodHandle {
 		return nil, fmt.Errorf("invokeBSM: CP entry at %d is not a MethodHandle", bsm.MethodRef)
 	}
-	bsmClass, bsmName, bsmSig, _ := GetMethInfoFromCPmethref(cp, int(mhCpe.AddrVal.entry2))
+	refIndex := int(mhCpe.AddrVal.entry2)
+	var bsmClass, bsmName, bsmSig string
+	if refIndex >= 1 && refIndex < len(cp.CpIndex) && cp.CpIndex[refIndex].Type == Interface {
+		bsmClass, bsmName, bsmSig = GetMethInfoFromCPinterfaceRef(cp, refIndex)
+	} else {
+		bsmClass, bsmName, bsmSig, _ = GetMethInfoFromCPmethref(cp, refIndex)
+	}
 	bsmFQN := bsmClass + "." + bsmName + bsmSig
 
 	// The executable payload must be a gfunction (see doc comment above).

@@ -97,6 +97,202 @@ func TestResolveCallSite_ClassNotFound(t *testing.T) {
 	}
 }
 
+// --- marshalBSMArgs ---
+
+func TestMarshalBSMArgs_Structure_NonVarargs(t *testing.T) {
+	setupMhResolutionTest(t)
+
+	callerClass := "caller/MyClass"
+	MethAreaInsert(callerClass, &Klass{Status: 'N', Data: &ClData{Name: callerClass}})
+
+	fr := frames.CreateFrame(1)
+	fr.ClName = callerClass
+
+	staticArg1 := object.StringObjectFromGoString("recipe\x01")
+	staticArgs := []*object.Object{staticArg1}
+
+	bsmSig := "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;)Ljava/lang/invoke/CallSite;"
+	params, err := marshalBSMArgs(fr, "testMethod", "(Ljava/lang/String;)Ljava/lang/String;", bsmSig, staticArgs)
+	if err != nil {
+		t.Fatalf("marshalBSMArgs failed: %v", err)
+	}
+
+	if len(params) != 4 {
+		t.Fatalf("Expected 4 parameters (lookup, name, type, staticArg), got %d", len(params))
+	}
+
+	// Param 0: MethodHandles.Lookup object
+	lookupObj, ok := params[0].(*object.Object)
+	if !ok || lookupObj == nil {
+		t.Fatalf("Param 0 is not a non-nil *object.Object")
+	}
+	lookupClassName := stringPool.GetStringPointer(lookupObj.KlassName)
+	if lookupClassName == nil || *lookupClassName != "java/lang/invoke/MethodHandles$Lookup" {
+		t.Errorf("Param 0 class name: expected 'java/lang/invoke/MethodHandles$Lookup', got %v", lookupClassName)
+	}
+	lookupClassField, ok := lookupObj.FieldTable["lookupClass"]
+	if !ok || lookupClassField.Fvalue == nil {
+		t.Errorf("Param 0 Lookup object missing lookupClass field")
+	}
+
+	// Param 1: CallSite name (java.lang.String)
+	nameObj, ok := params[1].(*object.Object)
+	if !ok || nameObj == nil {
+		t.Fatalf("Param 1 is not a non-nil *object.Object")
+	}
+	if gotName := object.GoStringFromStringObject(nameObj); gotName != "testMethod" {
+		t.Errorf("Param 1 name: expected 'testMethod', got '%s'", gotName)
+	}
+
+	// Param 2: CallSite MethodType (java.lang.invoke.MethodType)
+	typeObj, ok := params[2].(*object.Object)
+	if !ok || typeObj == nil {
+		t.Fatalf("Param 2 is not a non-nil *object.Object")
+	}
+
+	// Param 3: static argument
+	if params[3] != staticArg1 {
+		t.Errorf("Param 3: expected staticArg1, got %v", params[3])
+	}
+}
+
+func TestMarshalBSMArgs_Varargs_SingleRecipe(t *testing.T) {
+	setupMhResolutionTest(t)
+
+	callerClass := "caller/MyClass"
+	MethAreaInsert(callerClass, &Klass{Status: 'N', Data: &ClData{Name: callerClass}})
+
+	fr := frames.CreateFrame(1)
+	fr.ClName = callerClass
+
+	recipeArg := object.StringObjectFromGoString("Hello \x01")
+	staticArgs := []*object.Object{recipeArg}
+
+	bsmSig := "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
+	params, err := marshalBSMArgs(fr, "makeConcatWithConstants", "(Ljava/lang/String;)Ljava/lang/String;", bsmSig, staticArgs)
+	if err != nil {
+		t.Fatalf("marshalBSMArgs failed: %v", err)
+	}
+
+	if len(params) != 5 {
+		t.Fatalf("Expected 5 parameters (lookup, name, type, recipe, constants), got %d", len(params))
+	}
+
+	// Param 0: Lookup
+	if _, ok := params[0].(*object.Object); !ok {
+		t.Errorf("Param 0 is not a non-nil *object.Object")
+	}
+	// Param 1: CallSite name
+	if nameObj, ok := params[1].(*object.Object); !ok || object.GoStringFromStringObject(nameObj) != "makeConcatWithConstants" {
+		t.Errorf("Param 1 name mismatch: %v", params[1])
+	}
+	// Param 2: CallSite MethodType
+	if _, ok := params[2].(*object.Object); !ok {
+		t.Errorf("Param 2 is not a non-nil *object.Object")
+	}
+	// Param 3: Recipe
+	if params[3] != recipeArg {
+		t.Errorf("Param 3: expected recipeArg, got %v", params[3])
+	}
+	// Param 4: Extra constants (empty slice)
+	constantsSlice, ok := params[4].([]*object.Object)
+	if !ok {
+		t.Fatalf("Param 4 is not []*object.Object, got %T", params[4])
+	}
+	if len(constantsSlice) != 0 {
+		t.Errorf("Param 4: expected empty slice, got %d elements", len(constantsSlice))
+	}
+}
+
+func TestMarshalBSMArgs_Varargs_WithExtraConstants(t *testing.T) {
+	setupMhResolutionTest(t)
+
+	callerClass := "caller/MyClass"
+	MethAreaInsert(callerClass, &Klass{Status: 'N', Data: &ClData{Name: callerClass}})
+
+	fr := frames.CreateFrame(1)
+	fr.ClName = callerClass
+
+	recipeArg := object.StringObjectFromGoString("Answer: \x01, Code: \x02")
+	const1 := object.StringObjectFromGoString("extraConst1")
+	const2 := object.StringObjectFromGoString("extraConst2")
+	staticArgs := []*object.Object{recipeArg, const1, const2}
+
+	bsmSig := "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
+	params, err := marshalBSMArgs(fr, "makeConcatWithConstants", "(Ljava/lang/String;)Ljava/lang/String;", bsmSig, staticArgs)
+	if err != nil {
+		t.Fatalf("marshalBSMArgs failed: %v", err)
+	}
+
+	if len(params) != 5 {
+		t.Fatalf("Expected 5 parameters, got %d", len(params))
+	}
+
+	if params[3] != recipeArg {
+		t.Errorf("Param 3: expected recipeArg, got %v", params[3])
+	}
+
+	constantsSlice, ok := params[4].([]*object.Object)
+	if !ok {
+		t.Fatalf("Param 4 is not []*object.Object, got %T", params[4])
+	}
+	if len(constantsSlice) != 2 {
+		t.Fatalf("Param 4: expected 2 elements, got %d", len(constantsSlice))
+	}
+	if constantsSlice[0] != const1 || constantsSlice[1] != const2 {
+		t.Errorf("Param 4 elements mismatch: got %v", constantsSlice)
+	}
+}
+
+func TestMarshalBSMArgs_Varargs_NoStaticArgs(t *testing.T) {
+	setupMhResolutionTest(t)
+
+	callerClass := "caller/MyClass"
+	MethAreaInsert(callerClass, &Klass{Status: 'N', Data: &ClData{Name: callerClass}})
+
+	fr := frames.CreateFrame(1)
+	fr.ClName = callerClass
+
+	bsmSig := "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
+	params, err := marshalBSMArgs(fr, "makeConcatWithConstants", "()Ljava/lang/String;", bsmSig, nil)
+	if err != nil {
+		t.Fatalf("marshalBSMArgs failed: %v", err)
+	}
+
+	if len(params) != 5 {
+		t.Fatalf("Expected 5 parameters, got %d", len(params))
+	}
+
+	recipeObj, ok := params[3].(*object.Object)
+	if !ok || object.GoStringFromStringObject(recipeObj) != "" {
+		t.Errorf("Param 3: expected empty string object, got %v", params[3])
+	}
+
+	constantsSlice, ok := params[4].([]*object.Object)
+	if !ok || len(constantsSlice) != 0 {
+		t.Errorf("Param 4: expected empty slice, got %v", params[4])
+	}
+}
+
+func TestMarshalBSMArgs_ClassNotFound(t *testing.T) {
+	setupMhResolutionTest(t)
+
+	globals.GetGlobalRef().FuncInvokeGFunction = func(_ string, _ []interface{}) interface{} {
+		return nil
+	}
+
+	fr := frames.CreateFrame(1)
+	fr.ClName = "unregistered/CallerClass"
+
+	_, err := marshalBSMArgs(fr, "testMethod", "()V", "()V", nil)
+	if err == nil {
+		t.Fatalf("Expected error when caller class object cannot be resolved, got nil")
+	}
+	if !strings.Contains(err.Error(), "could not get Class object for caller") {
+		t.Errorf("Expected 'could not get Class object for caller' in error message, got: %v", err)
+	}
+}
+
 // --- ResolveStaticArgument ---
 
 func TestResolveStaticArgument_InvalidIndexZero(t *testing.T) {
