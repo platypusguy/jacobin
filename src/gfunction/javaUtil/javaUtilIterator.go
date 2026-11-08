@@ -100,6 +100,14 @@ func iteratorHasNext(params []interface{}) interface{} {
 		if index < int64(len(mapKeys)) {
 			return types.JavaBoolTrue
 		}
+	case "java/util/TreeSet":
+		hasNext, err := treeSetIteratorHasNext(self)
+		if err != nil {
+			return err
+		}
+		if hasNext {
+			return types.JavaBoolTrue
+		}
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("iteratorHasNext: Unsupported collection type %s", className))
 	}
@@ -181,6 +189,9 @@ func iteratorNext(params []interface{}) interface{} {
 			return object.StringObjectFromGoString(s)
 		}
 		return key
+
+	case "java/util/TreeSet":
+		return treeSetIteratorNext(self)
 	}
 
 	return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("iteratorNext: Unsupported collection type %s", className))
@@ -250,6 +261,9 @@ func iteratorRemove(params []interface{}) interface{} {
 	case "java/util/HashMap", "java/util/HashSet", "java/util/concurrent/ConcurrentHashMap":
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "iteratorRemove: Not supported for maps")
 
+	case "java/util/TreeSet":
+		return treeSetIteratorRemove(self)
+
 	default:
 		return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, fmt.Sprintf("iteratorRemove: Unsupported collection type %s", className))
 	}
@@ -284,6 +298,14 @@ func NewIterator(collection *object.Object) *object.Object {
 				keys = append(keys, k)
 			}
 			o.FieldTable[iteratorMapKeysField] = object.Field{Ftype: types.RefArray, Fvalue: keys}
+		}
+	case "java/util/TreeSet":
+		view, err := treeSetViewFromObject(collection)
+		if err == nil {
+			o.FieldTable[treeSetIteratorValues] = object.Field{Ftype: types.Ref, Fvalue: treeSetVisibleElements(view)}
+			o.FieldTable[treeSetExpectedModCount] = object.Field{Ftype: types.Long, Fvalue: view.data.modCount}
+			o.FieldTable[treeSetIteratorLast] = object.Field{Ftype: types.Int, Fvalue: int64(-1)}
+			o.FieldTable[iteratorIndexField] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
 		}
 	}
 	return o
