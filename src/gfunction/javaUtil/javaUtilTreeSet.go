@@ -65,6 +65,7 @@ func Load_Util_Tree_Set() {
 	reg("descendingIterator()Ljava/util/Iterator;", 0, treeSetDescendingIterator, true)
 	reg("descendingSet()Ljava/util/NavigableSet;", 0, treeSetDescendingSet, false)
 	reg("first()Ljava/lang/Object;", 0, treeSetFirst, true)
+	reg("ceiling(Ljava/lang/Object;)Ljava/lang/Object;", 1, treeSetCeiling, true)
 	reg("floor(Ljava/lang/Object;)Ljava/lang/Object;", 1, treeSetFloor, true)
 	reg("headSet(Ljava/lang/Object;)Ljava/util/SortedSet;", 1, treeSetHeadSetInclusive, true)
 	reg("headSet(Ljava/lang/Object;Z)Ljava/util/NavigableSet;", 2, treeSetHeadSet, true)
