@@ -15,9 +15,6 @@
 #Jetbrains artifacts
 .idea/
 
-# Markdown artifacts
-*.md
-
 #Ancillary dirs and files that should not be checked in
 reports/
 myNotes/
