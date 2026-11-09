@@ -9,7 +9,7 @@ Jacobin is a Go-based Java Virtual Machine (JVM). Its primary objective is corre
 
 #### 1. Uniform 64-Bit Call-Stack Slot Layout
 - Every stack entry and local variable slot in Jacobin is strictly 64 bits:
-  - Reference pointer (`*object.Object` or `nil`)
+  - Reference pointer (`*object.Object` or `object.Null`)
   - 64-bit integer (`int64`)
   - 64-bit floating point (`float64`)
 - **Single-Slot Convention**: Unlike HotSpot, Jacobin allocates **exactly one parameter slot** for `long` (`J`) and `double` (`D`) primitive arguments in method parameter lists. When registering `ParamSlots` in `ghelpers.MethodSignatures`, count `J` and `D` as 1 slot each.
