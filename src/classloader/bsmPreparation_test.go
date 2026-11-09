@@ -97,7 +97,7 @@ func TestResolveCallSite_ClassNotFound(t *testing.T) {
 	}
 }
 
-// --- marshalBSMArgs ---
+// --- marshalBSMargs ---
 
 func TestMarshalBSMArgs_Structure_NonVarargs(t *testing.T) {
 	setupMhResolutionTest(t)
@@ -112,9 +112,9 @@ func TestMarshalBSMArgs_Structure_NonVarargs(t *testing.T) {
 	staticArgs := []*object.Object{staticArg1}
 
 	bsmSig := "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;)Ljava/lang/invoke/CallSite;"
-	params, err := marshalBSMArgs(fr, "testMethod", "(Ljava/lang/String;)Ljava/lang/String;", bsmSig, staticArgs)
+	params, err := marshalBSMargs(fr, "testMethod", "(Ljava/lang/String;)Ljava/lang/String;", bsmSig, staticArgs)
 	if err != nil {
-		t.Fatalf("marshalBSMArgs failed: %v", err)
+		t.Fatalf("marshalBSMargs failed: %v", err)
 	}
 
 	if len(params) != 4 {
@@ -169,9 +169,9 @@ func TestMarshalBSMArgs_Varargs_SingleRecipe(t *testing.T) {
 	staticArgs := []*object.Object{recipeArg}
 
 	bsmSig := "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
-	params, err := marshalBSMArgs(fr, "makeConcatWithConstants", "(Ljava/lang/String;)Ljava/lang/String;", bsmSig, staticArgs)
+	params, err := marshalBSMargs(fr, "makeConcatWithConstants", "(Ljava/lang/String;)Ljava/lang/String;", bsmSig, staticArgs)
 	if err != nil {
-		t.Fatalf("marshalBSMArgs failed: %v", err)
+		t.Fatalf("marshalBSMargs failed: %v", err)
 	}
 
 	if len(params) != 5 {
@@ -219,9 +219,9 @@ func TestMarshalBSMArgs_Varargs_WithExtraConstants(t *testing.T) {
 	staticArgs := []*object.Object{recipeArg, const1, const2}
 
 	bsmSig := "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
-	params, err := marshalBSMArgs(fr, "makeConcatWithConstants", "(Ljava/lang/String;)Ljava/lang/String;", bsmSig, staticArgs)
+	params, err := marshalBSMargs(fr, "makeConcatWithConstants", "(Ljava/lang/String;)Ljava/lang/String;", bsmSig, staticArgs)
 	if err != nil {
-		t.Fatalf("marshalBSMArgs failed: %v", err)
+		t.Fatalf("marshalBSMargs failed: %v", err)
 	}
 
 	if len(params) != 5 {
@@ -254,9 +254,9 @@ func TestMarshalBSMArgs_Varargs_NoStaticArgs(t *testing.T) {
 	fr.ClName = callerClass
 
 	bsmSig := "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
-	params, err := marshalBSMArgs(fr, "makeConcatWithConstants", "()Ljava/lang/String;", bsmSig, nil)
+	params, err := marshalBSMargs(fr, "makeConcatWithConstants", "()Ljava/lang/String;", bsmSig, nil)
 	if err != nil {
-		t.Fatalf("marshalBSMArgs failed: %v", err)
+		t.Fatalf("marshalBSMargs failed: %v", err)
 	}
 
 	if len(params) != 5 {
@@ -284,7 +284,7 @@ func TestMarshalBSMArgs_ClassNotFound(t *testing.T) {
 	fr := frames.CreateFrame(1)
 	fr.ClName = "unregistered/CallerClass"
 
-	_, err := marshalBSMArgs(fr, "testMethod", "()V", "()V", nil)
+	_, err := marshalBSMargs(fr, "testMethod", "()V", "()V", nil)
 	if err == nil {
 		t.Fatalf("Expected error when caller class object cannot be resolved, got nil")
 	}

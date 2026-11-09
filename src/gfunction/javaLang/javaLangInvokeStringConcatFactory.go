@@ -78,9 +78,7 @@ func stringConcatFactory_makeConcatWithConstants(params []any) any {
 		}
 	}
 
-	trace.Raw(fmt.Sprintf("method type: %s", object.GoStringFromStringObject(params[2].(*object.Object))))
 	trace.Raw(fmt.Sprintf("recipe: %s", object.GoStringFromStringObject(params[3].(*object.Object))))
-	// trace.Raw("\tpassed-in args (pargs):")
 	constants := params[4].([]*object.Object)
 	if len(constants) > 0 {
 		trace.Raw("constants/args:")

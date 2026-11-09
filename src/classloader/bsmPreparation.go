@@ -88,7 +88,7 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 	// the call site MethodType, then the resolved static arguments in order.
 	// The resolves arguments to the BSM are always static and if primitives, always boxed.
 	// When the BSM expects varargs (e.g. Object... constants), trailing static arguments are packed into an array.
-	bsmArgs, err := marshalBSMArgs(fr, methName, methType, bsmSig, staticArgs)
+	bsmArgs, err := marshalBSMargs(fr, methName, methType, bsmSig, staticArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -97,15 +97,15 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 	return invokeBSM(cp, bsm, bsmHandle, bsmArgs)
 }
 
-// marshalBSMArgs assembles the argument list for bootstrap method invocation.
+// marshalBSMargs assembles the argument list for bootstrap method invocation.
 // When the target bootstrap method signature expects varargs (e.g. [Ljava/lang/Object;),
 // any trailing static arguments beyond the fixed parameters are packed into an array
 // (or an empty array/slice if no extra constants exist).
-func marshalBSMArgs(fr *frames.Frame, methName, methType, bsmSig string, staticArgs []*object.Object) ([]any, error) {
+func marshalBSMargs(fr *frames.Frame, methName, methType, bsmSig string, staticArgs []*object.Object) ([]any, error) {
 	// arg 0: a Lookup object bound to the caller class (for caller-sensitive BSMs).
 	callerClassObj, err := getClassObj("L"+fr.ClName+";", fr)
 	if err != nil {
-		return nil, fmt.Errorf("marshalBSMArgs: could not get Class object for caller %s: %w", fr.ClName, err)
+		return nil, fmt.Errorf("marshalBSMargs: could not get Class object for caller %s: %w", fr.ClName, err)
 	}
 
 	// arg 1: the call site name.
@@ -114,7 +114,7 @@ func marshalBSMArgs(fr *frames.Frame, methName, methType, bsmSig string, staticA
 	// arg 2: the call site type as a MethodType object.
 	typeObj, err := getMethodTypeObject(methType, fr)
 	if err != nil {
-		return nil, fmt.Errorf("marshalBSMArgs: %w", err)
+		return nil, fmt.Errorf("marshalBSMargs: %w", err)
 	}
 
 	// Check if the BSM signature expects 5 parameters ending with [Ljava/lang/Object;
