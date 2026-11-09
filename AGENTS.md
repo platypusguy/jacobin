@@ -17,7 +17,7 @@ Jacobin is a Go-based Java Virtual Machine (JVM). Its primary objective is corre
 #### 2. G-Function Return & Error Contract
 Every G-function must strictly adhere to the two-way return convention:
 - **Success**: Return the type matching the descriptor in the method signature:
-  - Reference types (`L...;`, `[`): `*object.Object` (or `nil` for Java `null`).
+  - Reference types (`L...;`, `[`): `*object.Object` (or `object.Null` for Java `null`).
   - Integer / Boolean primitives (`Z`, `B`, `C`, `S`, `I`, `J`): 64-bit integer (`int64`, `types.JavaBoolTrue`, `types.JavaBoolFalse`).
   - Floating-point primitives (`F`, `D`): `float64` / `float32`.
   - `void` (`V`): `nil` or `ghelpers.VoidReturn()`.
@@ -68,3 +68,4 @@ While values are passed as 64-bit entries, all arithmetic operations must strict
   - Run full test suite: `go test ./...`
   - Cross-platform check (Windows compatibility): `GOOS=windows go test -c ./src/gfunction/...`
 - **Zero Regressions**: All existing tests must pass before concluding any modification.
+- **Jacotest**: Run the `.github/workflows/jacotest_multiple_oses.yml` work file (6 O/Ses) to make sure that the results are consistent.
