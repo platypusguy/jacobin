@@ -45,7 +45,7 @@ While values are passed as 64-bit entries, all arithmetic operations must strict
 ### Package Structure & Responsibilities
 
 - `src/gfunction/`: Standard library method table loaders and execution dispatchers.
-  - `src/gfunction/ghelpers/`: Universal G-function helpers, conversions, and OS-specific bridges (`zoneHelpers_posix.go`, `zoneHelpers_windows.go`).
+  - `src/gfunction/ghelpers/`: Universal G-function helpers, conversions, and the platform-neutral JDK TZDB zone helpers (`zoneHelpers.go`).
   - `src/gfunction/javaTime/`: Implementation of `java.time.*` and `java.time.zone.*` classes.
   - `src/gfunction/javaUtil/`: Collections, utilities, and currency/locale support.
   - `src/gfunction/javaLang/`: Core language primitives, reflection, and system classes.
