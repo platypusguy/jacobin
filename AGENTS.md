@@ -57,7 +57,7 @@ While values are passed as 64-bit entries, all arithmetic operations must strict
 
 ---
 
-### Verification and Testing Standards
+### Testing Standards
 
 - **Unit Tests**: Every new G-function or module must be accompanied by unit tests covering:
   - Normal execution paths and return values.
