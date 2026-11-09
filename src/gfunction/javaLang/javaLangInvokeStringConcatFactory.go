@@ -8,6 +8,7 @@ package javaLang
 
 import (
 	"fmt"
+	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
@@ -62,7 +63,30 @@ func stringConcatFactory_makeConcatWithConstants(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.MalformedParametersException, errMsg)
 	}
 
-	trace.Raw(fmt.Sprintf("name of method: %s", object.GoStringFromStringObject(params[1].(*object.Object))))
+	trace.Raw(fmt.Sprintf("calling class: %s", object.GoStringFromStringObject(params[0].(*object.Object))))
+	trace.Raw(fmt.Sprintf("name of callsite method: %s", object.GoStringFromStringObject(params[1].(*object.Object))))
+	// the method type is a java/lang/invoke/MethodType object with ptypes (parameter types) and
+	// rtype (return type), which eventually must be extracted.
+	ptypesArray := params[2].(*object.Object).FieldTable["ptypes"].Fvalue.(*object.Object)
+	ptypes := ptypesArray.FieldTable["value"].Fvalue.([]*object.Object)
+	for i, ptype := range ptypes {
+		klassVal := ptype.FieldTable["$klass"].Fvalue
+		if clData, ok := klassVal.(*classloader.ClData); ok && clData != nil {
+			trace.Raw(fmt.Sprintf("ptype %d $klass: %s", i, clData.Name))
+		} else {
+			trace.Raw(fmt.Sprintf("ptype %d $klass: %v", i, klassVal))
+		}
+	}
 
+	trace.Raw(fmt.Sprintf("method type: %s", object.GoStringFromStringObject(params[2].(*object.Object))))
+	trace.Raw(fmt.Sprintf("recipe: %s", object.GoStringFromStringObject(params[3].(*object.Object))))
+	// trace.Raw("\tpassed-in args (pargs):")
+	constants := params[4].([]*object.Object)
+	if len(constants) > 0 {
+		trace.Raw("constants/args:")
+		for _, constant := range constants {
+			trace.Raw("\t" + object.StringifyAnythingGo(constant))
+		}
+	}
 	return nil
 }

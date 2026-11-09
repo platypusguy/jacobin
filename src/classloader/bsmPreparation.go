@@ -119,7 +119,11 @@ func marshalBSMArgs(fr *frames.Frame, methName, methType, bsmSig string, staticA
 
 	// Check if the BSM signature expects 5 parameters ending with [Ljava/lang/Object;
 	// e.g. StringConcatFactory.makeConcatWithConstants(Lookup, String, MethodType, String, Object...)
-	// which has descriptor (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+	// which has descriptor (
+	//   Ljava/lang/invoke/MethodHandles$Lookup;
+	//   Ljava/lang/String;Ljava/lang/invoke/MethodType;
+	//   Ljava/lang/String;[Ljava/lang/Object;)
+	//      Ljava/lang/invoke/CallSite;
 	if strings.Contains(bsmSig, "[Ljava/lang/Object;)") {
 		params := make([]any, 5)
 		params[0] = makeLookupObject(callerClassObj)

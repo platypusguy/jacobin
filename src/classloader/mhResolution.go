@@ -26,7 +26,6 @@ type MethodHandleSpec struct {
 	CallerClass *object.Object
 }
 
-
 // ResolveMethodHandle resolves a MethodHandle constant pool entry into a runtime representation.
 // This corresponds to the JVM's resolution of a CONSTANT_MethodHandle_info structure.
 //
@@ -298,7 +297,6 @@ func resolveMethodHandleEntry(cp *CPool, refIndex int, isStatic bool, isSpecial 
 	}
 
 	// 2. Get java.lang.Class object for the defining class.
-	// defClassObj, err := getClassObj("L"+className+";", fr) // <<< where elkins 455 test bombs
 	defClassObj, err := getClassObj(className, fr)
 	if err != nil {
 		return nil, fmt.Errorf("resolveMethodHandleEntry: could not get Class object for %s: %w", className, err)
@@ -381,7 +379,7 @@ func getMethodTypeObject(descriptor string, fr *frames.Frame) (*object.Object, e
 	descriptorObj := object.StringObjectFromGoString(descriptor)
 
 	// The class loader is used to resolve class names in the descriptor.
-	// TFor now, we pass nil, which corresponds to the bootstrap class loader.
+	// For now, we pass nil, which corresponds to the bootstrap class loader.
 	params := []any{descriptorObj, nil}
 
 	// We invoke the gfunction for java.lang.invoke.MethodType.fromMethodDescriptorString
@@ -459,4 +457,3 @@ func getClassObj(descriptor string, fr *frames.Frame) (*object.Object, error) {
 	return nil, fmt.Errorf("getClassObj: Class.forName failed for '%s', err: ClassNotFoundException", forNameArg)
 
 }
-
