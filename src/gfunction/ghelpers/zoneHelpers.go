@@ -1,5 +1,3 @@
-//go:build !windows
-
 /*
  * Jacobin VM - A Java virtual machine
  * Copyright (c) 2026 by the Jacobin authors. Consult jacobin.org.
