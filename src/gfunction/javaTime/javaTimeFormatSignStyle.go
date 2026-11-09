@@ -90,55 +90,55 @@ func Load_Time_Format_SignStyle() {
 
 	ghelpers.MethodSignatures["java/time/format/SignStyle.<init>(Ljava/lang/String;I)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  signStyleInit,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/SignStyle.compareTo(Ljava/lang/Enum;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  signStyleCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/SignStyle.compareTo(Ljava/lang/Object;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  signStyleCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/SignStyle.compareTo(Ljava/time/format/SignStyle;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  signStyleCompareTo,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/SignStyle.equals(Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  signStyleEquals,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/SignStyle.hashCode()I"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  signStyleHashCode,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/SignStyle.name()Ljava/lang/String;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  signStyleName,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/SignStyle.ordinal()I"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  signStyleOrdinal,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/SignStyle.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  signStyleToString,
 		}
 
@@ -157,7 +157,7 @@ func Load_Time_Format_SignStyle() {
 	// SignStyle package-private parse/print helper methods in Java time format
 	ghelpers.MethodSignatures["java/time/format/SignStyle.parse(ZZZ)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  signStyleParse,
 		}
 }
@@ -301,9 +301,6 @@ func signStyleHashCode(params []any) any {
 }
 
 func toBool(val any) bool {
-	if b, ok := val.(bool); ok {
-		return b
-	}
 	if i, ok := ghelpers.GetInt64Val(val); ok {
 		return i != types.JavaBoolFalse
 	}

@@ -135,17 +135,18 @@ func TestYearLeapYearAndFormatting(t *testing.T) {
 		{-100, false, 1, 365},
 	} {
 		year := yearTestObject(t, yearOf([]any{test.year}))
-		if got := yearIsLeapStatic([]any{test.year}); got != test.leap {
-			t.Errorf("isLeap(%d) = %v, want %v", test.year, got, test.leap)
+		wantLeap := types.ConvertGoBoolToJavaBool(test.leap)
+		if got := yearIsLeapStatic([]any{test.year}); got != wantLeap {
+			t.Errorf("isLeap(%d) = %v, want %v", test.year, got, wantLeap)
 		}
-		if got := yearIsLeapInstance([]any{year}); got != test.leap {
-			t.Errorf("Year(%d).isLeap() = %v, want %v", test.year, got, test.leap)
+		if got := yearIsLeapInstance([]any{year}); got != wantLeap {
+			t.Errorf("Year(%d).isLeap() = %v, want %v", test.year, got, wantLeap)
 		}
 		if got := yearLength([]any{year}); yearTestValue(t, got) != test.length {
 			t.Errorf("Year(%d).length() = %v, want %d", test.year, got, test.length)
 		}
-		if got := yearIsValidMonthDay([]any{year, yearTestMonthDay(2, 29)}); got != test.leap {
-			t.Errorf("Year(%d).isValidMonthDay(February 29) = %v, want %v", test.year, got, test.leap)
+		if got := yearIsValidMonthDay([]any{year, yearTestMonthDay(2, 29)}); got != wantLeap {
+			t.Errorf("Year(%d).isValidMonthDay(February 29) = %v, want %v", test.year, got, wantLeap)
 		}
 	}
 
@@ -198,11 +199,11 @@ func TestYearTemporalFieldsAndArithmetic(t *testing.T) {
 	eraField := getChronoField("ERA")
 	monthField := getChronoField("MONTH_OF_YEAR")
 	for _, field := range []*object.Object{yearField, yearOfEraField, eraField} {
-		if got := yearIsSupportedField([]any{year, field}); got != true {
+		if got := yearIsSupportedField([]any{year, field}); got != types.JavaBoolTrue {
 			t.Errorf("Year should support field %q", getTemporalFieldName(field))
 		}
 	}
-	if got := yearIsSupportedField([]any{year, monthField}); got != false {
+	if got := yearIsSupportedField([]any{year, monthField}); got != types.JavaBoolFalse {
 		t.Error("Year should not support MONTH_OF_YEAR")
 	}
 	if got := yearTestValue(t, yearGetLong([]any{year, yearField})); got != 2020 {
@@ -314,10 +315,10 @@ func TestYearDatesAndComparisons(t *testing.T) {
 	if got := yearTestValue(t, yearCompareTo([]any{leapYear, commonYear})); got != 1 {
 		t.Errorf("2024.compareTo(2023) = %d, want 1", got)
 	}
-	if !yearEquals([]any{leapYear, yearOf([]any{2024})}).(bool) {
+	if yearEquals([]any{leapYear, yearOf([]any{2024})}) != types.JavaBoolTrue {
 		t.Error("Years with the same value should be equal")
 	}
-	if !yearIsAfter([]any{leapYear, commonYear}).(bool) || !yearIsBefore([]any{commonYear, leapYear}).(bool) {
+	if yearIsAfter([]any{leapYear, commonYear}) != types.JavaBoolTrue || yearIsBefore([]any{commonYear, leapYear}) != types.JavaBoolTrue {
 		t.Error("Year before/after comparisons returned false for ordered years")
 	}
 	if got := yearTestValue(t, yearHashCode([]any{leapYear})); got != 2024 {

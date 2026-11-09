@@ -101,13 +101,13 @@ func Load_Time_Format_DecimalStyle() {
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.<init>()V"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  decimalStyleInitDefault,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.<init>(CCCC)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  decimalStyleInit4,
 		}
 
@@ -131,79 +131,79 @@ func Load_Time_Format_DecimalStyle() {
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.getZeroDigit()C"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  decimalStyleGetZeroDigit,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.withZeroDigit(C)Ljava/time/format/DecimalStyle;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  decimalStyleWithZeroDigit,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.getPositiveSign()C"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  decimalStyleGetPositiveSign,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.withPositiveSign(C)Ljava/time/format/DecimalStyle;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  decimalStyleWithPositiveSign,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.getNegativeSign()C"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  decimalStyleGetNegativeSign,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.withNegativeSign(C)Ljava/time/format/DecimalStyle;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  decimalStyleWithNegativeSign,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.getDecimalSeparator()C"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  decimalStyleGetDecimalSeparator,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.withDecimalSeparator(C)Ljava/time/format/DecimalStyle;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  decimalStyleWithDecimalSeparator,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.convertToDigit(C)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  decimalStyleConvertToDigit,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.convertNumberToI18N(Ljava/lang/String;)Ljava/lang/String;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  decimalStyleConvertNumberToI18N,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.equals(Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  decimalStyleEquals,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.hashCode()I"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  decimalStyleHashCode,
 		}
 
 	ghelpers.MethodSignatures["java/time/format/DecimalStyle.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  decimalStyleToString,
 		}
 }

@@ -767,6 +767,14 @@ func TestLocalDateTimeParseAndFormat(t *testing.T) {
 		t.Error("Expected error when parsing invalid string")
 	}
 
+	// parse with custom formatter
+	customFmt := createDateTimeFormatterObject("dd-MM-yyyy HH:mm:ss", nil, nil, nil)
+	customParsed := localDateTimeParseFormatter([]any{object.StringObjectFromGoString("24-06-2026 14:30:15"), customFmt}).(*object.Object)
+	y, m, d, h, minute, sec, n = getLocalDateTimeYMDHMSN(customParsed)
+	if y != 2026 || m != 6 || d != 24 || h != 14 || minute != 30 || sec != 15 || n != 0 {
+		t.Errorf("parse with custom formatter: expected 2026-06-24T14:30:15, got %04d-%02d-%02dT%02d:%02d:%02d.%d", y, m, d, h, minute, sec, n)
+	}
+
 	// from(TemporalAccessor)
 	fromRes := localDateTimeFrom([]any{parsedRes}).(*object.Object)
 	y, m, d, h, minute, sec, n = getLocalDateTimeYMDHMSN(fromRes)
@@ -830,6 +838,13 @@ func TestLocalTemporalFormatUsesFormatter(t *testing.T) {
 			temporal:  CreateLocalDateTime(CreateLocalDate(2026, 6, 24), createLocalTime(14, 30, 15, 0)),
 			formatter: createDateTimeFormatterObject("yyyy/MM/dd HH:mm", nil, nil, nil),
 			expected:  "2026/06/24 14:30",
+		},
+		{
+			name:      "LocalDateTimeCustomPattern",
+			format:    localDateTimeFormat,
+			temporal:  CreateLocalDateTime(CreateLocalDate(2026, 6, 24), createLocalTime(14, 30, 15, 0)),
+			formatter: createDateTimeFormatterObject("EEE, dd MMM yyyy HH:mm:ss", nil, nil, nil),
+			expected:  "Wed, 24 Jun 2026 14:30:15",
 		},
 	}
 

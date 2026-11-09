@@ -71,7 +71,7 @@ func Load_Time_Chrono_Chronology() {
 
 	ghelpers.MethodSignatures["java/time/chrono/Chronology.dateEpochDay(J)Ljava/time/chrono/ChronoLocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  chronologyDateEpochDay,
 		}
 
@@ -173,7 +173,7 @@ func Load_Time_Chrono_Chronology() {
 
 	ghelpers.MethodSignatures["java/time/chrono/Chronology.isLeapYear(J)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  chronologyIsLeapYear,
 		}
 

@@ -193,19 +193,19 @@ func Load_Time_Period() {
 
 	ghelpers.MethodSignatures["java/time/Period.minusDays(J)Ljava/time/Period;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  periodMinusDays,
 		}
 
 	ghelpers.MethodSignatures["java/time/Period.minusMonths(J)Ljava/time/Period;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  periodMinusMonths,
 		}
 
 	ghelpers.MethodSignatures["java/time/Period.minusYears(J)Ljava/time/Period;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  periodMinusYears,
 		}
 
@@ -295,19 +295,19 @@ func Load_Time_Period() {
 
 	ghelpers.MethodSignatures["java/time/Period.plusDays(J)Ljava/time/Period;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  periodPlusDays,
 		}
 
 	ghelpers.MethodSignatures["java/time/Period.plusMonths(J)Ljava/time/Period;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  periodPlusMonths,
 		}
 
 	ghelpers.MethodSignatures["java/time/Period.plusYears(J)Ljava/time/Period;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  periodPlusYears,
 		}
 

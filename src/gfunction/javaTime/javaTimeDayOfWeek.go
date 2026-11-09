@@ -148,6 +148,11 @@ func getChronoFieldDayOfWeek() *object.Object {
 
 // Load_Time_DayOfWeek registers all java/time/DayOfWeek methods.
 func Load_Time_DayOfWeek() {
+	dayOfWeekMutex.Lock()
+	dayOfWeekInitialized = false
+	dayOfWeekMutex.Unlock()
+	ensureDayOfWeekInited()
+
 	ghelpers.MethodSignatures["java/time/DayOfWeek.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -294,6 +299,9 @@ func Load_Time_DayOfWeek() {
 }
 
 func dayOfWeekClinit([]any) any {
+	dayOfWeekMutex.Lock()
+	dayOfWeekInitialized = false
+	dayOfWeekMutex.Unlock()
 	ensureDayOfWeekInited()
 	return nil
 }

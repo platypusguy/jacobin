@@ -96,12 +96,12 @@ func Load_Time_Chrono_IsoChronology() {
 	// dateEpochDay(J)
 	ghelpers.MethodSignatures["java/time/chrono/IsoChronology.dateEpochDay(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  chronologyDateEpochDay,
 		}
 	ghelpers.MethodSignatures["java/time/chrono/IsoChronology.dateEpochDay(J)Ljava/time/chrono/ChronoLocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  chronologyDateEpochDay,
 		}
 
@@ -229,7 +229,7 @@ func Load_Time_Chrono_IsoChronology() {
 	// isLeapYear(J)
 	ghelpers.MethodSignatures["java/time/chrono/IsoChronology.isLeapYear(J)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  isoChronologyIsLeapYear,
 		}
 

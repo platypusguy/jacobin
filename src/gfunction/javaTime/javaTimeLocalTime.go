@@ -494,13 +494,13 @@ func Load_Time_LocalTime() {
 
 	ghelpers.MethodSignatures["java/time/LocalTime.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localTimeMinusUnit,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/temporal/Temporal;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localTimeMinusUnit,
 		}
 
@@ -518,25 +518,25 @@ func Load_Time_LocalTime() {
 
 	ghelpers.MethodSignatures["java/time/LocalTime.minusHours(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimeMinusHours,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.minusMinutes(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimeMinusMinutes,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.minusNanos(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimeMinusNanos,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.minusSeconds(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimeMinusSeconds,
 		}
 
@@ -584,13 +584,13 @@ func Load_Time_LocalTime() {
 
 	ghelpers.MethodSignatures["java/time/LocalTime.ofNanoOfDay(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimeOfNanoOfDay,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.ofSecondOfDay(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimeOfSecondOfDay,
 		}
 
@@ -608,13 +608,13 @@ func Load_Time_LocalTime() {
 
 	ghelpers.MethodSignatures["java/time/LocalTime.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localTimePlusUnit,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/temporal/Temporal;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localTimePlusUnit,
 		}
 
@@ -632,25 +632,25 @@ func Load_Time_LocalTime() {
 
 	ghelpers.MethodSignatures["java/time/LocalTime.plusHours(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimePlusHours,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.plusMinutes(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimePlusMinutes,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.plusNanos(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimePlusNanos,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.plusSeconds(J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localTimePlusSeconds,
 		}
 
@@ -716,13 +716,13 @@ func Load_Time_LocalTime() {
 
 	ghelpers.MethodSignatures["java/time/LocalTime.with(Ljava/time/temporal/TemporalField;J)Ljava/time/LocalTime;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localTimeWithField,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalTime.with(Ljava/time/temporal/TemporalField;J)Ljava/time/temporal/Temporal;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localTimeWithField,
 		}
 
@@ -765,8 +765,20 @@ func localTimeNowClock(params []any) any {
 	if len(params) < 1 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalTime.now: clock is null")
 	}
-	now := time.Now()
-	return CreateLocalTime(int64(now.Hour()), int64(now.Minute()), int64(now.Second()), int64(now.Nanosecond()))
+	clock := params[0].(*object.Object)
+	instRes := clockInstant([]any{clock})
+	if err, isErr := instRes.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	zoneRes := clockGetZone([]any{clock})
+	if err, isErr := zoneRes.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	zdt := zonedDateTimeOfInstant(instRes.(*object.Object), zoneRes.(*object.Object))
+	if err, isErr := zdt.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	return zonedDateTimeToLocalTime([]any{zdt.(*object.Object)})
 }
 
 func localTimeNowZone(params []any) any {
@@ -944,11 +956,23 @@ func localTimeParse(params []any) any {
 }
 
 func localTimeParseFormatter(params []any) any {
-	if len(params) < 2 || params[0] == nil || params[1] == nil ||
-		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
-		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalTime.parse: null argument")
+	if len(params) < 1 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalTime.parse: text is null")
 	}
-	return localTimeParse(params[:1])
+	if len(params) < 2 || params[1] == nil || object.IsNull(params[1].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalTime.parse: formatter is null")
+	}
+	textObj := params[0].(*object.Object)
+	formatterObj := params[1].(*object.Object)
+	if !object.IsStringObject(textObj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "LocalTime.parse: invalid string")
+	}
+	text := object.GoStringFromStringObject(textObj)
+	accessor, err := parseTextToTemporalAccessor(formatterObj, text)
+	if err != nil {
+		return ghelpers.GetGErrBlk(excNames.DateTimeParseException, err.Error())
+	}
+	return localTimeFrom([]any{accessor})
 }
 
 func isSupportedLocalTimeField(fieldName string) bool {
@@ -966,25 +990,25 @@ func isSupportedLocalTimeField(fieldName string) bool {
 func localTimeIsSupportedField(params []any) any {
 	if len(params) < 2 || params[0] == nil || params[1] == nil ||
 		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	fieldObj := params[1].(*object.Object)
 	fieldName := getTemporalFieldName(fieldObj)
-	return isSupportedLocalTimeField(fieldName)
+	return types.ConvertGoBoolToJavaBool(isSupportedLocalTimeField(fieldName))
 }
 
 func localTimeIsSupportedUnit(params []any) any {
 	if len(params) < 2 || params[0] == nil || params[1] == nil ||
 		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	unitObj := params[1].(*object.Object)
 	unitName := strings.ToUpper(getTemporalUnitName(unitObj))
 	switch unitName {
 	case "NANOS", "MICROS", "MILLIS", "SECONDS", "MINUTES", "HOURS", "HALF_DAYS":
-		return true
+		return types.JavaBoolTrue
 	default:
-		return false
+		return types.JavaBoolFalse
 	}
 }
 
@@ -1844,9 +1868,9 @@ func localTimeIsAfter(params []any) any {
 		return err
 	}
 	if val, ok := getInt64Val(cmp); ok {
-		return val > 0
+		return types.ConvertGoBoolToJavaBool(val > 0)
 	}
-	return false
+	return types.JavaBoolFalse
 }
 
 func localTimeIsBefore(params []any) any {
@@ -1861,26 +1885,26 @@ func localTimeIsBefore(params []any) any {
 		return err
 	}
 	if val, ok := getInt64Val(cmp); ok {
-		return val < 0
+		return types.ConvertGoBoolToJavaBool(val < 0)
 	}
-	return false
+	return types.JavaBoolFalse
 }
 
 func localTimeEquals(params []any) any {
 	if len(params) < 2 || params[0] == nil || params[1] == nil {
-		return false
+		return types.JavaBoolFalse
 	}
 	self, okS := params[0].(*object.Object)
 	other, okO := params[1].(*object.Object)
 	if !okS || !okO || object.IsNull(self) || object.IsNull(other) {
-		return false
+		return types.JavaBoolFalse
 	}
 	if self == other {
-		return true
+		return types.JavaBoolTrue
 	}
 	h1, m1, s1, n1 := getLocalTimeHMSN(self)
 	h2, m2, s2, n2 := getLocalTimeHMSN(other)
-	return h1 == h2 && m1 == m2 && s1 == s2 && n1 == n2
+	return types.ConvertGoBoolToJavaBool(h1 == h2 && m1 == m2 && s1 == s2 && n1 == n2)
 }
 
 func localTimeHashCode(params []any) any {

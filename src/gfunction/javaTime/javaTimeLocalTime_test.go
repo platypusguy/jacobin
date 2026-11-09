@@ -11,6 +11,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
+	"jacobin/src/types"
 	"testing"
 )
 
@@ -262,10 +263,10 @@ func TestLocalTimeComparisons(t *testing.T) {
 	t3 := createLocalTime(11, 0, 0, 0)
 
 	// equals
-	if !localTimeEquals([]any{t1, t2}).(bool) {
+	if localTimeEquals([]any{t1, t2}) != types.JavaBoolTrue {
 		t.Error("t1 should equal t2")
 	}
-	if localTimeEquals([]any{t1, t3}).(bool) {
+	if localTimeEquals([]any{t1, t3}) != types.JavaBoolFalse {
 		t.Error("t1 should not equal t3")
 	}
 
@@ -281,10 +282,10 @@ func TestLocalTimeComparisons(t *testing.T) {
 	}
 
 	// isBefore / isAfter
-	if !localTimeIsBefore([]any{t1, t3}).(bool) {
+	if localTimeIsBefore([]any{t1, t3}) != types.JavaBoolTrue {
 		t.Error("t1 isBefore t3 should be true")
 	}
-	if !localTimeIsAfter([]any{t3, t1}).(bool) {
+	if localTimeIsAfter([]any{t3, t1}) != types.JavaBoolTrue {
 		t.Error("t3 isAfter t1 should be true")
 	}
 
@@ -384,11 +385,11 @@ func TestLocalTimeFieldsAndRanges(t *testing.T) {
 	cfAmPmOfDay := getChronoField("AMPM_OF_DAY")
 
 	// isSupportedField
-	if !localTimeIsSupportedField([]any{lt, cfHourOfDay}).(bool) {
+	if localTimeIsSupportedField([]any{lt, cfHourOfDay}) != types.JavaBoolTrue {
 		t.Error("HOUR_OF_DAY should be supported")
 	}
 	cfYear := getChronoField("YEAR")
-	if localTimeIsSupportedField([]any{lt, cfYear}).(bool) {
+	if localTimeIsSupportedField([]any{lt, cfYear}) != types.JavaBoolFalse {
 		t.Error("YEAR should not be supported")
 	}
 

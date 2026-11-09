@@ -95,6 +95,11 @@ func ensureChronoFieldInited() {
 }
 
 func Load_Time_Temporal_ChronoField() {
+	chronoFieldMutex.Lock()
+	chronoFieldInitialized = false
+	chronoFieldMutex.Unlock()
+	ensureChronoFieldInited()
+
 	ghelpers.MethodSignatures["java/time/temporal/ChronoField.<clinit>()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
@@ -235,6 +240,9 @@ func Load_Time_Temporal_ChronoField() {
 }
 
 func chronoFieldClinit([]any) any {
+	chronoFieldMutex.Lock()
+	chronoFieldInitialized = false
+	chronoFieldMutex.Unlock()
 	ensureChronoFieldInited()
 	return nil
 }

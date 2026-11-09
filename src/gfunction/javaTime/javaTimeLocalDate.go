@@ -447,19 +447,19 @@ func Load_Time_LocalDate() {
 
 	ghelpers.MethodSignatures["java/time/LocalDate.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localDateMinusUnit,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/temporal/Temporal;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localDateMinusUnit,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.minus(JLjava/time/temporal/TemporalUnit;)Ljava/time/chrono/ChronoLocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localDateMinusUnit,
 		}
 
@@ -483,25 +483,25 @@ func Load_Time_LocalDate() {
 
 	ghelpers.MethodSignatures["java/time/LocalDate.minusDays(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localDateMinusDays,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.minusMonths(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localDateMinusMonths,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.minusWeeks(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localDateMinusWeeks,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.minusYears(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localDateMinusYears,
 		}
 
@@ -537,7 +537,7 @@ func Load_Time_LocalDate() {
 
 	ghelpers.MethodSignatures["java/time/LocalDate.ofEpochDay(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localDateOfEpochDay,
 		}
 
@@ -567,19 +567,19 @@ func Load_Time_LocalDate() {
 
 	ghelpers.MethodSignatures["java/time/LocalDate.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localDatePlusUnit,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/temporal/Temporal;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localDatePlusUnit,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.plus(JLjava/time/temporal/TemporalUnit;)Ljava/time/chrono/ChronoLocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localDatePlusUnit,
 		}
 
@@ -603,25 +603,25 @@ func Load_Time_LocalDate() {
 
 	ghelpers.MethodSignatures["java/time/LocalDate.plusDays(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localDatePlusDays,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.plusMonths(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localDatePlusMonths,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.plusWeeks(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localDatePlusWeeks,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.plusYears(J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  localDatePlusYears,
 		}
 
@@ -687,19 +687,19 @@ func Load_Time_LocalDate() {
 
 	ghelpers.MethodSignatures["java/time/LocalDate.with(Ljava/time/temporal/TemporalField;J)Ljava/time/LocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localDateWithField,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.with(Ljava/time/temporal/TemporalField;J)Ljava/time/temporal/Temporal;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localDateWithField,
 		}
 
 	ghelpers.MethodSignatures["java/time/LocalDate.with(Ljava/time/temporal/TemporalField;J)Ljava/time/chrono/ChronoLocalDate;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  localDateWithField,
 		}
 
@@ -742,8 +742,20 @@ func localDateNowClock(params []any) any {
 	if len(params) < 1 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalDate.now: clock is null")
 	}
-	now := time.Now()
-	return CreateLocalDate(int64(now.Year()), int64(now.Month()), int64(now.Day()))
+	clock := params[0].(*object.Object)
+	instRes := clockInstant([]any{clock})
+	if err, isErr := instRes.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	zoneRes := clockGetZone([]any{clock})
+	if err, isErr := zoneRes.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	zdt := zonedDateTimeOfInstant(instRes.(*object.Object), zoneRes.(*object.Object))
+	if err, isErr := zdt.(*ghelpers.GErrBlk); isErr {
+		return err
+	}
+	return zonedDateTimeToLocalDate([]any{zdt.(*object.Object)})
 }
 
 func localDateNowZone(params []any) any {
@@ -916,6 +928,34 @@ func localDateFrom(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalDate.from: null argument")
 	}
 	obj := params[0].(*object.Object)
+	className := object.GoStringFromStringPoolIndex(obj.KlassName)
+	if className == classNameLocalDateVal {
+		return obj
+	}
+	if strings.Contains(className, "LocalDateTime") {
+		d := getLocalDateTimeDate(obj)
+		if d != nil {
+			return d
+		}
+	}
+	if strings.Contains(className, "ZonedDateTime") {
+		ldt := getZonedDateTimeLocalDateTime(obj)
+		if ldt != nil {
+			d := getLocalDateTimeDate(ldt)
+			if d != nil {
+				return d
+			}
+		}
+	}
+	if strings.Contains(className, "OffsetDateTime") {
+		ldt := getOffsetDateTimeDateTime(obj)
+		if ldt != nil {
+			d := getLocalDateTimeDate(ldt)
+			if d != nil {
+				return d
+			}
+		}
+	}
 	if y, m, d, ok := getLocalDateYMD(obj); ok {
 		return CreateLocalDate(y, m, d)
 	}
@@ -970,11 +1010,23 @@ func localDateParse(params []any) any {
 }
 
 func localDateParseFormatter(params []any) any {
-	if len(params) < 2 || params[0] == nil || params[1] == nil ||
-		object.IsNull(params[0].(*object.Object)) || object.IsNull(params[1].(*object.Object)) {
-		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalDate.parse: null argument")
+	if len(params) < 1 || params[0] == nil || object.IsNull(params[0].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalDate.parse: text is null")
 	}
-	return localDateParse(params[:1])
+	if len(params) < 2 || params[1] == nil || object.IsNull(params[1].(*object.Object)) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalDate.parse: formatter is null")
+	}
+	textObj := params[0].(*object.Object)
+	formatterObj := params[1].(*object.Object)
+	if !object.IsStringObject(textObj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "LocalDate.parse: invalid string")
+	}
+	text := object.GoStringFromStringObject(textObj)
+	accessor, err := parseTextToTemporalAccessor(formatterObj, text)
+	if err != nil {
+		return ghelpers.GetGErrBlk(excNames.DateTimeParseException, err.Error())
+	}
+	return localDateFrom([]any{accessor})
 }
 
 func localDateGetYear(params []any) any {
@@ -1073,7 +1125,7 @@ func localDateIsLeapYear(params []any) any {
 	if !ok {
 		return ghelpers.GetGErrBlk(excNames.DateTimeException, "LocalDate.isLeapYear: invalid state")
 	}
-	return isLeapYearDate(y)
+	return types.ConvertGoBoolToJavaBool(isLeapYearDate(y))
 }
 
 func localDateLengthOfMonth(params []any) any {
@@ -1106,12 +1158,12 @@ func localDateIsSupportedField(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalDate.isSupported: self is null")
 	}
 	if params[1] == nil || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	fieldObj := params[1].(*object.Object)
 	fieldName := getTemporalFieldName(fieldObj)
 	if fieldName == "" {
-		return false
+		return types.JavaBoolFalse
 	}
 	switch strings.ToUpper(fieldName) {
 	case "DAY_OF_WEEK", "ALIGNED_DAY_OF_WEEK_IN_MONTH", "ALIGNED_DAY_OF_WEEK_IN_YEAR",
@@ -1119,9 +1171,9 @@ func localDateIsSupportedField(params []any) any {
 		"ALIGNED_WEEK_OF_MONTH", "ALIGNED_WEEK_OF_YEAR",
 		"MONTH_OF_YEAR", "PROLEPTIC_MONTH",
 		"YEAR_OF_ERA", "YEAR", "ERA":
-		return true
+		return types.JavaBoolTrue
 	default:
-		return false
+		return types.JavaBoolFalse
 	}
 }
 
@@ -1130,18 +1182,18 @@ func localDateIsSupportedUnit(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "LocalDate.isSupported: self is null")
 	}
 	if params[1] == nil || object.IsNull(params[1].(*object.Object)) {
-		return false
+		return types.JavaBoolFalse
 	}
 	unitObj := params[1].(*object.Object)
 	unitName := getTemporalUnitName(unitObj)
 	if unitName == "" {
-		return false
+		return types.JavaBoolFalse
 	}
 	switch strings.ToUpper(unitName) {
 	case "DAYS", "WEEKS", "MONTHS", "YEARS", "DECADES", "CENTURIES", "MILLENNIA", "ERAS":
-		return true
+		return types.JavaBoolTrue
 	default:
-		return false
+		return types.JavaBoolFalse
 	}
 }
 
@@ -1386,22 +1438,22 @@ func localDateCompareTo(params []any) any {
 
 func localDateEquals(params []any) any {
 	if len(params) < 2 || params[0] == nil || params[1] == nil {
-		return false
+		return types.JavaBoolFalse
 	}
 	self, okS := params[0].(*object.Object)
 	other, okO := params[1].(*object.Object)
 	if !okS || !okO || object.IsNull(self) || object.IsNull(other) {
-		return false
+		return types.JavaBoolFalse
 	}
 	if self == other {
-		return true
+		return types.JavaBoolTrue
 	}
 	y1, m1, d1, ok1 := getLocalDateYMD(self)
 	y2, m2, d2, ok2 := getLocalDateYMD(other)
 	if !ok1 || !ok2 {
-		return false
+		return types.JavaBoolFalse
 	}
-	return y1 == y2 && m1 == m2 && d1 == d2
+	return types.ConvertGoBoolToJavaBool(y1 == y2 && m1 == m2 && d1 == d2)
 }
 
 func localDateHashCode(params []any) any {
@@ -1430,9 +1482,9 @@ func localDateIsAfter(params []any) any {
 		return err
 	}
 	if val, ok := getInt64Val(cmp); ok {
-		return val > 0
+		return types.ConvertGoBoolToJavaBool(val > 0)
 	}
-	return false
+	return types.JavaBoolFalse
 }
 
 func localDateIsBefore(params []any) any {
@@ -1447,9 +1499,9 @@ func localDateIsBefore(params []any) any {
 		return err
 	}
 	if val, ok := getInt64Val(cmp); ok {
-		return val < 0
+		return types.ConvertGoBoolToJavaBool(val < 0)
 	}
-	return false
+	return types.JavaBoolFalse
 }
 
 func localDateIsEqual(params []any) any {
@@ -1464,9 +1516,9 @@ func localDateIsEqual(params []any) any {
 		return err
 	}
 	if val, ok := getInt64Val(cmp); ok {
-		return val == 0
+		return types.ConvertGoBoolToJavaBool(val == 0)
 	}
-	return false
+	return types.JavaBoolFalse
 }
 
 func localDateWithYear(params []any) any {

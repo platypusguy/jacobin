@@ -145,11 +145,27 @@ func temporalWithField(params []any) any {
 	}
 
 	className := object.GoStringFromStringPoolIndex(self.KlassName)
-	if className == classNameLocalTime {
+	switch className {
+	case "java/time/LocalTime":
 		return localTimeWithField([]any{self, field, newValue})
-	}
-	if className == "java/time/LocalDate" {
+	case "java/time/LocalDate":
+		return localDateWithField([]any{self, field, newValue})
+	case "java/time/LocalDateTime":
+		return localDateTimeWithField([]any{self, field, newValue})
+	case "java/time/ZonedDateTime":
+		return zonedDateTimeWithField([]any{self, field, newValue})
+	case "java/time/OffsetDateTime":
+		return offsetDateTimeWithField([]any{self, field, newValue})
+	case "java/time/Instant":
+		return instantWithField([]any{self, field, newValue})
+	case "java/time/Year":
+		return yearWithField([]any{self, field, newValue})
+	case "java/time/chrono/ChronoLocalDate":
 		return chronoLocalDateWithField([]any{self, field, newValue})
+	case "java/time/chrono/ChronoLocalDateTime":
+		return chronoLocalDateTimeWithField([]any{self, field, newValue})
+	case "java/time/chrono/ChronoZonedDateTime":
+		return chronoZonedDateTimeWithField([]any{self, field, newValue})
 	}
 
 	res := cloneTemporalObject(self)
@@ -173,6 +189,30 @@ func temporalPlusAmount(params []any) any {
 	}
 	self := params[0].(*object.Object)
 	amount := params[1].(*object.Object)
+
+	className := object.GoStringFromStringPoolIndex(self.KlassName)
+	switch className {
+	case "java/time/LocalDate":
+		return localDatePlusAmount([]any{self, amount})
+	case "java/time/LocalTime":
+		return localTimePlusAmount([]any{self, amount})
+	case "java/time/LocalDateTime":
+		return localDateTimePlusAmount([]any{self, amount})
+	case "java/time/ZonedDateTime":
+		return zonedDateTimePlusAmount([]any{self, amount})
+	case "java/time/OffsetDateTime":
+		return offsetDateTimePlusAmount([]any{self, amount})
+	case "java/time/Instant":
+		return instantPlusAmount([]any{self, amount})
+	case "java/time/Year":
+		return yearPlusAmount([]any{self, amount})
+	case "java/time/chrono/ChronoLocalDate":
+		return chronoLocalDatePlusAmount([]any{self, amount})
+	case "java/time/chrono/ChronoLocalDateTime":
+		return chronoLocalDateTimePlusAmount([]any{self, amount})
+	case "java/time/chrono/ChronoZonedDateTime":
+		return chronoZonedDateTimePlusAmount([]any{self, amount})
+	}
 
 	res := cloneTemporalObject(self)
 	if amount.FieldTable != nil {
@@ -215,6 +255,30 @@ func temporalPlusUnit(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.DateTimeException, "Temporal.plus: invalid amountToAdd type")
 	}
 
+	className := object.GoStringFromStringPoolIndex(self.KlassName)
+	switch className {
+	case "java/time/LocalDate":
+		return localDatePlusUnit([]any{self, amountToAdd, unit})
+	case "java/time/LocalTime":
+		return localTimePlusUnit([]any{self, amountToAdd, unit})
+	case "java/time/LocalDateTime":
+		return localDateTimePlusUnit([]any{self, amountToAdd, unit})
+	case "java/time/ZonedDateTime":
+		return zonedDateTimePlusUnit([]any{self, amountToAdd, unit})
+	case "java/time/OffsetDateTime":
+		return offsetDateTimePlusUnit([]any{self, amountToAdd, unit})
+	case "java/time/Instant":
+		return instantPlusUnit([]any{self, amountToAdd, unit})
+	case "java/time/Year":
+		return yearPlusUnit([]any{self, amountToAdd, unit})
+	case "java/time/chrono/ChronoLocalDate":
+		return chronoLocalDatePlusUnit([]any{self, amountToAdd, unit})
+	case "java/time/chrono/ChronoLocalDateTime":
+		return chronoLocalDateTimePlusUnit([]any{self, amountToAdd, unit})
+	case "java/time/chrono/ChronoZonedDateTime":
+		return chronoZonedDateTimePlusUnit([]any{self, amountToAdd, unit})
+	}
+
 	res := cloneTemporalObject(self)
 	unitName := getTemporalUnitName(unit)
 	if unitName != "" {
@@ -239,6 +303,30 @@ func temporalMinusAmount(params []any) any {
 	}
 	self := params[0].(*object.Object)
 	amount := params[1].(*object.Object)
+
+	className := object.GoStringFromStringPoolIndex(self.KlassName)
+	switch className {
+	case "java/time/LocalDate":
+		return localDateMinusAmount([]any{self, amount})
+	case "java/time/LocalTime":
+		return localTimeMinusAmount([]any{self, amount})
+	case "java/time/LocalDateTime":
+		return localDateTimeMinusAmount([]any{self, amount})
+	case "java/time/ZonedDateTime":
+		return zonedDateTimeMinusAmount([]any{self, amount})
+	case "java/time/OffsetDateTime":
+		return offsetDateTimeMinusAmount([]any{self, amount})
+	case "java/time/Instant":
+		return instantMinusAmount([]any{self, amount})
+	case "java/time/Year":
+		return yearMinusAmount([]any{self, amount})
+	case "java/time/chrono/ChronoLocalDate":
+		return chronoLocalDateMinusAmount([]any{self, amount})
+	case "java/time/chrono/ChronoLocalDateTime":
+		return chronoLocalDateTimeMinusAmount([]any{self, amount})
+	case "java/time/chrono/ChronoZonedDateTime":
+		return chronoZonedDateTimeMinusAmount([]any{self, amount})
+	}
 
 	res := cloneTemporalObject(self)
 	if amount.FieldTable != nil {
@@ -274,9 +362,35 @@ func temporalMinusUnit(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "Temporal.minus: unit is null")
 	}
 
+	self := params[0].(*object.Object)
+	unit := params[2].(*object.Object)
 	amountToSubtract, ok := getInt64Val(params[1])
 	if !ok {
 		return ghelpers.GetGErrBlk(excNames.DateTimeException, "Temporal.minus: invalid amountToSubtract type")
+	}
+
+	className := object.GoStringFromStringPoolIndex(self.KlassName)
+	switch className {
+	case "java/time/LocalDate":
+		return localDateMinusUnit([]any{self, amountToSubtract, unit})
+	case "java/time/LocalTime":
+		return localTimeMinusUnit([]any{self, amountToSubtract, unit})
+	case "java/time/LocalDateTime":
+		return localDateTimeMinusUnit([]any{self, amountToSubtract, unit})
+	case "java/time/ZonedDateTime":
+		return zonedDateTimeMinusUnit([]any{self, amountToSubtract, unit})
+	case "java/time/OffsetDateTime":
+		return offsetDateTimeMinusUnit([]any{self, amountToSubtract, unit})
+	case "java/time/Instant":
+		return instantMinusUnit([]any{self, amountToSubtract, unit})
+	case "java/time/Year":
+		return yearMinusUnit([]any{self, amountToSubtract, unit})
+	case "java/time/chrono/ChronoLocalDate":
+		return chronoLocalDateMinusUnit([]any{self, amountToSubtract, unit})
+	case "java/time/chrono/ChronoLocalDateTime":
+		return chronoLocalDateTimeMinusUnit([]any{self, amountToSubtract, unit})
+	case "java/time/chrono/ChronoZonedDateTime":
+		return chronoZonedDateTimeMinusUnit([]any{self, amountToSubtract, unit})
 	}
 
 	if amountToSubtract == math.MinInt64 {
@@ -306,6 +420,28 @@ func temporalUntil(params []any) any {
 	self := params[0].(*object.Object)
 	endExclusive := params[1].(*object.Object)
 	unit := params[2].(*object.Object)
+
+	className := object.GoStringFromStringPoolIndex(self.KlassName)
+	switch className {
+	case "java/time/LocalDate":
+		return localDateUntilUnit([]any{self, endExclusive, unit})
+	case "java/time/LocalTime":
+		return localTimeUntilUnit([]any{self, endExclusive, unit})
+	case "java/time/LocalDateTime":
+		return localDateTimeUntil([]any{self, endExclusive, unit})
+	case "java/time/ZonedDateTime":
+		return zonedDateTimeUntil([]any{self, endExclusive, unit})
+	case "java/time/OffsetDateTime":
+		return offsetDateTimeUntil([]any{self, endExclusive, unit})
+	case "java/time/Instant":
+		return instantUntil([]any{self, endExclusive, unit})
+	case "java/time/Year":
+		return yearUntil([]any{self, endExclusive, unit})
+	case "java/time/chrono/ChronoLocalDate":
+		return chronoLocalDateUntilUnit([]any{self, endExclusive, unit})
+	case "java/time/chrono/ChronoLocalDateTime":
+		return chronoLocalDateTimeUntilUnit([]any{self, endExclusive, unit})
+	}
 
 	unitName := getTemporalUnitName(unit)
 	if unitName != "" && self.FieldTable != nil && endExclusive.FieldTable != nil {

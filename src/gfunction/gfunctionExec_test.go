@@ -167,6 +167,136 @@ func TestRunGfunction_GErrBlk_ReturnsErrorInTestMode(t *testing.T) {
 	}
 }
 
+func TestRunGfunction_Tracing(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+
+	fs := makeFrameStack()
+
+	gm := ghelpers.GMeth{
+		ParamSlots: 1,
+		GFunction: func(in []interface{}) interface{} {
+			return int64(100)
+		},
+	}
+	mt := classloader.MTentry{
+		Meth:      gm,
+		MType:     'G',
+		MethClass: object.StringPoolIndexFromGoString("java/lang/Math"),
+		MethName:  object.StringPoolIndexFromGoString("abs"),
+		MethType:  object.StringPoolIndexFromGoString("(I)I"),
+	}
+
+	params := []interface{}{int64(-100)}
+	ret := RunGfunction(mt, fs, &params, true, true)
+	if v, ok := ret.(int64); !ok || v != 100 {
+		t.Fatalf("expected int64(100) return with tracing enabled, got %v (%T)", ret, ret)
+	}
+}
+
+func TestRunGfunction_ThreadNonMain(t *testing.T) {
+	globals.InitGlobals("test")
+
+	fs := frames.CreateFrameStack()
+	f := frames.CreateFrame(0)
+	f.Thread = 2 // worker thread
+	f.ClName = "java/lang/ThreadWorker"
+	f.MethName = "run"
+	f.MethType = "()V"
+	_ = frames.PushFrame(fs, f)
+
+	gm := ghelpers.GMeth{GFunction: func([]interface{}) interface{} {
+		return &ghelpers.GErrBlk{
+			ExceptionType: excNames.IllegalStateException,
+			ErrMsg:        "worker error"}
+	}}
+	mt := classloader.MTentry{
+		Meth:      gm,
+		MType:     'G',
+		MethClass: object.StringPoolIndexFromGoString("Worker"),
+		MethName:  object.StringPoolIndexFromGoString("doWork"),
+		MethType:  object.StringPoolIndexFromGoString("()V"),
+	}
+
+	var params []interface{}
+	ret := RunGfunction(mt, fs, &params, false, false)
+
+	err, ok := ret.(error)
+	if !ok {
+		t.Fatalf("expected error return on worker thread, got %T: %v", ret, ret)
+	}
+	if !contains(err.Error(), "in thread 2") || !contains(err.Error(), "worker error") {
+		t.Fatalf("expected error message with thread 2 info, got: %q", err.Error())
+	}
+}
+
+func TestRunGfunction_NilAndZeroParams(t *testing.T) {
+	globals.InitGlobals("test")
+	fs := makeFrameStack()
+
+	called := false
+	gm := ghelpers.GMeth{
+		ParamSlots: 0,
+		GFunction: func(in []interface{}) interface{} {
+			called = true
+			if in != nil {
+				t.Fatalf("expected nil args passed to GFunction when paramCount == 0, got %v", in)
+			}
+			return "success"
+		},
+	}
+	mt := classloader.MTentry{
+		Meth:      gm,
+		MType:     'G',
+		MethClass: object.StringPoolIndexFromGoString("TestClass"),
+		MethName:  object.StringPoolIndexFromGoString("noArgs"),
+		MethType:  object.StringPoolIndexFromGoString("()Ljava/lang/String;"),
+	}
+
+	// 1. params == nil
+	res := RunGfunction(mt, fs, nil, false, false)
+	if !called || res != "success" {
+		t.Fatalf("expected 'success' for nil params, got %v (called=%t)", res, called)
+	}
+
+	// 2. empty params slice
+	called = false
+	emptyParams := []interface{}{}
+	res = RunGfunction(mt, fs, &emptyParams, false, false)
+	if !called || res != "success" {
+		t.Fatalf("expected 'success' for empty params, got %v (called=%t)", res, called)
+	}
+}
+
+func TestRunGfunction_SingleParamNoReverse(t *testing.T) {
+	globals.InitGlobals("test")
+	fs := makeFrameStack()
+
+	var receivedArg interface{}
+	gm := ghelpers.GMeth{
+		ParamSlots: 1,
+		GFunction: func(in []interface{}) interface{} {
+			if len(in) == 1 {
+				receivedArg = in[0]
+			}
+			return true
+		},
+	}
+	mt := classloader.MTentry{
+		Meth:      gm,
+		MType:     'G',
+		MethClass: object.StringPoolIndexFromGoString("TestClass"),
+		MethName:  object.StringPoolIndexFromGoString("singleArg"),
+		MethType:  object.StringPoolIndexFromGoString("(I)Z"),
+	}
+
+	params := []interface{}{int64(777)}
+	res := RunGfunction(mt, fs, &params, false, false)
+	if res != true || receivedArg != int64(777) {
+		t.Fatalf("expected single arg 777, got %v with res %v", receivedArg, res)
+	}
+}
+
 // contains is a tiny helper to avoid importing strings just for Contains
 func contains(haystack, needle string) bool {
 	return len(needle) == 0 || (len(haystack) >= len(needle) && indexOf(haystack, needle) >= 0)
