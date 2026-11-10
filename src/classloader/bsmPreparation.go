@@ -27,10 +27,10 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 	// Fetch the InvokeDynamic entry (it was previously validated in codeCheck.go)
 	idEntry := FetchCPentry(cp, index)
 
-	// idEntry.AddrVal.entry1 is the bootstrap_method_attr_index
-	// idEntry.AddrVal.entry2 is the name_and_type_index for the CallSite
-	bsmIndex := int(idEntry.AddrVal.entry1)
-	natIndex := int(idEntry.AddrVal.entry2)
+	// idEntry.AddrVal.Entry1 is the bootstrap_method_attr_index
+	// idEntry.AddrVal.Entry2 is the name_and_type_index for the CallSite
+	bsmIndex := int(idEntry.AddrVal.Entry1)
+	natIndex := int(idEntry.AddrVal.Entry2)
 
 	// Get the Bootstrap Method info from the class attributes
 	klass := MethAreaFetch(fr.ClName)
@@ -63,7 +63,7 @@ func ResolveCallSite(cp *CPool, index int, fr *frames.Frame) (*object.Object, er
 	if mhCpe.EntryType != MethodHandle {
 		return nil, fmt.Errorf("ResolveCallSite: CP entry at %d is not a MethodHandle", bsm.MethodRef)
 	}
-	refIndex := int(mhCpe.AddrVal.entry2)
+	refIndex := int(mhCpe.AddrVal.Entry2)
 	var bsmSig string
 	if refIndex >= 1 && refIndex < len(cp.CpIndex) && cp.CpIndex[refIndex].Type == Interface {
 		_, _, bsmSig = GetMethInfoFromCPinterfaceRef(cp, refIndex)
@@ -189,7 +189,7 @@ func invokeBSM(cp *CPool, bsm BootstrapMethod, bsmHandle *object.Object, params 
 	if mhCpe.EntryType != MethodHandle {
 		return nil, fmt.Errorf("invokeBSM: CP entry at %d is not a MethodHandle", bsm.MethodRef)
 	}
-	refIndex := int(mhCpe.AddrVal.entry2)
+	refIndex := int(mhCpe.AddrVal.Entry2)
 	var bsmClass, bsmName, bsmSig string
 	if refIndex >= 1 && refIndex < len(cp.CpIndex) && cp.CpIndex[refIndex].Type == Interface {
 		bsmClass, bsmName, bsmSig = GetMethInfoFromCPinterfaceRef(cp, refIndex)

@@ -378,9 +378,9 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 	}
 
 	struc := cp.AddrVal
-	if struc.entry1 != uint16(4) || struc.entry2 != 2 {
+	if struc.Entry1 != uint16(4) || struc.Entry2 != 2 {
 		t.Errorf("Expected returned struc to contain 4 and 2, got %d and %d",
-			struc.entry1, struc.entry2)
+			struc.Entry1, struc.Entry2)
 	}
 
 	// Dynamic
@@ -396,9 +396,9 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 	}
 
 	struc = cp.AddrVal
-	if struc.entry1 != uint16(5) || struc.entry2 != uint16(3) {
+	if struc.Entry1 != uint16(5) || struc.Entry2 != uint16(3) {
 		t.Errorf("Expected returned struc to contain 5 and 3, got %d and %d",
-			struc.entry1, struc.entry2)
+			struc.Entry1, struc.Entry2)
 	}
 
 	// InvokeDynamic
@@ -414,9 +414,9 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 	}
 
 	struc = cp.AddrVal
-	if struc.entry1 != uint16(20) || struc.entry2 != uint16(21) {
+	if struc.Entry1 != uint16(20) || struc.Entry2 != uint16(21) {
 		t.Errorf("Expected returned struc to contain 20 and 21, got %d and %d",
-			struc.entry1, struc.entry2)
+			struc.Entry1, struc.Entry2)
 	}
 
 	// Method Handle
@@ -432,9 +432,9 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 	}
 
 	struc = cp.AddrVal
-	if struc.entry1 != uint16(8) || struc.entry2 != uint16(9) {
+	if struc.Entry1 != uint16(8) || struc.Entry2 != uint16(9) {
 		t.Errorf("Expected returned struc to contain 8 and 9, got %d and %d",
-			struc.entry1, struc.entry2)
+			struc.Entry1, struc.Entry2)
 	}
 
 	// Method Ref
@@ -450,9 +450,9 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 	}
 
 	struc = cp.AddrVal
-	if struc.entry1 != uint16(10) || struc.entry2 != uint16(11) {
+	if struc.Entry1 != uint16(10) || struc.Entry2 != uint16(11) {
 		t.Errorf("Expected returned struc to contain 10 and 11, got %d and %d",
-			struc.entry1, struc.entry2)
+			struc.Entry1, struc.Entry2)
 	}
 
 	// NameAndType
@@ -468,9 +468,9 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 	}
 
 	struc = cp.AddrVal
-	if struc.entry1 != uint16(12) || struc.entry2 != uint16(13) {
+	if struc.Entry1 != uint16(12) || struc.Entry2 != uint16(13) {
 		t.Errorf("Expected returned struc to contain 12 and 13, got %d and %d",
-			struc.entry1, struc.entry2)
+			struc.Entry1, struc.Entry2)
 	}
 }
 

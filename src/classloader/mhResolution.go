@@ -42,14 +42,14 @@ func ResolveMethodHandle(cp *CPool, index int, fr *frames.Frame) (*object.Object
 
 	// Fetch the MethodHandle entry from the constant pool
 	// Note: FetchCPentry returns a CpType struct. For MethodHandle, RetType is IS_STRUCT_ADDR
-	// and AddrVal points to a CPuint16s struct where entry1 is RefKind and entry2 is RefIndex.
+	// and AddrVal points to a CPuint16s struct where Entry1 is RefKind and Entry2 is RefIndex.
 	mhEntry := FetchCPentry(cp, index)
 	if mhEntry.EntryType != MethodHandle {
 		return nil, fmt.Errorf("ResolveMethodHandle: CP entry at %d is not a MethodHandle (type %d)", index, mhEntry.EntryType)
 	}
 
-	refKind := uint8(mhEntry.AddrVal.entry1) // uint8
-	refIndex := mhEntry.AddrVal.entry2
+	refKind := uint8(mhEntry.AddrVal.Entry1) // uint8
+	refIndex := mhEntry.AddrVal.Entry2
 
 	if globals.TraceClass {
 		trace.Trace(fmt.Sprintf("ResolveMethodHandle: Resolving MH at index %d, kind=%d, refIndex=%d", index, refKind, refIndex))

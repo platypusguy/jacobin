@@ -7,9 +7,11 @@
 package javaLang
 
 import (
+	"container/list"
 	"fmt"
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
+	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/trace"
@@ -86,5 +88,90 @@ func stringConcatFactory_makeConcatWithConstants(params []any) any {
 			trace.Raw("\t" + object.StringifyAnythingGo(constant))
 		}
 	}
+	return nil
+}
+
+// Concatenates a single parameter to an existing item.
+// Requires the frame data so that it can reach into the INVOKEDYNAMIC's
+// constant pool to find the first existing item. The second item is found
+// on the op stack and the second arg to this function defines its type.
+// NeedsContext = true (so last param is the frame stack)
+func concat1param(params []any) any {
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf("concat1param expected 2 args, got %d", len(params))
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.MalformedParametersException, errMsg)
+	}
+
+	frameList, ok := params[1].(*list.List)
+	if !ok || frameList == nil || frameList.Len() == 0 {
+		errMsg := "concat1param: invalid or empty frame stack in params[1]"
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	elem := frameList.Front()
+	if elem == nil || elem.Value == nil {
+		errMsg := "concat1param: no active frame at front of frame stack"
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	fr, ok := elem.Value.(*frames.Frame)
+	if !ok || fr == nil {
+		errMsg := "concat1param: front of frame stack is not a valid *frames.Frame"
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	if fr.Meth == nil || fr.PC < 0 || fr.PC+2 >= len(fr.Meth) {
+		errMsg := fmt.Sprintf("concat1param: PC %d out of bounds for method bytecode", fr.PC)
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
+	}
+
+	// The two bytes following the INVOKEDYNAMIC opcode point to the CP entry
+	cpSlot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+
+	cp, ok := fr.CP.(*classloader.CPool)
+	if !ok || cp == nil {
+		errMsg := fmt.Sprintf("concat1param: invalid constant pool in frame for %s", fr.ClName)
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
+	}
+
+	idEntry := classloader.FetchCPentry(cp, cpSlot)
+	if idEntry.AddrVal == nil {
+		errMsg := fmt.Sprintf("concat1param: invalid InvokeDynamic CP entry at index %d", cpSlot)
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
+	}
+
+	bsmIndex := int(idEntry.AddrVal.Entry1)
+	if bsmIndex < 0 || bsmIndex >= len(cp.Bootstraps) {
+		errMsg := fmt.Sprintf("concat1param: bsmIndex %d out of range", bsmIndex)
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
+	}
+
+	bsm := cp.Bootstraps[bsmIndex]
+	if len(bsm.Args) == 0 {
+		errMsg := fmt.Sprintf("concat1param: no bootstrap arguments for BSM index %d", bsmIndex)
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
+	}
+
+	recipeArgIndex := int(bsm.Args[0])
+	recipeObj, err := classloader.ResolveStaticArgument(cp, recipeArgIndex, fr)
+	if err != nil {
+		errMsg := fmt.Sprintf("concat1param: error resolving recipe static argument at index %d: %s", recipeArgIndex, err.Error())
+		trace.Error(errMsg)
+		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
+	}
+
+	recipe := object.GoStringFromStringObject(recipeObj)
+	_ = recipe
+	_ = recipeObj
+
 	return nil
 }

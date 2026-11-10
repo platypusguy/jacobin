@@ -24,10 +24,10 @@ type CpType struct {
 }
 
 // all the multi-value structs use this layout. Depending on the type of
-// the CPentry, the fields entry1 and entry2 will have different meanings.
+// the CPentry, the fields Entry1 and Entry2 will have different meanings.
 type CPuint16s struct {
-	entry1 uint16
-	entry2 uint16
+	Entry1 uint16
+	Entry2 uint16
 }
 
 var IS_ERROR = 0
@@ -128,48 +128,48 @@ func FetchCPentry(cp *CPool, index int) CpType {
 	case Dynamic:
 		dyn := cp.Dynamics[entry.Slot]
 		cpe := CPuint16s{
-			entry1: dyn.BootstrapIndex,
-			entry2: dyn.NameAndType,
+			Entry1: dyn.BootstrapIndex,
+			Entry2: dyn.NameAndType,
 		}
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case Interface:
 		iface := cp.InterfaceRefs[entry.Slot]
 		cpe := CPuint16s{
-			entry1: iface.ClassIndex,
-			entry2: iface.NameAndType,
+			Entry1: iface.ClassIndex,
+			Entry2: iface.NameAndType,
 		}
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case InvokeDynamic:
 		idyn := cp.InvokeDynamics[entry.Slot]
 		cpe := CPuint16s{
-			entry1: idyn.BootstrapIndex,
-			entry2: idyn.NameAndType,
+			Entry1: idyn.BootstrapIndex,
+			Entry2: idyn.NameAndType,
 		}
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case MethodHandle:
 		mh := cp.MethodHandles[entry.Slot]
 		cpe := CPuint16s{
-			entry1: uint16(mh.RefKind),
-			entry2: mh.RefIndex,
+			Entry1: uint16(mh.RefKind),
+			Entry2: mh.RefIndex,
 		}
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case MethodRef:
 		mr := cp.MethodRefs[entry.Slot]
 		cpe := CPuint16s{
-			entry1: mr.ClassIndex,
-			entry2: mr.NameAndType,
+			Entry1: mr.ClassIndex,
+			Entry2: mr.NameAndType,
 		}
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case NameAndType:
 		nat := cp.NameAndTypes[entry.Slot]
 		cpe := CPuint16s{
-			entry1: nat.NameIndex,
-			entry2: nat.DescIndex,
+			Entry1: nat.NameIndex,
+			Entry2: nat.DescIndex,
 		}
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
