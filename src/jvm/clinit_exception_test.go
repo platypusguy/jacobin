@@ -90,8 +90,9 @@ func TestGetStaticClinitTrapExceptionCaught(t *testing.T) {
 		FldType:     "Ljava/lang/Object;",
 	}
 
-	// CP[2] = ClassRef for java/lang/Exception
-	excClassName := "java/lang/Exception"
+	// CP[2] = ClassRef for java/lang/Throwable, which can catch both the initial
+	// initializer exception and the NoClassDefFoundError on subsequent access.
+	excClassName := "java/lang/Throwable"
 	excClassIdx := stringPool.GetStringIndex(&excClassName)
 	cp.ClassRefs = []uint32{excClassIdx}
 	cp.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
@@ -117,7 +118,9 @@ func TestGetStaticClinitTrapExceptionCaught(t *testing.T) {
 	fs.PushFront(f)
 
 	glob := globals.GetGlobalRef()
+	var exceptionClasses []string
 	glob.FuncInstantiateClass = func(className string, fs *list.List) (any, error) {
+		exceptionClasses = append(exceptionClasses, className)
 		obj := object.MakeEmptyObject()
 		return obj, nil
 	}
@@ -140,6 +143,20 @@ func TestGetStaticClinitTrapExceptionCaught(t *testing.T) {
 
 	if f.TOS != 0 {
 		t.Fatalf("Expected TOS to be 0 (exception object on stack), got %d", f.TOS)
+	}
+
+	// A subsequent access to a class whose initializer failed must throw
+	// NoClassDefFoundError rather than a class-loading exception.
+	f.PC = 0
+	ret = doGetStatic(f, 0)
+	if ret != RESUME_HERE {
+		t.Fatalf("Expected subsequent doGetStatic to return RESUME_HERE (%d), got %d", RESUME_HERE, ret)
+	}
+	if f.PC != 20 {
+		t.Fatalf("Expected subsequent access to jump to catch handler PC 20, got %d", f.PC)
+	}
+	if len(exceptionClasses) < 2 || exceptionClasses[len(exceptionClasses)-1] != "java/lang/NoClassDefFoundError" {
+		t.Fatalf("Expected subsequent access to throw java/lang/NoClassDefFoundError, got %v", exceptionClasses)
 	}
 }
 

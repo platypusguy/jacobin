@@ -13,6 +13,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
+	"jacobin/src/frames"
 	"jacobin/src/gfunction"
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
@@ -119,7 +120,14 @@ func ensureInitialized(classname string, fs *list.List, initFn func() error) err
 			continue
 		case initFailed:
 			initMu.Unlock()
-			return fmt.Errorf("could not initialize class %s (previous initialization failed)", classname)
+			errMsg := fmt.Sprintf("could not initialize class %s (previous initialization failed)", classname)
+			if fs != nil && fs.Front() != nil {
+				if f, ok := fs.Front().Value.(*frames.Frame); ok &&
+					exceptions.ThrowEx(excNames.NoClassDefFoundError, errMsg, f) == exceptions.Caught {
+					return gfunction.CaughtGfunctionException
+				}
+			}
+			return errors.New(errMsg)
 		case initInProgress:
 			if ci.owner == fs {
 				initMu.Unlock()
