@@ -96,7 +96,11 @@ func inputStreamReaderInit(params []interface{}) interface{} {
 		errMsg := "inputStreamReaderInit: InputStream object lacks a ghelpers.FileHandle field"
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
-	osFile := fldHandle.Fvalue.(*os.File)
+	osFile, ok := fldHandle.Fvalue.(*os.File)
+	if !ok || osFile == nil {
+		errMsg := "inputStreamReaderInit: ghelpers.FileHandle is not a valid *os.File"
+		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+	}
 
 	// Get file statistics.
 	_, err := osFile.Stat()
@@ -185,8 +189,14 @@ func isrReadCharBufferSubset(params []interface{}) interface{} {
 		errMsg := "isrReadCharBufferSubset: InputStreamReader trouble with character array buffer"
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
-	offset := params[2].(int64)
-	length := params[3].(int64)
+	var offset, length int64
+	if len(params) > 2 {
+		offset = params[2].(int64)
+		length = params[3].(int64)
+	} else {
+		offset = 0
+		length = int64(len(intArray))
+	}
 
 	// Check parameters.
 	if length == 0 {
@@ -226,31 +236,13 @@ func isrReadCharBufferSubset(params []interface{}) interface{} {
 
 // "java/io/InputStreamReader.ready()Z"
 func isrReady(params []interface{}) interface{} {
-
-	// Get file path.
-	fldPath, ok := params[1].(*object.Object).FieldTable[ghelpers.FilePath]
-	if !ok {
-		errMsg := "isrReady: InputStreamReader object lacks a ghelpers.FilePath field"
-		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+	self := params[0].(*object.Object)
+	osFile, ok := self.FieldTable[ghelpers.FileHandle].Fvalue.(*os.File)
+	if !ok || osFile == nil {
+		return ghelpers.GetGErrBlk(excNames.IOException, "isrReady: object lacks a valid ghelpers.FileHandle field")
 	}
-
-	// Get file handle.
-	fldHandle, ok := params[1].(*object.Object).FieldTable[ghelpers.FileHandle]
-	if !ok {
-		errMsg := "isrReady: InputStreamReader object lacks a ghelpers.FileHandle field"
-		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+	if _, err := osFile.Stat(); err != nil {
+		return types.JavaBoolFalse
 	}
-
-	// Copy java/io/File path field into the InputStreamReader object.
-	fld := fldPath
-	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
-
-	// Get file handle and get file statistics.
-	osFile := fldHandle.Fvalue.(*os.File)
-	_, err := osFile.Stat()
-	if err != nil {
-		return types.JavaBoolFalse // Ready: false
-	}
-
 	return types.JavaBoolTrue
 }

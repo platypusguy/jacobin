@@ -391,7 +391,6 @@ func TestJavaIoFile_Mkdir_Mkdirs_IsDirectory(t *testing.T) {
 	nested := filepath.Join(dir, "a", "b", "c")
 	f := newFileObjFromPath(t, nested)
 	// mkdir should fail on a deep path (parent missing) and return false; mkdirs true
-	_ = fileDelete([]interface{}{f}) // ensure not exists
 	if fileMkdir([]interface{}{f}).(int64) != types.JavaBoolFalse {
 		// On some OS, Mkdir may fail with ENOENT as expected
 	}
@@ -766,5 +765,110 @@ func TestJavaIoFile_ToPath(t *testing.T) {
 	errRes = fileToPath([]any{emptyFile})
 	if errBlk, ok := errRes.(*ghelpers.GErrBlk); !ok || errBlk.ExceptionType != excNames.IOException {
 		t.Errorf("Expected IOException for empty File object, got %v", errRes)
+	}
+}
+
+func TestJavaIoFile_CreateNewFile_And_Permissions(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "create_test.txt")
+	f := newFileObjFromPath(t, path)
+
+	// createNewFile
+	res := fileCreate([]interface{}{f})
+	if res.(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileCreate returned false, expected true")
+	}
+	// Close the handle if created
+	if fld, ok := f.FieldTable[ghelpers.FileHandle]; ok && fld.Fvalue != nil {
+		if osFile, ok := fld.Fvalue.(*os.File); ok {
+			_ = osFile.Close()
+		}
+	}
+
+	// canRead, canWrite, canExecute
+	if fileCanRead([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Errorf("fileCanRead returned false for existing file")
+	}
+	if fileCanWrite([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Errorf("fileCanWrite returned false for existing writable file")
+	}
+	if fileCanExecute([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Errorf("fileCanExecute returned false for existing file")
+	}
+
+	// Nonexistent file
+	nonExistent := newFileObjFromPath(t, filepath.Join(dir, "no_such_file.txt"))
+	if fileCanRead([]interface{}{nonExistent}).(int64) != types.JavaBoolFalse {
+		t.Errorf("fileCanRead returned true for nonexistent file")
+	}
+	if fileCanWrite([]interface{}{nonExistent}).(int64) != types.JavaBoolFalse {
+		t.Errorf("fileCanWrite returned true for nonexistent file")
+	}
+	if fileCanExecute([]interface{}{nonExistent}).(int64) != types.JavaBoolFalse {
+		t.Errorf("fileCanExecute returned true for nonexistent file")
+	}
+
+	// isAbsolute
+	absFile := newFileObjFromPath(t, filepath.Join(dir, "abs.txt"))
+	if fileIsAbsolute([]interface{}{absFile}).(int64) != types.JavaBoolTrue {
+		t.Errorf("fileIsAbsolute returned false for absolute path")
+	}
+	relFile := object.MakeEmptyObject()
+	relFile.FieldTable = map[string]object.Field{
+		ghelpers.FilePath: {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString("relative/path.txt")},
+	}
+	if fileIsAbsolute([]interface{}{relFile}).(int64) != types.JavaBoolFalse {
+		t.Errorf("fileIsAbsolute returned true for relative path")
+	}
+}
+
+func TestJavaIoFile_Mkdir_And_Mkdirs(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+
+	dir := t.TempDir()
+	subDir := filepath.Join(dir, "subdir")
+	fSub := newFileObjFromPath(t, subDir)
+
+	if fileMkdir([]interface{}{fSub}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileMkdir failed to create directory")
+	}
+	if fileIsDirectory([]interface{}{fSub}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileIsDirectory returned false for created dir")
+	}
+
+	nestedDir := filepath.Join(dir, "a", "b", "c")
+	fNested := newFileObjFromPath(t, nestedDir)
+	if fileMkdirs([]interface{}{fNested}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileMkdirs failed to create nested directories")
+	}
+	if fileIsDirectory([]interface{}{fNested}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileIsDirectory returned false for nested dir")
+	}
+}
+
+func TestJavaIoFile_CreateTempFile(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+
+	pfxObj := object.StringObjectFromGoString("tmp_pfx_")
+	sfxObj := object.StringObjectFromGoString(".dat")
+
+	res := fileCreateTemp([]interface{}{pfxObj, sfxObj})
+	tmpObj, ok := res.(*object.Object)
+	if !ok || tmpObj == nil {
+		t.Fatalf("fileCreateTemp returned %T, want *object.Object", res)
+	}
+	path, err := fileGetPathString(tmpObj)
+	if err != nil {
+		t.Fatalf("fileGetPathString error: %v", err)
+	}
+	defer os.Remove(path)
+
+	if _, statErr := os.Stat(path); statErr != nil {
+		t.Fatalf("Temp file was not created on disk: %v", statErr)
 	}
 }

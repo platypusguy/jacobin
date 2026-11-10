@@ -19,7 +19,6 @@ import (
 	"jacobin/src/gfunction/javaMath"
 	"jacobin/src/gfunction/javaNet"
 	"jacobin/src/gfunction/javaNio"
-	"jacobin/src/gfunction/javaRmi"
 	"jacobin/src/gfunction/javaSecurity"
 	"jacobin/src/gfunction/javaSql"
 	"jacobin/src/gfunction/javaText"
@@ -49,7 +48,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// java/awt/*
 	javaAwt.Load_Awt_Color()
 	javaAwt.Load_Awt_Graphics_Environment()
-	javaAwt.Load_Awt_Traps()
+	javaAwt.Load_Awt_Toolkit()
 
 	// java/io/*
 	javaIo.Load_Io_BufferedInputStream()
@@ -72,7 +71,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaIo.Load_Io_OutputStreamWriter()
 	javaIo.Load_Io_PrintStream()
 	javaIo.Load_Io_RandomAccessFile()
-	javaIo.Load_Traps_Java_Io()
 
 	// java/lang/*
 	javaLang.ClassClinitIsh() // Special case clinit for java/lang/Class.
@@ -112,10 +110,13 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Throwable()
 	javaLang.Load_Lang_UTF16()
 	javaLang.Load_Lang_Void()
+
+	// java/lang exception and error classes
 	javaLang.Load_Java_Lang_AssertionError()
 	javaLang.Load_Java_Lang_Exception()
 	javaLang.Load_Java_Lang_NullPointerException()
 	javaLang.Load_Java_Lang_RuntimeException()
+	javaLang.Load_Java_Lang_Invoke_StringConcatException()
 
 	// java/math/*
 	javaMath.Load_Math_Big_Decimal()
@@ -146,9 +147,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaNio.Load_Nio_File_Path()
 	javaNio.Load_Nio_File_Paths()
 
-	// java/rmi/*
-	javaRmi.Load_Traps_Java_Rmi()
-
 	// java/security/*
 	javaSecurity.Load_ECFieldAndPoint()
 	javaSecurity.Load_Security_Interfaces_EC_Keys()
@@ -171,9 +169,8 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaSecurity.Load_Security_AlgorithmParameters()
 	javaSecurity.Load_Security_Spec_NamedParameterSpec()
 	javaSecurity.Load_Security_Spec_AlgorithmParameterSpec()
-	javaSecurity.Load_Traps_Java_Security()
 
-	// java/sql
+	// java/sql/*
 	javaSql.Load_Traps_Java_Sql()
 
 	// java/text/*
@@ -286,7 +283,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_Zip_CheckedInputStream()
 	javaUtil.Load_Util_Zip_Crc32_Crc32c()
 	javaUtil.Load_Util_Zip_ZipInputStream()
-	javaUtil.Load_Traps_Java_Util()
 
 	// javax/crypto/*
 	javaxCrypto.Load_Crypto_Cipher()
@@ -321,7 +317,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	sunSecurity.Load_Sun_Security_Action_GetPropertyAction()
 	sunSecurity.Load_Sun_Security_Jca_ProviderList()
 	sunSecurity.Load_Sun_Security_Jca_Providers()
-	sunSecurity.Load_Traps_Sun_Security()
+	sunSecurity.Load_Sun_Security_Util_Stubs()
 
 	// Load diagnostic helper functions.
 	misc.Load_jj()

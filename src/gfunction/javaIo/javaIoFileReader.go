@@ -36,7 +36,7 @@ func Load_Io_FileReader() {
 		}
 
 	// -----------------------------------------
-	// traps that do nothing but return an error
+	// Unsupported <init> functions
 	// -----------------------------------------
 
 	ghelpers.MethodSignatures["java/io/FileReader.<init>(Ljava/io/FileDescriptor;)V"] =
@@ -57,16 +57,20 @@ func Load_Io_FileReader() {
 			GFunction:  ghelpers.TrapFunction,
 		}
 
+	// -----------------------------------------
+	// Member functions
+	// -----------------------------------------
+
 	ghelpers.MethodSignatures["java/io/FileReader.close()V"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  isrClose,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileReader.getEncoding()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  ghelpers.ReturnCharsetName,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileReader.mark(I)V"] =
@@ -78,25 +82,25 @@ func Load_Io_FileReader() {
 	ghelpers.MethodSignatures["java/io/FileReader.markSupported()Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  ghelpers.ReturnFalse,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileReader.read()I"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  isrReadOneChar,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileReader.read([C)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  isrReadCharBufferSubset,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileReader.read([CII)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  isrReadCharBufferSubset,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileReader.read(Ljava/nio/CharBuffer;)I"] =
@@ -108,7 +112,7 @@ func Load_Io_FileReader() {
 	ghelpers.MethodSignatures["java/io/FileReader.ready()Z"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
+			GFunction:  isrReady,
 		}
 
 	ghelpers.MethodSignatures["java/io/FileReader.reset()V"] =

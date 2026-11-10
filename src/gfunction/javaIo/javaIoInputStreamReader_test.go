@@ -172,3 +172,61 @@ func TestInputStreamReader_Ready_And_Close(t *testing.T) {
 		t.Fatalf("expected error on closing already closed file, got nil")
 	}
 }
+
+func TestLoad_Io_InputStreamReader(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_InputStreamReader()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}
+
+func TestInputStreamReader_Init_ErrorPaths(t *testing.T) {
+	tmpDir := os.TempDir()
+	filePath := filepath.Join(tmpDir, "isr_test_init_errs.txt")
+	if err := os.WriteFile(filePath, []byte("test"), 0o644); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+	defer os.Remove(filePath)
+
+	inStreamObj := makeInputStreamObjForFile(t, filePath)
+	target := object.MakeEmptyObject()
+
+	// missing FilePath
+	streamMissingPath := &object.Object{FieldTable: map[string]object.Field{
+		ghelpers.FileHandle: inStreamObj.FieldTable[ghelpers.FileHandle],
+	}}
+	res1 := inputStreamReaderInit([]interface{}{target, streamMissingPath})
+	if res1 == nil {
+		t.Fatalf("expected error for missing FilePath")
+	}
+
+	// missing FileHandle
+	streamMissingHandle := &object.Object{FieldTable: map[string]object.Field{
+		ghelpers.FilePath: inStreamObj.FieldTable[ghelpers.FilePath],
+	}}
+	res2 := inputStreamReaderInit([]interface{}{target, streamMissingHandle})
+	if res2 == nil {
+		t.Fatalf("expected error for missing FileHandle")
+	}
+
+	// wrong type for FileHandle
+	streamBadHandleType := &object.Object{FieldTable: map[string]object.Field{
+		ghelpers.FilePath:   inStreamObj.FieldTable[ghelpers.FilePath],
+		ghelpers.FileHandle: {Ftype: ghelpers.FileHandle, Fvalue: "not-a-file"},
+	}}
+	res3 := inputStreamReaderInit([]interface{}{target, streamBadHandleType})
+	if res3 == nil {
+		t.Fatalf("expected error for non-*os.File handle")
+	}
+
+	// Close error path
+	_ = inputStreamReaderInit([]interface{}{target, inStreamObj})
+	_ = isrClose([]interface{}{target})
+	if res := isrClose([]interface{}{target}); res == nil {
+		t.Fatalf("expected error closing already closed reader")
+	}
+}

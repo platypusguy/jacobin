@@ -222,3 +222,80 @@ func TestFosClose(t *testing.T) {
 		os.Remove(filePath)
 	}
 }
+
+func TestLoad_Io_FileOutputStream(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_FileOutputStream()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}
+
+func TestFos_ErrorCases(t *testing.T) {
+	emptyObj := object.MakeEmptyObject()
+
+	// fosWriteOne without FileHandle
+	if res := fosWriteOne([]interface{}{emptyObj, int64(65)}); res == nil {
+		t.Errorf("Expected error for fosWriteOne without FileHandle")
+	}
+
+	// fosWriteByteArray without FileHandle
+	if res := fosWriteByteArray([]interface{}{emptyObj, emptyObj}); res == nil {
+		t.Errorf("Expected error for fosWriteByteArray without FileHandle")
+	}
+
+	// fosWriteByteArrayOffset without FileHandle
+	if res := fosWriteByteArrayOffset([]interface{}{emptyObj, emptyObj, int64(0), int64(1)}); res == nil {
+		t.Errorf("Expected error for fosWriteByteArrayOffset without FileHandle")
+	}
+
+	// fosClose without FileHandle
+	if res := fosClose([]interface{}{emptyObj}); res == nil {
+		t.Errorf("Expected error for fosClose without FileHandle")
+	}
+
+	// With open file handle, test write with missing params
+	tmpDir := os.TempDir()
+	filePath := filepath.Join(tmpDir, "fos_err_test.txt")
+	osFile, _ := os.Create(filePath)
+	defer os.Remove(filePath)
+	defer osFile.Close()
+
+	fosObj := &object.Object{
+		FieldTable: map[string]object.Field{
+			"FileHandle": {Ftype: ghelpers.FileHandle, Fvalue: osFile},
+		},
+	}
+
+	// fosWriteOne with bad param type
+	if res := fosWriteOne([]interface{}{fosObj, "not-int"}); res == nil {
+		t.Errorf("Expected error for fosWriteOne with non-int")
+	}
+
+	// fosWriteByteArray with bad byte array object (no value field)
+	if res := fosWriteByteArray([]interface{}{fosObj, emptyObj}); res == nil {
+		t.Errorf("Expected error for fosWriteByteArray with invalid byte array obj")
+	}
+
+	// fosWriteByteArrayOffset with length == 0
+	byteArray := []types.JavaByte{65, 66}
+	byteArrayObj := &object.Object{
+		FieldTable: map[string]object.Field{
+			"value": {Ftype: types.JavaByteArray, Fvalue: byteArray},
+		},
+	}
+	if res := fosWriteByteArrayOffset([]interface{}{fosObj, byteArrayObj, int64(0), int64(0)}); res != int64(0) {
+		t.Errorf("Expected 0 for 0 length write, got %v", res)
+	}
+
+	// fosWriteByteArrayOffset out of bounds
+	if res := fosWriteByteArrayOffset([]interface{}{fosObj, byteArrayObj, int64(-1), int64(1)}); res == nil {
+		t.Errorf("Expected IndexOutOfBoundsException for negative offset")
+	}
+	if res := fosWriteByteArrayOffset([]interface{}{fosObj, byteArrayObj, int64(0), int64(10)}); res == nil {
+		t.Errorf("Expected IndexOutOfBoundsException for length > len(buf)")
+	}
+}
