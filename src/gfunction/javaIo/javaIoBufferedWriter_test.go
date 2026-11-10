@@ -426,3 +426,14 @@ func TestBufferedWriter_WriteOne_WrongArgType(t *testing.T) {
     }
     _ = bwClose([]interface{}{target})
 }
+
+func TestLoad_Io_BufferedWriter(t *testing.T) {
+    saved := ghelpers.MethodSignatures
+    defer func() { ghelpers.MethodSignatures = saved }()
+    ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+    Load_Io_BufferedWriter()
+    if len(ghelpers.MethodSignatures) == 0 {
+        t.Fatal("Expected signatures to be registered")
+    }
+}

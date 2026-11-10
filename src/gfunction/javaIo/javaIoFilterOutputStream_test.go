@@ -111,3 +111,42 @@ func TestFilterOutputStream_WriteRange_ParamError(t *testing.T) {
 	}
 	_ = filteroutputstreamClose([]interface{}{target})
 }
+
+func TestFilterOutputStream_ErrorPaths(t *testing.T) {
+	target := object.MakeEmptyObject()
+
+	// Missing FilePath
+	streamMissingPath := &object.Object{FieldTable: map[string]object.Field{
+		ghelpers.FileHandle: {Ftype: ghelpers.FileHandle, Fvalue: os.Stdout},
+	}}
+	if res := filteroutputstreamInit([]interface{}{target, streamMissingPath}); res == nil {
+		t.Errorf("Expected error for missing FilePath in filteroutputstreamInit")
+	}
+
+	// Missing FileHandle
+	streamMissingHandle := &object.Object{FieldTable: map[string]object.Field{
+		ghelpers.FilePath: {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString("test")},
+	}}
+	if res := filteroutputstreamInit([]interface{}{target, streamMissingHandle}); res == nil {
+		t.Errorf("Expected error for missing FileHandle in filteroutputstreamInit")
+	}
+
+	// Bad FileHandle type
+	streamBadHandle := &object.Object{FieldTable: map[string]object.Field{
+		ghelpers.FilePath:   {Ftype: types.JavaByteArray, Fvalue: object.JavaByteArrayFromGoString("test")},
+		ghelpers.FileHandle: {Ftype: ghelpers.FileHandle, Fvalue: "not-a-file"},
+	}}
+	if res := filteroutputstreamInit([]interface{}{target, streamBadHandle}); res == nil {
+		t.Errorf("Expected error for bad FileHandle type in filteroutputstreamInit")
+	}
+
+	// Close on empty object returns nil
+	if res := filteroutputstreamClose([]interface{}{target}); res != nil {
+		t.Errorf("Expected nil for filteroutputstreamClose without handle, got %v", res)
+	}
+
+	// Flush on empty object returns nil
+	if res := filteroutputstreamFlush([]interface{}{target}); res != nil {
+		t.Errorf("Expected nil for filteroutputstreamFlush without handle, got %v", res)
+	}
+}

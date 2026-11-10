@@ -9,6 +9,12 @@ import (
 
 func Load_Awt_Color() {
 
+	ghelpers.MethodSignatures["java/awt/Color.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.ClinitGeneric,
+		}
+
 	ghelpers.MethodSignatures["java/awt/Color.<init>(FFF)V"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,

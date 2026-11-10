@@ -7,6 +7,7 @@
 package javaIo
 
 import (
+	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
@@ -123,7 +124,14 @@ func ByteArrayOutputStreamInit(params []interface{}) interface{} {
 
 	size := int64(32) // Default size
 	if len(params) == 2 {
-		size = params[1].(int64)
+		sizeVal, ok := ghelpers.GetInt64Val(params[1])
+		if !ok {
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Invalid size")
+		}
+		if sizeVal < 0 {
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("Negative initial size: %d", sizeVal))
+		}
+		size = sizeVal
 	}
 
 	buf := make([]types.JavaByte, size)

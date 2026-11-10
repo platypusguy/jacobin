@@ -440,3 +440,51 @@ func TestFisTransferTo_Success(t *testing.T) {
 		t.Errorf("Content mismatch: got %q want %q", gotString, string(content))
 	}
 }
+
+func TestLoad_Io_FileInputStream(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_FileInputStream()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}
+
+func TestFisAvailable_And_ReadByteArray(t *testing.T) {
+	content := []byte("testing available and read byte array")
+	path, cleanup := makeTempFile(t, content)
+	defer cleanup()
+
+	fisObj := newFileInputStreamObject()
+	fisObj.FieldTable[ghelpers.FileHandle] = object.Field{
+		Ftype:  ghelpers.FileHandle,
+		Fvalue: mustOpenFile(t, path),
+	}
+	defer fisObj.FieldTable[ghelpers.FileHandle].Fvalue.(*os.File).Close()
+
+	// fisAvailable
+	availRes := fisAvailable([]interface{}{fisObj})
+	avail, ok := availRes.(int64)
+	if !ok || avail <= 0 {
+		t.Errorf("Expected positive available bytes, got %v", availRes)
+	}
+
+	// fisReadByteArray
+	baObj := newJavaByteArrayObject(len(content))
+	readRes := fisReadByteArray([]interface{}{fisObj, baObj})
+	n, ok := readRes.(int64)
+	if !ok || n != int64(len(content)) {
+		t.Errorf("Expected %d bytes read, got %v", len(content), readRes)
+	}
+
+	// fisReadByteArray with missing FileHandle
+	emptyObj := newFileInputStreamObject()
+	if errRes := fisReadByteArray([]interface{}{emptyObj, baObj}); errRes == nil {
+		t.Errorf("Expected error for fisReadByteArray without FileHandle")
+	}
+	if errRes := fisAvailable([]interface{}{emptyObj}); errRes == nil {
+		t.Errorf("Expected error for fisAvailable without FileHandle")
+	}
+}

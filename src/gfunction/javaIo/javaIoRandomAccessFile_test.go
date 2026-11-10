@@ -711,3 +711,14 @@ func TestRafWriteDataMethods(t *testing.T) {
 		t.Errorf("writeUTF/readUTF: expected %q, got %q", expectedStr, gotStr)
 	}
 }
+
+func TestLoad_Io_RandomAccessFile(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_RandomAccessFile()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}

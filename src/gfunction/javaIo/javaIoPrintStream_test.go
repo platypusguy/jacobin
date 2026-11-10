@@ -16,6 +16,7 @@ import (
 	"jacobin/src/types"
 	"maps"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -947,5 +948,99 @@ func TestPrintStreamWithObjectReceiver(t *testing.T) {
 	ret = Printf([]any{emptyPsObj, makeStringObject("test"), object.MakeArrayFromRawArray([]*object.Object{})})
 	if _, isErr := ret.(*ghelpers.GErrBlk); !isErr {
 		t.Errorf("Printf with emptyPsObj should return GErrBlk, got %v", ret)
+	}
+}
+
+func TestInitPrintStreamFile_And_String(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+
+	tmpDir := os.TempDir()
+	filePath := filepath.Join(tmpDir, "ps_file_test.txt")
+	defer os.Remove(filePath)
+
+	psClassName := "java/io/PrintStream"
+	psObj := object.MakeEmptyObjectWithClassName(&psClassName)
+	fileObj := makeJavaFileObj(filePath)
+
+	res := initPrintStreamFile([]any{psObj, fileObj})
+	if res != nil {
+		t.Fatalf("initPrintStreamFile failed: %v", res)
+	}
+	_ = PrintFlush([]any{psObj})
+	if fld, ok := psObj.FieldTable[ghelpers.FileHandle]; ok && fld.Fvalue != nil {
+		if closer, ok := fld.Fvalue.(io.Closer); ok {
+			_ = closer.Close()
+		}
+	}
+
+	// initPrintStreamString
+	psObj2 := object.MakeEmptyObjectWithClassName(&psClassName)
+	res2 := initPrintStreamString([]any{psObj2, object.StringObjectFromGoString(filePath)})
+	if res2 != nil {
+		t.Fatalf("initPrintStreamString failed: %v", res2)
+	}
+	_ = PrintFlush([]any{psObj2})
+	if fld, ok := psObj2.FieldTable[ghelpers.FileHandle]; ok && fld.Fvalue != nil {
+		if closer, ok := fld.Fvalue.(io.Closer); ok {
+			_ = closer.Close()
+		}
+	}
+}
+
+func TestPrintStream_WriteFromByteArray(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+
+	buf := new(bytes.Buffer)
+	psClassName := "java/io/PrintStream"
+	psObj := object.MakeEmptyObjectWithClassName(&psClassName)
+	psObj.FieldTable[ghelpers.FileHandle] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: buf}
+
+	data := []types.JavaByte{72, 101, 108, 108, 111} // "Hello"
+	bObj := object.MakePrimitiveObject("[B", types.JavaByteArray, data)
+
+	// write([B)V
+	res := printstreamWriteFromByteArray([]any{psObj, bObj})
+	if res != nil {
+		t.Fatalf("printstreamWriteFromByteArray([B) error: %v", res)
+	}
+	if buf.String() != "Hello" {
+		t.Errorf("Expected 'Hello', got %q", buf.String())
+	}
+
+	// write([BII)V
+	buf.Reset()
+	res = printstreamWriteFromByteArray([]any{psObj, bObj, int64(1), int64(3)})
+	if res != nil {
+		t.Fatalf("printstreamWriteFromByteArray([BII) error: %v", res)
+	}
+	if buf.String() != "ell" {
+		t.Errorf("Expected 'ell', got %q", buf.String())
+	}
+
+	// Error cases
+	// Invalid writer
+	errRes := printstreamWriteFromByteArray([]any{object.MakeEmptyObject(), bObj})
+	if _, isErr := errRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected GErrBlk for invalid writer, got %v", errRes)
+	}
+
+	// Invalid byte array
+	errRes = printstreamWriteFromByteArray([]any{psObj, "not-an-object"})
+	if _, isErr := errRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected GErrBlk for invalid byte array, got %v", errRes)
+	}
+
+	// Out of bounds
+	errRes = printstreamWriteFromByteArray([]any{psObj, bObj, int64(-1), int64(3)})
+	if _, isErr := errRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected GErrBlk for negative offset, got %v", errRes)
+	}
+
+	// PrintFlush with invalid writer
+	errRes = PrintFlush([]any{object.MakeEmptyObject()})
+	if _, isErr := errRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected GErrBlk for PrintFlush with invalid writer, got %v", errRes)
 	}
 }

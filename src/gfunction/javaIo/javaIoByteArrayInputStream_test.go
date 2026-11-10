@@ -8,6 +8,7 @@ package javaIo
 
 import (
 	"container/list"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
@@ -211,5 +212,66 @@ func TestByteArrayInputStream_ReadAllBytes(t *testing.T) {
 	resData = resObj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if len(resData) != 0 {
 		t.Errorf("Expected 0 bytes, got %d", len(resData))
+	}
+}
+
+func TestLoad_Io_ByteArrayInputStream(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_ByteArrayInputStream()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}
+
+func TestByteArrayInputStream_ReadNBytesAndErrors(t *testing.T) {
+	setupBAISTest()
+
+	data := []types.JavaByte{10, 20, 30, 40, 50}
+	bufObj := object.MakeEmptyObject()
+	bufObj.FieldTable["value"] = object.Field{Ftype: "[B", Fvalue: data}
+
+	bais := object.MakeEmptyObject()
+	ByteArrayInputStreamInit([]interface{}{bais, bufObj})
+
+	// readNBytes
+	dest := make([]types.JavaByte, 5)
+	destObj := object.MakeEmptyObject()
+	destObj.FieldTable["value"] = object.Field{Ftype: "[B", Fvalue: dest}
+
+	res := ByteArrayInputStreamReadNBytes([]interface{}{bais, destObj, int64(0), int64(2)})
+	if res.(int64) != 2 {
+		t.Errorf("Expected 2 bytes read via readNBytes, got %v", res)
+	}
+
+	// Null destObj
+	errRes := ByteArrayInputStreamReadRange([]interface{}{bais, object.Null, int64(0), int64(1)})
+	if _, isErr := errRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected GErrBlk for null dest, got %v", errRes)
+	}
+
+	// Out of bounds
+	errRes = ByteArrayInputStreamReadRange([]interface{}{bais, destObj, int64(-1), int64(1)})
+	if _, isErr := errRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected GErrBlk for negative offset, got %v", errRes)
+	}
+
+	errRes = ByteArrayInputStreamReadRange([]interface{}{bais, destObj, int64(0), int64(100)})
+	if _, isErr := errRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected GErrBlk for length exceeding buffer, got %v", errRes)
+	}
+
+	// Skip negative
+	skipRes := ByteArrayInputStreamSkip([]interface{}{bais, int64(-5)})
+	if skipRes.(int64) != 0 {
+		t.Errorf("Expected skip of negative to return 0, got %v", skipRes)
+	}
+
+	// Read range with lenReq <= 0
+	zeroRes := ByteArrayInputStreamReadRange([]interface{}{bais, destObj, int64(0), int64(0)})
+	if zeroRes.(int64) != 0 {
+		t.Errorf("Expected 0 for 0 lenReq, got %v", zeroRes)
 	}
 }

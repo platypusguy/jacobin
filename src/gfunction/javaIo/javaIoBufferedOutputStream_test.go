@@ -176,3 +176,43 @@ func makeOutputStreamObjForFileBuffered(t *testing.T, filePath string) *object.O
 	under.FieldTable[ghelpers.FileHandle] = object.Field{Ftype: "Ljava/io/FileDescriptor;", Fvalue: f}
 	return under
 }
+
+func TestBufferedOutputStream_Errors(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+
+	tmpDir := os.TempDir()
+	filePath := filepath.Join(tmpDir, "bostream_err_test.bin")
+	defer os.Remove(filePath)
+
+	under := makeOutputStreamObjForFileBuffered(t, filePath)
+	self := object.MakeEmptyObject()
+
+	// Init with negative size -> IllegalArgumentException
+	if res := BufferedOutputStreamInit([]interface{}{self, under, int64(-5)}); res == nil {
+		t.Errorf("Expected error for negative buffer size in BufferedOutputStreamInit")
+	}
+
+	// Init with default size (len(params) == 2)
+	selfDefault := object.MakeEmptyObject()
+	if res := BufferedOutputStreamInit([]interface{}{selfDefault, under}); res != nil {
+		t.Fatalf("Init default failed: %v", res)
+	}
+
+	// WriteRange out of bounds
+	buf := []types.JavaByte{1, 2, 3}
+	bObj := &object.Object{FieldTable: map[string]object.Field{"value": {Ftype: "[B", Fvalue: buf}}}
+	if res := BufferedOutputStreamWriteRange([]interface{}{selfDefault, bObj, int64(-1), int64(2)}); res == nil {
+		t.Errorf("Expected error for negative offset")
+	}
+	if res := BufferedOutputStreamWriteRange([]interface{}{selfDefault, bObj, int64(0), int64(10)}); res == nil {
+		t.Errorf("Expected error for length > len(buf)")
+	}
+
+	// Null buffer
+	if res := BufferedOutputStreamWriteRange([]interface{}{selfDefault, object.Null, int64(0), int64(1)}); res == nil {
+		t.Errorf("Expected error for null buffer")
+	}
+
+	_ = BufferedOutputStreamClose([]interface{}{selfDefault})
+}

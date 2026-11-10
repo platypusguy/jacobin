@@ -146,3 +146,14 @@ func TestFileReader_Error_Cases(t *testing.T) {
 		}
 	}
 }
+
+func TestLoad_Io_FileReader(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_FileReader()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}

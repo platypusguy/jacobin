@@ -210,3 +210,62 @@ func TestByteArrayOutputStream_FlushAndClose(t *testing.T) {
 		t.Errorf("Expected close (JustReturn) to return nil, got %v", res)
 	}
 }
+
+func TestLoad_Io_ByteArrayOutputStream(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_ByteArrayOutputStream()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}
+
+func TestByteArrayOutputStream_WriterAndTrapMethods(t *testing.T) {
+	setup()
+	obj := object.MakeEmptyObject()
+	ByteArrayOutputStreamInit([]any{obj})
+
+	// byteArrayOutputStreamWriter Write, Flush, Close
+	writer := &byteArrayOutputStreamWriter{obj: obj}
+	n, err := writer.Write([]byte("TestWriter"))
+	if err != nil || n != 10 {
+		t.Errorf("writer.Write returned n=%d, err=%v", n, err)
+	}
+	if err := writer.Flush(); err != nil {
+		t.Errorf("writer.Flush returned err=%v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Errorf("writer.Close returned err=%v", err)
+	}
+
+	// Trap methods
+	res := ByteArrayOutputStreamToStringCharsetName([]any{obj, object.StringObjectFromGoString("UTF-8")})
+	if _, isErr := res.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected trap GErrBlk for ToStringCharsetName, got %v", res)
+	}
+
+	res = ByteArrayOutputStreamToStringCharset([]any{obj, object.Null})
+	if _, isErr := res.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected trap GErrBlk for ToStringCharset, got %v", res)
+	}
+
+	res = ByteArrayOutputStreamWriteTo([]any{obj, object.Null})
+	if _, isErr := res.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected GErrBlk for WriteTo with null out, got %v", res)
+	}
+
+	// Null array in writeBytesAll
+	res = ByteArrayOutputStreamWriteBytesAll([]any{obj, nil})
+	if _, isErr := res.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected NullPointerException for null in writeBytesAll, got %v", res)
+	}
+
+	// Invalid initial size -> IllegalArgumentException
+	negObj := object.MakeEmptyObject()
+	negRes := ByteArrayOutputStreamInit([]any{negObj, int64(-5)})
+	if _, isErr := negRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("Expected IllegalArgumentException for negative size, got %v", negRes)
+	}
+}

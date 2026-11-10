@@ -67,3 +67,21 @@ func TestInputStreamReadIntoByteArray_ValidRead(t *testing.T) {
 		}
 	}
 }
+
+func TestLoad_Io_InputStream(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_InputStream()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}
+
+func TestInputStreamAvailable(t *testing.T) {
+	res := inputStreamAvailable([]any{&object.Object{}})
+	if val, ok := res.(int64); !ok || val != 0 {
+		t.Errorf("Expected available() to return 0, got %v", res)
+	}
+}
