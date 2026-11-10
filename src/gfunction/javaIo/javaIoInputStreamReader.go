@@ -236,31 +236,13 @@ func isrReadCharBufferSubset(params []interface{}) interface{} {
 
 // "java/io/InputStreamReader.ready()Z"
 func isrReady(params []interface{}) interface{} {
-
-	// Get file path.
-	fldPath, ok := params[1].(*object.Object).FieldTable[ghelpers.FilePath]
-	if !ok {
-		errMsg := "isrReady: InputStreamReader object lacks a ghelpers.FilePath field"
-		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+	self := params[0].(*object.Object)
+	osFile, ok := self.FieldTable[ghelpers.FileHandle].Fvalue.(*os.File)
+	if !ok || osFile == nil {
+		return ghelpers.GetGErrBlk(excNames.IOException, "isrReady: object lacks a valid ghelpers.FileHandle field")
 	}
-
-	// Get file handle.
-	fldHandle, ok := params[1].(*object.Object).FieldTable[ghelpers.FileHandle]
-	if !ok {
-		errMsg := "isrReady: InputStreamReader object lacks a ghelpers.FileHandle field"
-		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+	if _, err := osFile.Stat(); err != nil {
+		return types.JavaBoolFalse
 	}
-
-	// Copy java/io/File path field into the InputStreamReader object.
-	fld := fldPath
-	params[0].(*object.Object).FieldTable[ghelpers.FilePath] = fld
-
-	// Get file handle and get file statistics.
-	osFile := fldHandle.Fvalue.(*os.File)
-	_, err := osFile.Stat()
-	if err != nil {
-		return types.JavaBoolFalse // Ready: false
-	}
-
 	return types.JavaBoolTrue
 }
