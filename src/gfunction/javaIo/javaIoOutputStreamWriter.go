@@ -105,7 +105,11 @@ func initOutputStreamWriter(params []interface{}) interface{} {
 		errMsg := "initOutputStreamWriter: OutputStream object lacks a ghelpers.FileHandle field"
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
-	osFile := fldHandle.Fvalue.(*os.File)
+	osFile, ok := fldHandle.Fvalue.(*os.File)
+	if !ok || osFile == nil {
+		errMsg := "initOutputStreamWriter: ghelpers.FileHandle is not a valid *os.File"
+		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+	}
 
 	// Get file statistics.
 	_, err := osFile.Stat()

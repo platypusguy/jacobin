@@ -159,3 +159,67 @@ func TestOutputStreamWriter_WriteStringBuffer(t *testing.T) {
 
 	_ = oswClose([]interface{}{target})
 }
+
+func TestLoad_Io_OutputStreamWriter(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_OutputStreamWriter()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}
+
+func TestOutputStreamWriter_Init_ErrorPaths(t *testing.T) {
+	tmpDir := os.TempDir()
+	filePath := filepath.Join(tmpDir, "osw_test_init_errs.txt")
+	defer os.Remove(filePath)
+
+	outStreamObj := makeOutputStreamObjForFile(t, filePath)
+	target := object.MakeEmptyObject()
+
+	// missing FilePath
+	streamMissingPath := &object.Object{FieldTable: map[string]object.Field{
+		ghelpers.FileHandle: outStreamObj.FieldTable[ghelpers.FileHandle],
+	}}
+	res1 := initOutputStreamWriter([]interface{}{target, streamMissingPath})
+	if res1 == nil {
+		t.Fatalf("expected error for missing FilePath")
+	}
+
+	// missing FileHandle
+	streamMissingHandle := &object.Object{FieldTable: map[string]object.Field{
+		ghelpers.FilePath: outStreamObj.FieldTable[ghelpers.FilePath],
+	}}
+	res2 := initOutputStreamWriter([]interface{}{target, streamMissingHandle})
+	if res2 == nil {
+		t.Fatalf("expected error for missing FileHandle")
+	}
+
+	// wrong type for FileHandle
+	streamBadHandleType := &object.Object{FieldTable: map[string]object.Field{
+		ghelpers.FilePath:   outStreamObj.FieldTable[ghelpers.FilePath],
+		ghelpers.FileHandle: {Ftype: ghelpers.FileHandle, Fvalue: "not-a-file"},
+	}}
+	res3 := initOutputStreamWriter([]interface{}{target, streamBadHandleType})
+	if res3 == nil {
+		t.Fatalf("expected error for non-*os.File handle")
+	}
+
+	// Bad argument to oswWriteOneChar
+	_ = initOutputStreamWriter([]interface{}{target, outStreamObj})
+	res4 := oswWriteOneChar([]interface{}{target, "bad-int"})
+	if res4 == nil {
+		t.Fatalf("expected error for non-int64 char in oswWriteOneChar")
+	}
+
+	// Close then close/flush
+	_ = oswClose([]interface{}{target})
+	if res := oswClose([]interface{}{target}); res == nil {
+		t.Fatalf("expected error when closing already closed stream")
+	}
+	if res := oswFlush([]interface{}{target}); res == nil {
+		t.Fatalf("expected error when flushing closed stream")
+	}
+}

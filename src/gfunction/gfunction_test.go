@@ -72,6 +72,15 @@ func TestMTableLoadGFunctions(t *testing.T) {
 		t.Errorf("Expecting java/lang/Object.<init>()V to be of type 'G', but got type: %c",
 			mte.MType)
 	}
+
+	toolkitMethod := "java/awt/Toolkit.loadLibraries()V"
+	toolkitEntry, exists := classloader.MTable[toolkitMethod]
+	if !exists {
+		t.Fatalf("Expecting MTable entry for %s, but it does not exist", toolkitMethod)
+	}
+	if toolkitEntry.MType != 'G' {
+		t.Errorf("Expecting %s to be of type 'G', but got type: %c", toolkitMethod, toolkitEntry.MType)
+	}
 }
 
 func TestCheckKey(t *testing.T) {

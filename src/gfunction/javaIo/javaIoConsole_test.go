@@ -14,6 +14,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
+	"jacobin/src/types"
 	"os"
 	"reflect"
 	"testing"
@@ -206,5 +207,65 @@ func TestConsolePrintfReadLine_PromptAndRead(t *testing.T) {
 	outBytes, _ := io.ReadAll(rout)
 	if string(outBytes) != "Enter: " {
 		t.Fatalf("unexpected prompt output: %q", string(outBytes))
+	}
+}
+
+func TestConsoleFlush(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "GS", Value: os.Stdin})
+	_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: os.Stdout})
+
+	res := consoleFlush(nil)
+	if res != nil {
+		t.Errorf("Expected consoleFlush to return nil, got %v", res)
+	}
+}
+
+func TestConsoleReadPassword_NonTerminal(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: os.Stdout})
+
+	// When stdin is not a terminal (e.g. in test env), consoleReadPassword should return an IOException error block
+	res := consoleReadPassword(nil)
+	if res != nil {
+		if blk, ok := res.(*ghelpers.GErrBlk); ok {
+			if blk.ExceptionType != excNames.IOException {
+				t.Errorf("Expected IOException GErrBlk, got %d", blk.ExceptionType)
+			}
+		}
+	}
+
+	fmtObj := object.StringObjectFromGoString("Password: ")
+	emptyArgs := makeObjectRefArray()
+	params := []interface{}{object.MakeEmptyObject(), fmtObj, emptyArgs}
+	res = consolePrintfReadPassword(params)
+	if res != nil {
+		if blk, ok := res.(*ghelpers.GErrBlk); ok {
+			if blk.ExceptionType != excNames.IOException {
+				t.Errorf("Expected IOException GErrBlk, got %d", blk.ExceptionType)
+			}
+		}
+	}
+}
+
+func TestConsoleClinit_Success(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = classloader.Init()
+	classloader.LoadBaseClasses()
+
+	// Insert dummy class into method area
+	klass := &classloader.Klass{
+		Data: &classloader.ClData{
+			ClInit: types.ClInitNotRun,
+		},
+	}
+	classloader.MethAreaInsert("java/io/Console", klass)
+
+	res := consoleClinit(nil)
+	if res != nil {
+		t.Errorf("Expected consoleClinit to return nil on success, got %v", res)
+	}
+	if klass.Data.ClInit != types.ClInitRun {
+		t.Errorf("Expected ClInitRun, got %v", klass.Data.ClInit)
 	}
 }

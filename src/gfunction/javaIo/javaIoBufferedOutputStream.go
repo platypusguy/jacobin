@@ -125,7 +125,13 @@ func BufferedOutputStreamWriteInt(params []interface{}) interface{} {
 
 func BufferedOutputStreamWriteRange(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
-	bObj := params[1].(*object.Object)
+	if len(params) < 2 || object.IsNull(params[1]) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "write: b is null")
+	}
+	bObj, ok := params[1].(*object.Object)
+	if !ok || bObj == nil {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "write: b is null")
+	}
 	off := params[2].(int64)
 	lenVal := params[3].(int64)
 
@@ -133,7 +139,11 @@ func BufferedOutputStreamWriteRange(params []interface{}) interface{} {
 		return nil
 	}
 
-	javaBytes := bObj.FieldTable["value"].Fvalue.([]types.JavaByte)
+	valFld, ok := bObj.FieldTable["value"]
+	if !ok || valFld.Fvalue == nil {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "write: b has no value")
+	}
+	javaBytes := valFld.Fvalue.([]types.JavaByte)
 	if off < 0 || lenVal < 0 || off+lenVal > int64(len(javaBytes)) {
 		return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, "")
 	}

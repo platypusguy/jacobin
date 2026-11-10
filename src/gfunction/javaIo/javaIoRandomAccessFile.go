@@ -197,13 +197,13 @@ func Load_Io_RandomAccessFile() {
 
 	ghelpers.MethodSignatures["java/io/RandomAccessFile.seek(J)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  rafSeek,
 		}
 
 	ghelpers.MethodSignatures["java/io/RandomAccessFile.seek0(J)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  rafSeek,
 		}
 
@@ -263,7 +263,7 @@ func Load_Io_RandomAccessFile() {
 
 	ghelpers.MethodSignatures["java/io/RandomAccessFile.writeLong(J)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  rafWriteLong,
 		}
 
@@ -275,7 +275,7 @@ func Load_Io_RandomAccessFile() {
 
 	ghelpers.MethodSignatures["java/io/RandomAccessFile.writeDouble(D)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  rafWriteDouble,
 		}
 

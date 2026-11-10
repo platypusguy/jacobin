@@ -464,11 +464,8 @@ func initPrintStreamOutputStreamBoolean(params []any) any {
 	self.FieldTable["out"] = object.Field{Ftype: "java/io/OutputStream", Fvalue: underlying}
 
 	if len(params) > 2 {
-		if autoFlush, ok := params[2].(bool); ok {
-			self.FieldTable["autoFlush"] = object.Field{Ftype: "Z", Fvalue: autoFlush}
-		} else if autoFlushInt, ok := params[2].(int64); ok {
-			self.FieldTable["autoFlush"] = object.Field{Ftype: "Z", Fvalue: autoFlushInt != 0}
-		}
+		autoFlushVal, _ := ghelpers.GetInt64Val(params[2])
+		self.FieldTable["autoFlush"] = object.Field{Ftype: "Z", Fvalue: autoFlushVal != 0}
 	}
 
 	if fldHandle, ok := underlying.FieldTable[ghelpers.FileHandle]; ok {

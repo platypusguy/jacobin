@@ -282,3 +282,58 @@ func TestBufferedInputStream_Skip(t *testing.T) {
 		t.Errorf("Expected 3, got %d", b)
 	}
 }
+
+func TestBufferedInputStream_SkipAndErrors(t *testing.T) {
+	setupBufferedInputStreamTest()
+
+	data := []types.JavaByte{1, 2, 3, 4, 5}
+	bufObj := object.MakeEmptyObject()
+	bufObj.FieldTable["value"] = object.Field{Ftype: "[B", Fvalue: data}
+
+	bais := object.MakeEmptyObject()
+	nameBAIS := "java/io/ByteArrayInputStream"
+	bais.KlassName = stringPool.GetStringIndex(&nameBAIS)
+	ByteArrayInputStreamInit([]interface{}{bais, bufObj})
+
+	bis := object.MakeEmptyObject()
+	nameBIS := "java/io/BufferedInputStream"
+	bis.KlassName = stringPool.GetStringIndex(&nameBIS)
+	BufferedInputStreamInit([]interface{}{bis, bais, int64(2)})
+
+	// Negative skip
+	if n := BufferedInputStreamSkip([]interface{}{bis, int64(-5)}); n.(int64) != 0 {
+		t.Errorf("Expected 0 for negative skip, got %v", n)
+	}
+
+	// Skip more than buffer size (triggers fill / skip from in)
+	if n := BufferedInputStreamSkip([]interface{}{bis, int64(10)}); n.(int64) < 1 {
+		t.Errorf("Expected positive skip count, got %v", n)
+	}
+
+	// Reset with invalid mark -> IOException
+	bisNoMark := object.MakeEmptyObject()
+	bisNoMark.KlassName = stringPool.GetStringIndex(&nameBIS)
+	BufferedInputStreamInit([]interface{}{bisNoMark, bais, int64(2)})
+	if res := BufferedInputStreamReset([]interface{}{bisNoMark}); res == nil {
+		t.Errorf("Expected error for reset without mark")
+	}
+
+	// Init with negative size -> IllegalArgumentException
+	bisBad := object.MakeEmptyObject()
+	bisBad.KlassName = stringPool.GetStringIndex(&nameBIS)
+	if res := BufferedInputStreamInit([]interface{}{bisBad, bais, int64(-1)}); res == nil {
+		t.Errorf("Expected error for negative buffer size")
+	}
+
+	// Operations on closed stream
+	BufferedInputStreamClose([]interface{}{bis})
+	if res := BufferedInputStreamAvailable([]interface{}{bis}); res == nil {
+		t.Errorf("Expected error for available on closed stream")
+	}
+	if res := BufferedInputStreamSkip([]interface{}{bis, int64(1)}); res == nil {
+		t.Errorf("Expected error for skip on closed stream")
+	}
+	if res := BufferedInputStreamReset([]interface{}{bis}); res == nil {
+		t.Errorf("Expected error for reset on closed stream")
+	}
+}

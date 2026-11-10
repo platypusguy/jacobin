@@ -139,3 +139,14 @@ func TestFileWriter_Write_ParamErrors(t *testing.T) {
 
 	_ = oswClose([]interface{}{fw})
 }
+
+func TestLoad_Io_FileWriter(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
+	Load_Io_FileWriter()
+	if len(ghelpers.MethodSignatures) == 0 {
+		t.Fatal("Expected signatures to be registered")
+	}
+}
