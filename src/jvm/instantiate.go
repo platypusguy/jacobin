@@ -258,7 +258,9 @@ func initializeClass(k *classloader.Klass, classname string, superclasses []stri
 	}
 
 	// (c) <clinit>
-	if _, ok := k.Data.MethodTable["<clinit>()V"]; ok {
+	_, hasJavaClinit := k.Data.MethodTable["<clinit>()V"]
+	hasNativeClinit := classloader.GetMtableEntry(classname+".<clinit>()V").Meth != nil
+	if hasJavaClinit || hasNativeClinit {
 		// runInitializationBlock treats a non-empty chain as complete and will
 		// not add classname itself, so we must prepend it here — mirroring
 		// what the original InstantiateClass did before this was split out.
