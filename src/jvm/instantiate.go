@@ -13,6 +13,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
+	"jacobin/src/gfunction"
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -271,8 +272,10 @@ func initializeClass(k *classloader.Klass, classname string, superclasses []stri
 			initChain = append([]string{classname}, initChain...)
 		}
 		if err := runInitializationBlock(k, initChain, fs); err != nil {
-			errMsg := fmt.Sprintf("InitializeClass: runInitializationBlock failed with %s.<clinit>()V", classname)
-			trace.Error(errMsg)
+			if !errors.Is(err, gfunction.CaughtGfunctionException) {
+				errMsg := fmt.Sprintf("InitializeClass: runInitializationBlock failed with %s.<clinit>()V", classname)
+				trace.Error(errMsg)
+			}
 			return err
 		}
 	}
@@ -426,7 +429,7 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 	/* The following code is no longer needed as it handled only the ConstValue attribute.
 		Howvever, at a future point, we may want to add the ability process other field attributes
 		and this code will give us a template for doing so.
-	    //
+			//
 		// static fields can have ConstantValue attributes,
 		// which specify their initial value.
 		if len(f.Attributes) > 0 {
