@@ -114,6 +114,8 @@ func (s *deflaterState) writeZlibHeader() {
 		binary.BigEndian.PutUint32(dictID[:], adler32.Checksum(s.dict))
 		s.outCollector.Write(dictID[:])
 	}
+	// Trailer Adler-32 covers only uncompressed data (RFC 1950), not the dictionary.
+	s.adler = 1
 }
 
 func (s *deflaterState) ensureWriter() error {

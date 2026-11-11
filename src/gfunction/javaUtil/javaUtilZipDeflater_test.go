@@ -418,6 +418,22 @@ func TestDeflaterPresetDictionary(t *testing.T) {
 	n := deflaterDeflateArray([]any{defObj, outBufObj}).(int64)
 	comp := getBytesFromJavaByteArrayObj(outBufObj)[:n]
 
+	// A zlib reader validates the trailer Adler-32 against uncompressed data only.
+	zr, err := zlib.NewReaderDict(bytes.NewReader(comp), dict)
+	if err != nil {
+		t.Fatalf("failed to create zlib reader with dictionary: %v", err)
+	}
+	zlibDecoded, err := io.ReadAll(zr)
+	if err != nil {
+		t.Fatalf("failed to decompress zlib stream with dictionary: %v", err)
+	}
+	if err := zr.Close(); err != nil {
+		t.Fatalf("failed to close zlib reader with dictionary: %v", err)
+	}
+	if !bytes.Equal(zlibDecoded, msg) {
+		t.Fatalf("zlib dictionary decompression mismatch: got %s", zlibDecoded)
+	}
+
 	// Decompress with flate with dictionary
 	// In zlib stream with dictionary, header is 6 bytes (2 byte header + 4 byte dict id)
 	if len(comp) < 6 {
