@@ -22,7 +22,7 @@ func Load_Lang_Invoke_MethodHandle() {
 
 	// not called by a public API, used internally only
 	ghelpers.MethodSignatures["java/lang/invoke/MethodHandle.initMHobject()Ljava/lang/invoke/MethodHandle;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: createMethodHandleObject}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: createMethodHandleObject}
 }
 
 // Internal representation of java.lang.invoke.MethodHandle

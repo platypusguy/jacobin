@@ -39,6 +39,7 @@ func TestLoad_Nio_Charset_Charset_RegistersAllMethods(t *testing.T) {
 		{"java/nio/charset/Charset.newDecoder()Ljava/nio/charset/CharsetDecoder;", 0, ghelpers.TrapFunction},
 		{"java/nio/charset/Charset.newEncoder()Ljava/nio/charset/CharsetEncoder;", 0, ghelpers.TrapFunction},
 		{"java/nio/charset/Charset.toString()Ljava/lang/String;", 0, ghelpers.TrapFunction},
+		{"java/nio/charset/StandardCharsets.<clinit>()V", 0, ghelpers.TrapClass},
 	}
 
 	if len(ghelpers.MethodSignatures) != len(checks) {

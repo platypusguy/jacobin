@@ -420,10 +420,26 @@ func fisSkip(params []interface{}) interface{} {
 // "java/io/FileInputStream.close()V"
 func fisClose(params []interface{}) interface{} {
 
-	// Get file handle.
-	osFile, ok := params[0].(*object.Object).FieldTable[ghelpers.FileHandle].Fvalue.(*os.File)
+	fisObj, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := "fisClose: FileInputStream object lacks a ghelpers.FileHandle field"
+		errMsg := fmt.Sprintf("fisClose: params[0] is not a *object.Object, saw: %T", params[0])
+		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+	}
+
+	fld, ok := fisObj.FieldTable[ghelpers.FileHandle]
+	if !ok {
+		errMsg := "fisClose: params[0] is missing the file handle field"
+		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+	}
+
+	if fld.Fvalue == nil {
+		return nil
+	}
+
+	// Get file handle.
+	osFile, ok := fld.Fvalue.(*os.File)
+	if !ok {
+		errMsg := "fisClose: FileInputStream object ghelpers.FileHandle field is not an *os.File, saw: %T"
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -433,5 +449,9 @@ func fisClose(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("fisClose: osFile.Close() failed, reason: %s", err.Error())
 		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
 	}
+
+	fld.Fvalue = nil
+	fisObj.FieldTable[ghelpers.FileHandle] = fld
+
 	return nil
 }

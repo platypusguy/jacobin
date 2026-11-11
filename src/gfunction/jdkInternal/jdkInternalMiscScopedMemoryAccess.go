@@ -40,19 +40,19 @@ func Load_Jdk_Internal_Misc_ScopedMemoryAccess() {
 
 	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.copyMemory(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JLjava/lang/Object;JJ)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 7,
+			ParamSlots: 6,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.copySwapMemory(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JLjava/lang/Object;JJJ)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 8,
+			ParamSlots: 7,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.setMemory(Ljdk/internal/misc/ScopedMemoryAccess$Scope;Ljava/lang/Object;JJB)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 5,
 			GFunction:  ghelpers.TrapFunction,
 		}
 

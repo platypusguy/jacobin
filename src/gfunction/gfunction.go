@@ -115,9 +115,10 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// java/lang exception and error classes
 	javaLang.Load_Java_Lang_AssertionError()
 	javaLang.Load_Java_Lang_Exception()
+	javaLang.Load_Java_Lang_Invoke_StringConcatException()
 	javaLang.Load_Java_Lang_NullPointerException()
 	javaLang.Load_Java_Lang_RuntimeException()
-	javaLang.Load_Java_Lang_Invoke_StringConcatException()
+	javaLang.Load_Java_Lang_UnsupportedOperationException()
 
 	// java/math/*
 	javaMath.Load_Math_Big_Decimal()
@@ -242,6 +243,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_Concurrent_Atomic_Atomic_Long()
 	javaUtil.Load_Util_Concurrent_CyclicBarrier()
 	javaUtil.Load_Util_Concurrent_Hash_Map()
+	javaUtil.Load_Util_Concurrent_TimeUnit()
 	javaUtil.Load_Util_Date()
 	javaUtil.Load_Util_Function_Supplier()
 	javaUtil.Load_Util_Iterator()
@@ -283,6 +285,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_Zip_Adler32()
 	javaUtil.Load_Util_Zip_CheckedInputStream()
 	javaUtil.Load_Util_Zip_Crc32_Crc32c()
+	javaUtil.Load_Util_Zip_ZipEntry()
 	javaUtil.Load_Util_Zip_ZipInputStream()
 
 	// javax/crypto/*

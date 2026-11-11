@@ -13,19 +13,19 @@ import (
 func Load_Nio_File_FileVisitor() {
 	// preVisitDirectory(Object dir, BasicFileAttributes attrs)
 	ghelpers.MethodSignatures["java/nio/file/FileVisitor.preVisitDirectory(Ljava/lang/Object;Ljava/nio/file/attribute/BasicFileAttributes;)Ljava/nio/file/FileVisitResult;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: fileVisitorPreVisitDirectory, NeedsContext: true}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: fileVisitorPreVisitDirectory, NeedsContext: true}
 
 	// visitFile(Object file, BasicFileAttributes attrs)
 	ghelpers.MethodSignatures["java/nio/file/FileVisitor.visitFile(Ljava/lang/Object;Ljava/nio/file/attribute/BasicFileAttributes;)Ljava/nio/file/FileVisitResult;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: fileVisitorVisitFile, NeedsContext: true}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: fileVisitorVisitFile, NeedsContext: true}
 
 	// visitFileFailed(Object file, IOException exc)
 	ghelpers.MethodSignatures["java/nio/file/FileVisitor.visitFileFailed(Ljava/lang/Object;Ljava/io/IOException;)Ljava/nio/file/FileVisitResult;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: fileVisitorVisitFileFailed, NeedsContext: true}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: fileVisitorVisitFileFailed, NeedsContext: true}
 
 	// postVisitDirectory(Object dir, IOException exc)
 	ghelpers.MethodSignatures["java/nio/file/FileVisitor.postVisitDirectory(Ljava/lang/Object;Ljava/io/IOException;)Ljava/nio/file/FileVisitResult;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: fileVisitorPostVisitDirectory, NeedsContext: true}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: fileVisitorPostVisitDirectory, NeedsContext: true}
 }
 
 func fileVisitorPreVisitDirectory(params []interface{}) interface{} {

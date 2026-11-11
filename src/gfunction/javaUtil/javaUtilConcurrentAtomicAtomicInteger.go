@@ -30,7 +30,7 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 			GFunction:  atomicIntegerInitInt,
 		}
 
-	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.accumulateAndGet(ILjava/util/function.IntBinaryOperator;)I"] =
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.accumulateAndGet(ILjava/util/function/IntBinaryOperator;)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
@@ -96,7 +96,7 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 			GFunction:  atomicIntegerGet,
 		}
 
-	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.getAndAccumulate(ILjava/util/function.IntBinaryOperator;)I"] =
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.getAndAccumulate(ILjava/util/function/IntBinaryOperator;)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
@@ -126,7 +126,7 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 			GFunction:  atomicIntegerGetAndSet,
 		}
 
-	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.getAndUpdate(Ljava/util/function.IntUnaryOperator;)I"] =
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.getAndUpdate(Ljava/util/function/IntUnaryOperator;)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
@@ -198,7 +198,7 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 			GFunction:  atomicIntegerToString,
 		}
 
-	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.updateAndGet(Ljava/util/function.IntUnaryOperator;)I"] =
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicInteger.updateAndGet(Ljava/util/function/IntUnaryOperator;)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
