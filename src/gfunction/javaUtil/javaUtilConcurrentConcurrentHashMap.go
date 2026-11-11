@@ -151,49 +151,49 @@ func Load_Util_Concurrent_Hash_Map() {
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.forEach(JLjava/util/function/BiConsumer;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.forEach(JLjava/util/function/BiFunction;Ljava/util/function/Consumer;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.forEachEntry(JLjava/util/function/Consumer;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.forEachEntry(JLjava/util/function/Function;Ljava/util/function/Consumer;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.forEachKey(JLjava/util/function/Consumer;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.forEachKey(JLjava/util/function/Function;Ljava/util/function/Consumer;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.forEachValue(JLjava/util/function/Consumer;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.forEachValue(JLjava/util/function/Function;Ljava/util/function/Consumer;)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
@@ -277,115 +277,115 @@ func Load_Util_Concurrent_Hash_Map() {
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduce(JLjava/util/function/BiFunction;Ljava/util/function/BiFunction;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceEntries(JLjava/util/function/BiFunction;)Ljava/util/Map$Entry;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceEntries(JLjava/util/function/Function;Ljava/util/function/BiFunction;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceEntriesToDouble(JLjava/util/function/ToDoubleFunction;DLjava/util/function/DoubleBinaryOperator;)D"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceEntriesToInt(JLjava/util/function/ToIntFunction;ILjava/util/function/IntBinaryOperator;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceEntriesToLong(JLjava/util/function/ToLongFunction;JLjava/util/function/LongBinaryOperator;)J"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceKeys(JLjava/util/function/BiFunction;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceKeys(JLjava/util/function/Function;Ljava/util/function/BiFunction;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceKeysToDouble(JLjava/util/function/ToDoubleFunction;DLjava/util/function/DoubleBinaryOperator;)D"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceKeysToInt(JLjava/util/function/ToIntFunction;ILjava/util/function/IntBinaryOperator;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceKeysToLong(JLjava/util/function/ToLongFunction;JLjava/util/function/LongBinaryOperator;)J"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceToDouble(JLjava/util/function/ToDoubleBiFunction;DLjava/util/function/DoubleBinaryOperator;)D"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceToInt(JLjava/util/function/ToIntBiFunction;ILjava/util/function/IntBinaryOperator;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceToLong(JLjava/util/function/ToLongBiFunction;JLjava/util/function/LongBinaryOperator;)J"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceValues(JLjava/util/function/BiFunction;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceValues(JLjava/util/function/Function;Ljava/util/function/BiFunction;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceValuesToDouble(JLjava/util/function/ToDoubleFunction;DLjava/util/function/DoubleBinaryOperator;)D"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceValuesToInt(JLjava/util/function/ToIntFunction;ILjava/util/function/IntBinaryOperator;)I"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.reduceValuesToLong(JLjava/util/function/ToLongFunction;JLjava/util/function/LongBinaryOperator;)J"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 4,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
@@ -421,25 +421,25 @@ func Load_Util_Concurrent_Hash_Map() {
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.search(JLjava/util/function/BiFunction;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.searchEntries(JLjava/util/function/Function;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.searchKeys(JLjava/util/function/Function;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/util/concurrent/ConcurrentHashMap.searchValues(JLjava/util/function/Function;)Ljava/lang/Object;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 

@@ -234,7 +234,7 @@ func Load_Net_Http_HttpRequest() {
 
 	ghelpers.MethodSignatures["java/net/http/HttpRequest$BodyPublishers.fromPublisher(Ljava/util/concurrent/Flow$Publisher;J)Ljava/net/http/HttpRequest$BodyPublisher;"] =
 		ghelpers.GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
 		}
 

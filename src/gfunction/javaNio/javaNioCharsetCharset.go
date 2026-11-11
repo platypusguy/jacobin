@@ -139,4 +139,10 @@ func Load_Nio_Charset_Charset() {
 			ParamSlots: 0,
 			GFunction:  ghelpers.TrapFunction,
 		}
+
+	ghelpers.MethodSignatures["java/nio/charset/StandardCharsets.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapClass,
+		}
 }

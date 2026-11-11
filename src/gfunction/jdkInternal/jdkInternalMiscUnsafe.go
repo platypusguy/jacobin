@@ -90,19 +90,19 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.compareAndSetLong(Ljava/lang/Object;JJJ)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  UnsafeCompareAndSetLong,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.compareAndSetReference(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  UnsafeCompareAndSetReference,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getAndAddLong(Ljava/lang/Object;JJ)J"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  UnsafeCompareAndSetLong,
 		}
 
@@ -114,7 +114,7 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.getAndSetLong(Ljava/lang/Object;JJ)J"] =
 		ghelpers.GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  UnsafeCompareAndSetLong,
 		}
 
@@ -156,13 +156,13 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.setMemory(Ljava/lang/Object;JJB)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  ghelpers.JustReturn,
 		}
 
 	ghelpers.MethodSignatures["jdk/internal/misc/Unsafe.copyMemory(Ljava/lang/Object;JLjava/lang/Object;JJ)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 5,
 			GFunction:  ghelpers.JustReturn,
 		}
 

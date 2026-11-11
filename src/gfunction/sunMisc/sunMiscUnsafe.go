@@ -51,13 +51,13 @@ func Load_Sun_Misc_Unsafe() {
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.compareAndSwapLong(Ljava/lang/Object;JJJ)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  jdkInternal.UnsafeCompareAndSetLong,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.compareAndSwapObject(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  jdkInternal.UnsafeCompareAndSetReference,
 		}
 
@@ -129,13 +129,13 @@ func Load_Sun_Misc_Unsafe() {
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.setMemory(Ljava/lang/Object;JJB)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  ghelpers.JustReturn,
 		}
 
 	ghelpers.MethodSignatures["sun/misc/Unsafe.copyMemory(Ljava/lang/Object;JLjava/lang/Object;JJ)V"] =
 		ghelpers.GMeth{
-			ParamSlots: 6,
+			ParamSlots: 5,
 			GFunction:  ghelpers.JustReturn,
 		}
 

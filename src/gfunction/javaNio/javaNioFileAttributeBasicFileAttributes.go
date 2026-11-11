@@ -10,46 +10,44 @@ import (
 	"io/fs"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
-	"jacobin/src/types"
-	"time"
 )
 
 func Load_Nio_File_Attribute_BasicFileAttributes() {
 	// isRegularFile()Z
 	ghelpers.MethodSignatures["java/nio/file/attribute/BasicFileAttributes.isRegularFile()Z"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: bfaIsRegularFile}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: bfaIsRegularFile}
 
 	// isDirectory()Z
 	ghelpers.MethodSignatures["java/nio/file/attribute/BasicFileAttributes.isDirectory()Z"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: bfaIsDirectory}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: bfaIsDirectory}
 
 	// isSymbolicLink()Z
 	ghelpers.MethodSignatures["java/nio/file/attribute/BasicFileAttributes.isSymbolicLink()Z"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: bfaIsSymbolicLink}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: bfaIsSymbolicLink}
 
 	// isOther()Z
 	ghelpers.MethodSignatures["java/nio/file/attribute/BasicFileAttributes.isOther()Z"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: bfaIsOther}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: bfaIsOther}
 
 	// size()J
 	ghelpers.MethodSignatures["java/nio/file/attribute/BasicFileAttributes.size()J"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: bfaSize}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: bfaSize}
 
 	// lastModifiedTime()Ljava/nio/file/attribute/FileTime;
 	ghelpers.MethodSignatures["java/nio/file/attribute/BasicFileAttributes.lastModifiedTime()Ljava/nio/file/attribute/FileTime;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: bfaLastModifiedTime}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: bfaLastModifiedTime}
 
 	// lastAccessTime()Ljava/nio/file/attribute/FileTime;
 	ghelpers.MethodSignatures["java/nio/file/attribute/BasicFileAttributes.lastAccessTime()Ljava/nio/file/attribute/FileTime;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
 	// creationTime()Ljava/nio/file/attribute/FileTime;
 	ghelpers.MethodSignatures["java/nio/file/attribute/BasicFileAttributes.creationTime()Ljava/nio/file/attribute/FileTime;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
 	// fileKey()Ljava/lang/Object;
 	ghelpers.MethodSignatures["java/nio/file/attribute/BasicFileAttributes.fileKey()Ljava/lang/Object;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 }
 
 func bfaIsRegularFile(params []interface{}) interface{} {
@@ -94,54 +92,4 @@ func newBasicFileAttributes(info fs.FileInfo) *object.Object {
 	obj := object.MakeEmptyObjectWithClassName(&className)
 	obj.FieldTable["info"] = object.Field{Ftype: "any", Fvalue: info}
 	return obj
-}
-
-func newFileTime(t time.Time) *object.Object {
-	className := "java/nio/file/attribute/FileTime"
-	obj := object.MakeEmptyObjectWithClassName(&className)
-	obj.FieldTable["value"] = object.Field{Ftype: types.Long, Fvalue: t.UnixMilli()}
-	return obj
-}
-
-func Load_Nio_File_Attribute_FileTime() {
-	// toMillis()J
-	ghelpers.MethodSignatures["java/nio/file/attribute/FileTime.toMillis()J"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: fileTimeToMillis}
-
-	// compareTo(Ljava/nio/file/attribute/FileTime;)I
-	ghelpers.MethodSignatures["java/nio/file/attribute/FileTime.compareTo(Ljava/nio/file/attribute/FileTime;)I"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-
-	// equals(Ljava/lang/Object;)Z
-	ghelpers.MethodSignatures["java/nio/file/attribute/FileTime.equals(Ljava/lang/Object;)Z"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-
-	// from(JLjava/util/concurrent/TimeUnit;)Ljava/nio/file/attribute/FileTime;
-	ghelpers.MethodSignatures["java/nio/file/attribute/FileTime.from(JLjava/util/concurrent/TimeUnit;)Ljava/nio/file/attribute/FileTime;"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-
-	// from(Ljava/time/Instant;)Ljava/nio/file/attribute/FileTime;
-	ghelpers.MethodSignatures["java/nio/file/attribute/FileTime.from(Ljava/time/Instant;)Ljava/nio/file/attribute/FileTime;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-
-	// hashCode()I
-	ghelpers.MethodSignatures["java/nio/file/attribute/FileTime.hashCode()I"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-
-	// to(Ljava/util/concurrent/TimeUnit;)J
-	ghelpers.MethodSignatures["java/nio/file/attribute/FileTime.to(Ljava/util/concurrent/TimeUnit;)J"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-
-	// toInstant()Ljava/time/Instant;
-	ghelpers.MethodSignatures["java/nio/file/attribute/FileTime.toInstant()Ljava/time/Instant;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-
-	// toString()Ljava/lang/String;
-	ghelpers.MethodSignatures["java/nio/file/attribute/FileTime.toString()Ljava/lang/String;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-}
-
-func fileTimeToMillis(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	return obj.FieldTable["value"].Fvalue.(int64)
 }

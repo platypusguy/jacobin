@@ -41,6 +41,10 @@ func loadAllGFunctions() {
 const classPrefix = "java/io"
 
 func TestJavaIoParamSlotsConsistency(t *testing.T) {
+	saved := ghelpers.MethodSignatures
+	defer func() { ghelpers.MethodSignatures = saved }()
+	ghelpers.MethodSignatures = make(map[string]ghelpers.GMeth)
+
 	loadAllGFunctions()
 
 	var mismatches []string
