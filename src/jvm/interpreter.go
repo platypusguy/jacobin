@@ -2259,6 +2259,9 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 	//   - being initialized by this thread (a nested GETSTATIC inside
 	//     <clinit>): returns immediately, as the JVMS requires
 	if err := InitializeClass(className, fr.FrameStack); err != nil {
+		if errors.Is(err, gfunction.CaughtGfunctionException) {
+			return RESUME_HERE
+		}
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
 		if exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr) != exceptions.Caught {
@@ -2327,6 +2330,9 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	//   - being initialized by this thread (a nested PUTSTATIC inside
 	//     <clinit>): returns immediately, as the JVMS requires
 	if err := InitializeClass(className, fr.FrameStack); err != nil {
+		if errors.Is(err, gfunction.CaughtGfunctionException) {
+			return RESUME_HERE
+		}
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		trace.Error(fmt.Sprintf("PUTSTATIC: could not load class %s", className))
 		return ERROR_OCCURRED
@@ -3018,6 +3024,9 @@ func doNew(fr *frames.Frame, _ int64) int {
 
 	ref, err := InstantiateClass(className, fr.FrameStack)
 	if err != nil {
+		if errors.Is(err, gfunction.CaughtGfunctionException) {
+			return RESUME_HERE
+		}
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("NEW: could not load class %s", className)
 		status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)

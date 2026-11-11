@@ -43,7 +43,7 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 
 		superclass := *stringPool.GetStringPointer(k.Data.SuperclassIndex)
 		for {
-			if superclass == types.ObjectClassName {
+			if superclass == "" || superclass == types.ObjectClassName {
 				break
 			}
 
@@ -166,7 +166,12 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 }
 
 func runNativeInitializer(mt classloader.MTentry, k *classloader.Klass, fs *list.List) error {
-	_ = gfunction.RunGfunction(mt, fs, nil, false, false)
+	ret := gfunction.RunGfunction(mt, fs, nil, false, false)
+	if ret != nil {
+		if gerr, ok := ret.(error); ok {
+			return gerr
+		}
+	}
 	k.Data.CP.Mutex.Lock()
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 	k.Data.CP.Mutex.Unlock()

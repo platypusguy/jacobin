@@ -85,6 +85,9 @@ func doInvokeStatic(fr *frames.Frame, _ int64) int {
 		if clInitRun == types.ClInitNotRun {
 			err = runInitializationBlock(k, nil, fr.FrameStack)
 			if err != nil {
+				if errors.Is(err, gfunction.CaughtGfunctionException) {
+					return RESUME_HERE
+				}
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s", fqn)
 				status := exceptions.ThrowEx(excNames.ExceptionInInitializerError, errMsg, fr)

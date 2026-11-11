@@ -13,6 +13,8 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
+	"jacobin/src/frames"
+	"jacobin/src/gfunction"
 	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -118,7 +120,14 @@ func ensureInitialized(classname string, fs *list.List, initFn func() error) err
 			continue
 		case initFailed:
 			initMu.Unlock()
-			return fmt.Errorf("could not initialize class %s (previous initialization failed)", classname)
+			errMsg := fmt.Sprintf("could not initialize class %s (previous initialization failed)", classname)
+			if fs != nil && fs.Front() != nil {
+				if f, ok := fs.Front().Value.(*frames.Frame); ok &&
+					exceptions.ThrowEx(excNames.NoClassDefFoundError, errMsg, f) == exceptions.Caught {
+					return gfunction.CaughtGfunctionException
+				}
+			}
+			return errors.New(errMsg)
 		case initInProgress:
 			if ci.owner == fs {
 				initMu.Unlock()
@@ -258,7 +267,9 @@ func initializeClass(k *classloader.Klass, classname string, superclasses []stri
 	}
 
 	// (c) <clinit>
-	if _, ok := k.Data.MethodTable["<clinit>()V"]; ok {
+	_, hasJavaClinit := k.Data.MethodTable["<clinit>()V"]
+	hasNativeClinit := classloader.GetMtableEntry(classname+".<clinit>()V").Meth != nil
+	if hasJavaClinit || hasNativeClinit {
 		// runInitializationBlock treats a non-empty chain as complete and will
 		// not add classname itself, so we must prepend it here — mirroring
 		// what the original InstantiateClass did before this was split out.
@@ -269,8 +280,10 @@ func initializeClass(k *classloader.Klass, classname string, superclasses []stri
 			initChain = append([]string{classname}, initChain...)
 		}
 		if err := runInitializationBlock(k, initChain, fs); err != nil {
-			errMsg := fmt.Sprintf("InitializeClass: runInitializationBlock failed with %s.<clinit>()V", classname)
-			trace.Error(errMsg)
+			if !errors.Is(err, gfunction.CaughtGfunctionException) {
+				errMsg := fmt.Sprintf("InitializeClass: runInitializationBlock failed with %s.<clinit>()V", classname)
+				trace.Error(errMsg)
+			}
 			return err
 		}
 	}
@@ -424,7 +437,7 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 	/* The following code is no longer needed as it handled only the ConstValue attribute.
 		Howvever, at a future point, we may want to add the ability process other field attributes
 		and this code will give us a template for doing so.
-	    //
+			//
 		// static fields can have ConstantValue attributes,
 		// which specify their initial value.
 		if len(f.Attributes) > 0 {
