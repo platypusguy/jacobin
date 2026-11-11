@@ -188,11 +188,11 @@ func asGErrBlk(val any) (*ghelpers.GErrBlk, bool) {
 	if val == nil {
 		return nil, false
 	}
-	switch val.(type) {
-	case error:
-		return ghelpers.GetGErrBlk(excNames.IOException, val.(error).Error()), true
+	switch v := val.(type) {
 	case *ghelpers.GErrBlk:
-		return val.(*ghelpers.GErrBlk), true
+		return v, true
+	case error:
+		return ghelpers.GetGErrBlk(excNames.IOException, v.Error()), true
 	}
 	return nil, false
 }

@@ -67,8 +67,11 @@ func loadAllJavaUtil() {
 	Load_Util_Zip_Adler32()
 	Load_Util_Zip_CheckedInputStream()
 	Load_Util_Zip_Crc32_Crc32c()
+	Load_Util_Zip_Deflater()
 	Load_Util_Zip_ZipEntry()
+	Load_Util_Zip_ZipException()
 	Load_Util_Zip_ZipInputStream()
+	Load_Util_Zip_ZipOutputStream()
 }
 
 func TestJavaUtilParamSlotsConsistency(t *testing.T) {

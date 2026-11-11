@@ -12,7 +12,6 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
-	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
@@ -692,28 +691,17 @@ func TestClearProperty_JavaIoTmpdir(t *testing.T) {
 func TestSetProperties(t *testing.T) {
 	globals.InitGlobals("test")
 
-	// Create a Properties object.
-	propsObj := object.MakeEmptyObjectWithClassName(&types.ClassNameProperties)
-	params := []interface{}{propsObj}
-	javaUtil.PropertiesInit(params)
-
-	// Add 2 elements to the Properties object.
-	key1Obj := object.StringObjectFromGoString("color")
-	value1Obj := object.StringObjectFromGoString("green")
-	params = []interface{}{propsObj, key1Obj, value1Obj}
-	_ = javaUtil.PropertiesSetProperty(params)
-	key2Obj := object.StringObjectFromGoString("sound")
-	value2Obj := object.StringObjectFromGoString("soft")
-	params = []interface{}{propsObj, key2Obj, value2Obj}
-	_ = javaUtil.PropertiesSetProperty(params)
+	// Create and populate properties map
+	propsMap := make(types.DefProperties)
+	propsMap["color"] = "green"
+	propsMap["sound"] = "soft"
 
 	// Replace the system properties.
-	propsMap := propsObj.FieldTable[types.FieldNameProperties].Fvalue.(types.DefProperties)
 	globals.ReplaceSystemProperties(propsMap)
 
 	// Try to get tmp dir.
 	propObj := object.StringObjectFromGoString("java.io.tmpdir")
-	params = []interface{}{propObj}
+	params := []interface{}{propObj}
 	result := SystemGetProperty(params)
 	if result != object.Null {
 		t.Errorf("Expected object.Null, observed %v", result)
