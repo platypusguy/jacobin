@@ -317,7 +317,7 @@ func TestZipOutputStream_Overrides(t *testing.T) {
 		t.Fatalf("Expected String object, got %v", strRes)
 	}
 	strVal := object.GoStringFromStringObject(strObj)
-	if !strings.HasPrefix(strVal, "java/util/zip/ZipOutputStream@") {
+	if !strings.HasPrefix(strVal, "java.util.zip.ZipOutputStream@") {
 		t.Fatalf("Unexpected toString result: %s", strVal)
 	}
 
