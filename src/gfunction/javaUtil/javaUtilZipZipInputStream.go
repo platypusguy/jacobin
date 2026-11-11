@@ -478,15 +478,10 @@ func zipInputStreamGetNextEntry(params []any) any {
 	if method == uint16(ZipEntryDeflated) {
 		state.flateReader = flate.NewReader(state.reader)
 	} else if method == uint16(ZipEntryStored) {
-		if (flag & 0x08) == 0 {
-			state.entryBytesRem = int64(size)
-		} else {
-			if size > 0 {
-				state.entryBytesRem = int64(size)
-			} else {
-				state.entryBytesRem = -1
-			}
+		if flag&0x08 != 0 && size == 0 {
+			return ghelpers.GetGErrBlk(excNames.IOException, "only DEFLATED entries can have EXT descriptor")
 		}
+		state.entryBytesRem = int64(size)
 	}
 
 	self.FieldTable["entry"] = object.Field{Ftype: "Ljava/util/zip/ZipEntry;", Fvalue: entryObj}

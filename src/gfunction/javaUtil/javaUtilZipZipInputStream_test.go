@@ -10,6 +10,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
+	"hash/crc32"
 	"testing"
 
 	"jacobin/src/excNames"
@@ -93,25 +94,33 @@ func createSampleZipData(t *testing.T) []byte {
 		t.Fatalf("Write file1.txt failed: %v", err)
 	}
 
-	// Entry 2: Stored file
+	// Entry 2: Stored file. Stored entries need sizes and CRC in the header,
+	// so use CreateRaw to avoid a data descriptor.
+	storedData := []byte("Hello, Stored World!")
 	hdr2 := &zip.FileHeader{
-		Name:   "stored.txt",
-		Method: zip.Store,
+		Name:               "stored.txt",
+		Method:             zip.Store,
+		CRC32:              crc32.ChecksumIEEE(storedData),
+		CompressedSize64:   uint64(len(storedData)),
+		UncompressedSize64: uint64(len(storedData)),
 	}
-	f2, err := w.CreateHeader(hdr2)
+	f2, err := w.CreateRaw(hdr2)
 	if err != nil {
 		t.Fatalf("Create stored.txt failed: %v", err)
 	}
-	if _, err := f2.Write([]byte("Hello, Stored World!")); err != nil {
+	if _, err := f2.Write(storedData); err != nil {
 		t.Fatalf("Write stored.txt failed: %v", err)
 	}
 
 	// Entry 3: Directory
 	hdr3 := &zip.FileHeader{
-		Name:   "subfolder/",
-		Method: zip.Store,
+		Name:               "subfolder/",
+		Method:             zip.Store,
+		CRC32:              crc32.ChecksumIEEE(nil),
+		CompressedSize64:   0,
+		UncompressedSize64: 0,
 	}
-	if _, err := w.CreateHeader(hdr3); err != nil {
+	if _, err := w.CreateRaw(hdr3); err != nil {
 		t.Fatalf("Create subfolder/ failed: %v", err)
 	}
 
@@ -362,6 +371,33 @@ func TestZipInputStream_CreateZipEntryAndMarkReset(t *testing.T) {
 	errBlk, ok := res.(*ghelpers.GErrBlk)
 	if !ok || errBlk.ExceptionType != excNames.IOException {
 		t.Errorf("reset() expected IOException, got: %v", res)
+	}
+}
+
+func TestZipInputStream_RejectStoredEntryWithDataDescriptor(t *testing.T) {
+	initZipInputStreamTests()
+
+	buf := new(bytes.Buffer)
+	w := zip.NewWriter(buf)
+	stored, err := w.CreateHeader(&zip.FileHeader{Name: "stored.txt", Method: zip.Store})
+	if err != nil {
+		t.Fatalf("Create stored.txt failed: %v", err)
+	}
+	if _, err := stored.Write([]byte("stored data containing PK\x03\x04 bytes")); err != nil {
+		t.Fatalf("Write stored.txt failed: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("zip.Writer.Close failed: %v", err)
+	}
+
+	zis := newTestZipInputStream(newTestByteArrayInputStream(buf.Bytes()))
+	got := zipInputStreamGetNextEntry([]any{zis})
+	errBlk, ok := got.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("getNextEntry = %v, want IOException", got)
+	}
+	if errBlk.ExceptionType != excNames.IOException {
+		t.Errorf("getNextEntry exception = %v, want IOException", errBlk.ExceptionType)
 	}
 }
 
@@ -620,16 +656,19 @@ func TestZipInputStream_ReadAllBytes(t *testing.T) {
 		t.Fatalf("Write file1.txt failed: %v", err)
 	}
 
-	// Entry 2: Stored file
+	// Entry 2: Stored file with its metadata in the header, so no data descriptor is needed.
+	content2Expected := []byte("Hello, Stored World! Testing stored entry readAllBytes.")
 	hdr2 := &zip.FileHeader{
-		Name:   "stored.txt",
-		Method: zip.Store,
+		Name:               "stored.txt",
+		Method:             zip.Store,
+		CRC32:              crc32.ChecksumIEEE(content2Expected),
+		CompressedSize64:   uint64(len(content2Expected)),
+		UncompressedSize64: uint64(len(content2Expected)),
 	}
-	f2, err := w.CreateHeader(hdr2)
+	f2, err := w.CreateRaw(hdr2)
 	if err != nil {
 		t.Fatalf("Create stored.txt failed: %v", err)
 	}
-	content2Expected := []byte("Hello, Stored World! Testing stored entry readAllBytes.")
 	if _, err := f2.Write(content2Expected); err != nil {
 		t.Fatalf("Write stored.txt failed: %v", err)
 	}
