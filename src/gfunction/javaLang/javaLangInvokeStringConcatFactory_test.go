@@ -110,7 +110,7 @@ func TestConcat1param_Success(t *testing.T) {
 		fs,
 	}
 
-	res := concat1param(params)
+	res := ConcatStringElements(params)
 	if res != nil {
 		t.Fatalf("Expected nil return on success, got %v", res)
 	}
@@ -121,20 +121,20 @@ func TestConcat1param_InvalidParams(t *testing.T) {
 	trace.Init()
 
 	// Case 1: Incorrect param count
-	res1 := concat1param([]any{list.New()})
+	res1 := ConcatStringElements([]any{list.New()})
 	if res1 == nil {
 		t.Errorf("Expected error block for incorrect parameter count, got nil")
 	}
 
 	// Case 2: params[1] is not a list
-	res2 := concat1param([]any{"arg0", "not-a-list"})
+	res2 := ConcatStringElements([]any{"arg0", "not-a-list"})
 	if _, ok := res2.(*ghelpers.GErrBlk); !ok {
 		t.Errorf("Expected *ghelpers.GErrBlk for invalid frame stack, got %T", res2)
 	}
 
 	// Case 3: empty frame stack
 	emptyFs := list.New()
-	res3 := concat1param([]any{"arg0", emptyFs})
+	res3 := ConcatStringElements([]any{"arg0", emptyFs})
 	if _, ok := res3.(*ghelpers.GErrBlk); !ok {
 		t.Errorf("Expected *ghelpers.GErrBlk for empty frame stack, got %T", res3)
 	}

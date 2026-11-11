@@ -91,41 +91,53 @@ func stringConcatFactory_makeConcatWithConstants(params []any) any {
 	return nil
 }
 
-// Concatenates a single parameter to an existing item.
-// Requires the frame data so that it can reach into the INVOKEDYNAMIC's
-// constant pool to find the first existing item. The second item is found
-// on the op stack and the second arg to this function defines its type.
-// NeedsContext = true (so last param is the frame stack)
-func concat1param(params []any) any {
+// ConcatStringElements concatenates multiple fragments into a single string.
+// This is the universal call site method for string concatenation as handled
+// in INVOKEDYNAMIC.
+//
+// It accepts only one parameter, which is the context data provided in the
+// executing frame stack from which the frame of the calling method is located.
+// That frame is the source of two different types of elements to be concatenated.
+// 1) Dynamic elements are pushed onto the operand stack immediately prior to the
+// INVOKEDYNAMIC instruction;
+// 2) Static elements are found in the constant pool, pointed to by the INVOKEDYNAMIC
+// instruction.
+//
+// Both types of elements can be retrieved by accessing the frame.
+// One of the static arguments that is always present is the "recipe," which is
+// a string-like series of bytes that has string data and embedded 0x01 and 0x02 bytes.
+// The 0x01 byte specifies the location of a dynamic element, while the 0x02
+// specifies the location of a static element.
+func ConcatStringElements(params []any) any {
 	if len(params) != 2 {
-		errMsg := fmt.Sprintf("concat1param expected 2 args, got %d", len(params))
+		errMsg := fmt.Sprintf("ConcatStringElements expected 2 args, got %d", len(params))
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.MalformedParametersException, errMsg)
 	}
 
 	frameList, ok := params[1].(*list.List)
 	if !ok || frameList == nil || frameList.Len() == 0 {
-		errMsg := "concat1param: invalid or empty frame stack in params[1]"
+		errMsg := "ConcatStringElements: invalid or empty frame stack in params[1]"
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	elem := frameList.Front()
 	if elem == nil || elem.Value == nil {
-		errMsg := "concat1param: no active frame at front of frame stack"
+		errMsg := "ConcatStringElements: no active frame at front of frame stack"
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	fr, ok := elem.Value.(*frames.Frame)
 	if !ok || fr == nil {
-		errMsg := "concat1param: front of frame stack is not a valid *frames.Frame"
+		errMsg := "ConcatStringElements: front of frame stack is not a valid *frames.Frame"
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	if fr.Meth == nil || fr.PC < 0 || fr.PC+2 >= len(fr.Meth) {
-		errMsg := fmt.Sprintf("concat1param: PC %d out of bounds for method bytecode", fr.PC)
+		errMsg := fmt.Sprintf("ConcatStringElements: PC %d out of bounds for method bytecode", fr.PC)
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
@@ -135,28 +147,28 @@ func concat1param(params []any) any {
 
 	cp, ok := fr.CP.(*classloader.CPool)
 	if !ok || cp == nil {
-		errMsg := fmt.Sprintf("concat1param: invalid constant pool in frame for %s", fr.ClName)
+		errMsg := fmt.Sprintf("ConcatStringElements: invalid constant pool in frame for %s", fr.ClName)
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
 
 	idEntry := classloader.FetchCPentry(cp, cpSlot)
 	if idEntry.AddrVal == nil {
-		errMsg := fmt.Sprintf("concat1param: invalid InvokeDynamic CP entry at index %d", cpSlot)
+		errMsg := fmt.Sprintf("ConcatStringElements: invalid InvokeDynamic CP entry at index %d", cpSlot)
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
 
 	bsmIndex := int(idEntry.AddrVal.Entry1)
 	if bsmIndex < 0 || bsmIndex >= len(cp.Bootstraps) {
-		errMsg := fmt.Sprintf("concat1param: bsmIndex %d out of range", bsmIndex)
+		errMsg := fmt.Sprintf("ConcatStringElements: bsmIndex %d out of range", bsmIndex)
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
 
 	bsm := cp.Bootstraps[bsmIndex]
 	if len(bsm.Args) == 0 {
-		errMsg := fmt.Sprintf("concat1param: no bootstrap arguments for BSM index %d", bsmIndex)
+		errMsg := fmt.Sprintf("ConcatStringElements: no bootstrap arguments for BSM index %d", bsmIndex)
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
@@ -164,7 +176,7 @@ func concat1param(params []any) any {
 	recipeArgIndex := int(bsm.Args[0])
 	recipeObj, err := classloader.ResolveStaticArgument(cp, recipeArgIndex, fr)
 	if err != nil {
-		errMsg := fmt.Sprintf("concat1param: error resolving recipe static argument at index %d: %s", recipeArgIndex, err.Error())
+		errMsg := fmt.Sprintf("ConcatStringElements: error resolving recipe static argument at index %d: %s", recipeArgIndex, err.Error())
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
