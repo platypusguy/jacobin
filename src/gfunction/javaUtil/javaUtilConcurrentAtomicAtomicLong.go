@@ -37,7 +37,7 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 			GFunction:  atomicLongInitLong,
 		}
 
-	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.accumulateAndGet(JLjava/util/function.LongBinaryOperator;)J"] =
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.accumulateAndGet(JLjava/util/function/LongBinaryOperator;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
@@ -103,7 +103,7 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 			GFunction:  atomicLongGet,
 		}
 
-	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.getAndAccumulate(JLjava/util/function.LongBinaryOperator;)J"] =
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.getAndAccumulate(JLjava/util/function/LongBinaryOperator;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
 			GFunction:  ghelpers.TrapFunction,
@@ -133,7 +133,7 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 			GFunction:  atomicLongGetAndSet,
 		}
 
-	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.getAndUpdate(Ljava/util/function.LongUnaryOperator;)J"] =
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.getAndUpdate(Ljava/util/function/LongUnaryOperator;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
@@ -205,7 +205,7 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 			GFunction:  atomicLongToString,
 		}
 
-	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.updateAndGet(Ljava/util/function.LongUnaryOperator;)J"] =
+	ghelpers.MethodSignatures["java/util/concurrent/atomic/AtomicLong.updateAndGet(Ljava/util/function/LongUnaryOperator;)J"] =
 		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ghelpers.TrapFunction,
