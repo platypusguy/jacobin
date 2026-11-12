@@ -93,14 +93,28 @@ func stringConcatFactory_makeConcatWithConstants(params []any) any {
 	// create a method handle for ConcatStringElements
 	mh := createRawMethodHandleObject()
 	mh.FieldTable["Kind"] = object.Field{Ftype: types.Int, Fvalue: REF_invokeStatic}
+	mh.FieldTable["RefClass"] = object.Field{
+		Ftype: types.Ref, Fvalue: object.StringObjectFromGoString("java/lang/invoke")}
+	mh.FieldTable["RefName"] = object.Field{
+		Ftype: types.Ref, Fvalue: object.StringObjectFromGoString("ConcatStringElements")}
+	mh.FieldTable["RefDescriptor"] = object.Field{
+		Ftype: types.Ref, Fvalue: object.StringObjectFromGoString("()Ljava/lang/String;")}
 	mh.FieldTable["$target"] = object.Field{Ftype: types.Ref, Fvalue: classloader.MTentry{
 		Meth:      ConcatStringElements,
 		MType:     'G',
-		MethClass: 0,
-		MethName:  0,
-		MethType:  0,
+		MethClass: object.StringPoolIndexFromGoString("java/lang/invoke"),
+		MethName:  object.StringPoolIndexFromGoString("ConcatStringElements"),
+		MethType:  object.StringPoolIndexFromGoString("()Ljava/lang/String;"),
 	}}
+	mh.FieldTable["DirectMethod"] = object.Field{Ftype: types.Bool, Fvalue: true}
+	mh.FieldTable["IsVarArgs"] = object.Field{Ftype: types.Bool, Fvalue: false}
+	// type is the MethodType with ptypes and rtypes filled in
+	mh.FieldTable["type"] = object.Field{Ftype: types.Ref, Fvalue: params[2].(*object.Object)}
+
 	// wrap the method handle in a call site
+
 	// return the call site
 	return nil
 }
+
+// java/lang/invoke.ConcatStringElements()Ljava/lang/String;

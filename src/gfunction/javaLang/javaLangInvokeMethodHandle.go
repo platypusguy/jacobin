@@ -73,7 +73,7 @@ func createRawMethodHandleObject() *object.Object {
 	mho.FieldTable["RefClass"] = object.Field{Ftype: types.Ref, Fvalue: nil}      // java string object
 	mho.FieldTable["RefName"] = object.Field{Ftype: types.Ref, Fvalue: nil}       // java string object
 	mho.FieldTable["RefDescriptor"] = object.Field{Ftype: types.Ref, Fvalue: nil} // java.lang.invoke.MethodType object
-	mho.FieldTable["DirectMethod"] = object.Field{Ftype: types.Ref, Fvalue: nil}
+	mho.FieldTable["DirectMethod"] = object.Field{Ftype: types.Bool, Fvalue: false}
 	mho.FieldTable["IsVarArgs"] = object.Field{Ftype: types.Bool, Fvalue: false}
 	mho.FieldTable["type"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 	mho.FieldTable["$target"] = object.Field{Ftype: types.Ref, Fvalue: nil} // the MTentry to execute
