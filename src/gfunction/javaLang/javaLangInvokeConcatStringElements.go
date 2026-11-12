@@ -44,13 +44,13 @@ func Load_Lang_Invoke_ConcatStringElements() {
 // The 0x01 byte specifies the location of a dynamic element, while the 0x02
 // specifies the location of a static element.
 func ConcatStringElements(params []any) any {
-	if len(params) != 2 {
-		errMsg := fmt.Sprintf("ConcatStringElements expected 2 args, got %d", len(params))
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("ConcatStringElements expected 1 argument, got %d", len(params))
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.MalformedParametersException, errMsg)
 	}
 
-	frameList, ok := params[1].(*list.List)
+	frameList, ok := params[0].(*list.List)
 	if !ok || frameList == nil || frameList.Len() == 0 {
 		errMsg := "ConcatStringElements: invalid or empty frame stack in params[1]"
 		trace.Error(errMsg)

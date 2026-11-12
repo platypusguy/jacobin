@@ -3001,6 +3001,20 @@ func doInvokeDynamic(fr *frames.Frame, _ int64) int {
 		}
 		return RESUME_HERE // caught
 	}
+	methHandle := callSite.FieldTable["target"].Fvalue.(*object.Object)
+	mtEntry := methHandle.FieldTable["$target"].Fvalue.(classloader.MTentry)
+	// methData := mtEntry.Meth.(ghelpers.GMeth)
+	// method := methData.GFunction
+	// methData.GFunction = method
+	// methData.NeedsContext = true
+	// methData.ParamSlots = 0
+	// presently all callsite method handles point to gfunctions
+	invokevirtualGfunction(fr, mtEntry,
+		*stringPool.GetStringPointer(mtEntry.MethClass),
+		*stringPool.GetStringPointer(mtEntry.MethName),
+		*stringPool.GetStringPointer(mtEntry.MethType),
+	)
+
 	return 5 // the two bytes for the CP slot + 2 bytes with value 0x00 + 1 for next bytecode
 }
 

@@ -99,22 +99,35 @@ func stringConcatFactory_makeConcatWithConstants(params []any) any {
 		Ftype: types.Ref, Fvalue: object.StringObjectFromGoString("ConcatStringElements")}
 	mh.FieldTable["RefDescriptor"] = object.Field{
 		Ftype: types.Ref, Fvalue: object.StringObjectFromGoString("()Ljava/lang/String;")}
-	mh.FieldTable["$target"] = object.Field{Ftype: types.Ref, Fvalue: classloader.MTentry{
-		Meth:      ConcatStringElements,
+
+	gMeth := ghelpers.GMeth{
+		ParamSlots:   0,
+		GFunction:    ConcatStringElements,
+		NeedsContext: true,
+	}
+
+	mtEntry := classloader.MTentry{
+		Meth:      gMeth,
 		MType:     'G',
 		MethClass: object.StringPoolIndexFromGoString("java/lang/invoke"),
 		MethName:  object.StringPoolIndexFromGoString("ConcatStringElements"),
 		MethType:  object.StringPoolIndexFromGoString("()Ljava/lang/String;"),
-	}}
+	}
+
+	mh.FieldTable["$target"] = object.Field{Ftype: types.Ref, Fvalue: mtEntry}
+
 	mh.FieldTable["DirectMethod"] = object.Field{Ftype: types.Bool, Fvalue: true}
 	mh.FieldTable["IsVarArgs"] = object.Field{Ftype: types.Bool, Fvalue: false}
 	// type is the MethodType with ptypes and rtypes filled in
 	mh.FieldTable["type"] = object.Field{Ftype: types.Ref, Fvalue: params[2].(*object.Object)}
 
 	// wrap the method handle in a call site
+	callsite := CreateRawConstantCallSiteObject()
+	callsite.FieldTable["target"] = object.Field{
+		Ftype: "Ljava/lang/invoke/MethodHandle;", Fvalue: mh}
+	callsite.FieldTable["type"] = object.Field{
+		Ftype: "Ljava/lang/invoke/MethodType;", Fvalue: params[2].(*object.Object)}
 
 	// return the call site
-	return nil
+	return callsite
 }
-
-// java/lang/invoke.ConcatStringElements()Ljava/lang/String;

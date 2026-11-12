@@ -17,42 +17,6 @@ import (
 	"testing"
 )
 
-func TestStringConcatFactory_MakeConcatWithConstants_PtypesKlass(t *testing.T) {
-	globals.InitGlobals("test")
-	trace.Init()
-	classloader.Init()
-	classloader.LoadBaseClasses()
-
-	// Prepare method type with parameter types (e.g. String, int)
-	integerClinit(nil)
-	mtObjRaw := MethodTypeFromMethodDescriptorString([]interface{}{
-		object.StringObjectFromGoString("(Ljava/lang/String;I)Ljava/lang/String;"),
-		nil,
-	})
-	mtObj, ok := mtObjRaw.(*object.Object)
-	if !ok || mtObj == nil {
-		t.Fatalf("Failed to create MethodType object: %v", mtObjRaw)
-	}
-
-	lookupObj := object.StringObjectFromGoString("caller/MyClass")
-	nameObj := object.StringObjectFromGoString("makeConcatWithConstants")
-	recipeObj := object.StringObjectFromGoString("Hello \x01, score \x01")
-	constants := []*object.Object{}
-
-	params := []any{
-		lookupObj,
-		nameObj,
-		mtObj,
-		recipeObj,
-		constants,
-	}
-
-	result := stringConcatFactory_makeConcatWithConstants(params)
-	if result != nil {
-		t.Errorf("Expected nil return, got %v", result)
-	}
-}
-
 func TestStringConcatFactory_MakeConcatWithConstants_IncorrectParamCount(t *testing.T) {
 	globals.InitGlobals("test")
 	trace.Init()
@@ -106,7 +70,7 @@ func TestConcat1param_Success(t *testing.T) {
 
 	// params: [arg0 (e.g. type or item), params[1] = frame stack]
 	params := []any{
-		object.StringObjectFromGoString("dummyParam"),
+		// object.StringObjectFromGoString("dummyParam"),
 		fs,
 	}
 
