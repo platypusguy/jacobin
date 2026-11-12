@@ -15,6 +15,7 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/trace"
+	"jacobin/src/util"
 )
 
 func Load_Lang_Invoke_ConcatStringElements() {
@@ -31,12 +32,12 @@ func Load_Lang_Invoke_ConcatStringElements() {
 // in INVOKEDYNAMIC.
 //
 // It accepts only one parameter, which is the context data provided in the
-// executing frame stack from which the frame of the calling method is located.
+// frame stack from which the frame of the calling method is located.
 // That frame is the source of two different types of elements to be concatenated.
-// 1) Dynamic elements are pushed onto the operand stack immediately prior to the
-// INVOKEDYNAMIC instruction;
-// 2) Static elements are found in the constant pool, pointed to by the INVOKEDYNAMIC
-// instruction.
+// 1) Dynamic elements previously pushed onto the operand stack immediately prior
+// to the INVOKEDYNAMIC instruction;
+// 2) Static elements that are found in the constant pool, pointed to by the
+// INVOKEDYNAMIC instruction.
 //
 // Both types of elements can be retrieved by accessing the frame.
 // One of the static arguments that is always present is the "recipe," which is
@@ -77,7 +78,8 @@ func ConcatStringElements(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
 
-	// The two bytes following the INVOKEDYNAMIC opcode point to the CP entry
+	// The two bytes following the INVOKEDYNAMIC opcode are an index into the CP index pointing to
+	// the INVOKEDYNAMIC entry
 	cpSlot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 
 	cp, ok := fr.CP.(*classloader.CPool)
@@ -86,6 +88,14 @@ func ConcatStringElements(params []any) any {
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
+
+	invdynIndex := cp.CpIndex[cpSlot]
+	invdyn := cp.InvokeDynamics[invdynIndex.Slot]
+	invdynNAT := invdyn.NameAndType
+	invdynTypeIndex := cp.CpIndex[invdynNAT]
+	invdynType := cp.Utf8Refs[invdynTypeIndex.Type]
+	invdynArgs := util.ParseIncomingParamsFromMethTypeStringRaw(invdynType) // the types of the dynamic args
+	trace.Raw(fmt.Sprintf("invdynArgs: %v", invdynArgs))
 
 	idEntry := classloader.FetchCPentry(cp, cpSlot)
 	if idEntry.AddrVal == nil {
@@ -102,7 +112,7 @@ func ConcatStringElements(params []any) any {
 	}
 
 	bsm := cp.Bootstraps[bsmIndex]
-	if len(bsm.Args) == 0 {
+	if len(bsm.Args) == 0 { // these should be the static args
 		errMsg := fmt.Sprintf("ConcatStringElements: no bootstrap arguments for BSM index %d", bsmIndex)
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
@@ -120,5 +130,5 @@ func ConcatStringElements(params []any) any {
 	_ = recipe
 	_ = recipeObj
 
-	return nil
+	return nil // <<<<<<<<<<<<<<<<<<<< continue here
 }
