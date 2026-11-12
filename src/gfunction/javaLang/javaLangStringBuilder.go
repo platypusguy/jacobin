@@ -13,6 +13,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"strconv"
+	"strings"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -526,7 +527,10 @@ func stringBuilderAppend(params []any) any {
 		parmArray = object.JavaByteArrayFromGoString(str)
 	case float64: // float, double
 		ff := params[1].(float64)
-		str := strconv.FormatFloat(ff, 'g', -1, 64)
+		str := strconv.FormatFloat(ff, 'f', -1, 64)
+		if !strings.ContainsAny(str, ".eEIN") {
+			str += ".0"
+		}
 		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
 		str := object.StringifyAnythingGo(params[1])
