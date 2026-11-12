@@ -242,6 +242,9 @@ const (
 	IllegalBlockSizeException
 	BadPaddingException
 	NoSuchPaddingException
+
+	// Zip exceptions
+	ZipException
 )
 
 // -----------------------------------------------------------------------//
@@ -477,6 +480,9 @@ var JVMexceptionNamesJacobin = []string{
 	"javax.crypto.IllegalBlockSizeException",
 	"javax.crypto.BadPaddingException",
 	"javax.crypto.NoSuchPaddingException",
+
+	// Zip exceptions
+	"java.util.zip.ZipException",
 }
 
 // -----------------------------------------------------------------------//
@@ -707,4 +713,11 @@ var JVMexceptionNames = []string{
 	"java.security.InvalidKeyException",
 	"java.security.SignatureException",
 	"java.security.InvalidAlgorithmParameterException",
+	"javax.crypto.ShortBufferException",
+	"javax.crypto.IllegalBlockSizeException",
+	"javax.crypto.BadPaddingException",
+	"javax.crypto.NoSuchPaddingException",
+
+	// Zip exceptions
+	"java.util.zip.ZipException",
 }

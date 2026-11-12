@@ -13,7 +13,6 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
-	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"strings"
@@ -145,10 +144,6 @@ func objectToString(params []interface{}) interface{} {
 		if !ok || object.IsNull(inObj) {
 			errMsg := fmt.Sprintf("objectToString: Invalid or null object, saw: %T", params[0])
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
-		}
-		classNameSuffix := object.GetClassNameSuffix(inObj, false)
-		if classNameSuffix == "LinkedList" {
-			return javaUtil.LinkedlistToString(params)
 		}
 		return object.StringifyAnythingJava(inObj)
 	}

@@ -24,6 +24,7 @@ func TestExceptionTableAlignment(t *testing.T) {
 	details(t, VirtualMachineError, "java.lang.VirtualMachineError")
 	details(t, UTFDataFormatException, "java.io.UTFDataFormatException")
 	details(t, NoSuchAlgorithmException, "java.security.NoSuchAlgorithmException")
+	details(t, ZipException, "java.util.zip.ZipException")
 }
 
 // Make sure that the enum for the exception correctly matches the string. Exceptions tested here
@@ -40,6 +41,7 @@ func TestJacobinExceptionTableAlignment(t *testing.T) {
 	detailsJacobin(t, XMLParseException, "javax.management.modelmbean.XMLParseException")
 	detailsJacobin(t, VirtualMachineError, "java.lang.VirtualMachineError")
 	detailsJacobin(t, VMStartException, "org.jacobin.connect.VMStartException")
+	detailsJacobin(t, ZipException, "java.util.zip.ZipException")
 }
 
 // utility function for previous unit test

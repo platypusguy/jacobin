@@ -286,8 +286,11 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_Zip_Adler32()
 	javaUtil.Load_Util_Zip_CheckedInputStream()
 	javaUtil.Load_Util_Zip_Crc32_Crc32c()
+	javaUtil.Load_Util_Zip_Deflater()
 	javaUtil.Load_Util_Zip_ZipEntry()
+	javaUtil.Load_Util_Zip_ZipException()
 	javaUtil.Load_Util_Zip_ZipInputStream()
+	javaUtil.Load_Util_Zip_ZipOutputStream()
 
 	// javax/crypto/*
 	javaxCrypto.Load_Crypto_Cipher()
