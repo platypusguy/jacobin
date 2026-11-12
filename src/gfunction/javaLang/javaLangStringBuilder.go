@@ -13,6 +13,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"strconv"
+	"strings"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -469,7 +470,12 @@ func stringBuilderAppend(params []any) any {
 	// Process based primarily on the params[1] type.
 	switch params[1].(type) {
 	case *object.Object: // char array, Object, String, StringBuffer, StringBuilder, or CharSequence
-		fvalue, ok := params[1].(*object.Object).FieldTable["value"]
+		p := params[1].(*object.Object)
+		if p == nil || object.IsNull(p) {
+			parmArray = object.JavaByteArrayFromGoString("null")
+			break
+		}
+		fvalue, ok := p.FieldTable["value"]
 		if ok {
 			switch fv := fvalue.Fvalue.(type) {
 			case []types.JavaByte: // JavaByte array, String, StringBuffer, or StringBuilder
@@ -500,13 +506,21 @@ func stringBuilderAppend(params []any) any {
 				parmArray = object.JavaByteArrayFromGoString(str)
 			}
 		} else {
-			// It might be a generic CharSequence.
-			res := charSequenceToString([]any{params[1]})
+			// It might be a generic CharSequence or Object.
+			res := charSequenceToString([]any{p})
 			if err, ok := res.(*ghelpers.GErrBlk); ok {
 				return err
 			}
 			strObj := res.(*object.Object)
-			parmArray = strObj.FieldTable["value"].Fvalue.([]types.JavaByte)
+			if valFld, ok := strObj.FieldTable["value"]; ok {
+				if jb, ok := valFld.Fvalue.([]types.JavaByte); ok {
+					parmArray = jb
+				} else {
+					parmArray = object.JavaByteArrayFromGoString(object.GoStringFromStringObject(strObj))
+				}
+			} else {
+				parmArray = object.JavaByteArrayFromGoString(object.GoStringFromStringObject(strObj))
+			}
 		}
 	case int64: // int, long, short
 		str := fmt.Sprintf("%d", params[1].(int64))
@@ -514,6 +528,9 @@ func stringBuilderAppend(params []any) any {
 	case float64: // float, double
 		ff := params[1].(float64)
 		str := strconv.FormatFloat(ff, 'f', -1, 64)
+		if !strings.ContainsAny(str, ".eEIN") {
+			str += ".0"
+		}
 		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
 		str := object.StringifyAnythingGo(params[1])
@@ -673,7 +690,12 @@ func stringBuilderInsert(params []any) any {
 	var parmArray []types.JavaByte
 	switch params[2].(type) {
 	case *object.Object: // char array, String, StringBuffer, StringBuilder, or CharSequence
-		fvalue, ok := params[2].(*object.Object).FieldTable["value"]
+		p := params[2].(*object.Object)
+		if p == nil || object.IsNull(p) {
+			parmArray = object.JavaByteArrayFromGoString("null")
+			break
+		}
+		fvalue, ok := p.FieldTable["value"]
 		if ok {
 			switch fv := fvalue.Fvalue.(type) {
 			case []types.JavaByte: // String, StringBuffer, or StringBuilder
@@ -700,18 +722,25 @@ func stringBuilderInsert(params []any) any {
 					}
 				}
 			default:
-				errMsg := fmt.Sprintf("stringBuilderInsert: Object value field value type (%T) is not a byte array nor a char array",
-					params[2])
-				return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+				str := object.StringifyAnythingGo(fv)
+				parmArray = object.JavaByteArrayFromGoString(str)
 			}
 		} else {
-			// It might be a generic CharSequence.
-			res := charSequenceToString([]any{params[2]})
+			// It might be a generic CharSequence or Object.
+			res := charSequenceToString([]any{p})
 			if err, ok := res.(*ghelpers.GErrBlk); ok {
 				return err
 			}
 			strObj := res.(*object.Object)
-			parmArray = strObj.FieldTable["value"].Fvalue.([]types.JavaByte)
+			if valFld, ok := strObj.FieldTable["value"]; ok {
+				if jb, ok := valFld.Fvalue.([]types.JavaByte); ok {
+					parmArray = jb
+				} else {
+					parmArray = object.JavaByteArrayFromGoString(object.GoStringFromStringObject(strObj))
+				}
+			} else {
+				parmArray = object.JavaByteArrayFromGoString(object.GoStringFromStringObject(strObj))
+			}
 		}
 	case int64: // integer, long
 		str := fmt.Sprintf("%d", params[2].(int64))

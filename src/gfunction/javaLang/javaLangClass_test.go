@@ -829,6 +829,86 @@ func TestClassIsSynthetic_True(t *testing.T) {
 	}
 }
 
+// === classIsRecord ===
+
+func TestClassIsRecord_InvalidObject(t *testing.T) {
+	setup()
+	result := classIsRecord([]interface{}{nil})
+	if _, ok := result.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk, got %T", result)
+	}
+
+	resultNull := classIsRecord([]interface{}{object.Null})
+	if _, ok := resultNull.(*ghelpers.GErrBlk); !ok {
+		t.Errorf("Expected GErrBlk, got %T", resultNull)
+	}
+}
+
+func TestClassIsRecord_True(t *testing.T) {
+	setup()
+	recSuperIndex := object.StringPoolIndexFromGoString("java/lang/Record")
+	cd := &classloader.ClData{
+		SuperclassIndex: recSuperIndex,
+		Access:          classloader.AccessFlags{ClassIsFinal: true},
+	}
+	obj := newClassObjWithKlass("main$ColoredPoint", cd)
+	result := classIsRecord([]interface{}{obj})
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected JavaBoolTrue, got %v", result)
+	}
+}
+
+func TestClassIsRecord_False_OtherSuperclass(t *testing.T) {
+	setup()
+	objSuperIndex := object.StringPoolIndexFromGoString("java/lang/Object")
+	cd := &classloader.ClData{
+		SuperclassIndex: objSuperIndex,
+		Access:          classloader.AccessFlags{ClassIsFinal: true},
+	}
+	obj := newClassObjWithKlass("java/lang/String", cd)
+	result := classIsRecord([]interface{}{obj})
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected JavaBoolFalse, got %v", result)
+	}
+}
+
+func TestClassIsRecord_False_Interface(t *testing.T) {
+	setup()
+	recSuperIndex := object.StringPoolIndexFromGoString("java/lang/Record")
+	cd := &classloader.ClData{
+		SuperclassIndex: recSuperIndex,
+		Access:          classloader.AccessFlags{ClassIsInterface: true},
+	}
+	obj := newClassObjWithKlass("some/RecordInterface", cd)
+	result := classIsRecord([]interface{}{obj})
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected JavaBoolFalse for interface, got %v", result)
+	}
+}
+
+func TestClassIsRecord_False_Abstract(t *testing.T) {
+	setup()
+	recSuperIndex := object.StringPoolIndexFromGoString("java/lang/Record")
+	cd := &classloader.ClData{
+		SuperclassIndex: recSuperIndex,
+		Access:          classloader.AccessFlags{ClassIsAbstract: true},
+	}
+	obj := newClassObjWithKlass("some/AbstractRecord", cd)
+	result := classIsRecord([]interface{}{obj})
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected JavaBoolFalse for abstract class, got %v", result)
+	}
+}
+
+func TestClassIsRecord_False_NoKlass(t *testing.T) {
+	setup()
+	obj := newClassObjWithNameObj("int")
+	result := classIsRecord([]interface{}{obj})
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected JavaBoolFalse when $klass is missing, got %v", result)
+	}
+}
+
 func TestClassGetPackage_InvalidObject(t *testing.T) {
 	setup()
 	result := classGetPackage([]interface{}{nil})

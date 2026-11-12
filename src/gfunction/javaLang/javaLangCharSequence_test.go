@@ -146,3 +146,79 @@ func TestCharSequence_Compare(t *testing.T) {
 		t.Errorf("expected 0, got %v", res)
 	}
 }
+
+func TestCharSequence_CustomObjectImplementation(t *testing.T) {
+	globals.InitStringPool()
+
+	customClassName := "main$ColoredPoint"
+	customObj := object.MakeEmptyObjectWithClassName(&customClassName)
+	customObj.FieldTable["x"] = object.Field{Ftype: types.Int, Fvalue: int64(10)}
+	customObj.FieldTable["y"] = object.Field{Ftype: types.Int, Fvalue: int64(20)}
+
+	// toString() on custom object (e.g. main$ColoredPoint)
+	res := charSequenceToString([]interface{}{customObj})
+	strObj, ok := res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object, got %T: %v", res, res)
+	}
+	gotStr := object.GoStringFromStringObject(strObj)
+	if gotStr != "ColoredPoint[x=10, y=20]" {
+		t.Errorf("expected %q, got %q", "ColoredPoint[x=10, y=20]", gotStr)
+	}
+
+	// length() on custom object
+	lenRes := charSequenceLength([]interface{}{customObj})
+	if lenRes.(int64) != int64(len(gotStr)) {
+		t.Errorf("expected length %d, got %v", len(gotStr), lenRes)
+	}
+
+	// charAt() on custom object
+	charRes := charSequenceCharAt([]interface{}{customObj, int64(0)})
+	if charRes.(int64) != int64(gotStr[0]) {
+		t.Errorf("expected %d, got %v", gotStr[0], charRes)
+	}
+
+	// subSequence() on custom object
+	subRes := charSequenceSubSequence([]interface{}{customObj, int64(0), int64(len(gotStr))})
+	subStrObj, ok := subRes.(*object.Object)
+	if !ok || object.GoStringFromStringObject(subStrObj) != gotStr {
+		t.Errorf("expected %q, got %q", gotStr, object.GoStringFromStringObject(subStrObj))
+	}
+
+	// null object checks
+	nullRes := charSequenceToString([]interface{}{nil})
+	if _, isErr := nullRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("expected error block for nil in charSequenceToString, got %v", nullRes)
+	}
+
+	nullObjRes := charSequenceToString([]interface{}{object.Null})
+	if _, isErr := nullObjRes.(*ghelpers.GErrBlk); !isErr {
+		t.Errorf("expected error block for object.Null in charSequenceToString, got %v", nullObjRes)
+	}
+}
+
+func TestStringBuilder_AppendCustomObject(t *testing.T) {
+	globals.InitStringPool()
+
+	sbClassName := "java/lang/StringBuilder"
+	sbObj := object.MakeEmptyObjectWithClassName(&sbClassName)
+	sbObj.FieldTable["value"] = object.Field{Ftype: types.JavaByteArray, Fvalue: []types.JavaByte{}}
+	sbObj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
+	sbObj.FieldTable["capacity"] = object.Field{Ftype: types.Int, Fvalue: int64(16)}
+
+	customClassName := "main$ColoredPoint"
+	customObj := object.MakeEmptyObjectWithClassName(&customClassName)
+	customObj.FieldTable["color"] = object.Field{Ftype: types.Int, Fvalue: int64(5)}
+
+	res := stringBuilderAppend([]any{sbObj, customObj})
+	if err, isErr := res.(*ghelpers.GErrBlk); isErr {
+		t.Fatalf("unexpected error appending custom object: %v", err)
+	}
+
+	appendedObj := res.(*object.Object)
+	byteArray := appendedObj.FieldTable["value"].Fvalue.([]types.JavaByte)
+	gotStr := object.GoStringFromJavaByteArray(byteArray)
+	if gotStr != "ColoredPoint[color=5]" {
+		t.Errorf("expected %q, got %q", "ColoredPoint[color=5]", gotStr)
+	}
+}

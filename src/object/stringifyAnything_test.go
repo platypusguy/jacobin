@@ -435,7 +435,7 @@ func TestStringifyAnythingGo_DefaultObjectCase(t *testing.T) {
 	result := StringifyAnythingGo(obj)
 
 	// Should contain class name and field values
-	if !strings.Contains(result, "ArrayList{") || !strings.Contains(result, "size=5") || !strings.Contains(result, "capacity=10") {
+	if !strings.Contains(result, "ArrayList[") || !strings.Contains(result, "size=5") || !strings.Contains(result, "capacity=10") {
 		t.Errorf("Expected format with class name and fields, got %s", result)
 	}
 }
@@ -718,5 +718,26 @@ func TestStringifyAnythingJava_NilInput(t *testing.T) {
 	content := StringifyAnythingGo(result)
 	if content != types.NullString {
 		t.Errorf("Expected %s, got %s", types.NullString, content)
+	}
+}
+
+func TestStringifyAnythingGo_CustomObject_SquareBraces(t *testing.T) {
+	globals.InitGlobals("test")
+	pointClassName := "Point"
+	pointObj := MakeEmptyObjectWithClassName(&pointClassName)
+	pointObj.FieldTable["x"] = Field{Ftype: types.Int, Fvalue: int64(5)}
+	pointObj.FieldTable["y"] = Field{Ftype: types.Int, Fvalue: int64(6)}
+
+	res := StringifyAnythingGo(pointObj)
+	expected := "Point[x=5, y=6]"
+	if res != expected {
+		t.Errorf("Expected %q, got %q", expected, res)
+	}
+
+	emptyPointObj := MakeEmptyObjectWithClassName(&pointClassName)
+	resEmpty := StringifyAnythingGo(emptyPointObj)
+	expectedEmpty := "Point[]"
+	if resEmpty != expectedEmpty {
+		t.Errorf("Expected %q, got %q", expectedEmpty, resEmpty)
 	}
 }

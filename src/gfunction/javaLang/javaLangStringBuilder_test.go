@@ -335,3 +335,29 @@ func TestStringBuffer_CharSequence(t *testing.T) {
 		t.Errorf("expected \"Hello World\", got %q", object.GoStringFromStringObject(resStr))
 	}
 }
+
+func TestStringBuilderAppendFloatingPointUsesFixedNotation(t *testing.T) {
+	testCases := []struct {
+		name  string
+		value float64
+		want  string
+	}{
+		{name: "fraction", value: 1.5, want: "1.5"},
+		{name: "integral", value: 42, want: "42.0"},
+		{name: "large value", value: 1e20, want: "100000000000000000000.0"},
+		{name: "small value", value: 1e-7, want: "0.0000001"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			sbObj := object.MakeEmptyObject()
+			stringBuilderInit([]any{sbObj})
+			stringBuilderAppend([]any{sbObj, tc.value})
+
+			got := object.GoStringFromStringObject(stringBuilderToString([]any{sbObj}).(*object.Object))
+			if got != tc.want {
+				t.Errorf("append(%v) = %q, want %q", tc.value, got, tc.want)
+			}
+		})
+	}
+}

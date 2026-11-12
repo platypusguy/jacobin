@@ -233,7 +233,7 @@ func TestPrintStreamPrintObject(t *testing.T) {
 	PrintObject([]any{buf, obj})
 	got := buf.String()
 	// field order in map is random, so we check for components
-	if !(got == "MyClass{field1=123, field2=456}" || got == "MyClass{field2=456, field1=123}") {
+	if !(got == "MyClass[field1=123, field2=456]" || got == "MyClass[field2=456, field1=123]") {
 		t.Errorf("PrintObject(Object) = %q; unexpected format", got)
 	}
 
@@ -241,7 +241,7 @@ func TestPrintStreamPrintObject(t *testing.T) {
 	buf.Reset()
 	PrintlnObject([]any{buf, obj})
 	got = buf.String()
-	if !(got == "MyClass{field1=123, field2=456}\n" || got == "MyClass{field2=456, field1=123}\n") {
+	if !(got == "MyClass[field1=123, field2=456]\n" || got == "MyClass[field2=456, field1=123]\n") {
 		t.Errorf("PrintlnObject(Object) = %q; unexpected format", got)
 	}
 
@@ -654,8 +654,8 @@ func TestPrintStreamPrintObjectSpecialValues(t *testing.T) {
 		{name: "LocalDateTime", value: localDateTime, want: "2026-06-24T14:30:15"},
 		{name: "Locale", value: locale, want: "en_US_#Latn"},
 		{name: "Thread", value: thread, want: "Thread[ID=17, Name=worker, Priority=7, State=WAITING]"},
-		{name: "Class", value: classObject, want: "Class{name=java.lang.String}"},
-		{name: "Object", value: emptyObject, want: "Object{}"},
+		{name: "Class", value: classObject, want: "Class[name=java.lang.String]"},
+		{name: "Object", value: emptyObject, want: "Object[]"},
 	}
 
 	states := []struct {

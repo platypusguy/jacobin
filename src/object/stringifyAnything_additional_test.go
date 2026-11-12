@@ -132,8 +132,8 @@ func TestStringifyAnythingGo_DelegationFallbackAndFailures(t *testing.T) {
 		result any
 		want   string
 	}{
-		{name: "missing method", result: stringifyInvokerTestError{message: "missing", methodMiss: true}, want: "Widget{}"},
-		{name: "nil result", result: nil, want: "Widget{}"},
+		{name: "missing method", result: stringifyInvokerTestError{message: "missing", methodMiss: true}, want: "Widget[]"},
+		{name: "nil result", result: nil, want: "Widget[]"},
 		{name: "invocation error", result: stringifyInvokerTestError{message: "failed"}, want: "*** ERROR, StringifyAnythingGo: example/Widget.toString()Ljava/lang/String; failed: failed"},
 		{name: "malformed result", result: "not a Java object", want: "*** ERROR, StringifyAnythingGo: example/Widget.toString()Ljava/lang/String; returned string, not a non-null Object"},
 		{name: "null string result", result: (*Object)(nil), want: "*** ERROR, StringifyAnythingGo: example/Widget.toString()Ljava/lang/String; returned *object.Object, not a non-null Object"},
@@ -158,7 +158,7 @@ func TestStringifyAnythingGo_DelegationFallbackAndFailures(t *testing.T) {
 		global := globals.GetGlobalRef()
 		global.FuncInvokeGFunction = nil
 		className := "example/Widget"
-		if got, want := StringifyAnythingGo(MakeEmptyObjectWithClassName(&className)), "Widget{}"; got != want {
+		if got, want := StringifyAnythingGo(MakeEmptyObjectWithClassName(&className)), "Widget[]"; got != want {
 			t.Errorf("StringifyAnythingGo() = %q, want %q", got, want)
 		}
 	})
@@ -173,7 +173,7 @@ func TestStringifyAnythingGo_DoesNotDispatchJavaLangObject(t *testing.T) {
 		return StringObjectFromGoString("unexpected")
 	}
 	className := "java/lang/Object"
-	if got, want := StringifyAnythingGo(MakeEmptyObjectWithClassName(&className)), "Object{}"; got != want {
+	if got, want := StringifyAnythingGo(MakeEmptyObjectWithClassName(&className)), "Object[]"; got != want {
 		t.Errorf("StringifyAnythingGo() = %q, want %q", got, want)
 	}
 	if called {

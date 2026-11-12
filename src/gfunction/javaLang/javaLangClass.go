@@ -108,6 +108,8 @@ func Load_Lang_Class() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsInterface}
 	ghelpers.MethodSignatures["java/lang/Class.isPrimitive()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsPrimitive}
+	ghelpers.MethodSignatures["java/lang/Class.isRecord()Z"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsRecord}
 	ghelpers.MethodSignatures["java/lang/Class.isSealed()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsSealed}
 	ghelpers.MethodSignatures["java/lang/Class.isSynthetic()Z"] =
@@ -984,6 +986,46 @@ func classIsPrimitive(params []interface{}) interface{} {
 	default:
 		return types.JavaBoolFalse
 	}
+}
+
+// java/lang/Class.isRecord()Z
+// Returns true if and only if this class was declared as a record
+func classIsRecord(params []interface{}) interface{} {
+	if len(params) == 0 || params[0] == nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsRecord: invalid or null object")
+	}
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "classIsRecord: invalid or null object")
+	}
+
+	klassField, ok := obj.FieldTable["$klass"]
+	if !ok || klassField.Fvalue == nil {
+		return types.JavaBoolFalse
+	}
+	klassPtr, ok := klassField.Fvalue.(*classloader.ClData)
+	if !ok || klassPtr == nil {
+		return types.JavaBoolFalse
+	}
+
+	if klassPtr.Access.ClassIsInterface {
+		return types.JavaBoolFalse
+	}
+
+	if klassPtr.SuperclassIndex == types.InvalidStringIndex {
+		return types.JavaBoolFalse
+	}
+
+	scNamePtr := stringPool.GetStringPointer(klassPtr.SuperclassIndex)
+	if scNamePtr == nil || *scNamePtr != "java/lang/Record" {
+		return types.JavaBoolFalse
+	}
+
+	if klassPtr.Access.ClassIsAbstract {
+		return types.JavaBoolFalse
+	}
+
+	return types.JavaBoolTrue
 }
 
 // java/lang/Class.isSealed()Z
