@@ -83,6 +83,86 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 	return params
 }
 
+// ParseIncomimgParamsFromMethTypeStringRaw takes a type string from a CP
+// and parses its passed-in parameters, returning them as a slice of strings.
+// Unlike the previous function, this returns the parameters without converting
+// them to their reduced types.
+func ParseIncomingParamsFromMethTypeStringRaw(s string) []string {
+	params := make([]string, 0)
+	if s == "" {
+		return params
+	}
+
+	paramChars := []byte(s)
+	paramLen := len(paramChars)
+	for i := 0; i < len(paramChars); i++ {
+		switch paramChars[i] {
+		case '(':
+			continue
+		case ')':
+			return params
+		case 'B':
+			params = append(params, types.Byte)
+		case 'C':
+			params = append(params, types.Char)
+		case 'I':
+			params = append(params, types.Int)
+		case 'S':
+			params = append(params, types.Short)
+		case 'F':
+			params = append(params, types.Float)
+		case 'J':
+			params = append(params, types.Long)
+		case 'D':
+			params = append(params, types.Double)
+		case 'Z':
+			params = append(params, types.Bool)
+		case 'L':
+			// validate reference descriptor terminates with ';' before appending
+			var j int
+			for j = i + 1; j < paramLen && paramChars[j] != ';'; j++ {
+				// scan to terminating ';'
+			}
+			if j >= paramLen {
+				// invalid reference descriptor: missing terminating ';'
+				return make([]string, 0)
+			}
+			params = append(params, types.Ref)
+			i = j
+		case '[': // arrays
+			elements := make([]byte, 0)
+			for i < paramLen && paramChars[i] == '[' {
+				elements = append(elements, '[')
+				i++
+			}
+			if i >= paramLen {
+				return make([]string, 0)
+			}
+			if paramChars[i] == ')' {
+				return make([]string, 0)
+			}
+			// validate reference arrays fully, then append
+			var j int
+			if paramChars[i] == 'L' {
+				for j = i + 1; j < paramLen && paramChars[j] != ';'; j++ {
+				}
+				if j >= paramLen {
+					return make([]string, 0)
+				}
+			}
+			elements = append(elements, paramChars[i])
+			params = append(params, string(elements))
+			if paramChars[i] == 'L' {
+				i = j
+			}
+		default:
+			// illegal or unexpected character encountered
+			return make([]string, 0)
+		}
+	}
+	return params
+}
+
 // ParseFQN parses a Java method's fully qualified name (FQN) into its
 // class name, method name, and method type (signature).
 // For example, "java/lang/String.valueOf(I)Ljava/lang/String;" is parsed into:

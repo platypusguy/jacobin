@@ -219,7 +219,7 @@ func invokeBSM(cp *CPool, bsm BootstrapMethod, bsmHandle *object.Object, params 
 			return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned null", bsmFQN)
 		}
 		if className := stringPool.GetStringPointer(r.KlassName); className == nil ||
-			*className != "java/lang/invoke/CallSite" {
+			(*className != "java/lang/invoke/CallSite" && *className != "java/lang/invoke/ConstantCallSite") {
 			return nil, fmt.Errorf("invokeBSM: bootstrap method %s returned %v, not a CallSite",
 				bsmFQN, klassNameOf(r))
 		}
