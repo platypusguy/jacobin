@@ -20,6 +20,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/statics"
 	"jacobin/src/types"
+	"jacobin/src/util"
 )
 
 var deflaterClassName = "java/util/zip/Deflater"
@@ -123,6 +124,7 @@ func (s *deflaterState) ensureWriter() error {
 		return nil
 	}
 	s.writeZlibHeader()
+	s.adler = 1 // trailer/getAdler covers only uncompressed data
 	flateLevel := s.level
 	if s.strategy == int(DeflaterHuffmanOnly) {
 		flateLevel = flate.HuffmanOnly
@@ -1034,6 +1036,9 @@ func deflaterEnd(params []any) any {
 		state.mu.Lock()
 		state.end()
 		state.mu.Unlock()
+		deflaterStatesMu.Lock()
+		delete(deflaterStates, self)
+		deflaterStatesMu.Unlock()
 	}
 	return nil
 }
@@ -1047,7 +1052,7 @@ func deflaterToString(params []any) any {
 		return object.StringObjectFromGoString("null")
 	}
 	self := params[0].(*object.Object)
-	return object.StringObjectFromGoString(fmt.Sprintf("%s@%x", deflaterClassName, uintptr(unsafe.Pointer(self))))
+	return object.StringObjectFromGoString(fmt.Sprintf("%s@%x", util.ConvertInternalClassNameToUserFormat(deflaterClassName), uintptr(unsafe.Pointer(self))))
 }
 
 func deflaterEquals(params []any) any {

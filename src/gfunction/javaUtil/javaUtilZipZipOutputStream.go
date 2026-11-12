@@ -120,6 +120,12 @@ func setZipOutStreamState(obj *object.Object, state *zipOutStreamState) {
 	zipOutStreamStates[obj] = state
 }
 
+func removeZipOutStreamState(obj *object.Object) {
+	zipOutStreamStatesMu.Lock()
+	defer zipOutStreamStatesMu.Unlock()
+	delete(zipOutStreamStates, obj)
+}
+
 // Load_Util_Zip_ZipOutputStream registers all method signatures for java.util.zip.ZipOutputStream.
 func Load_Util_Zip_ZipOutputStream() {
 	// <clinit>()V
@@ -829,6 +835,7 @@ func zipOutputStreamClose(params []any) any {
 	self.FieldTable["closed"] = object.Field{Ftype: "Z", Fvalue: types.JavaBoolTrue}
 
 	res := closeOutputStream(state.out)
+	removeZipOutStreamState(self)
 	if errBlk, ok := asGErrBlk(res); ok {
 		return errBlk
 	}

@@ -298,6 +298,9 @@ func TestZipOutputStream_Write_Errors(t *testing.T) {
 
 	// Write on closed stream
 	zipOutputStreamClose([]any{zos})
+	if state := getZipOutStreamState(zos); state != nil {
+		t.Fatalf("expected stream state to be removed after close, got %+v", state)
+	}
 	res = zipOutputStreamWriteRange([]any{zos, buf, int64(0), int64(5)})
 	if errBlk, ok := asGErrBlk(res); !ok || errBlk.ExceptionType != excNames.IOException {
 		t.Fatalf("Expected IOException on closed stream, got %v", res)

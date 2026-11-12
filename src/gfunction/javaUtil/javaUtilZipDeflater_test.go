@@ -452,6 +452,24 @@ func TestDeflaterPresetDictionary(t *testing.T) {
 	}
 }
 
+func TestDeflaterNowrapDictionaryAdler(t *testing.T) {
+	initDeflaterTest()
+	dict := []byte("a preset dictionary for raw deflate")
+	msg := []byte("raw deflate data that shares dictionary words")
+	defObj := newTestDeflaterObj()
+	deflaterInitLevelNowrap([]any{defObj, int64(DeflaterDefaultCompression), types.JavaBoolTrue})
+	deflaterSetDictionaryArray([]any{defObj, makeJavaByteArrayObj(dict)})
+	deflaterSetInputArray([]any{defObj, makeJavaByteArrayObj(msg)})
+	deflaterFinish([]any{defObj})
+	outBuf := makeJavaByteArrayObj(make([]byte, 512))
+	deflaterDeflateArray([]any{defObj, outBuf})
+
+	expectedAdler := int64(int32(adler32.Checksum(msg)))
+	if actualAdler := deflaterGetAdler([]any{defObj}).(int64); actualAdler != expectedAdler {
+		t.Fatalf("expected Adler %d for uncompressed input, got %d", expectedAdler, actualAdler)
+	}
+}
+
 func TestDeflaterSetLevelAndStrategy(t *testing.T) {
 	initDeflaterTest()
 	defObj := newTestDeflaterObj()
@@ -490,6 +508,9 @@ func TestDeflaterEndAndExceptions(t *testing.T) {
 	deflaterInitDefault([]any{defObj})
 
 	deflaterEnd([]any{defObj})
+	if state := getDeflaterState(defObj); state != nil {
+		t.Fatalf("expected state to be removed after end(), got %+v", state)
+	}
 
 	// After end(), operations should return NullPointerException
 	res := deflaterSetInputArray([]any{defObj, makeJavaByteArrayObj([]byte{1, 2, 3})})
@@ -615,8 +636,8 @@ func TestDeflaterBoundsAndEdgeCases(t *testing.T) {
 	if resFinalize != nil {
 		t.Fatalf("expected nil from finalize, got %v", resFinalize)
 	}
-	if state := getDeflaterState(defEmpty); state == nil || !state.ended {
-		t.Fatalf("expected state.ended to be true after finalize")
+	if state := getDeflaterState(defEmpty); state != nil {
+		t.Fatalf("expected state to be removed after finalize, got %+v", state)
 	}
 }
 
@@ -644,7 +665,7 @@ func TestDeflaterObjectOverrides(t *testing.T) {
 	// toString
 	strObj := deflaterToString([]any{def1}).(*object.Object)
 	str := object.GoStringFromStringObject(strObj)
-	if len(str) == 0 || !bytes.Contains([]byte(str), []byte("java/util/zip/Deflater@")) {
+	if len(str) == 0 || !bytes.Contains([]byte(str), []byte("java.util.zip.Deflater@")) {
 		t.Fatalf("unexpected toString(): %s", str)
 	}
 }
