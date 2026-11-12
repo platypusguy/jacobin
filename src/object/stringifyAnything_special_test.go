@@ -138,7 +138,7 @@ func TestStringifyAnythingGo_MissingRegisteredToStringFallsBack(t *testing.T) {
 	global := globals.GetGlobalRef()
 	global.FuncInvokeGFunction = ghelpers.Invoke
 	className := "example/Widget"
-	if got, want := object.StringifyAnythingGo(object.MakeEmptyObjectWithClassName(&className)), "Widget{}"; got != want {
+	if got, want := object.StringifyAnythingGo(object.MakeEmptyObjectWithClassName(&className)), "Widget[]"; got != want {
 		t.Errorf("StringifyAnythingGo() = %q, want %q", got, want)
 	}
 }

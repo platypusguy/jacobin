@@ -13,6 +13,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/types"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -259,15 +260,20 @@ func StringifyAnythingGo(arg interface{}) string {
 			return strBuffer + "]"
 		default:
 			// Format a small report of the class name and the FieldTable.
-			// Concoct a string buffer formatted as: class{name1=value1, name2=value2, ...}.
-			strBuffer := classNameSuffix + "{"
+			// Concoct a string buffer formatted as: class[name1=value1, name2=value2, ...].
+			strBuffer := classNameSuffix + "["
 			if len(obj.FieldTable) == 0 {
-				return strBuffer + "}"
+				return strBuffer + "]"
 			}
+			keys := make([]string, 0, len(obj.FieldTable))
 			for name := range obj.FieldTable {
+				keys = append(keys, name)
+			}
+			sort.Strings(keys)
+			for _, name := range keys {
 				strBuffer += name + "=" + ObjectFieldToString(obj, name) + ", "
 			}
-			return strBuffer[:len(strBuffer)-2] + "}"
+			return strBuffer[:len(strBuffer)-2] + "]"
 		}
 		/* end of case for *Object */
 	case Field:

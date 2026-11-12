@@ -69,7 +69,10 @@ func charSequenceLength(params []interface{}) interface{} {
 	if params[0] == nil {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceLength: self is nil")
 	}
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceLength: self is nil")
+	}
 	// CharSequence is an interface. We need to handle known implementations.
 	// In Jacobin, String objects have their value in a specific format.
 	if object.IsStringObject(obj) {
@@ -85,7 +88,8 @@ func charSequenceLength(params []interface{}) interface{} {
 		}
 	}
 
-	return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "charSequenceLength: unknown implementation")
+	str := object.StringifyAnythingGo(obj)
+	return int64(len(str))
 }
 
 // charSequenceCharAt returns the char value at the specified index.
@@ -93,7 +97,10 @@ func charSequenceCharAt(params []interface{}) interface{} {
 	if params[0] == nil {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceCharAt: self is nil")
 	}
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceCharAt: self is nil")
+	}
 	index := params[1].(int64)
 
 	if object.IsStringObject(obj) {
@@ -123,7 +130,11 @@ func charSequenceCharAt(params []interface{}) interface{} {
 		}
 	}
 
-	return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "charSequenceCharAt: unknown implementation")
+	str := object.StringifyAnythingGo(obj)
+	if index < 0 || index >= int64(len(str)) {
+		return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, "charSequenceCharAt: index out of bounds")
+	}
+	return int64(str[index])
 }
 
 // charSequenceSubSequence returns a CharSequence that is a subsequence of this sequence.
@@ -131,7 +142,10 @@ func charSequenceSubSequence(params []interface{}) interface{} {
 	if params[0] == nil {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceSubSequence: self is nil")
 	}
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceSubSequence: self is nil")
+	}
 	start := params[1].(int64)
 	end := params[2].(int64)
 
@@ -161,7 +175,12 @@ func charSequenceSubSequence(params []interface{}) interface{} {
 		}
 	}
 
-	return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "charSequenceSubSequence: unknown implementation")
+	str := object.StringifyAnythingGo(obj)
+	if start < 0 || end > int64(len(str)) || start > end {
+		return ghelpers.GetGErrBlk(excNames.IndexOutOfBoundsException, "charSequenceSubSequence: bounds out of range")
+	}
+	subStr := str[start:end]
+	return object.StringObjectFromGoString(subStr)
 }
 
 // charSequenceToString returns a string containing the characters in this sequence.
@@ -169,7 +188,10 @@ func charSequenceToString(params []interface{}) interface{} {
 	if params[0] == nil {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceToString: self is nil")
 	}
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceToString: self is nil")
+	}
 	if object.IsStringObject(obj) {
 		return obj
 	}
@@ -188,7 +210,7 @@ func charSequenceToString(params []interface{}) interface{} {
 		}
 	}
 
-	return ghelpers.GetGErrBlk(excNames.UnsupportedOperationException, "charSequenceToString: unknown implementation")
+	return object.StringifyAnythingJava(obj)
 }
 
 // charSequenceCompare compares two CharSequence instances lexicographically.
@@ -197,11 +219,14 @@ func charSequenceCompare(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceCompare: null parameter")
 	}
 
-	cs1Obj := params[0].(*object.Object)
-	cs2Obj := params[1].(*object.Object)
+	cs1Obj, ok1 := params[0].(*object.Object)
+	cs2Obj, ok2 := params[1].(*object.Object)
+	if !ok1 || !ok2 || object.IsNull(cs1Obj) || object.IsNull(cs2Obj) {
+		return ghelpers.GetGErrBlk(excNames.NullPointerException, "charSequenceCompare: null parameter")
+	}
 
-	str1 := object.GoStringFromStringObject(cs1Obj)
-	str2 := object.GoStringFromStringObject(cs2Obj)
+	str1 := object.StringifyAnythingGo(cs1Obj)
+	str2 := object.StringifyAnythingGo(cs2Obj)
 
 	if str1 < str2 {
 		return int64(-1)

@@ -63,7 +63,7 @@ func TestStringFormatter_StringConversionsUseRegisteredToStringMethods(t *testin
 		t.Fatalf("StringFormatter returned %T, want *object.Object", out)
 	}
 	got := object.GoStringFromStringObject(formatted)
-	if want := "plain string|Object{}|42|9876543210|123.4500|2026-06-24T14:30:15"; got != want {
+	if want := "plain string|Object[]|42|9876543210|123.4500|2026-06-24T14:30:15"; got != want {
 		t.Errorf("StringFormatter() = %q, want %q", got, want)
 	}
 }
