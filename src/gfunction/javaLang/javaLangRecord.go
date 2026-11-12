@@ -7,10 +7,15 @@
 package javaLang
 
 import (
+	"container/list"
 	"fmt"
+	"jacobin/src/classloader"
 	"jacobin/src/excNames"
+	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
 	"jacobin/src/object"
+	"jacobin/src/stringPool"
 	"jacobin/src/types"
 	"math"
 	"sort"
@@ -35,8 +40,9 @@ func Load_Lang_Record() {
 
 	ghelpers.MethodSignatures["java/lang/Record.equals(Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  recordEquals,
+			ParamSlots:   1,
+			GFunction:    recordEquals,
+			NeedsContext: true,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Record.hashCode()I"] =
@@ -70,6 +76,13 @@ func recordInit(params []any) any {
 // recordEquals implements "java/lang/Record.equals(Ljava/lang/Object;)Z"
 // Indicates whether some other object is "equal to" this one.
 func recordEquals(params []any) any {
+	var fs *list.List
+	if len(params) > 0 {
+		fs, _ = params[0].(*list.List)
+		if fs != nil {
+			params = params[1:]
+		}
+	}
 	if len(params) == 0 {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, "recordEquals: missing receiver")
 	}
@@ -105,7 +118,11 @@ func recordEquals(params []any) any {
 		if !exists {
 			return types.JavaBoolFalse
 		}
-		if !fieldValuesEqual(selfFld.Fvalue, otherFld.Fvalue) {
+		equal, err := fieldValuesEqual(fs, selfFld.Fvalue, otherFld.Fvalue)
+		if err != nil {
+			return err
+		}
+		if !equal {
 			return types.JavaBoolFalse
 		}
 	}
@@ -113,104 +130,276 @@ func recordEquals(params []any) any {
 	return types.JavaBoolTrue
 }
 
-func fieldValuesEqual(v1, v2 any) bool {
+func fieldValuesEqual(fs *list.List, v1, v2 any) (bool, *ghelpers.GErrBlk) {
 	if v1 == nil && v2 == nil {
-		return true
+		return true, nil
 	}
 	if v1 == nil || v2 == nil {
-		return false
+		return false, nil
 	}
 
 	switch val1 := v1.(type) {
 	case *object.Object:
 		val2, ok := v2.(*object.Object)
 		if !ok {
-			return false
+			return false, nil
 		}
 		if object.IsNull(val1) && object.IsNull(val2) {
-			return true
+			return true, nil
 		}
 		if object.IsNull(val1) || object.IsNull(val2) {
-			return false
+			return false, nil
 		}
 		if val1 == val2 {
-			return true
+			return true, nil
 		}
 		if object.IsStringObject(val1) && object.IsStringObject(val2) {
-			return object.GoStringFromStringObject(val1) == object.GoStringFromStringObject(val2)
+			return object.GoStringFromStringObject(val1) == object.GoStringFromStringObject(val2), nil
 		}
-		return val1 == val2
+		if equal, err, invoked := recordObjectEquals(fs, val1, val2); invoked {
+			if err != nil {
+				return false, err
+			}
+			return equal, nil
+		}
+		return val1 == val2, nil
 	case int64:
 		val2, ok := v2.(int64)
-		return ok && val1 == val2
+		return ok && val1 == val2, nil
 	case float64:
 		val2, ok := v2.(float64)
 		if !ok {
-			return false
+			return false, nil
 		}
-		return math.Float64bits(val1) == math.Float64bits(val2)
+		return math.Float64bits(val1) == math.Float64bits(val2), nil
 	case float32:
 		val2, ok := v2.(float32)
 		if !ok {
-			return false
+			return false, nil
 		}
-		return math.Float32bits(val1) == math.Float32bits(val2)
+		return math.Float32bits(val1) == math.Float32bits(val2), nil
 	case types.JavaByte:
 		val2, ok := v2.(types.JavaByte)
-		return ok && val1 == val2
+		return ok && val1 == val2, nil
 	case string:
 		val2, ok := v2.(string)
-		return ok && val1 == val2
+		return ok && val1 == val2, nil
 	case bool:
 		val2, ok := v2.(bool)
-		return ok && val1 == val2
+		return ok && val1 == val2, nil
 	case []int64:
 		val2, ok := v2.([]int64)
 		if !ok || len(val1) != len(val2) {
-			return false
+			return false, nil
 		}
 		for i := range val1 {
 			if val1[i] != val2[i] {
-				return false
+				return false, nil
 			}
 		}
-		return true
+		return true, nil
 	case []types.JavaByte:
 		val2, ok := v2.([]types.JavaByte)
 		if !ok || len(val1) != len(val2) {
-			return false
+			return false, nil
 		}
 		for i := range val1 {
 			if val1[i] != val2[i] {
-				return false
+				return false, nil
 			}
 		}
-		return true
+		return true, nil
 	case []byte:
 		val2, ok := v2.([]byte)
 		if !ok || len(val1) != len(val2) {
-			return false
+			return false, nil
 		}
 		for i := range val1 {
 			if val1[i] != val2[i] {
-				return false
+				return false, nil
 			}
 		}
-		return true
+		return true, nil
 	case []*object.Object:
 		val2, ok := v2.([]*object.Object)
 		if !ok || len(val1) != len(val2) {
-			return false
+			return false, nil
 		}
 		for i := range val1 {
-			if !fieldValuesEqual(val1[i], val2[i]) {
-				return false
+			equal, err := fieldValuesEqual(fs, val1[i], val2[i])
+			if err != nil {
+				return false, err
+			}
+			if !equal {
+				return false, nil
 			}
 		}
-		return true
+		return true, nil
 	default:
-		return v1 == v2
+		return v1 == v2, nil
 	}
+}
+
+func recordObjectEquals(fs *list.List, left, right *object.Object) (bool, *ghelpers.GErrBlk, bool) {
+	const methodName = "equals"
+	const methodType = "(Ljava/lang/Object;)Z"
+	className := object.GoStringFromStringPoolIndex(left.KlassName)
+
+	for currentClass := className; currentClass != ""; {
+		signature := currentClass + "." + methodName + methodType
+		if gmeth, ok := ghelpers.MethodSignatures[signature]; ok {
+			if gmeth.GFunction == nil || (gmeth.NeedsContext && fs == nil) {
+				return false, nil, false
+			}
+			params := []any{left, right}
+			if gmeth.NeedsContext {
+				params = append([]any{fs}, params...)
+			}
+			result := gmeth.GFunction(params)
+			if err, ok := result.(*ghelpers.GErrBlk); ok {
+				return false, err, true
+			}
+			return result == types.JavaBoolTrue, nil, true
+		}
+
+		mtEntry := classloader.GetMtableEntry(signature)
+		if mtEntry.Meth == nil && classloader.MethArea != nil && classloader.MethAreaFetch(currentClass) != nil {
+			mtEntry, _ = classloader.FetchMethodAndCP(currentClass, methodName, methodType)
+		}
+		if mtEntry.Meth != nil {
+			if mtEntry.MType == 'G' {
+				gmeth, ok := mtEntry.Meth.(ghelpers.GMeth)
+				if !ok || gmeth.GFunction == nil || (gmeth.NeedsContext && fs == nil) {
+					return false, nil, false
+				}
+				params := []any{left, right}
+				if gmeth.NeedsContext {
+					params = append([]any{fs}, params...)
+				}
+				result := gmeth.GFunction(params)
+				if err, ok := result.(*ghelpers.GErrBlk); ok {
+					return false, err, true
+				}
+				return result == types.JavaBoolTrue, nil, true
+			}
+			if mtEntry.MType == 'J' && fs != nil {
+				global := globals.GetGlobalRef()
+				if global == nil || global.FuncRunJavaFromG == nil || fs.Front() == nil {
+					return false, nil, false
+				}
+				global.FuncRunJavaFromG(fs, currentClass, methodName, methodType, left, right)
+				fr, ok := fs.Front().Value.(*frames.Frame)
+				if !ok || fr.TOS < 0 || fr.TOS >= len(fr.OpStack) {
+					return false, nil, true
+				}
+				result := fr.OpStack[fr.TOS]
+				fr.TOS--
+				return result == types.JavaBoolTrue, nil, true
+			}
+			return false, nil, false
+		}
+
+		if classloader.MethArea == nil {
+			break
+		}
+		klass := classloader.MethAreaFetch(currentClass)
+		if klass == nil || klass.Data == nil || klass.Data.SuperclassIndex == types.InvalidStringIndex {
+			break
+		}
+		currentClass = *stringPool.GetStringPointer(uint32(klass.Data.SuperclassIndex))
+	}
+	return false, nil, false
+}
+
+func recordFieldNames(self *object.Object) []string {
+	className := object.GoStringFromStringPoolIndex(self.KlassName)
+	var klass *classloader.Klass
+	if classloader.MethArea != nil {
+		klass = classloader.MethAreaFetch(className)
+	}
+	if klass != nil && klass.Data != nil {
+		for _, attr := range klass.Data.Attributes {
+			if classloader.FetchUTF8stringFromCPEntryNumber(&klass.Data.CP, attr.AttrName) != "Record" {
+				continue
+			}
+			if names, ok := parseRecordComponentNames(&klass.Data.CP, attr.AttrContent); ok {
+				return names
+			}
+		}
+
+		fields := make([]string, 0, len(klass.Data.Fields))
+		for _, field := range klass.Data.Fields {
+			if field.IsStatic {
+				continue
+			}
+			name := field.NameStr
+			if name == "" {
+				name = classloader.FetchUTF8stringFromCPEntryNumber(&klass.Data.CP, field.Name)
+			}
+			if name == "" {
+				fields = nil
+				break
+			}
+			if _, exists := self.FieldTable[name]; exists {
+				fields = append(fields, name)
+			}
+		}
+		if len(fields) > 0 {
+			return fields
+		}
+	}
+
+	keys := make([]string, 0, len(self.FieldTable))
+	for key := range self.FieldTable {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func parseRecordComponentNames(cp *classloader.CPool, content []byte) ([]string, bool) {
+	if len(content) < 2 {
+		return nil, false
+	}
+	readU2 := func(pos int) uint16 {
+		return uint16(content[pos])<<8 | uint16(content[pos+1])
+	}
+	pos := 0
+	componentCount := int(readU2(pos))
+	pos += 2
+	componentNames := make([]string, 0, componentCount)
+	for i := 0; i < componentCount; i++ {
+		if pos+6 > len(content) {
+			return nil, false
+		}
+		nameIndex := readU2(pos)
+		pos += 2
+		descriptorIndex := readU2(pos)
+		pos += 2
+		attributeCount := int(readU2(pos))
+		pos += 2
+
+		name := classloader.FetchUTF8stringFromCPEntryNumber(cp, nameIndex)
+		if name == "" || classloader.FetchUTF8stringFromCPEntryNumber(cp, descriptorIndex) == "" {
+			return nil, false
+		}
+		componentNames = append(componentNames, name)
+
+		for j := 0; j < attributeCount; j++ {
+			if pos+6 > len(content) {
+				return nil, false
+			}
+			pos += 2 // attribute_name_index
+			attributeLength := uint32(content[pos])<<24 | uint32(content[pos+1])<<16 |
+				uint32(content[pos+2])<<8 | uint32(content[pos+3])
+			pos += 4
+			if uint64(attributeLength) > uint64(len(content)-pos) {
+				return nil, false
+			}
+			pos += int(attributeLength)
+		}
+	}
+	return componentNames, pos == len(content)
 }
 
 // recordHashCode implements "java/lang/Record.hashCode()I"
@@ -225,11 +414,7 @@ func recordHashCode(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
-	keys := make([]string, 0, len(self.FieldTable))
-	for k := range self.FieldTable {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := recordFieldNames(self)
 
 	var result int32 = 1
 	for _, k := range keys {
@@ -325,11 +510,7 @@ func recordToString(params []any) any {
 	className := object.GoStringFromStringPoolIndex(self.KlassName)
 	simpleName := getSimpleClassName(className)
 
-	keys := make([]string, 0, len(self.FieldTable))
-	for k := range self.FieldTable {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := recordFieldNames(self)
 
 	var parts []string
 	for _, k := range keys {
