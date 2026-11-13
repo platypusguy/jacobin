@@ -86,7 +86,8 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 // ParseIncomimgParamsFromMethTypeStringRaw takes a type string from a CP
 // and parses its passed-in parameters, returning them as a slice of strings.
 // Unlike the previous function, this returns the parameters without converting
-// them to their reduced types.
+// them to their reduced types (so byte is not converted to int; and object
+// pointers are not converted to types.Ref, but rather remain the full class type.
 func ParseIncomingParamsFromMethTypeStringRaw(s string) []string {
 	params := make([]string, 0)
 	if s == "" {
@@ -127,7 +128,8 @@ func ParseIncomingParamsFromMethTypeStringRaw(s string) []string {
 				// invalid reference descriptor: missing terminating ';'
 				return make([]string, 0)
 			}
-			params = append(params, types.Ref)
+			// put the full object name into the parameters list
+			params = append(params, string(paramChars[i:j+1]))
 			i = j
 		case '[': // arrays
 			elements := make([]byte, 0)
@@ -149,9 +151,11 @@ func ParseIncomingParamsFromMethTypeStringRaw(s string) []string {
 				if j >= paramLen {
 					return make([]string, 0)
 				}
+				params = append(params, "["+string(paramChars[i:j+1]))
+			} else {
+				params = append(params, "["+string(paramChars[i]))
 			}
-			elements = append(elements, paramChars[i])
-			params = append(params, string(elements))
+
 			if paramChars[i] == 'L' {
 				i = j
 			}
