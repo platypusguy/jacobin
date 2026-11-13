@@ -17,7 +17,6 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/trace"
 	"jacobin/src/util"
-	"slices"
 )
 
 func Load_Lang_Invoke_ConcatStringElements() {
@@ -138,9 +137,8 @@ func ConcatStringElements(params []any) any {
 		tagArg   byte = 0x01 // '0x01' placeholder for dynamic arguments
 		tagConst byte = 0x02 // '0x02' placeholder for static constant arguments
 	)
-	var j int = 0
 	var argIndex int = 0
-	concatBytes := make([]byte, len(recipeBytes))
+	concatBytes := make([]byte, 0, len(recipeBytes))
 	for i := 0; i < len(recipeBytes); i++ {
 		switch recipeBytes[i] {
 		case tagArg: // these arguments are pulled off op stack of the present frame
@@ -149,17 +147,15 @@ func ConcatStringElements(params []any) any {
 			argType := invdynArgs[argIndex]
 			argIndex++
 			if argType == "B" {
-				concatBytes[j] = byte(arg.(int64))
+				concatBytes = append(concatBytes, byte(arg.(int64)))
 			} else {
 				s := object.StringifyAnythingGo(arg)
-				concatBytes = slices.Concat(concatBytes, []byte(s))
-				j = len(concatBytes) // and point j to the end of the new string
+				concatBytes = append(concatBytes, []byte(s)...)
 			}
 		case tagConst:
 			// Consume next constant from static constants array
 		default:
-			concatBytes[j] = recipeBytes[i]
-			j++
+			concatBytes = append(concatBytes, recipeBytes[i])
 		}
 	}
 
