@@ -11,6 +11,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/trace"
 	"jacobin/src/types"
@@ -66,24 +67,29 @@ func stringConcatFactory_makeConcatWithConstants(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.MalformedParametersException, errMsg)
 	}
 
-	trace.Raw(fmt.Sprintf("calling class: %s", object.GoStringFromStringObject(params[0].(*object.Object))))
-	trace.Raw(fmt.Sprintf("name of callsite method: %s", object.GoStringFromStringObject(params[1].(*object.Object))))
+	if globals.TraceInst {
+		trace.Raw(fmt.Sprintf("calling class: %s", object.GoStringFromStringObject(params[0].(*object.Object))))
+		trace.Raw(fmt.Sprintf("name of callsite method: %s", object.GoStringFromStringObject(params[1].(*object.Object))))
+		trace.Raw(fmt.Sprintf("recipe: %s", object.GoStringFromStringObject(params[3].(*object.Object))))
+	}
 	// the method type is a java/lang/invoke/MethodType object with ptypes (parameter types) and
 	// rtype (return type), which eventually must be extracted.
 	ptypesArray := params[2].(*object.Object).FieldTable["ptypes"].Fvalue.(*object.Object)
 	ptypes := ptypesArray.FieldTable["value"].Fvalue.([]*object.Object)
 	for i, ptype := range ptypes {
 		klassVal := ptype.FieldTable["$klass"].Fvalue
-		if clData, ok := klassVal.(*classloader.ClData); ok && clData != nil {
-			trace.Raw(fmt.Sprintf("ptype %d $klass: %s", i, clData.Name))
-		} else {
-			trace.Raw(fmt.Sprintf("ptype %d $klass: %v", i, klassVal))
+		clData, ok := klassVal.(*classloader.ClData)
+		if globals.TraceInst {
+			if ok && clData != nil {
+				trace.Raw(fmt.Sprintf("ptype %d $klass: %s", i, clData.Name))
+			} else {
+				trace.Raw(fmt.Sprintf("ptype %d $klass: %v", i, klassVal))
+			}
 		}
 	}
 
-	trace.Raw(fmt.Sprintf("recipe: %s", object.GoStringFromStringObject(params[3].(*object.Object))))
 	constants := params[4].([]*object.Object)
-	if len(constants) > 0 {
+	if len(constants) > 0 && globals.TraceInst {
 		trace.Raw("constants/args:")
 		for _, constant := range constants {
 			trace.Raw("\t" + object.StringifyAnythingGo(constant))
