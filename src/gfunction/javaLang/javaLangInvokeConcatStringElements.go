@@ -90,11 +90,15 @@ func ConcatStringElements(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
 
+	// get the type describing the arguments passed to this function
 	invdynIndex := cp.CpIndex[cpSlot]
 	invdyn := cp.InvokeDynamics[invdynIndex.Slot]
-	invdynNAT := invdyn.NameAndType
-	invdynTypeIndex := cp.CpIndex[invdynNAT]
-	invdynType := cp.Utf8Refs[invdynTypeIndex.Type]
+	invdynNATindex := invdyn.NameAndType
+	actualNATindex := cp.CpIndex[invdynNATindex]
+	actualNAT := cp.NameAndTypes[actualNATindex.Slot]
+	invdynTypeIndex := actualNAT.DescIndex
+	invdynType := classloader.FetchUTF8stringFromCPEntryNumber(cp, invdynTypeIndex)
+
 	invdynArgs := util.ParseIncomingParamsFromMethTypeStringRaw(invdynType) // the types of the dynamic args
 	if globals.TraceInst {
 		trace.Raw(fmt.Sprintf("invdynArgs: %v", invdynArgs))
@@ -115,7 +119,7 @@ func ConcatStringElements(params []any) any {
 	}
 
 	bsm := cp.Bootstraps[bsmIndex]
-	if len(bsm.Args) == 0 { // these should be the static args
+	if len(bsm.Args) == 0 { // these should be static args, one of which is the recipe
 		errMsg := fmt.Sprintf("ConcatStringElements: no bootstrap arguments for BSM index %d", bsmIndex)
 		trace.Error(errMsg)
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
@@ -137,6 +141,7 @@ func ConcatStringElements(params []any) any {
 		tagArg   byte = 0x01 // '0x01' placeholder for dynamic arguments
 		tagConst byte = 0x02 // '0x02' placeholder for static constant arguments
 	)
+
 	var argIndex int = 0
 	concatBytes := make([]byte, 0, len(recipeBytes))
 	for i := 0; i < len(recipeBytes); i++ {
