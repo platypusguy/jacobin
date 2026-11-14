@@ -17,6 +17,7 @@ import (
 	"jacobin/src/types"
 	"math"
 	"strconv"
+	"strings"
 )
 
 func Load_Lang_Double() {
@@ -631,6 +632,11 @@ func doubleToStringStatic(params []interface{}) interface{} {
 	}
 
 	str := strconv.FormatFloat(dd, 'g', -1, 64)
+
+	// Java adds a .0 to the string if there is no decimal point
+	if !strings.Contains(str, ".") {
+		str += ".0"
+	}
 	return object.StringObjectFromGoString(str)
 }
 

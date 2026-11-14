@@ -150,13 +150,27 @@ func StringifyAnythingGo(arg interface{}) string {
 			if !ok {
 				return "*** ERROR, StringifyAnythingGo: corrupted Double object, missing \"value\" field"
 			}
-			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 64)
+
+			// Ensure at least one digit after the decimal point for whole numbers
+			s := strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 64)
+			if !strings.Contains(s, ".") {
+				s += ".0"
+			}
+			return s
 		case "Float":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
 				return "*** ERROR, StringifyAnythingGo: corrupted Float object, missing \"value\" field"
 			}
-			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 32)
+
+			// Format using bitSize 32 and prec -1 for shortest exact representation
+			s := strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 32)
+
+			// Ensure at least one digit after the decimal point for whole numbers
+			if !strings.Contains(s, ".") {
+				s += ".0"
+			}
+			return s
 		case "Integer", "Long", "Short":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {

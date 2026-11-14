@@ -204,8 +204,8 @@ func TestFloat_Coverage(t *testing.T) {
 
 	// floatToString / floatToStringStatic
 	sObj := floatToString([]interface{}{f1}).(*object.Object)
-	if object.GoStringFromStringObject(sObj) != "1" {
-		t.Errorf("floatToString(1) expected '1', got %s", object.GoStringFromStringObject(sObj))
+	if object.GoStringFromStringObject(sObj) != "1.0" {
+		t.Errorf("floatToString(1) expected '1.0', got %s", object.GoStringFromStringObject(sObj))
 	}
 	// error paths
 	if blk, ok := floatToStringStatic([]interface{}{}).(*ghelpers.GErrBlk); !ok || blk.ExceptionType != excNames.IllegalArgumentException {

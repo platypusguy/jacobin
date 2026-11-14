@@ -17,6 +17,7 @@ import (
 	"jacobin/src/types"
 	"math"
 	"strconv"
+	"strings"
 )
 
 func Load_Lang_Float() {
@@ -609,6 +610,11 @@ func floatToStringStatic(params []interface{}) interface{} {
 	// Use 'g' for very large or very small, but usually decimal.
 	// strconv.FormatFloat(f, 'g', -1, 32) is closer than fmt.Sprintf("%f", ff)
 	str := strconv.FormatFloat(ff, 'g', -1, 32)
+
+	// Java adds a .0 to the string if there is no decimal point
+	if !strings.Contains(str, ".") {
+		str += ".0"
+	}
 	return object.StringObjectFromGoString(str)
 }
 
