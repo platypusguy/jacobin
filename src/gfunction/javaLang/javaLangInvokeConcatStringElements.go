@@ -7,6 +7,7 @@
 package javaLang
 
 import (
+	"bytes"
 	"container/list"
 	"fmt"
 	"jacobin/src/classloader"
@@ -17,6 +18,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/trace"
 	"jacobin/src/util"
+	"slices"
 )
 
 func Load_Lang_Invoke_ConcatStringElements() {
@@ -90,6 +92,8 @@ func ConcatStringElements(params []any) any {
 		return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
 	}
 
+	// globals.TraceInst = true // turn on as needed for diagnostic work
+
 	// get the type describing the arguments passed to this function
 	invdynIndex := cp.CpIndex[cpSlot]
 	invdyn := cp.InvokeDynamics[invdynIndex.Slot]
@@ -99,6 +103,7 @@ func ConcatStringElements(params []any) any {
 	invdynTypeIndex := actualNAT.DescIndex
 	invdynType := classloader.FetchUTF8stringFromCPEntryNumber(cp, invdynTypeIndex)
 
+	// <<<<<<<break the type string into the constituent descriptors of arguments and put them in a slice
 	invdynArgs := util.ParseIncomingParamsFromMethTypeStringRaw(invdynType) // the types of the dynamic args
 	if globals.TraceInst {
 		trace.Raw(fmt.Sprintf("invdynArgs: %v", invdynArgs))
@@ -142,19 +147,32 @@ func ConcatStringElements(params []any) any {
 		tagConst byte = 0x02 // '0x02' placeholder for static constant arguments
 	)
 
+	argCount := bytes.Count(recipeBytes, []byte{tagArg})
+	dynamicArgs := make([]any, 0, argCount)
+	for k := 0; k < argCount; k++ {
+		dynamicArgs = append(dynamicArgs, fr.OpStack[fr.TOS])
+		fr.TOS -= 1
+	}
+	slices.Reverse(dynamicArgs)
+	dynamicArgsIndex := 0
+
 	var argIndex int = 0
 	concatBytes := make([]byte, 0, len(recipeBytes))
 	for i := 0; i < len(recipeBytes); i++ {
 		switch recipeBytes[i] {
 		case tagArg: // these arguments are pulled off op stack of the present frame
-			arg := fr.OpStack[fr.TOS]
-			fr.TOS -= 1
+			arg := dynamicArgs[dynamicArgsIndex]
+			dynamicArgsIndex++
 			argType := invdynArgs[argIndex]
 			argIndex++
 			if argType == "B" {
 				concatBytes = append(concatBytes, byte(arg.(int64)))
 			} else {
-				s := object.StringifyAnythingGo(arg)
+				value := object.Field{
+					Ftype:  argType,
+					Fvalue: arg,
+				}
+				s := object.StringifyAnythingGo(value)
 				concatBytes = append(concatBytes, []byte(s)...)
 			}
 		case tagConst:
