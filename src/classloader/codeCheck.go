@@ -516,10 +516,9 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, maxLocals int, 
 	if code == nil || len(code) == 0 {
 		if access.ClassIsAbstract {
 			return nil
-		} else {
-			errMsg := "CheckCodeValidity: Empty code segment"
-			return errors.New(errMsg)
 		}
+		errMsg := "CheckCodeValidity: Empty code segment"
+		return errors.New(errMsg)
 	}
 
 	if cp == nil {
@@ -599,6 +598,9 @@ func checkAnewarray(ccvb *ccvBlock_type) int {
 	// check that the index points to an array of reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n ANEWARRAY at %d: CPslot (%d) is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -620,9 +622,11 @@ func checkBipush(ccvb *ccvBlock_type) int {
 	if len(ccvb.Code) > ccvb.PC+1 {
 		ccvb.StackEntries += 1
 		return 2
-	} else {
-		return ERROR_OCCURRED
 	}
+	errMsg := fmt.Sprintf("%s:\n BIPUSH at %d: len(ccvb.Code) (%d) is exceeds ccvb.PC+1 (%d)",
+		excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, len(ccvb.Code), ccvb.PC+1)
+	trace.Error(errMsg)
+	return ERROR_OCCURRED
 }
 
 // DUP  Push a duplicate of the top stack value onto the stack.
@@ -723,6 +727,9 @@ func checkGetfield(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n GETFIELD at %d: invalid CPslot (%d)",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -742,13 +749,16 @@ func checkGetstatic(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n GETSTATIC at %d: invalid CPslot (%d)",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
 	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != FieldRef {
 		errMsg := fmt.Sprintf(
-			"%s in GETSTATIC at %d: CP entry (%d) is not a field reference",
+			"%s:\n GETSTATIC at %d: CP entry (%d) is not a field reference",
 			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
@@ -760,8 +770,8 @@ func checkGetstatic(ccvb *ccvBlock_type) int {
 func checkGoto(ccvb *ccvBlock_type) int {
 	jumpTo := int(int16(ccvb.Code[ccvb.PC+1])*256 + int16(ccvb.Code[ccvb.PC+2]))
 	if ccvb.PC+jumpTo < 0 || ccvb.PC+jumpTo >= len(ccvb.Code) {
-		errMsg := fmt.Sprintf("%s:\n GOTO at %d: illegal jump to %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, ccvb.PC+jumpTo)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: illegal jump to %d",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC, ccvb.PC+jumpTo)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -790,8 +800,8 @@ func pushInt(ccvb *ccvBlock_type) int {
 func checkIf(ccvb *ccvBlock_type) int { // most IF* bytecodes come here. Jump if condition is met
 	jumpSize := int(int16(ccvb.Code[ccvb.PC+1])*256 + int16(ccvb.Code[ccvb.PC+2]))
 	if ccvb.PC+jumpSize < 0 || ccvb.PC+jumpSize >= len(ccvb.Code) {
-		errMsg := fmt.Sprintf("%s:\n IF_ACMPEQ at %d: illegal jump to %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, ccvb.PC+jumpSize)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: illegal jump to %d",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC, ccvb.PC+jumpSize)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -803,8 +813,8 @@ func checkIf(ccvb *ccvBlock_type) int { // most IF* bytecodes come here. Jump if
 func checkIfzero(ccvb *ccvBlock_type) int { // Jump if condition w.r.t 0 is met
 	jumpSize := int(int16(ccvb.Code[ccvb.PC+1])*256 + int16(ccvb.Code[ccvb.PC+2]))
 	if ccvb.PC+jumpSize < 0 || ccvb.PC+jumpSize >= len(ccvb.Code) {
-		errMsg := fmt.Sprintf("%s:\n IF_ZERO test at %d: illegal jump to %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, ccvb.PC+jumpSize)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: illegal jump to %d",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC, ccvb.PC+jumpSize)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -825,8 +835,8 @@ func checkIload(ccvb *ccvBlock_type) int {
 // ILOAD_0
 func checkIload0(ccvb *ccvBlock_type) int {
 	if ccvb.MaxLocals < 1 {
-		errMsg := fmt.Sprintf("%s:\n ILOAD_0 at %d: index 0 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: index 0 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -838,8 +848,8 @@ func checkIload0(ccvb *ccvBlock_type) int {
 // ILOAD_1
 func checkIload1(ccvb *ccvBlock_type) int {
 	if ccvb.MaxLocals < 2 {
-		errMsg := fmt.Sprintf("%s:\n ILOAD_1 at %d: index 1 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: index 1 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -850,8 +860,8 @@ func checkIload1(ccvb *ccvBlock_type) int {
 // ILOAD_2
 func checkIload2(ccvb *ccvBlock_type) int {
 	if ccvb.MaxLocals < 3 {
-		errMsg := fmt.Sprintf("%s:\n ILOAD_2 at %d: index 2 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: index 2 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -862,8 +872,8 @@ func checkIload2(ccvb *ccvBlock_type) int {
 // ILOAD_3
 func checkIload3(ccvb *ccvBlock_type) int {
 	if ccvb.MaxLocals < 4 {
-		errMsg := fmt.Sprintf("%s:\n ILOAD_3 at %d: index 3 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: index 3 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -946,16 +956,25 @@ func checkInvokedynamic(ccvb *ccvBlock_type) int {
 func checkInvokeinterface(ccvb *ccvBlock_type) int {
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n INVOKEINTERFACE at %d: CPslot (%d) is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
 	countByte := ccvb.Code[ccvb.PC+3]
 	if countByte == 0 {
+		errMsg := fmt.Sprintf("%s:\n INVOKEINTERFACE at %d: countByte (%d) is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, countByte)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
 	zeroByte := ccvb.Code[ccvb.PC+4]
 	if zeroByte != 0 {
+		errMsg := fmt.Sprintf("%s:\n INVOKEINTERFACE at %d: zeroByte (%d) is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, zeroByte)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -975,6 +994,9 @@ func checkInvokespecial(ccvb *ccvBlock_type) int {
 	// check that the index points to a method or interface reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n INVOKESPECIAL at %d: invalid CPslot (%d)",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -994,6 +1016,9 @@ func checkInvokestatic(ccvb *ccvBlock_type) int {
 	// check that the index points to a method or interface reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n INVOKESTATIC at %d: invalid CPslot (%d)",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -1013,6 +1038,9 @@ func checkInvokevirtual(ccvb *ccvBlock_type) int {
 	// check that the index points to a method reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n INVOKEVIRTUAL at %d: invalid CPslot (%d)",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -1044,8 +1072,8 @@ func storeIntRet2(ccvb *ccvBlock_type) int {
 // LLOAD_0
 func checkLload0(ccvb *ccvBlock_type) int {
 	if ccvb.MaxLocals < 2 { // LLOAD requires two locals entries
-		errMsg := fmt.Sprintf("%s:\n LLOAD_0 at %d: index 0 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: index 0 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -1056,8 +1084,8 @@ func checkLload0(ccvb *ccvBlock_type) int {
 // LLOAD_1
 func checkLload1(ccvb *ccvBlock_type) int {
 	if ccvb.MaxLocals < 3 { // locals[0] + two locals for long
-		errMsg := fmt.Sprintf("%s:\n LLOAD_1 at %d: index 1 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: index 1 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -1068,8 +1096,8 @@ func checkLload1(ccvb *ccvBlock_type) int {
 // LLOAD_2
 func checkLload2(ccvb *ccvBlock_type) int {
 	if ccvb.MaxLocals < 4 { // locals 0, 1 + two locals for long
-		errMsg := fmt.Sprintf("%s:\n LLOAD_2 at %d: index 2 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: index 2 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -1080,8 +1108,8 @@ func checkLload2(ccvb *ccvBlock_type) int {
 // LLOAD_3
 func checkLload3(ccvb *ccvBlock_type) int {
 	if ccvb.MaxLocals < 5 { // locals 0, 1, 2 + two locals for long
-		errMsg := fmt.Sprintf("%s:\n LLOAD_3 at %d: index 3 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
+		errMsg := fmt.Sprintf("%s:\n %s at %d: index 3 into locals is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], BytecodeNames[ccvb.Code[ccvb.PC]], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -1113,12 +1141,16 @@ func checkLookupswitch(ccvb *ccvBlock_type) int { // need to check this
 func checkNew(ccvb *ccvBlock_type) int {
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n NEW at %d: invalid CPslot (%d)",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
 	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != ClassRef && CPentry.Type != Interface {
-		errMsg := "NEW: Invalid reference to object type"
+		errMsg := fmt.Sprintf("%s:\n NEW at %d: Invalid reference to object type (%d)",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -1156,6 +1188,9 @@ func checkPutfield(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n PUTFIELD at %d: CPslot (%d) invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -1174,6 +1209,9 @@ func checkPutstatic(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n PUTSTATIC at %d: CPslot (%d) invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -1202,6 +1240,9 @@ func checkTableSwitch(ccvb *ccvBlock_type) int {
 	basePC += 8 // 4 bytes for low, 4 bytes for high
 
 	if !(low <= high) {
+		errMsg := fmt.Sprintf("%s:\n TABLESWITCH at %d: low (%d) exceeds high (%d)",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, low, high)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -1214,6 +1255,9 @@ func checkTableSwitch(ccvb *ccvBlock_type) int {
 func checkMultianewarray(ccvb *ccvBlock_type) int {
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+		errMsg := fmt.Sprintf("%s:\n MULTIANEWARRAY at %d: CPslot (%d) is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -1228,6 +1272,9 @@ func checkMultianewarray(ccvb *ccvBlock_type) int {
 
 	dimensions := ccvb.Code[ccvb.PC+3]
 	if dimensions == 0 {
+		errMsg := fmt.Sprintf("%s:\n MULTIANEWARRAY at %d: dimensions (%d) is invalid",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, dimensions)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
@@ -1242,9 +1289,11 @@ func checkSipush(ccvb *ccvBlock_type) int {
 	if len(ccvb.Code) > ccvb.PC+2 {
 		ccvb.StackEntries += 1
 		return 3
-	} else {
-		return ERROR_OCCURRED
 	}
+	errMsg := fmt.Sprintf("%s:\n SIPUSH at %d: len(ccvb.Code) (%d) is invalid",
+		excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, len(ccvb.Code))
+	trace.Error(errMsg)
+	return ERROR_OCCURRED
 }
 
 // WIDE
@@ -1328,7 +1377,7 @@ func bytecodePushes32BitValue(bytecode byte) bool {
 
 // bytecode instructions 204-255 (0xCB-0xFF) are disallowed in class files
 func invalidBytecode(ccvb *ccvBlock_type) int {
-	errMsg := fmt.Sprintf("%s: Invalid bytecode instruction at %d: %X",
+	errMsg := fmt.Sprintf("%s:\n Invalid bytecode instruction at %d: %X",
 		excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, ccvb.Code[ccvb.PC])
 	trace.Error(errMsg)
 	return ERROR_OCCURRED

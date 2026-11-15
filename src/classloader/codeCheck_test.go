@@ -2845,3 +2845,104 @@ func TestCheckCodeValidity_8Threads5Opcodes(t *testing.T) {
 
 	wg.Wait()
 }
+
+func TestCheckCodeValidity_OpcodeInErrorTrace(t *testing.T) {
+	globals.InitGlobals("test")
+
+	tests := []struct {
+		name        string
+		checkFunc   func(*ccvBlock_type) int
+		ccvb        ccvBlock_type
+		expectedStr string
+	}{
+		{
+			name:      "GETFIELD invalid CPslot",
+			checkFunc: checkGetfield,
+			ccvb: ccvBlock_type{
+				CP:   createBasicCP(),
+				Code: []byte{opcodes.GETFIELD, 0x00, 0xFF},
+				PC:   0,
+			},
+			expectedStr: "GETFIELD at 0: invalid CPslot (255)",
+		},
+		{
+			name:      "GETSTATIC invalid CPslot",
+			checkFunc: checkGetstatic,
+			ccvb: ccvBlock_type{
+				CP:   createBasicCP(),
+				Code: []byte{opcodes.GETSTATIC, 0x00, 0xFF},
+				PC:   0,
+			},
+			expectedStr: "GETSTATIC at 0: invalid CPslot (255)",
+		},
+		{
+			name:      "JSR illegal jump",
+			checkFunc: checkGoto,
+			ccvb: ccvBlock_type{
+				Code: []byte{opcodes.JSR, 0x7F, 0xFF},
+				PC:   0,
+			},
+			expectedStr: "JSR at 0: illegal jump",
+		},
+		{
+			name:      "IF_ICMPEQ illegal jump",
+			checkFunc: checkIf,
+			ccvb: ccvBlock_type{
+				Code: []byte{opcodes.IF_ICMPEQ, 0x7F, 0xFF},
+				PC:   0,
+			},
+			expectedStr: "IF_ICMPEQ at 0: illegal jump",
+		},
+		{
+			name:      "IFEQ illegal jump",
+			checkFunc: checkIfzero,
+			ccvb: ccvBlock_type{
+				Code: []byte{opcodes.IFEQ, 0x7F, 0xFF},
+				PC:   0,
+			},
+			expectedStr: "IFEQ at 0: illegal jump",
+		},
+		{
+			name:      "FLOAD_0 invalid locals",
+			checkFunc: checkIload0,
+			ccvb: ccvBlock_type{
+				Code:      []byte{opcodes.FLOAD_0},
+				PC:        0,
+				MaxLocals: 0,
+			},
+			expectedStr: "FLOAD_0 at 0: index 0 into locals is invalid",
+		},
+		{
+			name:      "DLOAD_0 invalid locals",
+			checkFunc: checkLload0,
+			ccvb: ccvBlock_type{
+				Code:      []byte{opcodes.DLOAD_0},
+				PC:        0,
+				MaxLocals: 1,
+			},
+			expectedStr: "DLOAD_0 at 0: index 0 into locals is invalid",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			normalStderr := os.Stderr
+			r, w, _ := os.Pipe()
+			os.Stderr = w
+
+			res := tc.checkFunc(&tc.ccvb)
+			if res != ERROR_OCCURRED {
+				t.Errorf("%s: expected ERROR_OCCURRED, got %d", tc.name, res)
+			}
+
+			_ = w.Close()
+			msg, _ := io.ReadAll(r)
+			os.Stderr = normalStderr
+
+			errMsg := string(msg)
+			if !strings.Contains(errMsg, tc.expectedStr) {
+				t.Errorf("%s: expected trace error containing '%s', got: %s", tc.name, tc.expectedStr, errMsg)
+			}
+		})
+	}
+}
