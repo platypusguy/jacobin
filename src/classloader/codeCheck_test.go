@@ -417,6 +417,39 @@ func TestDup2_RegularOperation(t *testing.T) {
 	}
 }
 
+func TestDupInstructionsAtEndOfCode(t *testing.T) {
+	tests := []struct {
+		name  string
+		code  byte
+		check func(*ccvBlock_type) int
+	}{
+		{name: "DUP2", code: opcodes.DUP2, check: checkDup2},
+		{name: "DUP2_X1", code: opcodes.DUP2_X1, check: checkDup2x1},
+		{name: "DUP2_X2", code: opcodes.DUP2_X2, check: checkDup2x2},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ccvb := ccvBlock_type{
+				Code:         []byte{test.code},
+				PC:           0,
+				PrevPC:       -1,
+				StackEntries: 1,
+			}
+
+			if result := test.check(&ccvb); result != 1 {
+				t.Fatalf("Expected return value 1, got: %d", result)
+			}
+			if ccvb.Code[0] != test.code {
+				t.Errorf("Expected opcode 0x%x to remain unchanged, got: 0x%x", test.code, ccvb.Code[0])
+			}
+			if ccvb.StackEntries != 3 {
+				t.Errorf("Expected stack entries to be 3, got: %d", ccvb.StackEntries)
+			}
+		})
+	}
+}
+
 // DUP2_X1 test when the preceding bytecode is for long or double
 func TestDup2_X1_Preceding(t *testing.T) {
 	globals.InitGlobals("test")

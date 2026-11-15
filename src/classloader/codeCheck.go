@@ -641,7 +641,7 @@ func checkDup2(ccvb *ccvBlock_type) int {
 	}
 
 	// TODO: should we be testing the previous bytecode instead? That's what we do in Dup2x1
-	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PC+1]) { // check if the next bytecode is for a long or double
+	if ccvb.PC+1 < len(ccvb.Code) && bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PC+1]) { // check if the next bytecode is for a long or double
 		ccvb.Code[ccvb.PC] = 0x59 // change DUP2 to DUP
 		ccvb.StackEntries += 1
 		return 1
@@ -657,13 +657,13 @@ func checkDup2x1(ccvb *ccvBlock_type) int {
 		goto dup2x1 // if so, we can safely use DUP2
 	}
 
-	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PrevPC]) { // check if the preceding bytecode is for a long or double
+	if ccvb.PrevPC > -1 && bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PrevPC]) { // check if the preceding bytecode is for a long or double
 		ccvb.Code[ccvb.PC] = 0x5A // change DUP2_X1 to DUP_X1
 		ccvb.StackEntries += 1
 		return 1
 	}
 
-	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PC+1]) { // check if the next bytecode is for a long or double
+	if ccvb.PC+1 < len(ccvb.Code) && bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PC+1]) { // check if the next bytecode is for a long or double
 		ccvb.Code[ccvb.PC] = 0x5A // change DUP2_X1 to DUP_X1
 		ccvb.StackEntries += 1
 		return 1
@@ -679,13 +679,13 @@ func checkDup2x2(ccvb *ccvBlock_type) int {
 		goto dup2x2 // if so, we can safely use DUP2
 	}
 
-	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PrevPC]) { // check if the preceding bytecode is for a long or double
+	if ccvb.PrevPC > -1 && bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PrevPC]) { // check if the preceding bytecode is for a long or double
 		ccvb.Code[ccvb.PC] = 0x5B // change DUP2_X2 to DUP_X2
 		ccvb.StackEntries += 1
 		return 1
 	}
 
-	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PC+1]) { // check if the following bytecode is for a long or double
+	if ccvb.PC+1 < len(ccvb.Code) && bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PC+1]) { // check if the following bytecode is for a long or double
 		ccvb.Code[ccvb.PC] = 0x5B // change DUP2_X2 to DUP_X2
 		ccvb.StackEntries += 1
 		return 1
