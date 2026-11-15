@@ -229,279 +229,284 @@ var BytecodeNames = [203]string{
 	"BREAKPOINT",      // 0xCA
 }
 
-type BytecodeFunc func() int
+type ccvBlock_type struct {
+	PC           int
+	PrevPC       int // allows us to view the preceding opcode if we need it for analysis
+	CP           *CPool
+	Code         []byte
+	StackEntries int
+	MaxStack     int
+	MaxLocals    int
+	wideInEffect bool
+}
+
+type BytecodeFunc func(*ccvBlock_type) int
 
 var ERROR_OCCURRED = math.MaxInt32
 
 var CheckTable = [256]BytecodeFunc{
-	Return1,              // NOP             0x00
-	CheckAconstnull,      // ACONST_NULL     0x01
-	PushInt,              // ICONST_M1       0x02
-	PushInt,              // ICONST_0        0x03
-	PushInt,              // ICONST_1        0x04
-	PushInt,              // ICONST_2        0x05
-	PushInt,              // ICONST_3        0x06
-	PushInt,              // ICONST_4        0x07
-	PushInt,              // ICONST_5        0x08
-	PushInt,              // LCONST_0        0x09
-	PushInt,              // LCONST_1        0x0A
-	PushFloat,            // FCONST_0        0x0B
-	PushFloat,            // FCONST_1        0x0C
-	PushFloat,            // FCONST_2        0x0D
-	PushFloat,            // DCONST_0        0x0E
-	PushFloat,            // DCONST_1        0x0F
-	CheckBipush,          // BIPUSH          0x10
-	CheckSipush,          // SIPUSH          0x11
-	PushIntRet2,          // LDC             0x12
-	PushIntRet3,          // LDC_W           0x13
-	PushIntRet3,          // LDC2_W          0x14
-	CheckIload,           // ILOAD           0x15
-	CheckIload,           // LLOAD           0x16
-	PushFloatRet2,        // FLOAD           0x17
-	PushFloatRet2,        // DLOAD           0x18
-	PushIntRet2,          // ALOAD           0x19
-	CheckIload0,          // ILOAD_0         0x1A
-	CheckIload1,          // ILOAD_1         0x1B
-	CheckIload2,          // ILOAD_2         0x1C
-	CheckIload3,          // ILOAD_3         0x1D
-	CheckLload0,          // LLOAD_0         0x1E
-	CheckLload1,          // LLOAD_1         0x1F
-	CheckLload2,          // LLOAD_2         0x20
-	CheckLload3,          // LLOAD_3         0x21
-	CheckIload0,          // FLOAD_0         0x22
-	CheckIload1,          // FLOAD_1         0x23
-	CheckIload2,          // FLOAD_2         0x24
-	CheckIload3,          // FLOAD_3         0x25
-	CheckLload0,          // DLOAD_0         0x26
-	CheckLload1,          // DLOAD_1         0x27
-	CheckLload2,          // DLOAD_2         0x28
-	CheckLload3,          // DLOAD_3         0x29
-	PushInt,              // ALOAD_0         0x2A
-	PushInt,              // ALOAD_1         0x2B
-	PushInt,              // ALOAD_2         0x2C
-	PushInt,              // ALOAD_3         0x2D
-	PushInt,              // IALOAD          0x2E
-	PushInt,              // LALOAD          0x2F
-	PushInt,              // FALOAD          0x30
-	PushInt,              // DALOAD          0x31
-	PushInt,              // AALOAD          0x32
-	PushInt,              // BALOAD          0x33
-	PushInt,              // CALOAD          0x34
-	PushInt,              // SALOAD          0x35
-	storeIntRet2,         // ISTORE          0x36
-	storeIntRet2,         // LSTORE          0x37
-	storeFloatRet2,       // FSTORE          0x38
-	storeFloatRet2,       // DSTORE          0x39
-	storeIntRet2,         // ASTORE          0x3A
-	storeInt,             // ISTORE_0        0x3B
-	storeInt,             // ISTORE_1        0x3C
-	storeInt,             // ISTORE_2        0x3D
-	storeInt,             // ISTORE_3        0x3E
-	storeInt,             // LSTORE_0        0x3F
-	storeInt,             // LSTORE_1        0x40
-	storeInt,             // LSTORE_2        0x41
-	storeInt,             // LSTORE_3        0x42
-	storeFloat,           // FSTORE_0        0x43
-	storeFloat,           // FSTORE_1        0x44
-	storeFloat,           // FSTORE_2        0x45
-	storeFloat,           // FSTORE_3        0x46
-	storeFloat,           // DSTORE_0        0x47
-	storeFloat,           // DSTORE_1        0x48
-	storeFloat,           // DSTORE_2        0x49
-	storeFloat,           // DSTORE_3        0x4A
-	storeInt,             // ASTORE_0        0x4B
-	storeInt,             // ASTORE_1        0x4C
-	storeInt,             // ASTORE_2        0x4D
-	storeInt,             // ASTORE_3        0x4E
-	storeInt,             // IASTORE         0x4F
-	storeInt,             // LASTORE         0x50
-	storeInt,             // FASTORE         0x51
-	storeInt,             // DASTORE         0x52
-	storeInt,             // AASTORE         0x53
-	storeInt,             // BASTORE         0x54
-	storeInt,             // CASTORE         0x55
-	storeInt,             // SASTORE         0x56
-	CheckPop,             // POP             0x57
-	CheckPop2,            // POP2            0x58
-	CheckDup1,            // DUP             0x59
-	CheckDup1,            // DUP_X1          0x5A
-	CheckDup1,            // DUP_X2          0x5B
-	CheckDup2,            // DUP2            0x5C
-	CheckDup2x1,          // DUP2_X1         0x5D
-	CheckDup2x2,          // DUP2_X2         0x5E
-	Return1,              // SWAP            0x5F
-	Arith,                // IADD            0x60
-	Arith,                // LADD            0x61
-	Arith,                // FADD            0x62
-	Arith,                // DADD            0x63
-	Arith,                // ISUB            0x64
-	Arith,                // LSUB            0x65
-	Arith,                // FSUB            0x66
-	Arith,                // DSUB            0x67
-	Arith,                // IMUL            0x68
-	Arith,                // LMUL            0x69
-	Arith,                // FMUL            0x6A
-	Arith,                // DMUL            0x6B
-	Arith,                // IDIV            0x6C
-	Arith,                // LDIV            0x6D
-	Arith,                // FDIV            0x6E
-	Arith,                // DDIV            0x6F
-	Arith,                // IREM            0x70
-	Arith,                // LREM            0x71
-	Arith,                // FREM            0x72
-	Arith,                // DREM            0x73
-	Arith,                // INEG            0x74
-	Arith,                // LNEG            0x75
-	Arith,                // FNEG            0x76
-	Arith,                // DNEG            0x77
-	Arith,                // ISHL            0x78
-	Arith,                // LSHL            0x79
-	Arith,                // ISHR            0x7A
-	Arith,                // LSHR            0x7B
-	Arith,                // IUSHR           0x7C
-	Arith,                // LUSHR           0x7D
-	Arith,                // IAND            0x7E
-	Arith,                // LAND            0x7F
-	Arith,                // IOR             0x80
-	Arith,                // LOR             0x81
-	Arith,                // IXOR            0x82
-	Arith,                // LXOR            0x83
-	Return3,              // IINC            0x84
-	Return1,              // I2L             0x85
-	Return1,              // I2F             0x86
-	Return1,              // I2D             0x87
-	Return1,              // L2I             0x88
-	Return1,              // L2F             0x89
-	Return1,              // L2D             0x8A
-	Return1,              // F2I             0x8B
-	Return1,              // F2L             0x8C
-	Return1,              // F2D             0x8D
-	Return1,              // D2I             0x8E
-	Return1,              // D2L             0x8F
-	Return1,              // D2F             0x90
-	Return1,              // I2B             0x91
-	Return1,              // I2C             0x92
-	Return1,              // I2S             0x93
-	Arith,                // LCMP            0x94
-	Arith,                // FCMPL           0x95
-	Arith,                // FCMPG           0x96
-	Arith,                // DCMPL           0x97
-	Arith,                // DCMPG           0x98
-	CheckIfzero,          // IFEQ            0x99
-	CheckIfzero,          // IFNE            0x9A
-	CheckIfzero,          // IFLT            0x9B
-	CheckIfzero,          // IFGE            0x9C
-	CheckIfzero,          // IFGT            0x9D
-	CheckIfzero,          // IFLE            0x9E
-	CheckIf,              // IF_ICMPEQ       0x9F
-	CheckIf,              // IF_ICMPNE       0xA0
-	CheckIf,              // IF_ICMPLT       0xA1
-	CheckIf,              // IF_ICMPGE       0xA2
-	CheckIf,              // IF_ICMPGT       0xA3
-	CheckIf,              // IF_ICMPLE       0xA4
-	CheckIf,              // IF_ACMPEQ       0xA5
-	CheckIf,              // IF_ACMPNE       0xA6
-	CheckGoto,            // GOTO            0xA7
-	CheckGoto,            // JSR             0xA8
-	Return2,              // RET             0xA9
-	CheckTableSwitch,     // TABLESWITCH     0xAA
-	checkLookupswitch,    // LOOKUPSWITCH    0xAB
-	Return1,              // IRETURN         0xAC
-	Return1,              // LRETURN         0xAD
-	Return1,              // FRETURN         0xAE
-	Return1,              // DRETURN         0xAF
-	Return1,              // ARETURN         0xB0
-	Return1,              // RETURN          0xB1
-	CheckGetstatic,       // GETSTATIC       0xB2
-	CheckPutstatic,       // PUTSTATIC       0xB3
-	CheckGetfield,        // GETFIELD        0xB4
-	CheckPutfield,        // PUTFIELD        0xB5
-	CheckInvokevirtual,   // INVOKEVIRTUAL   0xB6
-	checkInvokespecial,   // INVOKESPECIAL   0xB7
-	checkInvokestatic,    // INVOKESTATIC    0xB8
-	CheckInvokeinterface, // INVOKEINTERFACE 0xB9
-	CheckInvokedynamic,   // INVOKEDYNAMIC   0xBA
-	CheckNew,             // NEW             0xBB
-	CheckNewArray,        // NEWARRAY        0xBC
-	CheckAnewarray,       // ANEWARRAY       0xBD
-	Return1,              // ARRAYLENGTH     0xBE
-	Return1,              // ATHROW          0xBF
-	Return3,              // CHECKCAST       0xC0
-	Return3,              // INSTANCEOF      0xC1
-	Return1,              // MONITORENTER    0xC2
-	Return1,              // MONITOREXIT     0xC3
-	CheckWide,            // WIDE            0xC4
-	CheckMultianewarray,  // MULTIANEWARRAY  0xC5
-	Return3,              // IFNULL          0xC6
-	Return3,              // IFNONNULL       0xC7
-	CheckGotow,           // GOTO_W          0xC8
-	Return5,              // JSR_W           0xC9
-	Return1,              // BREAKPOINT      0xCA
-	InvalidBytecode,      // 0xCB All following bytecodes (thru 0xFF) are invalid in a class file
-	InvalidBytecode,      // 0xCC
-	InvalidBytecode,      // 0xCD
-	InvalidBytecode,      // 0xCE
-	InvalidBytecode,      // 0xCF
-	InvalidBytecode,      // 0xD0
-	InvalidBytecode,      // 0xD1
-	InvalidBytecode,      // 0xD2
-	InvalidBytecode,      // 0xD3
-	InvalidBytecode,      // 0xD4
-	InvalidBytecode,      // 0xD5
-	InvalidBytecode,      // 0xD6
-	InvalidBytecode,      // 0xD7
-	InvalidBytecode,      // 0xD8
-	InvalidBytecode,      // 0xD9
-	InvalidBytecode,      // 0xDA
-	InvalidBytecode,      // 0xDB
-	InvalidBytecode,      // 0xDC
-	InvalidBytecode,      // 0xDD
-	InvalidBytecode,      // 0xDE
-	InvalidBytecode,      // 0xDF
-	InvalidBytecode,      // 0xE0
-	InvalidBytecode,      // 0xE1
-	InvalidBytecode,      // 0xE2
-	InvalidBytecode,      // 0xE3
-	InvalidBytecode,      // 0xE4
-	InvalidBytecode,      // 0xE5
-	InvalidBytecode,      // 0xE6
-	InvalidBytecode,      // 0xE7
-	InvalidBytecode,      // 0xE8
-	InvalidBytecode,      // 0xE9
-	InvalidBytecode,      // 0xEA
-	InvalidBytecode,      // 0xEB
-	InvalidBytecode,      // 0xEC
-	InvalidBytecode,      // 0xED
-	InvalidBytecode,      // 0xEE
-	InvalidBytecode,      // 0xEF
-	InvalidBytecode,      // 0xF0
-	InvalidBytecode,      // 0xF1
-	InvalidBytecode,      // 0xF2
-	InvalidBytecode,      // 0xF3
-	InvalidBytecode,      // 0xF4
-	InvalidBytecode,      // 0xF5
-	InvalidBytecode,      // 0xF6
-	InvalidBytecode,      // 0xF7
-	InvalidBytecode,      // 0xF8
-	InvalidBytecode,      // 0xF9
-	InvalidBytecode,      // 0xFA
-	InvalidBytecode,      // 0xFB
-	InvalidBytecode,      // 0xFC
-	InvalidBytecode,      // 0xFD
-	InvalidBytecode,      // 0xFE
-	InvalidBytecode,      // 0xFF
+	return1,               // NOP             0x00
+	incrementStackEntries, // ACONST_NULL     0x01
+	pushInt,               // ICONST_M1       0x02
+	pushInt,               // ICONST_0        0x03
+	pushInt,               // ICONST_1        0x04
+	pushInt,               // ICONST_2        0x05
+	pushInt,               // ICONST_3        0x06
+	pushInt,               // ICONST_4        0x07
+	pushInt,               // ICONST_5        0x08
+	pushInt,               // LCONST_0        0x09
+	pushInt,               // LCONST_1        0x0A
+	pushFloat,             // FCONST_0        0x0B
+	pushFloat,             // FCONST_1        0x0C
+	pushFloat,             // FCONST_2        0x0D
+	pushFloat,             // DCONST_0        0x0E
+	pushFloat,             // DCONST_1        0x0F
+	checkBipush,           // BIPUSH          0x10
+	checkSipush,           // SIPUSH          0x11
+	pushIntRet2,           // LDC             0x12
+	pushIntRet3,           // LDC_W           0x13
+	pushIntRet3,           // LDC2_W          0x14
+	checkIload,            // ILOAD           0x15
+	checkIload,            // LLOAD           0x16
+	pushFloatRet2,         // FLOAD           0x17
+	pushFloatRet2,         // DLOAD           0x18
+	pushIntRet2,           // ALOAD           0x19
+	checkIload0,           // ILOAD_0         0x1A
+	checkIload1,           // ILOAD_1         0x1B
+	checkIload2,           // ILOAD_2         0x1C
+	checkIload3,           // ILOAD_3         0x1D
+	checkLload0,           // LLOAD_0         0x1E
+	checkLload1,           // LLOAD_1         0x1F
+	checkLload2,           // LLOAD_2         0x20
+	checkLload3,           // LLOAD_3         0x21
+	checkIload0,           // FLOAD_0         0x22
+	checkIload1,           // FLOAD_1         0x23
+	checkIload2,           // FLOAD_2         0x24
+	checkIload3,           // FLOAD_3         0x25
+	checkLload0,           // DLOAD_0         0x26
+	checkLload1,           // DLOAD_1         0x27
+	checkLload2,           // DLOAD_2         0x28
+	checkLload3,           // DLOAD_3         0x29
+	pushInt,               // ALOAD_0         0x2A
+	pushInt,               // ALOAD_1         0x2B
+	pushInt,               // ALOAD_2         0x2C
+	pushInt,               // ALOAD_3         0x2D
+	pushInt,               // IALOAD          0x2E
+	pushInt,               // LALOAD          0x2F
+	pushInt,               // FALOAD          0x30
+	pushInt,               // DALOAD          0x31
+	pushInt,               // AALOAD          0x32
+	pushInt,               // BALOAD          0x33
+	pushInt,               // CALOAD          0x34
+	pushInt,               // SALOAD          0x35
+	storeIntRet2,          // ISTORE          0x36
+	storeIntRet2,          // LSTORE          0x37
+	storeFloatRet2,        // FSTORE          0x38
+	storeFloatRet2,        // DSTORE          0x39
+	storeIntRet2,          // ASTORE          0x3A
+	storeInt,              // ISTORE_0        0x3B
+	storeInt,              // ISTORE_1        0x3C
+	storeInt,              // ISTORE_2        0x3D
+	storeInt,              // ISTORE_3        0x3E
+	storeInt,              // LSTORE_0        0x3F
+	storeInt,              // LSTORE_1        0x40
+	storeInt,              // LSTORE_2        0x41
+	storeInt,              // LSTORE_3        0x42
+	storeFloat,            // FSTORE_0        0x43
+	storeFloat,            // FSTORE_1        0x44
+	storeFloat,            // FSTORE_2        0x45
+	storeFloat,            // FSTORE_3        0x46
+	storeFloat,            // DSTORE_0        0x47
+	storeFloat,            // DSTORE_1        0x48
+	storeFloat,            // DSTORE_2        0x49
+	storeFloat,            // DSTORE_3        0x4A
+	storeInt,              // ASTORE_0        0x4B
+	storeInt,              // ASTORE_1        0x4C
+	storeInt,              // ASTORE_2        0x4D
+	storeInt,              // ASTORE_3        0x4E
+	storeInt,              // IASTORE         0x4F
+	storeInt,              // LASTORE         0x50
+	storeInt,              // FASTORE         0x51
+	storeInt,              // DASTORE         0x52
+	storeInt,              // AASTORE         0x53
+	storeInt,              // BASTORE         0x54
+	storeInt,              // CASTORE         0x55
+	storeInt,              // SASTORE         0x56
+	checkPop,              // POP             0x57
+	checkPop2,             // POP2            0x58
+	checkDup1,             // DUP             0x59
+	checkDup1,             // DUP_X1          0x5A
+	checkDup1,             // DUP_X2          0x5B
+	checkDup2,             // DUP2            0x5C
+	checkDup2x1,           // DUP2_X1         0x5D
+	checkDup2x2,           // DUP2_X2         0x5E
+	return1,               // SWAP            0x5F
+	decrementStackEntries, // IADD            0x60
+	decrementStackEntries, // LADD            0x61
+	decrementStackEntries, // FADD            0x62
+	decrementStackEntries, // DADD            0x63
+	decrementStackEntries, // ISUB            0x64
+	decrementStackEntries, // LSUB            0x65
+	decrementStackEntries, // FSUB            0x66
+	decrementStackEntries, // DSUB            0x67
+	decrementStackEntries, // IMUL            0x68
+	decrementStackEntries, // LMUL            0x69
+	decrementStackEntries, // FMUL            0x6A
+	decrementStackEntries, // DMUL            0x6B
+	decrementStackEntries, // IDIV            0x6C
+	decrementStackEntries, // LDIV            0x6D
+	decrementStackEntries, // FDIV            0x6E
+	decrementStackEntries, // DDIV            0x6F
+	decrementStackEntries, // IREM            0x70
+	decrementStackEntries, // LREM            0x71
+	decrementStackEntries, // FREM            0x72
+	decrementStackEntries, // DREM            0x73
+	decrementStackEntries, // INEG            0x74
+	decrementStackEntries, // LNEG            0x75
+	decrementStackEntries, // FNEG            0x76
+	decrementStackEntries, // DNEG            0x77
+	decrementStackEntries, // ISHL            0x78
+	decrementStackEntries, // LSHL            0x79
+	decrementStackEntries, // ISHR            0x7A
+	decrementStackEntries, // LSHR            0x7B
+	decrementStackEntries, // IUSHR           0x7C
+	decrementStackEntries, // LUSHR           0x7D
+	decrementStackEntries, // IAND            0x7E
+	decrementStackEntries, // LAND            0x7F
+	decrementStackEntries, // IOR             0x80
+	decrementStackEntries, // LOR             0x81
+	decrementStackEntries, // IXOR            0x82
+	decrementStackEntries, // LXOR            0x83
+	return3,               // IINC            0x84
+	return1,               // I2L             0x85
+	return1,               // I2F             0x86
+	return1,               // I2D             0x87
+	return1,               // L2I             0x88
+	return1,               // L2F             0x89
+	return1,               // L2D             0x8A
+	return1,               // F2I             0x8B
+	return1,               // F2L             0x8C
+	return1,               // F2D             0x8D
+	return1,               // D2I             0x8E
+	return1,               // D2L             0x8F
+	return1,               // D2F             0x90
+	return1,               // I2B             0x91
+	return1,               // I2C             0x92
+	return1,               // I2S             0x93
+	decrementStackEntries, // LCMP            0x94
+	decrementStackEntries, // FCMPL           0x95
+	decrementStackEntries, // FCMPG           0x96
+	decrementStackEntries, // DCMPL           0x97
+	decrementStackEntries, // DCMPG           0x98
+	checkIfzero,           // IFEQ            0x99
+	checkIfzero,           // IFNE            0x9A
+	checkIfzero,           // IFLT            0x9B
+	checkIfzero,           // IFGE            0x9C
+	checkIfzero,           // IFGT            0x9D
+	checkIfzero,           // IFLE            0x9E
+	checkIf,               // IF_ICMPEQ       0x9F
+	checkIf,               // IF_ICMPNE       0xA0
+	checkIf,               // IF_ICMPLT       0xA1
+	checkIf,               // IF_ICMPGE       0xA2
+	checkIf,               // IF_ICMPGT       0xA3
+	checkIf,               // IF_ICMPLE       0xA4
+	checkIf,               // IF_ACMPEQ       0xA5
+	checkIf,               // IF_ACMPNE       0xA6
+	checkGoto,             // GOTO            0xA7
+	checkGoto,             // JSR             0xA8
+	return2,               // RET             0xA9
+	checkTableSwitch,      // TABLESWITCH     0xAA
+	checkLookupswitch,     // LOOKUPSWITCH    0xAB
+	return1,               // IRETURN         0xAC
+	return1,               // LRETURN         0xAD
+	return1,               // FRETURN         0xAE
+	return1,               // DRETURN         0xAF
+	return1,               // ARETURN         0xB0
+	return1,               // RETURN          0xB1
+	checkGetstatic,        // GETSTATIC       0xB2
+	checkPutstatic,        // PUTSTATIC       0xB3
+	checkGetfield,         // GETFIELD        0xB4
+	checkPutfield,         // PUTFIELD        0xB5
+	checkInvokevirtual,    // INVOKEVIRTUAL   0xB6
+	checkInvokespecial,    // INVOKESPECIAL   0xB7
+	checkInvokestatic,     // INVOKESTATIC    0xB8
+	checkInvokeinterface,  // INVOKEINTERFACE 0xB9
+	checkInvokedynamic,    // INVOKEDYNAMIC   0xBA
+	checkNew,              // NEW             0xBB
+	checkNewArray,         // NEWARRAY        0xBC
+	checkAnewarray,        // ANEWARRAY       0xBD
+	return1,               // ARRAYLENGTH     0xBE
+	return1,               // ATHROW          0xBF
+	return3,               // CHECKCAST       0xC0
+	return3,               // INSTANCEOF      0xC1
+	return1,               // MONITORENTER    0xC2
+	return1,               // MONITOREXIT     0xC3
+	checkWide,             // WIDE            0xC4
+	checkMultianewarray,   // MULTIANEWARRAY  0xC5
+	return3,               // IFNULL          0xC6
+	return3,               // IFNONNULL       0xC7
+	checkGotow,            // GOTO_W          0xC8
+	return5,               // JSR_W           0xC9
+	return1,               // BREAKPOINT      0xCA
+	invalidBytecode,       // 0xCB All following bytecodes (thru 0xFF) are invalid in a class file
+	invalidBytecode,       // 0xCC
+	invalidBytecode,       // 0xCD
+	invalidBytecode,       // 0xCE
+	invalidBytecode,       // 0xCF
+	invalidBytecode,       // 0xD0
+	invalidBytecode,       // 0xD1
+	invalidBytecode,       // 0xD2
+	invalidBytecode,       // 0xD3
+	invalidBytecode,       // 0xD4
+	invalidBytecode,       // 0xD5
+	invalidBytecode,       // 0xD6
+	invalidBytecode,       // 0xD7
+	invalidBytecode,       // 0xD8
+	invalidBytecode,       // 0xD9
+	invalidBytecode,       // 0xDA
+	invalidBytecode,       // 0xDB
+	invalidBytecode,       // 0xDC
+	invalidBytecode,       // 0xDD
+	invalidBytecode,       // 0xDE
+	invalidBytecode,       // 0xDF
+	invalidBytecode,       // 0xE0
+	invalidBytecode,       // 0xE1
+	invalidBytecode,       // 0xE2
+	invalidBytecode,       // 0xE3
+	invalidBytecode,       // 0xE4
+	invalidBytecode,       // 0xE5
+	invalidBytecode,       // 0xE6
+	invalidBytecode,       // 0xE7
+	invalidBytecode,       // 0xE8
+	invalidBytecode,       // 0xE9
+	invalidBytecode,       // 0xEA
+	invalidBytecode,       // 0xEB
+	invalidBytecode,       // 0xEC
+	invalidBytecode,       // 0xED
+	invalidBytecode,       // 0xEE
+	invalidBytecode,       // 0xEF
+	invalidBytecode,       // 0xF0
+	invalidBytecode,       // 0xF1
+	invalidBytecode,       // 0xF2
+	invalidBytecode,       // 0xF3
+	invalidBytecode,       // 0xF4
+	invalidBytecode,       // 0xF5
+	invalidBytecode,       // 0xF6
+	invalidBytecode,       // 0xF7
+	invalidBytecode,       // 0xF8
+	invalidBytecode,       // 0xF9
+	invalidBytecode,       // 0xFA
+	invalidBytecode,       // 0xFB
+	invalidBytecode,       // 0xFC
+	invalidBytecode,       // 0xFD
+	invalidBytecode,       // 0xFE
+	invalidBytecode,       // 0xFF
 }
 
-var PC int
-var PrevPC int // allows us to view the preceding opcode if we need it for analysis
-var CP *CPool
-var Code []byte
-var StackEntries int
-var MaxStack int
-var MaxLocals int
-var wideInEffect bool
-
 func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, maxLocals int, access AccessFlags, methNamePtr *string) error {
+
+	ccvb := ccvBlock_type{}
+
 	if codePtr == nil {
 		errMsg := "CheckCodeValidity: ptr to code segment is nil"
 		return errors.New(errMsg)
@@ -522,8 +527,8 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, maxLocals int, 
 		return errors.New(errMsg)
 	}
 
-	CP = cp
-	if len(CP.CpIndex) == 0 {
+	ccvb.CP = cp
+	if len(ccvb.CP.CpIndex) == 0 {
 		errMsg := "CheckCodeValidity: empty constant pool"
 		return errors.New(errMsg)
 	}
@@ -535,38 +540,42 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, maxLocals int, 
 		methName = *methNamePtr
 	}
 
-	Code = code
-	PC = 0
-	PrevPC = -1 // -1 means no previous PC
-	MaxStack = maxStack
-	MaxLocals = maxLocals
-	StackEntries = 0
-	wideInEffect = false
+	ccvb.Code = code
+	ccvb.PC = 0
+	ccvb.PrevPC = -1 // -1 means no previous PC
+	ccvb.MaxStack = maxStack
+	ccvb.MaxLocals = maxLocals
+	ccvb.StackEntries = 0
+	ccvb.wideInEffect = false
 
 	if globals.TraceCodeCheck {
 		_, _ = fmt.Fprintf(os.Stderr, "\nCode check for method: %s\n", methName)
 	}
 
-	for PC < len(code) {
-		opcode := code[PC]
+	for ccvb.PC < len(code) {
+		opcode := code[ccvb.PC]
+		bcName := "UNKNOWN"
+		if int(opcode) < len(BytecodeNames) {
+			bcName = BytecodeNames[opcode]
+		}
 		if globals.TraceCodeCheck {
-			_, _ = fmt.Fprintf(os.Stderr, "PC: %03d %-14s (%02X)\n", PC, BytecodeNames[opcode], opcode)
+			_, _ = fmt.Fprintf(os.Stderr, "PC: %03d %-14s (%02X)\n", ccvb.PC, bcName, opcode)
 		}
 
-		ret := CheckTable[opcode]()
+		ret := CheckTable[opcode](&ccvb)
 		if ret == ERROR_OCCURRED {
 			errMsg := fmt.Sprintf("Check of %s instruction: Invalid bytecode or argument at location %d",
-				BytecodeNames[opcode], PC)
+				bcName, ccvb.PC)
 			return errors.New(errMsg)
 		}
 
-		if ret+PC > len(code) {
-			errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
+		if ret+ccvb.PC > len(code) {
+			errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", ccvb.PC)
 			return errors.New(errMsg)
 		}
 
-		PrevPC = PC
-		PC += ret
+		ccvb.PrevPC = ccvb.PC
+		ccvb.PC += ret
 	}
 	return nil
 }
@@ -574,42 +583,42 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, maxLocals int, 
 // === check functions in alpha order by name of bytecode ===
 
 // *ADD (pop 2 values, add/sub/multiply/divide/modulo them, push result)
-func Arith() int {
-	StackEntries -= 1
+func decrementStackEntries(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries -= 1
 	return 1
 }
 
 // ACONST_NULL 0x01 Push null onto op stack
-func CheckAconstnull() int {
-	StackEntries += 1
+func incrementStackEntries(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // ANEWARRAY 0xBD Create a new array of reference type elements
-func CheckAnewarray() int {
+func checkAnewarray(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != ClassRef && CPentry.Type != Interface {
 		errMsg := fmt.Sprintf("%s:\n ANEWARRAY at %d: CP entry (%d) is not a field or interface reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
-	StackEntries += 1 // for the dimension of the array
+	ccvb.StackEntries += 1 // for the dimension of the array
 
 	return 3
 }
 
 // BIPUSH 0x10 Push following byte onto op stack
-func CheckBipush() int {
-	if len(Code) > PC+1 {
-		StackEntries += 1
+func checkBipush(ccvb *ccvBlock_type) int {
+	if len(ccvb.Code) > ccvb.PC+1 {
+		ccvb.StackEntries += 1
 		return 2
 	} else {
 		return ERROR_OCCURRED
@@ -617,8 +626,8 @@ func CheckBipush() int {
 }
 
 // DUP  Push a duplicate of the top stack value onto the stack.
-func CheckDup1() int {
-	StackEntries += 1
+func checkDup1(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries += 1
 	return 1
 }
 
@@ -626,101 +635,101 @@ func CheckDup1() int {
 // which take up 2 stack entries on HotSpot and other OpenJDK JVMs. On Jacobin, doubles and longs
 // take up 1 stack entry, so we need to be check whether the operation is on a double or long. If
 // it is, then we convert DUP2 to DUP, which duplicates only the top stack entry.
-func CheckDup2() int {
-	if BytecodePushes32BitValue(Code[PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
+func checkDup2(ccvb *ccvBlock_type) int {
+	if bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
 		goto dup2 // if so, we can safely use DUP2
 	}
 
 	// TODO: should we be testing the previous bytecode instead? That's what we do in Dup2x1
-	if BytecodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
-		Code[PC] = 0x59 // change DUP2 to DUP
-		StackEntries += 1
+	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PC+1]) { // check if the next bytecode is for a long or double
+		ccvb.Code[ccvb.PC] = 0x59 // change DUP2 to DUP
+		ccvb.StackEntries += 1
 		return 1
 	}
 dup2:
-	StackEntries += 2
+	ccvb.StackEntries += 2
 	return 1
 }
 
-// CheckDup2x1 converts DUP2_X1 to DUP_X1 when it detects that the bytecode is handling a 64-bit value.
-func CheckDup2x1() int {
-	if BytecodePushes32BitValue(Code[PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
+// checkDup2x1 converts DUP2_X1 to DUP_X1 when it detects that the bytecode is handling a 64-bit value.
+func checkDup2x1(ccvb *ccvBlock_type) int {
+	if bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
 		goto dup2x1 // if so, we can safely use DUP2
 	}
 
-	if BytecodeIsForLongOrDouble(Code[PrevPC]) { // check if the preceding bytecode is for a long or double
-		Code[PC] = 0x5A // change DUP2_X1 to DUP_X1
-		StackEntries += 1
+	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PrevPC]) { // check if the preceding bytecode is for a long or double
+		ccvb.Code[ccvb.PC] = 0x5A // change DUP2_X1 to DUP_X1
+		ccvb.StackEntries += 1
 		return 1
 	}
 
-	if BytecodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
-		Code[PC] = 0x5A // change DUP2_X1 to DUP_X1
-		StackEntries += 1
+	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PC+1]) { // check if the next bytecode is for a long or double
+		ccvb.Code[ccvb.PC] = 0x5A // change DUP2_X1 to DUP_X1
+		ccvb.StackEntries += 1
 		return 1
 	}
 dup2x1:
-	StackEntries += 2
+	ccvb.StackEntries += 2
 	return 1
 }
 
-// DUP2_X2: *NOTE* CheckDup2x2 converts DUP2_X2 to DUP_X2 when it detects that the bytecode is handling a 64-bit value.
-func CheckDup2x2() int {
-	if BytecodePushes32BitValue(Code[PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
+// DUP2_X2: *NOTE* checkDup2x2 converts DUP2_X2 to DUP_X2 when it detects that the bytecode is handling a 64-bit value.
+func checkDup2x2(ccvb *ccvBlock_type) int {
+	if bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
 		goto dup2x2 // if so, we can safely use DUP2
 	}
 
-	if BytecodeIsForLongOrDouble(Code[PrevPC]) { // check if the preceding bytecode is for a long or double
-		Code[PC] = 0x5B // change DUP2_X2 to DUP_X2
-		StackEntries += 1
+	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PrevPC]) { // check if the preceding bytecode is for a long or double
+		ccvb.Code[ccvb.PC] = 0x5B // change DUP2_X2 to DUP_X2
+		ccvb.StackEntries += 1
 		return 1
 	}
 
-	if BytecodeIsForLongOrDouble(Code[PC+1]) { // check if the following bytecode is for a long or double
-		Code[PC] = 0x5B // change DUP2_X2 to DUP_X2
-		StackEntries += 1
+	if bytecodeIsForLongOrDouble(ccvb.Code[ccvb.PC+1]) { // check if the following bytecode is for a long or double
+		ccvb.Code[ccvb.PC] = 0x5B // change DUP2_X2 to DUP_X2
+		ccvb.StackEntries += 1
 		return 1
 	}
 dup2x2:
-	StackEntries += 2
+	ccvb.StackEntries += 2
 	return 1
 }
 
 // FCONST and DCONST Push a float onto the op stack
-func PushFloat() int {
-	StackEntries += 1
+func pushFloat(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // FLOAD* and DLOAD* Push an int or long from local onto op stack
-func PushFloatRet2() int {
-	StackEntries += 1
+func pushFloatRet2(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries += 1
 	return 2
 }
 
 // FSTORE* and DSTORE*
-func storeFloat() int {
-	StackEntries -= 1
+func storeFloat(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries -= 1
 	return 1
 }
 
-func storeFloatRet2() int {
-	StackEntries -= 1
+func storeFloatRet2(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries -= 1
 	return 2
 }
 
 // GETFIELD 0xB4 Get non-static field from object and push it onto the stack
-func CheckGetfield() int {
+func checkGetfield(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != FieldRef {
 		errMsg := fmt.Sprintf("%s:\n GETFIELD at %d: CP entry (%d) is not a field reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -729,18 +738,18 @@ func CheckGetfield() int {
 }
 
 // GETSTATIC 0xB4 Get static field from object and push it onto the stack
-func CheckGetstatic() int {
+func checkGetstatic(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != FieldRef {
 		errMsg := fmt.Sprintf(
 			"%s in GETSTATIC at %d: CP entry (%d) is not a field reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -748,11 +757,11 @@ func CheckGetstatic() int {
 }
 
 // GOTO 0xA7
-func CheckGoto() int {
-	jumpTo := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
-	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
+func checkGoto(ccvb *ccvBlock_type) int {
+	jumpTo := int(int16(ccvb.Code[ccvb.PC+1])*256 + int16(ccvb.Code[ccvb.PC+2]))
+	if ccvb.PC+jumpTo < 0 || ccvb.PC+jumpTo >= len(ccvb.Code) {
 		errMsg := fmt.Sprintf("%s:\n GOTO at %d: illegal jump to %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, PC+jumpTo)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, ccvb.PC+jumpTo)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -760,11 +769,11 @@ func CheckGoto() int {
 }
 
 // GOTO_W 0xC8
-func CheckGotow() int {
-	jumpTo := int(types.FourBytesToInt64(Code[PC+1], Code[PC+2], Code[PC+3], Code[PC+4]))
-	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
+func checkGotow(ccvb *ccvBlock_type) int {
+	jumpTo := int(types.FourBytesToInt64(ccvb.Code[ccvb.PC+1], ccvb.Code[ccvb.PC+2], ccvb.Code[ccvb.PC+3], ccvb.Code[ccvb.PC+4]))
+	if ccvb.PC+jumpTo < 0 || ccvb.PC+jumpTo >= len(ccvb.Code) {
 		errMsg := fmt.Sprintf("%s:\n GOTO_W at %d: illegal jump to %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, PC+jumpTo)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, ccvb.PC+jumpTo)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -772,17 +781,17 @@ func CheckGotow() int {
 }
 
 // ICONST* and LCONST Push an int or long onto op stack
-func PushInt() int {
-	StackEntries += 1
+func pushInt(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // IF_ACMPEQ 0xA5 (and the many other IF* bytecodes)
-func CheckIf() int { // most IF* bytecodes come here. Jump if condition is met
-	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
-	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
+func checkIf(ccvb *ccvBlock_type) int { // most IF* bytecodes come here. Jump if condition is met
+	jumpSize := int(int16(ccvb.Code[ccvb.PC+1])*256 + int16(ccvb.Code[ccvb.PC+2]))
+	if ccvb.PC+jumpSize < 0 || ccvb.PC+jumpSize >= len(ccvb.Code) {
 		errMsg := fmt.Sprintf("%s:\n IF_ACMPEQ at %d: illegal jump to %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, PC+jumpSize)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, ccvb.PC+jumpSize)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -790,129 +799,129 @@ func CheckIf() int { // most IF* bytecodes come here. Jump if condition is met
 }
 
 // IF_ZERO
-func CheckIfzero() int { // Jump if condition w.r.t 0 is met
-	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
-	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
+func checkIfzero(ccvb *ccvBlock_type) int { // Jump if condition w.r.t 0 is met
+	jumpSize := int(int16(ccvb.Code[ccvb.PC+1])*256 + int16(ccvb.Code[ccvb.PC+2]))
+	if ccvb.PC+jumpSize < 0 || ccvb.PC+jumpSize >= len(ccvb.Code) {
 		errMsg := fmt.Sprintf("%s:\n IF_ZERO test at %d: illegal jump to %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, PC+jumpSize)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, ccvb.PC+jumpSize)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	StackEntries -= 1
+	ccvb.StackEntries -= 1
 	return 3
 }
 
 // ILOAD and LLOAD
-func CheckIload() int {
-	StackEntries += 1
-	if wideInEffect {
-		wideInEffect = false
+func checkIload(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries += 1
+	if ccvb.wideInEffect {
+		ccvb.wideInEffect = false
 		return 3
 	}
 	return 2
 }
 
 // ILOAD_0
-func CheckIload0() int {
-	if MaxLocals < 1 {
+func checkIload0(ccvb *ccvBlock_type) int {
+	if ccvb.MaxLocals < 1 {
 		errMsg := fmt.Sprintf("%s:\n ILOAD_0 at %d: index 0 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
-	StackEntries += 1
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // ILOAD_1
-func CheckIload1() int {
-	if MaxLocals < 2 {
+func checkIload1(ccvb *ccvBlock_type) int {
+	if ccvb.MaxLocals < 2 {
 		errMsg := fmt.Sprintf("%s:\n ILOAD_1 at %d: index 1 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	StackEntries += 1
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // ILOAD_2
-func CheckIload2() int {
-	if MaxLocals < 3 {
+func checkIload2(ccvb *ccvBlock_type) int {
+	if ccvb.MaxLocals < 3 {
 		errMsg := fmt.Sprintf("%s:\n ILOAD_2 at %d: index 2 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	StackEntries += 1
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // ILOAD_3
-func CheckIload3() int {
-	if MaxLocals < 4 {
+func checkIload3(ccvb *ccvBlock_type) int {
+	if ccvb.MaxLocals < 4 {
 		errMsg := fmt.Sprintf("%s:\n ILOAD_3 at %d: index 3 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	StackEntries += 1
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // INVOKEDYNAMIC 0xBA
-func CheckInvokedynamic() int {
-	CPslot := int(int16(Code[PC+1])*256 + int16(Code[PC+2])) // next 2 bytes point to CP entry
+func checkInvokedynamic(ccvb *ccvBlock_type) int {
+	CPslot := int(int16(ccvb.Code[ccvb.PC+1])*256 + int16(ccvb.Code[ccvb.PC+2])) // next 2 bytes point to CP entry
 
 	// is CP slot pointing to a valid CP entry?
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		errMsg := fmt.Sprintf("%s:\n INVOKEDYNAMIC at %d: invalid CP slot %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPslot)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPslot)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
 	// is the CP entry of type InvokeDynamic?
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != InvokeDynamic {
 		errMsg := fmt.Sprintf("%s:\n INVOKEDYNAMIC at %d: Invalid CP entry type %d, should be 18",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
 	// is the CP entry slot pointing to a valid InvokeDynamic entry?
-	if CPentry.Slot >= uint16(len(CP.InvokeDynamics)) {
+	if CPentry.Slot >= uint16(len(ccvb.CP.InvokeDynamics)) {
 		errMsg := fmt.Sprintf("%s:\n INVOKEDYNAMIC at %d: invalid InvokeDynamic slot %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Slot)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Slot)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
 	// is the bootstrap method index pointed to by the InvokeDynamic entry valid?
-	CPdyn := CP.InvokeDynamics[CPentry.Slot]
+	CPdyn := ccvb.CP.InvokeDynamics[CPentry.Slot]
 	bootstrapIndex := CPdyn.BootstrapIndex
-	if bootstrapIndex >= uint16(len(CP.Bootstraps)) {
+	if bootstrapIndex >= uint16(len(ccvb.CP.Bootstraps)) {
 		errMsg := fmt.Sprintf("%s:\n INVOKEDYNAMIC at %d: invalid BootstrapIndex %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, bootstrapIndex)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, bootstrapIndex)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
 	// is the bootstrap name and type index pointed to by the InvokeDynamic entry valid?
 	bootstrapNatIndex := CPdyn.NameAndType
-	if int(bootstrapNatIndex) >= len(CP.CpIndex) {
+	if int(bootstrapNatIndex) >= len(ccvb.CP.CpIndex) {
 		errMsg := fmt.Sprintf("%s:\n INVOKEDYNAMIC at %d: invalid NameAndType index %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, bootstrapNatIndex)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, bootstrapNatIndex)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
-	bootstrapNat := CP.CpIndex[bootstrapNatIndex]
+	bootstrapNat := ccvb.CP.CpIndex[bootstrapNatIndex]
 	if bootstrapNat.Type != NameAndType {
 		errMsg := fmt.Sprintf("%s:\n INVOKEDYNAMIC at %d: invalid NameAndType index %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, bootstrapNatIndex)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, bootstrapNatIndex)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -920,12 +929,12 @@ func CheckInvokedynamic() int {
 	// finally, we have the NAT entry that points to two UTF-8 string entries, DescIndex
 	// and NameIndex, which are entries in CpIndex that point to UTF8 entries.
 	// make sure that the indices into CP.Utf8Refs are valid
-	NAT := CP.NameAndTypes[bootstrapNat.Slot]
-	name := CP.CpIndex[NAT.NameIndex]
-	desc := CP.CpIndex[NAT.DescIndex]
+	NAT := ccvb.CP.NameAndTypes[bootstrapNat.Slot]
+	name := ccvb.CP.CpIndex[NAT.NameIndex]
+	desc := ccvb.CP.CpIndex[NAT.DescIndex]
 	if name.Type != UTF8 || desc.Type != UTF8 {
 		errMsg := fmt.Sprintf("%s:\n INVOKEDYNAMIC at %d: invalid NameAndType name or descriptor field at %d",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, bootstrapNatIndex)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, bootstrapNatIndex)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -933,27 +942,27 @@ func CheckInvokedynamic() int {
 }
 
 // INVOKEINTERFACE 0xB9
-func CheckInvokeinterface() int {
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+func checkInvokeinterface(ccvb *ccvBlock_type) int {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	countByte := Code[PC+3]
+	countByte := ccvb.Code[ccvb.PC+3]
 	if countByte == 0 {
 		return ERROR_OCCURRED
 	}
 
-	zeroByte := Code[PC+4]
+	zeroByte := ccvb.Code[ccvb.PC+4]
 	if zeroByte != 0 {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != Interface {
 		// because this is not a ClassFormatError, we output a trace error message here
 		errMsg := fmt.Sprintf("%s:\n INVOKEINTERFACE at %d: CP entry (%d) is not an interface reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -961,18 +970,18 @@ func CheckInvokeinterface() int {
 }
 
 // INVOKESPECIAL 0xB7
-func checkInvokespecial() int {
+func checkInvokespecial(ccvb *ccvBlock_type) int {
 	// check that the index points to a method or interface reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != MethodRef && CPentry.Type != Interface && CPentry.Type != CachedMeth {
 		// because this is not a ClassFormatError, we output a trace error message here
 		errMsg := fmt.Sprintf("%s:\n INVOKESPECIAL at %d: CP entry (%d) is not a method or interface reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -980,18 +989,18 @@ func checkInvokespecial() int {
 }
 
 // INVOKESTATIC 0xB8
-func checkInvokestatic() int {
+func checkInvokestatic(ccvb *ccvBlock_type) int {
 	// check that the index points to a method or interface reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != MethodRef && CPentry.Type != Interface && CPentry.Type != CachedMeth {
 		// because this is not a ClassFormatError, we output a trace message here
 		errMsg := fmt.Sprintf("%s:\n INVOKESTATIC at %d: CP entry (%d) is not a method or interface reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -999,18 +1008,18 @@ func checkInvokestatic() int {
 }
 
 // INVOKEVIRTUAL 0xB6
-func CheckInvokevirtual() int {
+func checkInvokevirtual(ccvb *ccvBlock_type) int {
 	// check that the index points to a method reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != MethodRef && CPentry.Type != CachedMeth {
 		// because this is not a ClassFormatError, we emit a trace message here
 		errMsg := fmt.Sprintf("%s:\n INVOKEVIRTUAL at %d: CP entry (%d) is not a method reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -1021,69 +1030,69 @@ func CheckInvokevirtual() int {
 }
 
 // ISTORE
-func storeInt() int {
-	StackEntries -= 1
+func storeInt(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries -= 1
 	return 1
 }
 
-func storeIntRet2() int {
-	StackEntries -= 1
+func storeIntRet2(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries -= 1
 	return 2
 }
 
 // LLOAD_0
-func CheckLload0() int {
-	if MaxLocals < 2 { // LLOAD requires two locals entries
+func checkLload0(ccvb *ccvBlock_type) int {
+	if ccvb.MaxLocals < 2 { // LLOAD requires two locals entries
 		errMsg := fmt.Sprintf("%s:\n LLOAD_0 at %d: index 0 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	StackEntries += 1
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // LLOAD_1
-func CheckLload1() int {
-	if MaxLocals < 3 { // locals[0] + two locals for long
+func checkLload1(ccvb *ccvBlock_type) int {
+	if ccvb.MaxLocals < 3 { // locals[0] + two locals for long
 		errMsg := fmt.Sprintf("%s:\n LLOAD_1 at %d: index 1 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	StackEntries += 1
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // LLOAD_2
-func CheckLload2() int {
-	if MaxLocals < 4 { // locals 0, 1 + two locals for long
+func checkLload2(ccvb *ccvBlock_type) int {
+	if ccvb.MaxLocals < 4 { // locals 0, 1 + two locals for long
 		errMsg := fmt.Sprintf("%s:\n LLOAD_2 at %d: index 2 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	StackEntries += 1
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // LLOAD_3
-func CheckLload3() int {
-	if MaxLocals < 5 { // locals 0, 1, 2 + two locals for long
+func checkLload3(ccvb *ccvBlock_type) int {
+	if ccvb.MaxLocals < 5 { // locals 0, 1, 2 + two locals for long
 		errMsg := fmt.Sprintf("%s:\n LLOAD_3 at %d: index 3 into locals is invalid",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	StackEntries += 1
+	ccvb.StackEntries += 1
 	return 1
 }
 
 // LOOKUPSWITCH 0xAB
-func checkLookupswitch() int { // need to check this
-	basePC := PC
+func checkLookupswitch(ccvb *ccvBlock_type) int { // need to check this
+	basePC := ccvb.PC
 
-	paddingBytes := 4 - ((PC + 1) % 4)
+	paddingBytes := 4 - ((ccvb.PC + 1) % 4)
 	if paddingBytes == 4 {
 		paddingBytes = 0
 	}
@@ -1091,67 +1100,67 @@ func checkLookupswitch() int { // need to check this
 	basePC += 4 // jump size for default
 
 	npairs := binary.BigEndian.Uint32(
-		[]byte{Code[basePC+1], Code[basePC+2], Code[basePC+3], Code[basePC+4]})
+		[]byte{ccvb.Code[basePC+1], ccvb.Code[basePC+2], ccvb.Code[basePC+3], ccvb.Code[basePC+4]})
 
 	basePC += 4
 	basePC += int(npairs) * 8
 
-	return (basePC - PC) + 1
+	return (basePC - ccvb.PC) + 1
 }
 
 // NEW 0xBB
-func CheckNew() int {
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+func checkNew(ccvb *ccvBlock_type) int {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != ClassRef && CPentry.Type != Interface {
 		errMsg := fmt.Sprintf("NEW: Invalid reference to object type")
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	StackEntries += 1
+	ccvb.StackEntries += 1
 	return 3
 }
 
 // NEWARRAY 0xBC Create a 1-dimensional array
-func CheckNewArray() int {
+func checkNewArray(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
-	CPslot := int(Code[PC+1])
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	CPslot := int(ccvb.Code[ccvb.PC+1])
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	StackEntries += 1 // for the dimension of the array
+	ccvb.StackEntries += 1 // for the dimension of the array
 	return 2
 }
 
 // POP
-func CheckPop() int {
-	StackEntries -= 1
+func checkPop(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries -= 1
 	return 1
 }
 
 // POP2
-func CheckPop2() int {
-	StackEntries -= 2
+func checkPop2(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries -= 2
 	return 1
 }
 
 // PUTFIELD 0xB5 Put non-static field
-func CheckPutfield() int {
+func checkPutfield(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != FieldRef {
 		errMsg := fmt.Sprintf("%s:\n PUTFIELD at %d: CP entry (%d) is not a field reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -1159,17 +1168,17 @@ func CheckPutfield() int {
 }
 
 // PUTSTATIC 0xB3 Put static field
-func CheckPutstatic() int {
+func checkPutstatic(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != FieldRef {
 		errMsg := fmt.Sprintf("%s:\n PUTSTATIC at %d: CP entry (%d) is not a field reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -1177,17 +1186,17 @@ func CheckPutstatic() int {
 }
 
 // TABLESWITCH 0xAA
-func CheckTableSwitch() int {
-	basePC := PC
+func checkTableSwitch(ccvb *ccvBlock_type) int {
+	basePC := ccvb.PC
 
-	paddingBytes := 4 - ((PC + 1) % 4)
+	paddingBytes := 4 - ((ccvb.PC + 1) % 4)
 	if paddingBytes == 4 {
 		paddingBytes = 0
 	}
 	basePC += paddingBytes
 	basePC += 4 // jump size for default
-	low := types.FourBytesToInt64(Code[basePC+1], Code[basePC+2], Code[basePC+3], Code[basePC+4])
-	high := types.FourBytesToInt64(Code[basePC+5], Code[basePC+6], Code[basePC+7], Code[basePC+8])
+	low := types.FourBytesToInt64(ccvb.Code[basePC+1], ccvb.Code[basePC+2], ccvb.Code[basePC+3], ccvb.Code[basePC+4])
+	high := types.FourBytesToInt64(ccvb.Code[basePC+5], ccvb.Code[basePC+6], ccvb.Code[basePC+7], ccvb.Code[basePC+8])
 	basePC += 8 // 4 bytes for low, 4 bytes for high
 
 	if !(low <= high) {
@@ -1196,40 +1205,40 @@ func CheckTableSwitch() int {
 
 	offsetsCount := high - low + 1
 	basePC += int(offsetsCount) * 4
-	return (basePC - PC) + 1
+	return (basePC - ccvb.PC) + 1
 }
 
 // MULTIANEWARRAY 0xC5 (create a multidimensional array)
-func CheckMultianewarray() int {
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+func checkMultianewarray(ccvb *ccvBlock_type) int {
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
+	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != ClassRef {
 		// because this is not a ClassFormatError, we emit a trace message here
 		errMsg := fmt.Sprintf("%s:\n MULTIANEWARRAY at %d: CP entry (%d) is not a class reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 
-	dimensions := Code[PC+3]
+	dimensions := ccvb.Code[ccvb.PC+3]
 	if dimensions == 0 {
 		return ERROR_OCCURRED
 	}
 
 	// we pop off as many ints from the stack as there are dimensions
-	StackEntries -= int(dimensions)
+	ccvb.StackEntries -= int(dimensions)
 
 	return 4
 }
 
 // SIPUSH 0x11 create int from next 2 bytes and push it
-func CheckSipush() int {
-	if len(Code) > PC+2 {
-		StackEntries += 1
+func checkSipush(ccvb *ccvBlock_type) int {
+	if len(ccvb.Code) > ccvb.PC+2 {
+		ccvb.StackEntries += 1
 		return 3
 	} else {
 		return ERROR_OCCURRED
@@ -1237,45 +1246,45 @@ func CheckSipush() int {
 }
 
 // WIDE
-func CheckWide() int {
-	wideInEffect = true
+func checkWide(ccvb *ccvBlock_type) int {
+	ccvb.wideInEffect = true
 	return 1
 }
 
 // === utility functions ===
 
 // a one-byte opcode that has nothing that can be checked
-func Return1() int {
+func return1(ccvb *ccvBlock_type) int {
 	return 1
 }
 
-func Return2() int {
+func return2(ccvb *ccvBlock_type) int {
 	return 2
 }
 
-func Return3() int {
+func return3(ccvb *ccvBlock_type) int {
 	return 3
 }
 
-func Return4() int {
+func return4(ccvb *ccvBlock_type) int {
 	return 4
 }
 
-func Return5() int {
+func return5(ccvb *ccvBlock_type) int {
 	return 5
 }
 
-func PushIntRet2() int {
-	StackEntries += 1
+func pushIntRet2(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries += 1
 	return 2
 }
 
-func PushIntRet3() int {
-	StackEntries += 1
+func pushIntRet3(ccvb *ccvBlock_type) int {
+	ccvb.StackEntries += 1
 	return 3
 }
 
-func BytecodeIsForLongOrDouble(bytecode byte) bool {
+func bytecodeIsForLongOrDouble(bytecode byte) bool {
 	switch bytecode {
 	case 0x09, 0x0A, 0x0E, 0x0F, 0x14, 0x16, 0x18, 0x1E,
 		0x1F, 0x20, 0x21, 0x26, 0x27, 0x28, 0x29, 0x2F,
@@ -1292,7 +1301,7 @@ func BytecodeIsForLongOrDouble(bytecode byte) bool {
 	}
 }
 
-func BytecodePushes32BitValue(bytecode byte) bool {
+func bytecodePushes32BitValue(bytecode byte) bool {
 	switch bytecode {
 	case 0x02, 0x03, 0x04, 0x05, // ICONST_M1, ICONST_0, ICONST_1, ICONST_2
 		0x06, 0x07, 0x08, 0x0B, // ICONST_3, ICONST_4, ICONST_5, FCONST_0
@@ -1316,9 +1325,9 @@ func BytecodePushes32BitValue(bytecode byte) bool {
 }
 
 // bytecode instructions 204-255 (0xCB-0xFF) are disallowed in class files
-func InvalidBytecode() int {
+func invalidBytecode(ccvb *ccvBlock_type) int {
 	errMsg := fmt.Sprintf("%s: Invalid bytecode instruction at %d: %X",
-		excNames.JVMexceptionNames[excNames.VerifyError], PC, Code[PC])
+		excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, ccvb.Code[ccvb.PC])
 	trace.Error(errMsg)
 	return ERROR_OCCURRED
 }

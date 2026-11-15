@@ -12,6 +12,7 @@ import (
 	"jacobin/src/opcodes"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -154,37 +155,48 @@ func TestArith_StackDecrement(t *testing.T) { // test whether this is recognized
 // ==================== Utility Functions Tests ====================
 
 func TestReturn1(t *testing.T) {
-	result := Return1()
+	result := return1(&ccvBlock_type{})
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
 }
 
 func TestReturn2(t *testing.T) {
-	result := Return2()
+	result := return2(&ccvBlock_type{})
 	if result != 2 {
 		t.Errorf("Expected return value 2, got: %d", result)
 	}
 }
 
 func TestReturn3(t *testing.T) {
-	result := Return3()
+	result := return3(&ccvBlock_type{})
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
 	}
 }
 
 func TestReturn4(t *testing.T) {
-	result := Return4()
+	result := return4(&ccvBlock_type{})
 	if result != 4 {
 		t.Errorf("Expected return value 4, got: %d", result)
 	}
 }
 
 func TestReturn5(t *testing.T) {
-	result := Return5()
+	result := return5(&ccvBlock_type{})
 	if result != 5 {
 		t.Errorf("Expected return value 5, got: %d", result)
+	}
+}
+
+func TestPushIntRet2(t *testing.T) {
+	ccvb := ccvBlock_type{StackEntries: 0}
+	result := pushIntRet2(&ccvb)
+	if result != 2 {
+		t.Errorf("Expected return value 2, got: %d", result)
+	}
+	if ccvb.StackEntries != 1 {
+		t.Errorf("Expected StackEntries 1, got: %d", ccvb.StackEntries)
 	}
 }
 
@@ -194,7 +206,7 @@ func TestByteCodeIsForLongOrDouble_LongDoubleCodes(t *testing.T) {
 	// Test some long/double bytecodes
 	longDoubleCodes := []byte{0x09, 0x0A, 0x0E, 0x0F, 0x14, 0x16, 0x18}
 	for _, code := range longDoubleCodes {
-		result := BytecodeIsForLongOrDouble(code)
+		result := bytecodeIsForLongOrDouble(code)
 		if !result {
 			t.Errorf("Expected true for long/double bytecode 0x%02X, got false", code)
 		}
@@ -207,7 +219,7 @@ func TestByteCodeIsForLongOrDouble_OtherCodes(t *testing.T) {
 	// Test some non-long/double bytecodes
 	otherCodes := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x10, 0x11}
 	for _, code := range otherCodes {
-		result := BytecodeIsForLongOrDouble(code)
+		result := bytecodeIsForLongOrDouble(code)
 		if result {
 			t.Errorf("Expected false for non-long/double bytecode 0x%02X, got true", code)
 		}
@@ -234,14 +246,11 @@ func TestCheckAconstnull_HighLevel(t *testing.T) {
 func TestCheckAconstnull_StackIncrement(t *testing.T) {
 	globals.InitGlobals("test")
 
-	StackEntries = 0
-	result := CheckAconstnull()
+	ccvb := ccvBlock_type{StackEntries: 0}
+	result := incrementStackEntries(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
-	}
-	if StackEntries != 1 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
 	}
 }
 
@@ -288,17 +297,16 @@ func TestCheckBipush_HighLevel(t *testing.T) {
 func TestCheckBipush_ValidLength(t *testing.T) {
 	globals.InitGlobals("test")
 
-	Code = []byte{opcodes.BIPUSH, 0x42}
-	PC = 0
-	StackEntries = 0
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.BIPUSH, 0x42},
+		PC:           0,
+		StackEntries: 0,
+	}
 
-	result := CheckBipush()
+	result := checkBipush(&ccvb)
 
 	if result != 2 {
 		t.Errorf("Expected return value 2, got: %d", result)
-	}
-	if StackEntries != 1 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
 	}
 }
 
@@ -333,14 +341,11 @@ func TestDup_HighLevel(t *testing.T) {
 func TestDup(t *testing.T) {
 	globals.InitGlobals("test")
 
-	StackEntries = 1
-	result := CheckDup1()
+	ccvb := ccvBlock_type{StackEntries: 1}
+	result := checkDup1(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
-	}
-	if StackEntries != 2 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
 	}
 }
 
@@ -376,22 +381,21 @@ func TestDup2_LongDoubleOperation(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// Create code where next bytecode is for long/double
-	Code = []byte{opcodes.NOP, opcodes.DUP2, opcodes.LADD}
-	PC = 1
-	PrevPC = 0
-	StackEntries = 1
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.NOP, opcodes.DUP2, opcodes.LADD},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
 
-	result := CheckDup2()
+	result := checkDup2(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
-	if StackEntries != 2 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
-	}
 	// Check that DUP2 was converted to DUP
-	if Code[PC] != opcodes.DUP {
-		t.Errorf("Expected DUP2 to be converted to DUP, got: 0x%x", Code[PC])
+	if ccvb.Code[ccvb.PC] != opcodes.DUP {
+		t.Errorf("Expected DUP2 to be converted to DUP, got: 0x%x", ccvb.Code[ccvb.PC])
 	}
 }
 
@@ -399,17 +403,16 @@ func TestDup2_RegularOperation(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// Create code where next bytecode is NOT for long/double
-	Code = []byte{opcodes.DUP2, opcodes.IADD}
-	PC = 0
-	StackEntries = 2
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.DUP2, opcodes.IADD},
+		PC:           0,
+		StackEntries: 2,
+	}
 
-	result := CheckDup2()
+	result := checkDup2(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
-	}
-	if StackEntries != 4 {
-		t.Errorf("Expected StackEntries to increase by 2, got: %d", StackEntries)
 	}
 }
 
@@ -418,22 +421,21 @@ func TestDup2_X1_Preceding(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// Create code where next bytecode is for long/double
-	Code = []byte{opcodes.LADD, opcodes.DUP2_X1, opcodes.NOP}
-	PC = 1
-	PrevPC = 0
-	StackEntries = 1
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.LADD, opcodes.DUP2_X1, opcodes.NOP},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
 
-	result := CheckDup2x1()
+	result := checkDup2x1(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
-	if StackEntries != 2 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
-	}
 	// Check that DUP2_X1 was converted to DUP_X1
-	if Code[PC] != opcodes.DUP_X1 {
-		t.Errorf("Expected DUP2_X1 to be converted to DUP_X1, got: 0x%x", Code[PC])
+	if ccvb.Code[ccvb.PC] != opcodes.DUP_X1 {
+		t.Errorf("Expected DUP2_X1 to be converted to DUP_X1, got: 0x%x", ccvb.Code[ccvb.PC])
 	}
 }
 
@@ -442,22 +444,21 @@ func TestDup2_X1_Following(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// Create code where next bytecode is for long/double
-	Code = []byte{opcodes.NOP, opcodes.DUP2_X1, opcodes.LADD}
-	PC = 1
-	PrevPC = 0
-	StackEntries = 1
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.NOP, opcodes.DUP2_X1, opcodes.LADD},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
 
-	result := CheckDup2x1()
+	result := checkDup2x1(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
-	if StackEntries != 2 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
-	}
 	// Check that DUP2_X1 was converted to DUP_X1
-	if Code[PC] != opcodes.DUP_X1 {
-		t.Errorf("Expected DUP2_X1 to be converted to DUP_X1, got: 0x%x", Code[PC])
+	if ccvb.Code[ccvb.PC] != opcodes.DUP_X1 {
+		t.Errorf("Expected DUP2_X1 to be converted to DUP_X1, got: 0x%x", ccvb.Code[ccvb.PC])
 	}
 }
 
@@ -466,22 +467,21 @@ func TestDup2_X2_Preceding(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// Create code where next bytecode is for long/double
-	Code = []byte{opcodes.LADD, opcodes.DUP2_X2, opcodes.NOP}
-	PC = 1
-	PrevPC = 0
-	StackEntries = 1
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.LADD, opcodes.DUP2_X2, opcodes.NOP},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
 
-	result := CheckDup2x2()
+	result := checkDup2x2(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
-	if StackEntries != 2 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
-	}
 	// Check that DUP2_X1 was converted to DUP_X1
-	if Code[PC] != opcodes.DUP_X2 {
-		t.Errorf("Expected DUP2_X2 to be converted to DUP_X2, got: 0x%x", Code[PC])
+	if ccvb.Code[ccvb.PC] != opcodes.DUP_X2 {
+		t.Errorf("Expected DUP2_X2 to be converted to DUP_X2, got: 0x%x", ccvb.Code[ccvb.PC])
 	}
 }
 
@@ -490,22 +490,21 @@ func TestDup2_X2_Following(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// Create code where next bytecode is for long/double
-	Code = []byte{opcodes.NOP, opcodes.DUP2_X2, opcodes.LADD}
-	PC = 1
-	PrevPC = 0
-	StackEntries = 1
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.NOP, opcodes.DUP2_X2, opcodes.LADD},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
 
-	result := CheckDup2x2()
+	result := checkDup2x2(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
-	if StackEntries != 2 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
-	}
 	// Check that DUP2_X1 was converted to DUP_X1
-	if Code[PC] != opcodes.DUP_X2 {
-		t.Errorf("Expected DUP2_X2 to be converted to DUP_X2, got: 0x%x", Code[PC])
+	if ccvb.Code[ccvb.PC] != opcodes.DUP_X2 {
+		t.Errorf("Expected DUP2_X2 to be converted to DUP_X2, got: 0x%x", ccvb.Code[ccvb.PC])
 	}
 }
 
@@ -527,7 +526,7 @@ func TestPushFloat0_HighLevel(t *testing.T) {
 func TestPushFloatRet2_StackIncrement(t *testing.T) {
 	globals.InitGlobals("test")
 
-	// Create bytecode with FLOAD (0x17) which calls PushFloatRet2
+	// Create bytecode with FLOAD (0x17) which calls pushFloatRet2
 	code := []byte{opcodes.FLOAD, 0x01} // FLOAD with local variable index 1
 
 	// Create basic constant pool
@@ -601,12 +600,13 @@ func TestCheckGetfield_HighLevel(t *testing.T) {
 func TestCheckGetfield_ValidFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
 
-	cp := createCPWithEntry(1, FieldRef)
-	CP = cp
-	Code = []byte{opcodes.GETFIELD, 0x00, 0x01}
-	PC = 0
+	ccvb := ccvBlock_type{
+		CP:   createCPWithEntry(1, FieldRef),
+		Code: []byte{opcodes.GETFIELD, 0x00, 0x01},
+		PC:   0,
+	}
 
-	result := CheckGetfield()
+	result := checkGetfield(&ccvb)
 
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
@@ -678,11 +678,13 @@ func TestCheckGetstatic_HighLevel(t *testing.T) {
 func TestCheckGetstatic_ValidFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
 
-	CP = createCPWithEntry(1, FieldRef)
-	Code = []byte{opcodes.GETSTATIC, 0x00, 0x01}
-	PC = 0
+	ccvb := ccvBlock_type{
+		CP:   createCPWithEntry(1, FieldRef),
+		Code: []byte{opcodes.GETSTATIC, 0x00, 0x01},
+		PC:   0,
+	}
 
-	result := CheckGetfield()
+	result := checkGetfield(&ccvb)
 
 	if result != 3 {
 		t.Errorf("GETSTATIC: Expected return value 3, got: %d", result)
@@ -898,6 +900,51 @@ func TestCheckIfeq_HighLevel(t *testing.T) {
 	}
 }
 
+// ILOAD
+func TestCheckIload_Normal(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{StackEntries: 0, wideInEffect: false}
+	result := checkIload(&ccvb)
+
+	if result != 2 {
+		t.Errorf("Expected return value 2, got: %d", result)
+	}
+	if ccvb.StackEntries != 1 {
+		t.Errorf("Expected StackEntries 1, got: %d", ccvb.StackEntries)
+	}
+}
+
+func TestCheckIload_Wide(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{StackEntries: 0, wideInEffect: true}
+	result := checkIload(&ccvb)
+
+	if result != 3 {
+		t.Errorf("Expected return value 3, got: %d", result)
+	}
+	if ccvb.StackEntries != 1 {
+		t.Errorf("Expected StackEntries 1, got: %d", ccvb.StackEntries)
+	}
+	if ccvb.wideInEffect {
+		t.Errorf("Expected wideInEffect to be false, got true")
+	}
+}
+
+func TestCheckIload_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ILOAD, 0x01}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for ILOAD: %v", err)
+	}
+}
+
 // ILOAD_0
 func TestCheckIload0Valid(t *testing.T) {
 	globals.InitGlobals("test")
@@ -914,6 +961,19 @@ func TestCheckIload0Valid(t *testing.T) {
 	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
 	if err != nil {
 		t.Errorf("CheckIload0Valid failed: %v", err)
+	}
+}
+
+func TestCheckIload0Invalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ILOAD_0}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 10, 0, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for ILOAD_0 with MaxLocals=0, but got none")
 	}
 }
 
@@ -1055,11 +1115,13 @@ func TestCheckInvokedynamic_Success(t *testing.T) {
 		},
 		Utf8Refs: []string{"name", "desc"},
 	}
-	CP = &cp
-	Code = []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00}
-	PC = 0
+	ccvb := ccvBlock_type{
+		CP:   &cp,
+		Code: []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00},
+		PC:   0,
+	}
 
-	result := CheckInvokedynamic()
+	result := checkInvokedynamic(&ccvb)
 	if result != 5 {
 		t.Errorf("Expected return value 5, got: %d", result)
 	}
@@ -1067,11 +1129,13 @@ func TestCheckInvokedynamic_Success(t *testing.T) {
 
 func TestCheckInvokedynamic_InvalidCPslot(t *testing.T) {
 	globals.InitGlobals("test")
-	CP = createBasicCP()                                         // CP with only 10 entries (0-9)
-	Code = []byte{opcodes.INVOKEDYNAMIC, 0x00, 0xFF, 0x00, 0x00} // Slot 255
-	PC = 0
+	ccvb := ccvBlock_type{
+		CP:   createBasicCP(),                                       // CP with only 10 entries (0-9)
+		Code: []byte{opcodes.INVOKEDYNAMIC, 0x00, 0xFF, 0x00, 0x00}, // Slot 255
+		PC:   0,
+	}
 
-	result := CheckInvokedynamic()
+	result := checkInvokedynamic(&ccvb)
 	if result != ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for invalid CP slot, got: %d", result)
 	}
@@ -1079,11 +1143,13 @@ func TestCheckInvokedynamic_InvalidCPslot(t *testing.T) {
 
 func TestCheckInvokedynamic_InvalidEntryType(t *testing.T) {
 	globals.InitGlobals("test")
-	CP = createCPWithEntry(1, 99) // Type 99 (invalid)
-	Code = []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00}
-	PC = 0
+	ccvb := ccvBlock_type{
+		CP:   createCPWithEntry(1, 99), // Type 99 (invalid)
+		Code: []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00},
+		PC:   0,
+	}
 
-	result := CheckInvokedynamic()
+	result := checkInvokedynamic(&ccvb)
 	if result != ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for invalid CP entry type, got: %d", result)
 	}
@@ -1091,15 +1157,16 @@ func TestCheckInvokedynamic_InvalidEntryType(t *testing.T) {
 
 func TestCheckInvokedynamic_InvalidInvokeDynamicSlot(t *testing.T) {
 	globals.InitGlobals("test")
-	CP = &CPool{
-		CpIndex:        []CpEntry{{0, 0}, {InvokeDynamic, 1}}, // Slot 1 is out of bounds
-		InvokeDynamics: []InvokeDynamicEntry{},                // Empty
+	ccvb := ccvBlock_type{
+		CP: &CPool{
+			CpIndex:        []CpEntry{{0, 0}, {InvokeDynamic, 1}}, // Slot 1 is out of bounds
+			InvokeDynamics: []InvokeDynamicEntry{},                // Empty
+		},
+		Code: []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00},
+		PC:   0,
 	}
 
-	Code = []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00}
-	PC = 0
-
-	result := CheckInvokedynamic()
+	result := checkInvokedynamic(&ccvb)
 	if result != ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for invalid InvokeDynamic slot, got: %d", result)
 	}
@@ -1107,15 +1174,17 @@ func TestCheckInvokedynamic_InvalidInvokeDynamicSlot(t *testing.T) {
 
 func TestCheckInvokedynamic_InvalidBootstrapIndex(t *testing.T) {
 	globals.InitGlobals("test")
-	CP = &CPool{
-		CpIndex:        []CpEntry{{0, 0}, {InvokeDynamic, 0}},
-		InvokeDynamics: []InvokeDynamicEntry{{BootstrapIndex: 5, NameAndType: 0}}, // BSM 5 out of bounds
-		Bootstraps:     []BootstrapMethod{},
+	ccvb := ccvBlock_type{
+		CP: &CPool{
+			CpIndex:        []CpEntry{{0, 0}, {InvokeDynamic, 0}},
+			InvokeDynamics: []InvokeDynamicEntry{{BootstrapIndex: 5, NameAndType: 0}}, // BSM 5 out of bounds
+			Bootstraps:     []BootstrapMethod{},
+		},
+		Code: []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00},
+		PC:   0,
 	}
-	Code = []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00}
-	PC = 0
 
-	result := CheckInvokedynamic()
+	result := checkInvokedynamic(&ccvb)
 	if result != ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for invalid BootstrapIndex, got: %d", result)
 	}
@@ -1123,15 +1192,17 @@ func TestCheckInvokedynamic_InvalidBootstrapIndex(t *testing.T) {
 
 func TestCheckInvokedynamic_InvalidNameAndTypeIndex(t *testing.T) {
 	globals.InitGlobals("test")
-	CP = &CPool{
-		CpIndex:        []CpEntry{{0, 0}, {InvokeDynamic, 0}},
-		InvokeDynamics: []InvokeDynamicEntry{{BootstrapIndex: 0, NameAndType: 5}}, // NAT 5 out of bounds
-		Bootstraps:     []BootstrapMethod{{MethodRef: 0, Args: []uint16{}}},
+	ccvb := ccvBlock_type{
+		CP: &CPool{
+			CpIndex:        []CpEntry{{0, 0}, {InvokeDynamic, 0}},
+			InvokeDynamics: []InvokeDynamicEntry{{BootstrapIndex: 0, NameAndType: 5}}, // NAT 5 out of bounds
+			Bootstraps:     []BootstrapMethod{{MethodRef: 0, Args: []uint16{}}},
+		},
+		Code: []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00},
+		PC:   0,
 	}
-	Code = []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00}
-	PC = 0
 
-	result := CheckInvokedynamic()
+	result := checkInvokedynamic(&ccvb)
 	if result != ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for invalid NAT index, got: %d", result)
 	}
@@ -1139,19 +1210,21 @@ func TestCheckInvokedynamic_InvalidNameAndTypeIndex(t *testing.T) {
 
 func TestCheckInvokedynamic_InvalidNameAndTypeType(t *testing.T) {
 	globals.InitGlobals("test")
-	CP = &CPool{
-		CpIndex: []CpEntry{
-			{0, 0},
-			{InvokeDynamic, 0}, // Slot 1 points to InvokeDynamic
-			{0, 0},             // Slot 2: NAT index 2 points here (not NAT type)
+	ccvb := ccvBlock_type{
+		CP: &CPool{
+			CpIndex: []CpEntry{
+				{0, 0},
+				{InvokeDynamic, 0}, // Slot 1 points to InvokeDynamic
+				{0, 0},             // Slot 2: NAT index 2 points here (not NAT type)
+			},
+			InvokeDynamics: []InvokeDynamicEntry{{BootstrapIndex: 0, NameAndType: 2}},
+			Bootstraps:     []BootstrapMethod{{MethodRef: 0, Args: []uint16{}}},
 		},
-		InvokeDynamics: []InvokeDynamicEntry{{BootstrapIndex: 0, NameAndType: 2}},
-		Bootstraps:     []BootstrapMethod{{MethodRef: 0, Args: []uint16{}}},
+		Code: []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00},
+		PC:   0,
 	}
-	Code = []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00}
-	PC = 0
 
-	result := CheckInvokedynamic()
+	result := checkInvokedynamic(&ccvb)
 	if result != ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for invalid NAT type, got: %d", result)
 	}
@@ -1159,23 +1232,25 @@ func TestCheckInvokedynamic_InvalidNameAndTypeType(t *testing.T) {
 
 func TestCheckInvokedynamic_InvalidNATDescriptorIndex(t *testing.T) {
 	globals.InitGlobals("test")
-	CP = &CPool{
-		CpIndex: []CpEntry{
-			{0, 0},
-			{InvokeDynamic, 0},
-			{NameAndType, 0},
-			{UTF8, 0},
-			{MethodRef, 1}, // should be UTF8
+	ccvb := ccvBlock_type{
+		CP: &CPool{
+			CpIndex: []CpEntry{
+				{0, 0},
+				{InvokeDynamic, 0},
+				{NameAndType, 0},
+				{UTF8, 0},
+				{MethodRef, 1}, // should be UTF8
+			},
+			InvokeDynamics: []InvokeDynamicEntry{{BootstrapIndex: 0, NameAndType: 2}},
+			Bootstraps:     []BootstrapMethod{{MethodRef: 0, Args: []uint16{}}},
+			NameAndTypes:   []NameAndTypeEntry{{NameIndex: 3, DescIndex: 4}}, // DescIndex 4 doesn't point to a UTF8
+			Utf8Refs:       []string{"name"},
 		},
-		InvokeDynamics: []InvokeDynamicEntry{{BootstrapIndex: 0, NameAndType: 2}},
-		Bootstraps:     []BootstrapMethod{{MethodRef: 0, Args: []uint16{}}},
-		NameAndTypes:   []NameAndTypeEntry{{NameIndex: 3, DescIndex: 4}}, // DescIndex 4 doesn't point to a UTF8
-		Utf8Refs:       []string{"name"},
+		Code: []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00},
+		PC:   0,
 	}
-	Code = []byte{opcodes.INVOKEDYNAMIC, 0x00, 0x01, 0x00, 0x00}
-	PC = 0
 
-	result := CheckInvokedynamic()
+	result := checkInvokedynamic(&ccvb)
 	if result != ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for invalid NAT DescIndex, got: %d", result)
 	}
@@ -1199,11 +1274,13 @@ func TestCheckInvokeinterface_HighLevel(t *testing.T) {
 func TestCheckInvokeinterface_ValidInterface(t *testing.T) {
 	globals.InitGlobals("test")
 
-	CP = createCPWithEntry(1, Interface)
-	Code = []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x02, 0x00} // count=2, zero=0
-	PC = 0
+	ccvb := ccvBlock_type{
+		CP:   createCPWithEntry(1, Interface),
+		Code: []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x02, 0x00}, // count=2, zero=0
+		PC:   0,
+	}
 
-	result := CheckInvokeinterface()
+	result := checkInvokeinterface(&ccvb)
 
 	if result != 4 {
 		t.Errorf("Expected return value 4, got: %d", result)
@@ -1252,6 +1329,20 @@ func TestCheckInvokeinterface_NonZeroZeroByte(t *testing.T) {
 	}
 }
 
+// INVOKEINTERFACE: invalid entry type
+func TestCheckInvokeinterface_InvalidEntryType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x02, 0x00}
+	cp := createCPWithEntry(1, int(FieldRef)) // should be Interface
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for non-interface entry in INVOKEINTERFACE, but got none")
+	}
+}
+
 // INVOKESPECIAL bytecode with valid method ref
 func TestCheckInvokespecial_ValidMethodRef(t *testing.T) {
 	globals.InitGlobals("test")
@@ -1271,6 +1362,39 @@ func TestCheckInvokespecial_ValidMethodRef(t *testing.T) {
 	if err != nil {
 		t.Errorf("CheckCodeValidity failed: %v", err)
 	}
+}
+
+func TestCheckInvokespecial_InterfaceMethodRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.INVOKESPECIAL, 0x00, 0x01}
+	cp := createCPWithEntry(1, int(Interface))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for INVOKESPECIAL with Interface: %v", err)
+	}
+}
+
+func TestCheckInvokespecial_InvalidType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.INVOKESPECIAL, 0x00, 0x01}
+	cp := createCPWithEntry(1, int(FieldRef)) // should be MethodRef or InterfaceMethodRef
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 10, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for non-method ref in INVOKESPECIAL, but got none")
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
 }
 
 // INVOKESPECIAL bytecode with invalid CP slot
@@ -1322,6 +1446,39 @@ func TestCheckInvokestatic_ValidMethodRef(t *testing.T) {
 	if err != nil {
 		t.Errorf("CheckCodeValidity failed: %v", err)
 	}
+}
+
+func TestCheckInvokestatic_InterfaceMethodRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.INVOKESTATIC, 0x00, 0x01}
+	cp := createCPWithEntry(1, int(Interface))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 10, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for INVOKESTATIC with Interface: %v", err)
+	}
+}
+
+func TestCheckInvokestatic_InvalidType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.INVOKESTATIC, 0x00, 0x01}
+	cp := createCPWithEntry(1, int(FieldRef)) // should be MethodRef or InterfaceMethodRef
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 10, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for non-method ref in INVOKESTATIC, but got none")
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
 }
 
 // INVOKESTATIC bytecode with invalid CP slot
@@ -1401,7 +1558,6 @@ func TestNewInvokevirtualInvalidMethRef(t *testing.T) {
 		FldName: "testField",
 		FldType: "I",
 	}
-	CP = &cp
 
 	af := AccessFlags{}
 	err := CheckCodeValidity(&code, &cp, 5, 6, af, nil)
@@ -1460,7 +1616,7 @@ func TestIstore0_HighLevel(t *testing.T) {
 func TestPushIntRet3_StackIncrement(t *testing.T) {
 	globals.InitGlobals("test")
 
-	// Create bytecode with LDC_W (0x13) which calls PushIntRet3
+	// Create bytecode with LDC_W (0x13) which calls pushIntRet3
 	code := []byte{opcodes.LDC_W, 0x00, 0x01} // LDC_W with CP index 1
 
 	// Create basic constant pool with an integer constant
@@ -1495,6 +1651,19 @@ func TestCheckLload0Valid(t *testing.T) {
 	err := CheckCodeValidity(&code, &cp, 10, 6, af, nil)
 	if err != nil {
 		t.Errorf("CheckLload0Valid failed: %v", err)
+	}
+}
+
+func TestCheckLload0Invalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.LLOAD_0}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 10, 1, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for LLOAD_0 with MaxLocals=1, but got none")
 	}
 }
 
@@ -1847,11 +2016,13 @@ func TestCheckMultianewarray_HighLevel(t *testing.T) {
 func TestCheckMultianewarray_ValidClassRef(t *testing.T) {
 	globals.InitGlobals("test")
 
-	CP = createCPWithEntry(1, ClassRef)
-	Code = []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x02} // dimensions = 2
-	PC = 0
+	ccvb := ccvBlock_type{
+		CP:   createCPWithEntry(1, ClassRef),
+		Code: []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x02}, // dimensions = 2
+		PC:   0,
+	}
 
-	result := CheckMultianewarray()
+	result := checkMultianewarray(&ccvb)
 
 	if result != 4 {
 		t.Errorf("Expected return value 4, got: %d", result)
@@ -1872,6 +2043,85 @@ func TestCheckMultianewarray_ZeroDimensions(t *testing.T) {
 	}
 }
 
+func TestCheckMultianewarray_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.MULTIANEWARRAY, 0x00, 0xFF, 0x02}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for invalid MULTIANEWARRAY CP slot, but got none")
+	}
+}
+
+func TestCheckMultianewarray_InvalidCPType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x02}
+	cp := createCPWithEntry(1, int(FieldRef)) // should be ClassRef
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for non-class ref in MULTIANEWARRAY, but got none")
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+// NEWARRAY
+func TestCheckNewarray_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.NEWARRAY, 0x01} // NEWARRAY with CP index 1
+	cp := createCPWithEntry(1, int(ClassRef))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for NEWARRAY: %v", err)
+	}
+}
+
+func TestCheckNewarray_Valid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{
+		CP:           createCPWithEntry(1, ClassRef),
+		Code:         []byte{opcodes.NEWARRAY, 0x01},
+		PC:           0,
+		StackEntries: 0,
+	}
+
+	result := checkNewArray(&ccvb)
+	if result != 2 {
+		t.Errorf("Expected return value 2, got: %d", result)
+	}
+	if ccvb.StackEntries != 1 {
+		t.Errorf("Expected StackEntries 1, got: %d", ccvb.StackEntries)
+	}
+}
+
+func TestCheckNewarray_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.NEWARRAY, 0xFF}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for invalid NEWARRAY CP slot, but got none")
+	}
+}
+
 // NEW
 func TestNewInvalidReference(t *testing.T) {
 	globals.InitGlobals("test")
@@ -1885,7 +2135,6 @@ func TestNewInvalidReference(t *testing.T) {
 	cp.FieldRefs = make([]ResolvedFieldEntry, 1, 1)
 	cp.FieldRefs[0] = ResolvedFieldEntry{}
 	af := AccessFlags{}
-	CP = &cp
 
 	err := CheckCodeValidity(&code, &cp, 5, 6, af, nil)
 	if err == nil {
@@ -1930,14 +2179,11 @@ func TestCheckPop_HighLevel(t *testing.T) {
 func TestCheckPop_StackDecrement(t *testing.T) {
 	globals.InitGlobals("test")
 
-	StackEntries = 3
-	result := CheckPop()
+	ccvb := ccvBlock_type{StackEntries: 3}
+	result := checkPop(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
-	}
-	if StackEntries != 2 {
-		t.Errorf("Expected StackEntries to decrease by 1, got: %d", StackEntries)
 	}
 }
 
@@ -1958,14 +2204,83 @@ func TestCheckPop2_HighLevel(t *testing.T) {
 func TestCheckPop2_StackDecrement(t *testing.T) {
 	globals.InitGlobals("test")
 
-	StackEntries = 3
-	result := CheckPop2()
+	ccvb := ccvBlock_type{StackEntries: 3}
+	result := checkPop2(&ccvb)
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
-	if StackEntries != 1 {
-		t.Errorf("Expected StackEntries to decrease by 2, got: %d", StackEntries)
+}
+
+// PUTFIELD
+func TestCheckPutfield_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.PUTFIELD, 0x00, 0x01} // PUTFIELD with CP index 1
+	cp := createCPWithEntry(1, int(FieldRef))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for PUTFIELD: %v", err)
+	}
+}
+
+func TestCheckPutfield_ValidFieldRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{
+		CP:   createCPWithEntry(1, FieldRef),
+		Code: []byte{opcodes.PUTFIELD, 0x00, 0x01},
+		PC:   0,
+	}
+
+	result := checkPutfield(&ccvb)
+	if result != 3 {
+		t.Errorf("Expected return value 3, got: %d", result)
+	}
+}
+
+func TestCheckPutfield_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.PUTFIELD, 0x00, 0xFF}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for invalid PUTFIELD CP slot, but got none")
+	}
+}
+
+func TestCheckPutfield_InvalidFieldRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.PUTFIELD, 0x00, 0x01}
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	cp.CpIndex[1] = CpEntry{Type: MethodRef, Slot: 0} // should be a field ref
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("PUTFIELD: Expected error but did not get one.")
+	}
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a field reference") {
+		t.Errorf("PUTFIELD: Did not get expected error message, got: %s", errMsg)
 	}
 }
 
@@ -1973,13 +2288,12 @@ func TestCheckPop2_StackDecrement(t *testing.T) {
 func TestCheckPutstatic_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
-	code := []byte{opcodes.PUTSTATIC, 0x00, 0x01} // PUTFIELD with CP index 1
+	code := []byte{opcodes.PUTSTATIC, 0x00, 0x01} // PUTSTATIC with CP index 1
 	cp := createCPWithEntry(1, int(FieldRef))
 	af := AccessFlags{}
 
 	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
 	if err != nil {
-
 		t.Errorf("CheckCodeValidity failed: %v", err)
 	}
 }
@@ -1988,11 +2302,13 @@ func TestCheckPutstatic_HighLevel(t *testing.T) {
 func TestCheckPutstatic_ValidFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
 
-	CP = createCPWithEntry(1, FieldRef)
-	Code = []byte{opcodes.PUTSTATIC, 0x00, 0x01}
-	PC = 0
+	ccvb := ccvBlock_type{
+		CP:   createCPWithEntry(1, FieldRef),
+		Code: []byte{opcodes.PUTSTATIC, 0x00, 0x01},
+		PC:   0,
+	}
 
-	result := CheckGetfield()
+	result := checkPutstatic(&ccvb)
 
 	if result != 3 {
 		t.Errorf("Putstatic expected return value 3, got: %d", result)
@@ -2014,7 +2330,7 @@ func TestCheckPutstatic_InvalidCPSlot(t *testing.T) {
 }
 
 // PUTSTATIC with invalid field ref
-func TestCodeCheckPutfield(t *testing.T) {
+func TestCodeCheckPutstatic(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// redirect stderr so as not to pollute the test output with the expected error message
@@ -2023,14 +2339,14 @@ func TestCodeCheckPutfield(t *testing.T) {
 	os.Stderr = w
 
 	code := []byte{opcodes.PUTSTATIC, 0x00, 0x01} // PUTSTATIC pointing to slot 1
-	CP = &CPool{}
-	CP.CpIndex = make([]CpEntry, 10)
-	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = CpEntry{Type: MethodRef, Slot: 0} // should be a field ref
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	cp.CpIndex[1] = CpEntry{Type: MethodRef, Slot: 0} // should be a field ref
 
 	af := AccessFlags{}
 
-	err := CheckCodeValidity(&code, CP, 5, 6, af, nil)
+	err := CheckCodeValidity(&code, &cp, 5, 6, af, nil)
 	if err == nil {
 		t.Errorf("PUTSTATIC: Expected error but did not get one.")
 	}
@@ -2050,17 +2366,16 @@ func TestCodeCheckPutfield(t *testing.T) {
 func TestCheckSipush_ValidLength(t *testing.T) {
 	globals.InitGlobals("test")
 
-	Code = []byte{opcodes.SIPUSH, 0x12, 0x34}
-	PC = 0
-	StackEntries = 0
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.SIPUSH, 0x12, 0x34},
+		PC:           0,
+		StackEntries: 0,
+	}
 
-	result := CheckSipush()
+	result := checkSipush(&ccvb)
 
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
-	}
-	if StackEntries != 1 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
 	}
 }
 
@@ -2132,4 +2447,351 @@ func TestCheckTableswitch_InvalidRange(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected error for invalid TABLESWITCH range, but got none")
 	}
+}
+
+// WIDE
+func TestCheckWide_Direct(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{wideInEffect: false}
+	result := checkWide(&ccvb)
+
+	if result != 1 {
+		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if !ccvb.wideInEffect {
+		t.Errorf("Expected wideInEffect to be true, got false")
+	}
+}
+
+func TestCheckWide_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.WIDE, opcodes.ILOAD, 0x00, 0x01}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for WIDE ILOAD: %v", err)
+	}
+}
+
+// INVALID BYTECODE
+func TestInvalidBytecode_Direct(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	ccvb := ccvBlock_type{
+		Code: []byte{0xCB},
+		PC:   0,
+	}
+	result := invalidBytecode(&ccvb)
+	if result != ERROR_OCCURRED {
+		t.Errorf("Expected ERROR_OCCURRED, got: %d", result)
+	}
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "Invalid bytecode instruction") {
+		t.Errorf("Expected error message to contain 'Invalid bytecode instruction', got: %s", errMsg)
+	}
+}
+
+func TestInvalidBytecode_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{0xFE}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for invalid bytecode 0xFE, but got none")
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+// Additional opcode branch coverage tests
+func TestAnewarray_Interface(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ANEWARRAY, 0x00, 0x01}
+	cp := createCPWithEntry(1, int(Interface))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for ANEWARRAY with Interface: %v", err)
+	}
+}
+
+func TestCheckNew_Interface(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.NEW, 0x00, 0x01}
+	cp := createCPWithEntry(1, int(Interface))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for NEW with Interface: %v", err)
+	}
+}
+
+func TestCheckIf_IllegalJump(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.IF_ACMPEQ, 0x7F, 0xFF}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for out-of-bounds IF_ACMPEQ jump, but got none")
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+func TestCheckIfzero_IllegalJump(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.IFEQ, 0x7F, 0xFF}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for out-of-bounds IFEQ jump, but got none")
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+func TestCheckGotow_IllegalJump(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.GOTO_W, 0x7F, 0xFF, 0xFF, 0xFF}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for out-of-bounds GOTO_W jump, but got none")
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+func TestCheckDup2x1_64BitDirect(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.LCONST_0, opcodes.DUP2_X1},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
+
+	result := checkDup2x1(&ccvb)
+	if result != 1 {
+		t.Errorf("Expected return 1, got %d", result)
+	}
+	if ccvb.Code[1] != opcodes.DUP_X1 {
+		t.Errorf("Expected opcode at index 1 to be converted to DUP_X1 (0x%02X), got 0x%02X", opcodes.DUP_X1, ccvb.Code[1])
+	}
+}
+
+func TestCheckDup2x1_Next64BitDirect(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.NOP, opcodes.DUP2_X1, opcodes.LCONST_0},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
+
+	result := checkDup2x1(&ccvb)
+	if result != 1 {
+		t.Errorf("Expected return 1, got %d", result)
+	}
+	if ccvb.Code[1] != opcodes.DUP_X1 {
+		t.Errorf("Expected opcode at index 1 to be converted to DUP_X1 (0x%02X), got 0x%02X", opcodes.DUP_X1, ccvb.Code[1])
+	}
+}
+
+func TestCheckDup2x1_32BitDirect(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.ICONST_0, opcodes.DUP2_X1},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
+
+	result := checkDup2x1(&ccvb)
+	if result != 1 {
+		t.Errorf("Expected return 1, got %d", result)
+	}
+	if ccvb.Code[1] != opcodes.DUP2_X1 {
+		t.Errorf("Expected opcode at index 1 to remain DUP2_X1, got 0x%02X", ccvb.Code[1])
+	}
+}
+
+func TestCheckDup2x2_64BitDirect(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.LCONST_0, opcodes.DUP2_X2},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
+
+	result := checkDup2x2(&ccvb)
+	if result != 1 {
+		t.Errorf("Expected return 1, got %d", result)
+	}
+	if ccvb.Code[1] != opcodes.DUP_X2 {
+		t.Errorf("Expected opcode at index 1 to be converted to DUP_X2 (0x%02X), got 0x%02X", opcodes.DUP_X2, ccvb.Code[1])
+	}
+}
+
+func TestCheckDup2x2_Next64BitDirect(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.NOP, opcodes.DUP2_X2, opcodes.LCONST_0},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
+
+	result := checkDup2x2(&ccvb)
+	if result != 1 {
+		t.Errorf("Expected return 1, got %d", result)
+	}
+	if ccvb.Code[1] != opcodes.DUP_X2 {
+		t.Errorf("Expected opcode at index 1 to be converted to DUP_X2 (0x%02X), got 0x%02X", opcodes.DUP_X2, ccvb.Code[1])
+	}
+}
+
+func TestCheckDup2x2_32BitDirect(t *testing.T) {
+	globals.InitGlobals("test")
+
+	ccvb := ccvBlock_type{
+		Code:         []byte{opcodes.ICONST_0, opcodes.DUP2_X2},
+		PC:           1,
+		PrevPC:       0,
+		StackEntries: 1,
+	}
+
+	result := checkDup2x2(&ccvb)
+	if result != 1 {
+		t.Errorf("Expected return 1, got %d", result)
+	}
+	if ccvb.Code[1] != opcodes.DUP2_X2 {
+		t.Errorf("Expected opcode at index 1 to remain DUP2_X2, got 0x%02X", ccvb.Code[1])
+	}
+}
+
+func TestCheckAnewarray_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ANEWARRAY, 0x00, 0xFF}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for invalid ANEWARRAY CP slot, but got none")
+	}
+}
+
+func TestCheckNew_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.NEW, 0x00, 0xFF}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
+	if err == nil {
+		t.Errorf("Expected error for invalid NEW CP slot, but got none")
+	}
+}
+
+func TestCheckCodeValidity_8Threads5Opcodes(t *testing.T) {
+	globals.InitGlobals("test")
+
+	const numThreads = 16
+	const numIterations = 200
+	const maxStack = 100
+	const maxLocals = 100
+
+	// Bytecode sequence
+	code := []byte{
+		opcodes.ICONST_1,
+		opcodes.ICONST_2,
+		opcodes.FCONST_2,
+		opcodes.DCONST_1,
+		opcodes.DUP2_X2,
+		opcodes.LXOR,
+		opcodes.IADD,
+		opcodes.ISTORE_0,
+		opcodes.RETURN,
+		opcodes.POP2,
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(numThreads)
+
+	for i := range numThreads {
+		go func(threadID int) {
+			defer wg.Done()
+			cp := createBasicCP()
+			af := AccessFlags{}
+			for j := range numIterations {
+				codeCopy := make([]byte, len(code))
+				copy(codeCopy, code)
+				err := CheckCodeValidity(&codeCopy, cp, maxStack, maxLocals, af, nil)
+				if err != nil {
+					t.Errorf("Thread %d (iteration %d) failed CheckCodeValidity: %v", threadID, j, err)
+					return
+				}
+			}
+		}(i)
+	}
+
+	wg.Wait()
 }
