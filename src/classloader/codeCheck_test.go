@@ -2762,6 +2762,7 @@ func TestCheckCodeValidity_8Threads5Opcodes(t *testing.T) {
 
 	// Bytecode sequence
 	code := []byte{
+		opcodes.DUP2,
 		opcodes.ICONST_1,
 		opcodes.ICONST_2,
 		opcodes.FCONST_2,
