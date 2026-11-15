@@ -242,7 +242,7 @@ type ccvBlock_type struct {
 
 type BytecodeFunc func(*ccvBlock_type) int
 
-var ERROR_OCCURRED = math.MaxInt32
+const ERROR_OCCURRED = math.MaxInt32
 
 var CheckTable = [256]BytecodeFunc{
 	return1,               // NOP             0x00
@@ -513,7 +513,7 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, maxLocals int, 
 	}
 	code := *codePtr
 	// check that the code is valid
-	if code == nil {
+	if code == nil || len(code) == 0 {
 		if access.ClassIsAbstract {
 			return nil
 		} else {
@@ -596,7 +596,7 @@ func incrementStackEntries(ccvb *ccvBlock_type) int {
 
 // ANEWARRAY 0xBD Create a new array of reference type elements
 func checkAnewarray(ccvb *ccvBlock_type) int {
-	// check that the index points to a field reference in the CP
+	// check that the index points to an array of reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
 		return ERROR_OCCURRED
@@ -636,7 +636,7 @@ func checkDup1(ccvb *ccvBlock_type) int {
 // take up 1 stack entry, so we need to be check whether the operation is on a double or long. If
 // it is, then we convert DUP2 to DUP, which duplicates only the top stack entry.
 func checkDup2(ccvb *ccvBlock_type) int {
-	if bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
+	if ccvb.PrevPC > -1 && bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
 		goto dup2 // if so, we can safely use DUP2
 	}
 
@@ -653,7 +653,7 @@ dup2:
 
 // checkDup2x1 converts DUP2_X1 to DUP_X1 when it detects that the bytecode is handling a 64-bit value.
 func checkDup2x1(ccvb *ccvBlock_type) int {
-	if bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
+	if ccvb.PrevPC > -1 && bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
 		goto dup2x1 // if so, we can safely use DUP2
 	}
 
@@ -675,7 +675,7 @@ dup2x1:
 
 // DUP2_X2: *NOTE* checkDup2x2 converts DUP2_X2 to DUP_X2 when it detects that the bytecode is handling a 64-bit value.
 func checkDup2x2(ccvb *ccvBlock_type) int {
-	if bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
+	if ccvb.PrevPC > -1 && bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
 		goto dup2x2 // if so, we can safely use DUP2
 	}
 
@@ -701,7 +701,7 @@ func pushFloat(ccvb *ccvBlock_type) int {
 	return 1
 }
 
-// FLOAD* and DLOAD* Push an int or long from local onto op stack
+// FLOAD* and DLOAD* Push a float or double from local onto op stack
 func pushFloatRet2(ccvb *ccvBlock_type) int {
 	ccvb.StackEntries += 1
 	return 2
@@ -737,7 +737,7 @@ func checkGetfield(ccvb *ccvBlock_type) int {
 	return 3
 }
 
-// GETSTATIC 0xB4 Get static field from object and push it onto the stack
+// GETSTATIC 0xB2 Get static field from object and push it onto the stack
 func checkGetstatic(ccvb *ccvBlock_type) int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
@@ -795,6 +795,7 @@ func checkIf(ccvb *ccvBlock_type) int { // most IF* bytecodes come here. Jump if
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
+	ccvb.StackEntries -= 2
 	return 3
 }
 
@@ -872,7 +873,7 @@ func checkIload3(ccvb *ccvBlock_type) int {
 
 // INVOKEDYNAMIC 0xBA
 func checkInvokedynamic(ccvb *ccvBlock_type) int {
-	CPslot := int(int16(ccvb.Code[ccvb.PC+1])*256 + int16(ccvb.Code[ccvb.PC+2])) // next 2 bytes point to CP entry
+	CPslot := (int(ccvb.Code[ccvb.PC+1]) * 256) + int(ccvb.Code[ccvb.PC+2]) // next 2 bytes point to CP entry
 
 	// is CP slot pointing to a valid CP entry?
 	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
@@ -966,7 +967,7 @@ func checkInvokeinterface(ccvb *ccvBlock_type) int {
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	return 4
+	return 5
 }
 
 // INVOKESPECIAL 0xB7
@@ -1117,7 +1118,7 @@ func checkNew(ccvb *ccvBlock_type) int {
 
 	CPentry := ccvb.CP.CpIndex[CPslot]
 	if CPentry.Type != ClassRef && CPentry.Type != Interface {
-		errMsg := fmt.Sprintf("NEW: Invalid reference to object type")
+		errMsg := "NEW: Invalid reference to object type"
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
@@ -1125,15 +1126,16 @@ func checkNew(ccvb *ccvBlock_type) int {
 	return 3
 }
 
-// NEWARRAY 0xBC Create a 1-dimensional array
+// NEWARRAY 0xBC Create a 1-dimensional array of a primitive type
 func checkNewArray(ccvb *ccvBlock_type) int {
-	// check that the index points to a field reference in the CP
-	CPslot := int(ccvb.Code[ccvb.PC+1])
-	if CPslot < 1 || CPslot >= len(ccvb.CP.CpIndex) {
+	atype := ccvb.Code[ccvb.PC+1]
+	if atype < 4 || atype > 11 {
+		errMsg := fmt.Sprintf("%s:\n NEWARRAY at %d: invalid array type code %d",
+			excNames.JVMexceptionNames[excNames.VerifyError], ccvb.PC, atype)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-
-	ccvb.StackEntries += 1 // for the dimension of the array
+	// pops the count and pushes the array reference: net 0
 	return 2
 }
 

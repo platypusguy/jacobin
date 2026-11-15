@@ -9,6 +9,7 @@ package classloader
 import (
 	"io"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"jacobin/src/opcodes"
 	"os"
 	"strings"
@@ -1282,8 +1283,8 @@ func TestCheckInvokeinterface_ValidInterface(t *testing.T) {
 
 	result := checkInvokeinterface(&ccvb)
 
-	if result != 4 {
-		t.Errorf("Expected return value 4, got: %d", result)
+	if result != 5 {
+		t.Errorf("Expected return value 5, got: %d", result)
 	}
 }
 
@@ -2080,8 +2081,8 @@ func TestCheckMultianewarray_InvalidCPType(t *testing.T) {
 func TestCheckNewarray_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
-	code := []byte{opcodes.NEWARRAY, 0x01} // NEWARRAY with CP index 1
-	cp := createCPWithEntry(1, int(ClassRef))
+	code := []byte{opcodes.NEWARRAY, object.T_INT}
+	cp := createBasicCP()
 	af := AccessFlags{}
 
 	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
@@ -2094,10 +2095,10 @@ func TestCheckNewarray_Valid(t *testing.T) {
 	globals.InitGlobals("test")
 
 	ccvb := ccvBlock_type{
-		CP:           createCPWithEntry(1, ClassRef),
-		Code:         []byte{opcodes.NEWARRAY, 0x01},
+		CP:           createBasicCP(),
+		Code:         []byte{opcodes.NEWARRAY, object.T_INT},
 		PC:           0,
-		StackEntries: 0,
+		StackEntries: 1,
 	}
 
 	result := checkNewArray(&ccvb)
@@ -2109,7 +2110,7 @@ func TestCheckNewarray_Valid(t *testing.T) {
 	}
 }
 
-func TestCheckNewarray_InvalidCPSlot(t *testing.T) {
+func TestCheckNewarray_InvalidType(t *testing.T) {
 	globals.InitGlobals("test")
 
 	code := []byte{opcodes.NEWARRAY, 0xFF}
@@ -2118,7 +2119,7 @@ func TestCheckNewarray_InvalidCPSlot(t *testing.T) {
 
 	err := CheckCodeValidity(&code, cp, 5, 6, af, nil)
 	if err == nil {
-		t.Errorf("Expected error for invalid NEWARRAY CP slot, but got none")
+		t.Errorf("Expected error for invalid NEWARRAY array type, but got none")
 	}
 }
 
