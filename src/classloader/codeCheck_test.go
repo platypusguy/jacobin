@@ -176,13 +176,6 @@ func TestReturn3(t *testing.T) {
 	}
 }
 
-func TestReturn4(t *testing.T) {
-	result := return4(&ccvBlock_type{})
-	if result != 4 {
-		t.Errorf("Expected return value 4, got: %d", result)
-	}
-}
-
 func TestReturn5(t *testing.T) {
 	result := return5(&ccvBlock_type{})
 	if result != 5 {

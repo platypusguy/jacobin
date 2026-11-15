@@ -637,7 +637,7 @@ func checkDup1(ccvb *ccvBlock_type) int {
 
 // DUP2 is like DUP, but duplicates the top 2 stack values-- frequenly generated for longs and doubles,
 // which take up 2 stack entries on HotSpot and other OpenJDK JVMs. On Jacobin, doubles and longs
-// take up 1 stack entry, so we need to be check whether the operation is on a double or long. If
+// take up 1 stack entry, so we need to check whether the operation is on a double or long. If
 // it is, then we convert DUP2 to DUP, which duplicates only the top stack entry.
 func checkDup2(ccvb *ccvBlock_type) int {
 	if ccvb.PrevPC > -1 && bytecodePushes32BitValue(ccvb.Code[ccvb.PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
@@ -1126,7 +1126,7 @@ func checkLookupswitch(ccvb *ccvBlock_type) int { // need to check this
 		paddingBytes = 0
 	}
 	basePC += paddingBytes
-	basePC += 4 // jump size for default
+	basePC += 4 // jump-size for default
 
 	npairs := binary.BigEndian.Uint32(
 		[]byte{ccvb.Code[basePC+1], ccvb.Code[basePC+2], ccvb.Code[basePC+3], ccvb.Code[basePC+4]})
@@ -1234,7 +1234,7 @@ func checkTableSwitch(ccvb *ccvBlock_type) int {
 		paddingBytes = 0
 	}
 	basePC += paddingBytes
-	basePC += 4 // jump size for default
+	basePC += 4 // jump-size for default
 	low := types.FourBytesToInt64(ccvb.Code[basePC+1], ccvb.Code[basePC+2], ccvb.Code[basePC+3], ccvb.Code[basePC+4])
 	high := types.FourBytesToInt64(ccvb.Code[basePC+5], ccvb.Code[basePC+6], ccvb.Code[basePC+7], ccvb.Code[basePC+8])
 	basePC += 8 // 4 bytes for low, 4 bytes for high
@@ -1305,23 +1305,19 @@ func checkWide(ccvb *ccvBlock_type) int {
 // === utility functions ===
 
 // a one-byte opcode that has nothing that can be checked
-func return1(ccvb *ccvBlock_type) int {
+func return1(*ccvBlock_type) int {
 	return 1
 }
 
-func return2(ccvb *ccvBlock_type) int {
+func return2(*ccvBlock_type) int {
 	return 2
 }
 
-func return3(ccvb *ccvBlock_type) int {
+func return3(*ccvBlock_type) int {
 	return 3
 }
 
-func return4(ccvb *ccvBlock_type) int {
-	return 4
-}
-
-func return5(ccvb *ccvBlock_type) int {
+func return5(*ccvBlock_type) int {
 	return 5
 }
 
