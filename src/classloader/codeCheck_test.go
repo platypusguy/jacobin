@@ -253,6 +253,9 @@ func TestCheckAconstnull_StackIncrement(t *testing.T) {
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
+	if ccvb.StackEntries != 1 {
+		t.Errorf("Expected StackEntries to increase by 1, got: %d", ccvb.StackEntries)
+	}
 }
 
 // ANEWARRAY
@@ -348,6 +351,9 @@ func TestDup(t *testing.T) {
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
+	if ccvb.StackEntries != 2 {
+		t.Errorf("Expected StackEntries to increase by 1, got: %d", ccvb.StackEntries)
+	}
 }
 
 // DUP2
@@ -393,6 +399,9 @@ func TestDup2_LongDoubleOperation(t *testing.T) {
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if ccvb.StackEntries != 2 {
+		t.Errorf("Expected StackEntries to increase by 1, got: %d", ccvb.StackEntries)
 	}
 	// Check that DUP2 was converted to DUP
 	if ccvb.Code[ccvb.PC] != opcodes.DUP {
@@ -2219,6 +2228,9 @@ func TestCheckPop_StackDecrement(t *testing.T) {
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
+	if ccvb.StackEntries != 2 {
+		t.Errorf("Expected StackEntries to decrease by 1, got: %d", ccvb.StackEntries)
+	}
 }
 
 // POP2
@@ -2243,6 +2255,9 @@ func TestCheckPop2_StackDecrement(t *testing.T) {
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if ccvb.StackEntries != 1 {
+		t.Errorf("Expected StackEntries to decrease by 2, got: %d", ccvb.StackEntries)
 	}
 }
 
