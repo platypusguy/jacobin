@@ -67,6 +67,12 @@ func Load_Io_FileInputStream() {
 			GFunction:  fisReadByteArrayOffset,
 		}
 
+	ghelpers.MethodSignatures["java/io/FileInputStream.readAllBytes()[B"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  inputStreamReadAllBytes,
+		}
+
 	ghelpers.MethodSignatures["java/io/FileInputStream.readNBytes([BII)I"] =
 		ghelpers.GMeth{
 			ParamSlots: 3,
