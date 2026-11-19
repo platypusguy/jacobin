@@ -208,7 +208,7 @@ func invokeBSM(cp *CPool, bsm BootstrapMethod, bsmHandle *object.Object, params 
 		return nil, fmt.Errorf("invokeBSM: method handle $target is not an MTentry")
 	}
 	if mtEntry.MType != 'G' {
-		return nil, fmt.Errorf("invokeBSM: bootstrap methods implemented in Java are not yet supported (MType=%c)", mtEntry.MType)
+		return nil, fmt.Errorf("invokeBSM: %s is implemented in Java. Non-gfunctions BSMs are not yet supported", bsmFQN)
 	}
 
 	result := globals.GetGlobalRef().FuncInvokeGFunction(bsmFQN, params)
