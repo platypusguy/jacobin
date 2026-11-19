@@ -103,7 +103,6 @@ func ConcatStringElements(params []any) any {
 	invdynTypeIndex := actualNAT.DescIndex
 	invdynType := classloader.FetchUTF8stringFromCPEntryNumber(cp, invdynTypeIndex)
 
-	// <<<<<<<break the type string into the constituent descriptors of arguments and put them in a slice
 	invdynArgs := util.ParseIncomingParamsFromMethTypeStringRaw(invdynType) // the types of the dynamic args
 	if globals.TraceInst {
 		trace.Raw(fmt.Sprintf("invdynArgs: %v", invdynArgs))

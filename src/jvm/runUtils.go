@@ -1083,3 +1083,46 @@ func TraceObject(f *frames.Frame, opStr string, obj *object.Object) {
 		trace.Trace(traceInfo)
 	}
 }
+
+// isStringConcatBSM checks whether the InvokeDynamic constant pool entry at cpSlot
+// resolves to a bootstrap method in java/lang/invoke/StringConcatFactory.
+func isStringConcatBSM(cp *classloader.CPool, cpSlot int) bool {
+	// because codeCheck has validated many of the indices, this routine has fewer checks.
+
+	// 1. Fetch the CONSTANT_InvokeDynamic_info entry
+	idEntry := classloader.FetchCPentry(cp, cpSlot) // the classloader.InvokeDynamic entry
+
+	bsmIndex := int(idEntry.AddrVal.Entry1)
+	if bsmIndex < 0 || bsmIndex >= len(cp.Bootstraps) {
+		return false
+	}
+
+	// 2. Fetch the BootstrapMethod and its target CONSTANT_MethodHandle entry
+	bsm := cp.Bootstraps[bsmIndex]
+	if int(bsm.MethodRef) <= 0 || int(bsm.MethodRef) >= len(cp.CpIndex) {
+		return false
+	}
+
+	mhEntry := classloader.FetchCPentry(cp, int(bsm.MethodRef))
+	if mhEntry.EntryType != classloader.MethodHandle || mhEntry.AddrVal == nil {
+		return false
+	}
+
+	// 3. Retrieve the method reference index from the MethodHandle (Entry2 points to MethodRef/InterfaceMethodRef)
+	refIndex := int(mhEntry.AddrVal.Entry2)
+	if refIndex <= 0 || refIndex >= len(cp.CpIndex) {
+		return false
+	}
+
+	// 4. Resolve the class name and method name
+	var className, methName string
+	if cp.CpIndex[refIndex].Type == classloader.Interface {
+		className, methName, _ = classloader.GetMethInfoFromCPinterfaceRef(cp, refIndex)
+	} else {
+		className, methName, _, _ = classloader.GetMethInfoFromCPmethref(cp, refIndex)
+	}
+
+	// 5. Match against StringConcatFactory bootstrap methods
+	return className == "java/lang/invoke/StringConcatFactory" &&
+		(methName == "makeConcatWithConstants" || methName == "makeConcat")
+}

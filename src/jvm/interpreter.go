@@ -2991,6 +2991,25 @@ func doInvokeDynamic(fr *frames.Frame, _ int64) int {
 	// the components of the InvokeDynamic entry are validated by codeCheck prior to getting here
 	// so we can call the callsite resolution method without further verifying the entries.
 	CP := fr.CP.(*classloader.CPool)
+
+	// Fast-path: Check if the BSM is StringConcatFactory.makeConcatWithConstants
+	// If so, just call that method directly without going through the BSM processing
+	if isStringConcatBSM(CP, CPslot) {
+		res := javaLang.ConcatStringElements([]any{fr.FrameStack})
+		if errBlk, isErr := res.(*ghelpers.GErrBlk); isErr {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			status := exceptions.ThrowEx(errBlk.ExceptionType, errBlk.ErrMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED
+			}
+			return RESUME_HERE
+		}
+
+		// Push resulting String object onto the caller frame's operand stack
+		push(fr, res)
+		return 5 // 2 bytes CP slot + 2 zero bytes + 1 next bytecode
+	}
+
 	callSite, err := classloader.ResolveCallSite(CP, CPslot, fr)
 	if callSite == nil || err != nil {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
