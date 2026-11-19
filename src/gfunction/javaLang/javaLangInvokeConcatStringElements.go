@@ -157,6 +157,7 @@ func ConcatStringElements(params []any) any {
 	dynamicArgsIndex := 0
 
 	var argIndex int = 0
+	var constIndex int = 0 // index of tagConst arguments in the recipe
 	concatBytes := make([]byte, 0, len(recipeBytes))
 	for i := 0; i < len(recipeBytes); i++ {
 		switch recipeBytes[i] {
@@ -176,7 +177,17 @@ func ConcatStringElements(params []any) any {
 				concatBytes = append(concatBytes, []byte(s)...)
 			}
 		case tagConst:
-			// Consume next constant from static constants array
+			// bsm.Args[0] is the recipe; static constants start at bsm.Args[1]
+			staticArgCPIndex := int(bsm.Args[1+constIndex])
+			constIndex++
+			constObj, err := classloader.ResolveStaticArgument(cp, staticArgCPIndex, fr)
+			if err != nil {
+				errMsg := fmt.Sprintf("ConcatStringElements: error resolving static constant at CP index %d: %s", staticArgCPIndex, err.Error())
+				trace.Error(errMsg)
+				return ghelpers.GetGErrBlk(excNames.ClassFormatError, errMsg)
+			}
+			s := object.GoStringFromStringObject(constObj)
+			concatBytes = append(concatBytes, []byte(s)...)
 		default:
 			concatBytes = append(concatBytes, recipeBytes[i])
 		}
