@@ -86,6 +86,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaLang.Load_Lang_Integer()
 	javaLang.Load_Lang_Invoke_ConcatStringElements()
 	javaLang.Load_Lang_Invoke_ConstantCallSite()
+	javaLang.Load_Lang_Invoke_LambdaMetafactory()
 	javaLang.Load_Lang_Invoke_MethodHandle()
 	javaLang.Load_Lang_Invoke_MethodType()
 	javaLang.Load_Lang_Invoke_StringConcatFactory()
