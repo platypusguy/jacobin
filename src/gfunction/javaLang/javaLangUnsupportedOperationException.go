@@ -19,7 +19,7 @@ func Load_Java_Lang_UnsupportedOperationException() {
 			NeedsContext: true,
 		}
 
-	ghelpers.MethodSignatures["java/lang/OperationExceptionException.<init>(Ljava/lang/String;)V"] =
+	ghelpers.MethodSignatures["java/lang/UnsupportedOperationException.<init>(Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots:   1,
 			GFunction:    ThrowableInitString,
@@ -27,4 +27,3 @@ func Load_Java_Lang_UnsupportedOperationException() {
 		}
 
 }
-
