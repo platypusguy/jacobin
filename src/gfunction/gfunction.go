@@ -117,6 +117,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// java/lang exception and error classes
 	javaLang.Load_Java_Lang_AssertionError()
 	javaLang.Load_Java_Lang_Exception()
+	javaLang.Load_Java_Lang_Invoke_LambdaConversionException()
 	javaLang.Load_Java_Lang_Invoke_StringConcatException()
 	javaLang.Load_Java_Lang_NullPointerException()
 	javaLang.Load_Java_Lang_RuntimeException()
