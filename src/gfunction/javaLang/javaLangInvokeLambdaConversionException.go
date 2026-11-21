@@ -26,4 +26,10 @@ func Load_Java_Lang_Invoke_LambdaConversionException() {
 			NeedsContext: true,
 		}
 
+	ghelpers.MethodSignatures["java/lang/LambdaConversionException.<init>(Ljava/lang/Throwable;)V"] =
+		ghelpers.GMeth{
+			ParamSlots:   1,
+			GFunction:    ThrowableInitString,
+			NeedsContext: true,
+		}
 }
