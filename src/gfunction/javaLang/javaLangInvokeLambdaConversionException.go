@@ -12,24 +12,31 @@ import (
 
 func Load_Java_Lang_Invoke_LambdaConversionException() {
 
-	ghelpers.MethodSignatures["java/lang/LambdaConversionException.<init>()V"] =
+	ghelpers.MethodSignatures["java/lang/invoke/LambdaConversionException.<init>()V"] =
 		ghelpers.GMeth{
 			ParamSlots:   0,
 			GFunction:    ThrowableInitNull,
 			NeedsContext: true,
 		}
 
-	ghelpers.MethodSignatures["java/lang/LambdaConversionException.<init>(Ljava/lang/String;)V"] =
+	ghelpers.MethodSignatures["java/lang/invoke/LambdaConversionException.<init>(Ljava/lang/String;)V"] =
 		ghelpers.GMeth{
 			ParamSlots:   1,
 			GFunction:    ThrowableInitString,
 			NeedsContext: true,
 		}
 
-	ghelpers.MethodSignatures["java/lang/LambdaConversionException.<init>(Ljava/lang/Throwable;)V"] =
+	ghelpers.MethodSignatures["java/lang/invoke/LambdaConversionException.<init>(Ljava/lang/String;Ljava/lang/Throwable;)V"] =
+		ghelpers.GMeth{
+			ParamSlots:   2,
+			GFunction:    ghelpers.TrapFunction,
+			NeedsContext: true,
+		}
+
+	ghelpers.MethodSignatures["java/lang/invoke/LambdaConversionException.<init>(Ljava/lang/Throwable;)V"] =
 		ghelpers.GMeth{
 			ParamSlots:   1,
-			GFunction:    ThrowableInitString,
+			GFunction:    ThrowableInitThrowable,
 			NeedsContext: true,
 		}
 }
