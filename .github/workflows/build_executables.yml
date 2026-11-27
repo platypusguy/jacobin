@@ -32,11 +32,11 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            exe: jacobin-macos-latest
+            exe: jacobin-macos-arm64
           - os: ubuntu-latest
-            exe: jacobin-ubuntu-latest
+            exe: jacobin-ubuntu-amd64
           - os: windows-latest
-            exe: jacobin-windows-latest.exe
+            exe: jacobin-windows-amd64.exe
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v7
