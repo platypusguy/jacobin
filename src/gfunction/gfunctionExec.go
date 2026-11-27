@@ -107,8 +107,8 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 				*(stringPool.GetStringPointer(mt.MethName)),
 				*(stringPool.GetStringPointer(mt.MethType)))
 		} else {
-			errMsg = fmt.Sprintf("in thread: %s, in thread %s, reported by G-function: %s.%s%s",
-				errBlk.ErrMsg, threadName,
+			errMsg = fmt.Sprintf("in thread %s, %s reported by G-function: %s.%s%s",
+				threadName, errBlk.ErrMsg,
 				*(stringPool.GetStringPointer(mt.MethClass)),
 				*(stringPool.GetStringPointer(mt.MethName)),
 				*(stringPool.GetStringPointer(mt.MethType)))
