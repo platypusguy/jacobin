@@ -10,7 +10,23 @@ on:
 
 jobs:
 
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Validate tag exists
+      if: inputs.tag != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG: ${{ inputs.tag }}
+      run: |
+        gh api "repos/${{ github.repository }}/git/ref/tags/$TAG" >/dev/null 2>&1 \
+          || { echo "::error::Tag '$TAG' does not exist in ${{ github.repository }}"; exit 1; }
+
   build:
+    needs: validate
     strategy:
       fail-fast: false
       matrix:
@@ -54,7 +70,7 @@ jobs:
         path: dist/${{ matrix.exe }}*
         if-no-files-found: error
         retention-days: 1
-        
+
   collect:
     needs: build
     runs-on: ubuntu-latest
