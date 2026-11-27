@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/src/classloader"
-	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
@@ -22,24 +21,28 @@ import (
 
 var CaughtGfunctionException = errors.New("caught gfunction exception")
 
-// Execution of gfunctions (that is, Java functions ported to golang).
-// As part of JACOBIN-519, this code seeks to replace the previous set of
-// functions (e.g., runGframe() and runGmethod()) with a simpler streamlined
-// function.
+// RunGfunction - Execution of gfunctions (that is, Java functions ported to Golang).
 //
-// Parameters: mt is the gmethod we're about to run, fs is the frame stack
-// className, methodName, methodType should be self-explanatory, params is
-// a slice of parameters/arguments being passed to the gmethod, and objRef
-// is a boolean indicating whether a pointer to the object whose method is
-// being called was pushed on to the stack (true) or not (false)
+// Parameters:
+// * mt holds the MTentry we're about to run
+// * fs is the frame stack
+// * params is a pointer to a slice of parameters/arguments being passed to the gmethod
+// * objRef is a boolean indicating whether a pointer to the object whose method is
+//   being called was included in the parameters
+// * tracing is a boolean governing G function executive tracing
 //
-// Returns an errorBlock if an exception occured, an error if the gfunction
-// returned an error but did not throw an exception, or a value if the
-// gfunction returned a value.
+// Returns normally:
+// * int64 (Java boolean, byte, char, short, int, or long)
+// * float64 (Java float or double)
+// * *object.Object (Java object)
+// * nil (Java void)
+//
+// Returns a Golang error struct, indicating an exception condition has occurred:
+// * CaughtGfunctionException (a special error instance) if the exception should be caught
+// * a Golang error struct with some other value if the exception cannot be caught
 
 func RunGfunction(mt classloader.MTentry, fs *list.List,
-	// className, methodName, methodType string,
-	params *[]interface{}, objRef bool, tracing bool) any {
+	params *[]any, objRef bool, tracing bool) any {
 
 	f := fs.Front().Value.(*frames.Frame)
 
@@ -85,10 +88,9 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 		ret = gmeth.GFunction(*params)
 	}
 
-	// if an error occured
+	// What was returned from the G function?
 	switch ret.(type) {
-	case *ghelpers.GErrBlk:
-		// var errorDetails string
+	case *ghelpers.GErrBlk: // G function error block (bad news)
 		errBlk := *ret.(*ghelpers.GErrBlk)
 
 		var threadName string
@@ -97,19 +99,20 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 		} else {
 			threadName = fmt.Sprintf("%d", f.Thread)
 		}
+		var errMsg string
 		if f.Thread == 0 {
-			errMsg := fmt.Sprintf("in main thread initialization, %s reported by G-function: %s.%s%s",
+			errMsg = fmt.Sprintf("in main thread initialization, %s reported by G-function: %s.%s%s",
 				errBlk.ErrMsg,
 				*(stringPool.GetStringPointer(mt.MethClass)),
 				*(stringPool.GetStringPointer(mt.MethName)),
 				*(stringPool.GetStringPointer(mt.MethType)))
-			exceptions.MinimalAbort(errBlk.ExceptionType, errMsg)
+		} else {
+			errMsg = fmt.Sprintf("in thread: %s, in thread %s, reported by G-function: %s.%s%s",
+				errBlk.ErrMsg, threadName,
+				*(stringPool.GetStringPointer(mt.MethClass)),
+				*(stringPool.GetStringPointer(mt.MethName)),
+				*(stringPool.GetStringPointer(mt.MethType)))
 		}
-		errMsg := fmt.Sprintf("in thread: %s, in thread %s, reported by G-function: %s.%s%s",
-			errBlk.ErrMsg, threadName,
-			*(stringPool.GetStringPointer(mt.MethClass)),
-			*(stringPool.GetStringPointer(mt.MethName)),
-			*(stringPool.GetStringPointer(mt.MethType)))
 		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
 		if status != exceptions.Caught {
 			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test
@@ -118,16 +121,12 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 		// if the exception was caught, tell calling function to execute the catching logic
 		return CaughtGfunctionException
 
-	case error:
-		errMsg := (ret.(error)).Error()
-		status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
-		if status != exceptions.Caught {
-			return ret.(error) // applies only if in test
-		}
-		return nil // return nothing if the error was caught
+	default:
+		// No errors.
+		// Return int64, float64, *object.Object, or nil.
+		// TODO: Come the revolution, this default will be transformed.
+		return ret
+
 	}
 
-	// if return is not an errBlk or an error, then it's a legitimate
-	// return value, so return it.
-	return ret
 }
