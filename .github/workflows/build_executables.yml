@@ -43,6 +43,7 @@ jobs:
         cd ../dist
         if [[ "$RUNNER_OS" != "Windows" ]]; then
             tar -czf "${{ matrix.exe }}.tar.gz" "${{ matrix.exe }}"
+            rm "${{ matrix.exe }}"
         fi
         ls -l
 
