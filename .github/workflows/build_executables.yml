@@ -40,16 +40,20 @@ jobs:
         mkdir -p dist
         cd src
         go build -o "../dist/${{ matrix.exe }}" .
-        ls -l ../dist
+        cd ../dist
+        if [[ "$RUNNER_OS" != "Windows" ]]; then
+            tar -czf "${{ matrix.exe }}.tar.gz" "${{ matrix.exe }}"
+        fi
+        ls -l
 
     - name: Upload per-OS executable
       uses: actions/upload-artifact@v4
       with:
         name: stage-${{ matrix.os }}
-        path: dist/${{ matrix.exe }}
+        path: dist/${{ matrix.exe }}*
         if-no-files-found: error
         retention-days: 1
-
+        
   collect:
     needs: build
     runs-on: ubuntu-latest
