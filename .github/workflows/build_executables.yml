@@ -10,17 +10,33 @@ on:
 
 jobs:
 
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Validate tag exists
+      if: inputs.tag != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG: ${{ inputs.tag }}
+      run: |
+        gh api "repos/${{ github.repository }}/git/ref/tags/$TAG" >/dev/null 2>&1 \
+          || { echo "::error::Tag '$TAG' does not exist in ${{ github.repository }}"; exit 1; }
+
   build:
+    needs: validate
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: macos-latest
-            exe: jacobin-macos-latest
+            exe: jacobin-macos-arm64
           - os: ubuntu-latest
-            exe: jacobin-ubuntu-latest
+            exe: jacobin-ubuntu-amd64
           - os: windows-latest
-            exe: jacobin-windows-latest.exe
+            exe: jacobin-windows-amd64.exe
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v7
@@ -40,13 +56,18 @@ jobs:
         mkdir -p dist
         cd src
         go build -o "../dist/${{ matrix.exe }}" .
-        ls -l ../dist
+        cd ../dist
+        if [[ "$RUNNER_OS" != "Windows" ]]; then
+            tar -czf "${{ matrix.exe }}.tar.gz" "${{ matrix.exe }}"
+            rm "${{ matrix.exe }}"
+        fi
+        ls -l
 
     - name: Upload per-OS executable
       uses: actions/upload-artifact@v4
       with:
         name: stage-${{ matrix.os }}
-        path: dist/${{ matrix.exe }}
+        path: dist/${{ matrix.exe }}*
         if-no-files-found: error
         retention-days: 1
 
