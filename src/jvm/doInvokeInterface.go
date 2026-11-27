@@ -22,140 +22,6 @@ import (
 	"runtime/debug"
 )
 
-// searchForDefaultInterfaceFunction searches for a default method in all interfaces
-// implemented by className (and their superinterfaces), following JVM rules.
-//
-// JVM rules for default methods:
-//  1. Start with all interfaces directly implemented by the class.
-//  2. Recursively check superinterfaces.
-//  3. If multiple default methods are found with the same signature, throw
-//     IncompatibleClassChangeError (ambiguity).
-//  4. Otherwise, return the most-specific default method (closest to the class).
-//
-// Returns the interface name and mtEntry if a default method is found, or nil if not.
-//
-// Reference: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.3.4
-//
-// Note: this function is similar in many aspects to locateInterfaceMeth() in run.go.
-// The two functions might eventually be integrated into one.
-func searchForDefaultInterfaceFunction(
-	fr *frames.Frame, className, methodName, methodType string,
-) (any, classloader.MTentry) {
-
-	var mtEntry classloader.MTentry
-
-	// Fetch runtime class metadata
-	klass := classloader.MethAreaFetch(className)
-	if klass == nil || len(klass.Data.Interfaces) == 0 {
-		// Class does not implement any interfaces
-		return nil, mtEntry
-	}
-
-	// Recursive helper to search an interface and its superinterfaces.
-	// visited is passed in fresh for every top-level search so that
-	// interfaces shared by different branches (diamond inheritance of
-	// default methods) are not incorrectly skipped.
-	var searchInterface func(intfName string, visited map[string]bool) (string, classloader.MTentry)
-	searchInterface = func(intfName string, visited map[string]bool) (string, classloader.MTentry) {
-		if visited[intfName] {
-			return "", classloader.MTentry{}
-		}
-		visited[intfName] = true
-
-		intfClass := classloader.MethAreaFetch(intfName)
-		if intfClass == nil {
-			return "", classloader.MTentry{}
-		}
-
-		// Step 3a: Build fully qualified method name and check method table
-		fqn := intfName + "." + methodName + methodType
-		mtEntry = classloader.GetMtableEntry(fqn)
-		if mtEntry.Meth != nil {
-			m := mtEntry.Meth.(classloader.JmEntry)
-			if len(m.Code) > 0 {
-				// Found a non-abstract method → candidate default method
-				return intfName, mtEntry
-			}
-		}
-
-		// Step 3b: Recurse into superinterfaces
-		for _, idx := range intfClass.Data.Interfaces {
-			superIntfName := *stringPool.GetStringPointer(uint32(idx))
-			if resName, resMT := searchInterface(superIntfName, visited); resName != "" {
-				return resName, resMT
-			}
-		}
-
-		return "", classloader.MTentry{}
-	}
-
-	// Track all candidates found
-	candidates := make([]struct {
-		intf string
-		mt   classloader.MTentry
-	}, 0)
-
-	// Search all interfaces directly implemented by this class
-	for _, idx := range klass.Data.Interfaces {
-		intfName := *stringPool.GetStringPointer(uint32(idx))
-		if resName, resMT := searchInterface(intfName, make(map[string]bool)); resName != "" {
-			candidates = append(candidates, struct {
-				intf string
-				mt   classloader.MTentry
-			}{resName, resMT})
-		}
-	}
-
-	// De-duplicate candidates by the interface that actually declares the
-	// default method. In diamond-inheritance cases (e.g. a class implements
-	// two interfaces that both extend a common super-interface and neither
-	// overrides the default method), the search above will find the *same*
-	// declaring interface via more than one directly-implemented interface.
-	// That is not a genuine conflict per JVMS 5.4.3.3 -- only distinct
-	// declaring interfaces providing competing default methods are ambiguous.
-	if len(candidates) > 1 {
-		seen := make(map[string]bool, len(candidates))
-		deduped := candidates[:0:0]
-		for _, c := range candidates {
-			if !seen[c.intf] {
-				seen[c.intf] = true
-				deduped = append(deduped, c)
-			}
-		}
-		candidates = deduped
-	}
-
-	// JVM rule: handle multiple candidates
-	if len(candidates) > 1 {
-		// Conflict detected: multiple default methods with same signature
-		errMsg := "INVOKEVIRTUAL: Ambiguous default method for " + className + "." + methodName + methodType
-		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, fr)
-		// The exception has already been thrown here (and either caught, in which
-		// case execution should resume in the catch block, or it was uncaught, in
-		// which case the interpreter loop must stop). Either way, the caller must
-		// not attempt any further resolution or throw a second exception for the
-		// same bytecode, so we signal "already handled" via defaultMethodException.
-		if status == exceptions.Caught {
-			return defaultMethodException(RESUME_HERE), classloader.MTentry{}
-		}
-		return defaultMethodException(ERROR_OCCURRED), classloader.MTentry{}
-	}
-
-	// Return the default method (unambiguous single candidate)
-	if len(candidates) == 1 {
-		return candidates[0].intf, candidates[0].mt
-	}
-
-	// No default method found
-	return nil, mtEntry
-}
-
-// defaultMethodException wraps an interpreter return code (RESUME_HERE or
-// ERROR_OCCURRED) so that searchForDefaultInterfaceFunction's caller can
-// distinguish "an exception was already thrown, just return this code" from
-// "no default method was found, go ahead and throw NoSuchMethodError".
-type defaultMethodException int
-
 // 0xB9 INVOKEINTERFACE
 func doInvokeInterface(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
@@ -326,3 +192,137 @@ func doInvokeInterface(fr *frames.Frame, _ int64) int {
 	}
 	return notImplemented(fr, 0) // in theory, unreachable code
 }
+
+// searchForDefaultInterfaceFunction searches for a default method in all interfaces
+// implemented by className (and their superinterfaces), following JVM rules.
+//
+// JVM rules for default methods:
+//  1. Start with all interfaces directly implemented by the class.
+//  2. Recursively check superinterfaces.
+//  3. If multiple default methods are found with the same signature, throw
+//     IncompatibleClassChangeError (ambiguity).
+//  4. Otherwise, return the most-specific default method (closest to the class).
+//
+// Returns the interface name and mtEntry if a default method is found, or nil if not.
+//
+// Reference: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.3.4
+//
+// Note: this function is similar in many aspects to locateInterfaceMeth() in run.go.
+// The two functions might eventually be integrated into one.
+func searchForDefaultInterfaceFunction(
+	fr *frames.Frame, className, methodName, methodType string,
+) (any, classloader.MTentry) {
+
+	var mtEntry classloader.MTentry
+
+	// Fetch runtime class metadata
+	klass := classloader.MethAreaFetch(className)
+	if klass == nil || len(klass.Data.Interfaces) == 0 {
+		// Class does not implement any interfaces
+		return nil, mtEntry
+	}
+
+	// Recursive helper to search an interface and its superinterfaces.
+	// visited is passed in fresh for every top-level search so that
+	// interfaces shared by different branches (diamond inheritance of
+	// default methods) are not incorrectly skipped.
+	var searchInterface func(intfName string, visited map[string]bool) (string, classloader.MTentry)
+	searchInterface = func(intfName string, visited map[string]bool) (string, classloader.MTentry) {
+		if visited[intfName] {
+			return "", classloader.MTentry{}
+		}
+		visited[intfName] = true
+
+		intfClass := classloader.MethAreaFetch(intfName)
+		if intfClass == nil {
+			return "", classloader.MTentry{}
+		}
+
+		// Step 3a: Build fully qualified method name and check method table
+		fqn := intfName + "." + methodName + methodType
+		mtEntry = classloader.GetMtableEntry(fqn)
+		if mtEntry.Meth != nil {
+			m := mtEntry.Meth.(classloader.JmEntry)
+			if len(m.Code) > 0 {
+				// Found a non-abstract method → candidate default method
+				return intfName, mtEntry
+			}
+		}
+
+		// Step 3b: Recurse into superinterfaces
+		for _, idx := range intfClass.Data.Interfaces {
+			superIntfName := *stringPool.GetStringPointer(uint32(idx))
+			if resName, resMT := searchInterface(superIntfName, visited); resName != "" {
+				return resName, resMT
+			}
+		}
+
+		return "", classloader.MTentry{}
+	}
+
+	// Track all candidates found
+	candidates := make([]struct {
+		intf string
+		mt   classloader.MTentry
+	}, 0)
+
+	// Search all interfaces directly implemented by this class
+	for _, idx := range klass.Data.Interfaces {
+		intfName := *stringPool.GetStringPointer(uint32(idx))
+		if resName, resMT := searchInterface(intfName, make(map[string]bool)); resName != "" {
+			candidates = append(candidates, struct {
+				intf string
+				mt   classloader.MTentry
+			}{resName, resMT})
+		}
+	}
+
+	// De-duplicate candidates by the interface that actually declares the
+	// default method. In diamond-inheritance cases (e.g. a class implements
+	// two interfaces that both extend a common super-interface and neither
+	// overrides the default method), the search above will find the *same*
+	// declaring interface via more than one directly-implemented interface.
+	// That is not a genuine conflict per JVMS 5.4.3.3 -- only distinct
+	// declaring interfaces providing competing default methods are ambiguous.
+	if len(candidates) > 1 {
+		seen := make(map[string]bool, len(candidates))
+		deduped := candidates[:0:0]
+		for _, c := range candidates {
+			if !seen[c.intf] {
+				seen[c.intf] = true
+				deduped = append(deduped, c)
+			}
+		}
+		candidates = deduped
+	}
+
+	// JVM rule: handle multiple candidates
+	if len(candidates) > 1 {
+		// Conflict detected: multiple default methods with same signature
+		errMsg := "INVOKEVIRTUAL: Ambiguous default method for " + className + "." + methodName + methodType
+		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, fr)
+		// The exception has already been thrown here (and either caught, in which
+		// case execution should resume in the catch block, or it was uncaught, in
+		// which case the interpreter loop must stop). Either way, the caller must
+		// not attempt any further resolution or throw a second exception for the
+		// same bytecode, so we signal "already handled" via defaultMethodException.
+		if status == exceptions.Caught {
+			return defaultMethodException(RESUME_HERE), classloader.MTentry{}
+		}
+		return defaultMethodException(ERROR_OCCURRED), classloader.MTentry{}
+	}
+
+	// Return the default method (unambiguous single candidate)
+	if len(candidates) == 1 {
+		return candidates[0].intf, candidates[0].mt
+	}
+
+	// No default method found
+	return nil, mtEntry
+}
+
+// defaultMethodException wraps an interpreter return code (RESUME_HERE or
+// ERROR_OCCURRED) so that searchForDefaultInterfaceFunction's caller can
+// distinguish "an exception was already thrown, just return this code" from
+// "no default method was found, go ahead and throw NoSuchMethodError".
+type defaultMethodException int
